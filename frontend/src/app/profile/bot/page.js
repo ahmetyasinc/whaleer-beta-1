@@ -1,17 +1,17 @@
 'use client';
 
-import { useState } from 'react';
 import { FaLock } from 'react-icons/fa';
-import { BotModal } from '@/components/profile_component/(bot)/botModal';
-import { BotCard } from '@/components/profile_component/(bot)/botCard';
-import { useBotStore } from '@/store/bot/botStore';
-import { HiPlusSmall } from 'react-icons/hi2';
+//import { useState } from 'react';
+//import { BotModal } from '@/components/profile_component/(bot)/botModal';
+//import { BotCard } from '@/components/profile_component/(bot)/botCard';
+//import { useBotStore } from '@/store/bot/botStore';
+//import { HiPlusSmall } from 'react-icons/hi2';
 
 const isBeta = true; // 🔒 false yaparsan sayfa açılır
 
 export default function BotsPage() {
-  const [modalOpen, setModalOpen] = useState(false);
-  const bots = useBotStore((state) => state.bots);
+  //const [modalOpen, setModalOpen] = useState(false);
+  //const bots = useBotStore((state) => state.bots);
 
   if (isBeta) {
     return (
@@ -39,7 +39,7 @@ export default function BotsPage() {
   // Sayfa erişime açık
   return (
     <div>
-      <header className="flex justify-end h-[60px] bg-black items-center mb-6">
+      {/*<header className="flex justify-end h-[60px] bg-black items-center mb-6">
         <button
           onClick={() => setModalOpen(true)}
           className="group/button relative inline-flex items-center justify-center overflow-hidden rounded-md bg-gray-800/90 backdrop-blur-lg px-6 py-1 text-sm font-semibold text-white transition-all duration-300 ease-in-out hover:shadow-md hover:shadow-gray-600/50 mr-6"
@@ -58,7 +58,7 @@ export default function BotsPage() {
         {bots.map((bot) => (
           <BotCard key={bot.id} bot={bot} />
         ))}
-      </div>
+      </div>*/}
     </div>
   );
 }

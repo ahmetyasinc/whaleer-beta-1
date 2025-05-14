@@ -64,7 +64,7 @@ export default function ChartComponent({ symbol = "BTCUSDT", interval = "1d" }) 
             async function fetchData() {
                 try {
                     const response = await fetch(
-                        `http://localhost:8000/api/get-binance-data/?symbol=${selectedCrypto.binance_symbol || symbol}&interval=${selectedPeriod}`,
+                        `${process.env.NEXT_PUBLIC_API_URL}/api/get-binance-data/?symbol=${selectedCrypto.binance_symbol || symbol}&interval=${selectedPeriod}`,
                         {
                             method: "GET",
                             headers: {

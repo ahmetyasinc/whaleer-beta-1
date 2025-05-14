@@ -11,7 +11,7 @@ export const createApiKey = async (apiData) => {
         api_key: apiData.key,
         api_secret: apiData.secretkey,
       };
-      const response = await axios.post('http://localhost:8000/api/create-api/', formattedData);
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/create-api/`, formattedData);
       console.log("API Key oluşturuldu:", response.data);
       return response.data;
     } catch (error) {
@@ -22,7 +22,7 @@ export const createApiKey = async (apiData) => {
 
 export const getApiKeys = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/get-apis/');
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/get-apis/`);
       console.log("API Key listesi alındı:", response.data);
   
       const formattedData = response.data.map(item => {
@@ -55,7 +55,7 @@ export const getApiKeys = async () => {
 
 export const deleteApiKey = async (name) => {
   try {
-    const response = await axios.post('http://localhost:8000/api/delete-api/', { name });
+    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/delete-api/`, { name });
     console.log("API Key silindi:", response.data);
     return response.data;
   } catch (error) {

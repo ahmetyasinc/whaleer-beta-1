@@ -52,7 +52,7 @@ const PersonalIndicators = () => {
   
     try {
       // API'ye DELETE isteği gönder
-      await axios.delete(`http://localhost:8000/api/delete-indicator/${selectedIndicator.id}/`, {
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/delete-indicator/${selectedIndicator.id}/`, {
         withCredentials: true, // Cookie bilgisini dahil etmek için
       });
   

@@ -55,7 +55,7 @@ const TerminalStrategy = ({ id }) => {
   // Backend'e PUT isteği göndererek indikatör listesini günceller
   const updateBackendIndicators = async (updatedList) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/strategies/update", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/strategies/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -97,7 +97,7 @@ const TerminalStrategy = ({ id }) => {
   useEffect(() => {
     async function fetchIndicators() {
       try {
-        const response = await fetch(`http://localhost:8000/api/strategies/${id}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/strategies/${id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

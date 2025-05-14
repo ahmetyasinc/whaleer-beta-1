@@ -30,7 +30,6 @@ export default function LoginForm() {
         e.preventDefault(); // Formun default submit davranışını engelle
       
         try {
-      
           const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/login/`, {
             method: "POST",
             headers: {
@@ -39,10 +38,14 @@ export default function LoginForm() {
             body: JSON.stringify(formData), // JSON formatında formData gönder
             credentials: "include", // Cookie saklamak için gerekli
           });
-      
           if (response.ok) {
+            console.log("Giriş başarılı");
             setIsAuthenticated(true); // Kullanıcıyı giriş yapmış olarak işaretle
-            router.push("/profile"); // Başarılı giriş sonrası yönlendirme
+            setTimeout(() => {
+              router.push("/profile");
+            }, 200); // 200 ms bekleyip yönlendir
+
+            
           } else {
             const errorData = await response.json(); // API hata detaylarını al
             alert(`Giriş başarısız: ${errorData.detail}`);
@@ -56,31 +59,31 @@ export default function LoginForm() {
     return (
         <div>
             <button
-  onClick={() => router.push("/")}
-  className="absolute top-3 left-2 bg-[#363636] text-center w-40 rounded-[8px] h-10 text-white text-xl font-semibold group"
-  type="button"
->
-  <div
-    className="bg-[rgb(38,135,192)] rounded-[5px] h-8 w-1/4 flex items-center justify-center absolute left-1 top-[4px] group-hover:w-[151px] z-10 duration-500"
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 1024 1024"
-      height="25px"
-      width="25px"
-    >
-      <path
-        d="M224 480h640a32 32 0 1 1 0 64H224a32 32 0 0 1 0-64z"
-        fill="#000000"
-      ></path>
-      <path
-        d="m237.248 512 265.408 265.344a32 32 0 0 1-45.312 45.312l-288-288a32 32 0 0 1 0-45.312l288-288a32 32 0 1 1 45.312 45.312L237.248 512z"
-        fill="#000000"
-      ></path>
-    </svg>
-  </div>
-  <p className="translate-x-6 translate-y-1">Anasayfa</p>
-</button>
+              onClick={() => router.push("/")}
+              className="absolute top-3 left-2 bg-[#363636] text-center w-40 rounded-[8px] h-10 text-white text-xl font-semibold group"
+              type="button"
+            >
+              <div
+                className="bg-[rgb(38,135,192)] rounded-[5px] h-8 w-1/4 flex items-center justify-center absolute left-1 top-[4px] group-hover:w-[151px] z-10 duration-500"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 1024 1024"
+                  height="25px"
+                  width="25px"
+                >
+                  <path
+                    d="M224 480h640a32 32 0 1 1 0 64H224a32 32 0 0 1 0-64z"
+                    fill="#000000"
+                  ></path>
+                  <path
+                    d="m237.248 512 265.408 265.344a32 32 0 0 1-45.312 45.312l-288-288a32 32 0 0 1 0-45.312l288-288a32 32 0 1 1 45.312 45.312L237.248 512z"
+                    fill="#000000"
+                  ></path>
+                </svg>
+              </div>
+              <p className="translate-x-6 translate-y-1">Anasayfa</p>
+            </button>
             <div className="bg-white/0 backdrop-blur-lg border-[1px] border-gray-400 rounded-lg shadow-xl overflow-hidden">
                 <div className="p-8">
                     <h2 className="text-center text-3xl font-extrabold text-white">

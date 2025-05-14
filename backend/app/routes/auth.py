@@ -8,6 +8,10 @@ from app.database import get_db
 from app.core.auth import create_access_token, create_refresh_token  # JWT fonksiyonlarını içe aktar
 import logging
 
+from dotenv import load_dotenv
+import os
+load_dotenv()
+
 SECRET_KEY = "38842270259879952027900728229105"  # Gerçek projelerde .env dosyasına koymalısın!
 ALGORITHM = "HS256"
 
@@ -49,16 +53,18 @@ async def login(response: Response, data: LoginRequest, db: AsyncSession = Depen
     if user.password != password:
         raise HTTPException(status_code=401, detail="Geçersiz kullanıcı adı veya şifre!")
 
+    print("giriş başarılı")
     access_token = create_access_token({"sub": str(user.id)})
     refresh_token = create_refresh_token({"sub": str(user.id)})
-
+    print("access token:", access_token)
+    print("refresh token:", refresh_token)
     response.set_cookie(
         key="access_token",
         value=access_token,
         secure=False,
         max_age=1800,
         samesite="Lax",
-        domain="localhost",
+        #domain=os.getenv("COOKIE_DOMAIN"),
         path="/"
     )
 
@@ -68,7 +74,7 @@ async def login(response: Response, data: LoginRequest, db: AsyncSession = Depen
         secure=False,
         max_age=1800,
         samesite="Lax",
-        domain="localhost",
+        #domain=os.getenv("COOKIE_DOMAIN"),
         path="/"
     )
 

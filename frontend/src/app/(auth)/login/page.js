@@ -1,22 +1,24 @@
-"use client"; // ✅ Sayfayı Client Component yaptık
+"use client";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import LoginForm from "@/components/LoginForm"; // ✅ Client bileşeni çağırıyoruz
+import { useAuth } from '@/context/AuthContext';
+import LoginForm from "@/components/LoginForm";
 
 export default function LoginPage() {
+    const { isAuthenticated } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
-        const accessToken = sessionStorage.getItem("access_token");
-        if (accessToken) {
-            router.push("/profile"); // Eğer token varsa ana sayfaya yönlendir
+        if (isAuthenticated) {
+            console.log("Giriş yapmışsınız, yönlendiriliyor...");
+            router.push('/profile');
         }
-    }, []);
+    }, [isAuthenticated]);
 
     return (
         <main className="flex justify-center items-center min-h-screen">
-            <LoginForm /> {/* ✅ Login işlemleri Client Component'e taşındı */}
+            <LoginForm />
         </main>
     );
 }

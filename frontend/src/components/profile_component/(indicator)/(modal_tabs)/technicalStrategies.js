@@ -21,7 +21,7 @@ const TechnicalStrategies = () => {
 
         const fetchStrategies = async () => {
             try {
-                const response = await axios.get("http://localhost:8000/api/all-strategies/");
+                const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/all-strategies/`);
                 console.log(response.data)
                 
                 const tecnic_strategies = response.data.tecnic_strategies || [];
@@ -48,11 +48,11 @@ const TechnicalStrategies = () => {
         
         try {
             if (isAlreadyFavorite) {
-                await axios.delete("http://localhost:8000/api/strategy-remove-favourite/", {
+                await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/strategy-remove-favourite/`, {
                     data: { strategy_id: strategy.id }
                 });                
             } else {
-                await axios.post("http://localhost:8000/api/strategy-add-favorite/", {
+                await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/strategy-add-favorite/`, {
                     strategy_id: strategy.id
                 });
             }

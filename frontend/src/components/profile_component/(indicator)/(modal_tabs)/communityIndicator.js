@@ -22,11 +22,11 @@ const CommunityIndicators = () => {
         
         try {
             if (isAlreadyFavorite) {
-                await axios.delete("http://localhost:8000/api/indicator-remove-favourite/", {
+                await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/indicator-remove-favourite/`, {
                     data: { indicator_id: indicator.id }
                 });                
             } else {
-                await axios.post("http://localhost:8000/api/indicator-add-favorite/", {
+                await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/indicator-add-favorite/`, {
                     indicator_id: indicator.id
                 });
             }

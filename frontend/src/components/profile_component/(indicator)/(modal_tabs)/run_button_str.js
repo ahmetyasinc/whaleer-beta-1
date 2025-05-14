@@ -27,7 +27,7 @@ const RunButton = ({ strategyId, onBeforeRun }) => {
                 return;
             }
 
-            const response = await axios.post("http://localhost:8000/api/run-strategy/", {
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/run-strategy/`, {
                 strategy_id: strategyId,
                 binance_symbol: selectedCrypto.binance_symbol,
                 interval: selectedPeriod,

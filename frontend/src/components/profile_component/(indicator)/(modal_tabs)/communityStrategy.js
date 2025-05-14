@@ -22,11 +22,11 @@ const CommunityStrategies = () => {
         
         try {
             if (isAlreadyFavorite) {
-                await axios.delete("http://localhost:8000/api/strategy-remove-favourite/", {
+                await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/strategy-remove-favourite/`, {
                     data: { strategy_id: strategy.id }
                 });                
             } else {
-                await axios.post("http://localhost:8000/api/strategy-add-favorite/", {
+                await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/strategy-add-favorite/`, {
                     strategy_id: strategy.id
                 });
             }

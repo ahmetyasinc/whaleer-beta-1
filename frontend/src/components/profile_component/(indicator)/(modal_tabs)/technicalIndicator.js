@@ -21,7 +21,7 @@ const TechnicalIndicators = () => {
 
         const fetchIndicators = async () => {
             try {
-                const response = await axios.get("http://localhost:8000/api/all-indicators/");
+                const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/all-indicators/`);
                 console.log(response.data)
                 
                 const tecnic_indicators = response.data.tecnic_indicators || [];
@@ -48,11 +48,11 @@ const TechnicalIndicators = () => {
         
         try {
             if (isAlreadyFavorite) {
-                await axios.delete("http://localhost:8000/api/indicator-remove-favourite/", {
+                await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/indicator-remove-favourite/`, {
                     data: { indicator_id: indicator.id }
                 });                
             } else {
-                await axios.post("http://localhost:8000/api/indicator-add-favorite/", {
+                await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/indicator-add-favorite/`, {
                     indicator_id: indicator.id
                 });
             }

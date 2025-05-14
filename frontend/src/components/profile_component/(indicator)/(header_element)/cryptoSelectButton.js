@@ -19,7 +19,7 @@ const CryptoSelectButton = () => {
   useEffect(() => {
     const fetchCoins = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/api/get-coin-list/");
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/get-coin-list/`);
 
         if (response.data && response.data.coins) {
           const coins = response.data.coins.map(coin => ({
@@ -65,7 +65,7 @@ const CryptoSelectButton = () => {
       togglePinned(crypto); // Zustand'da güncelle
   
       try {
-        const response = await axios.post("http://localhost:8000/api/pin-binance_coin/", {
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/pin-binance_coin/`, {
           coin_id: crypto.id,
         });
         console.log("Pinleme işlemi başarılı:", response.data);
@@ -79,7 +79,7 @@ const CryptoSelectButton = () => {
     togglePinned(crypto); // Zustand'da güncelle
   
     try {
-      const response = await axios.delete("http://localhost:8000/api/unpin-binance-coin/", {
+      const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/unpin-binance-coin/`, {
         data: { coin_id: crypto.id }, // DELETE isteği için `data` içinde gönderiyoruz
       });
       console.log("Pin kaldırma işlemi başarılı:", response.data);

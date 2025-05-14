@@ -26,7 +26,7 @@ const RunButton = ({ indicatorId, onBeforeRun}) => {
                 return;
             }
 
-            const response = await axios.post("http://localhost:8000/api/run-indicator/", {
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/run-indicator/`, {
               indicator_id: indicatorId,
               binance_symbol: selectedCrypto.binance_symbol,
               interval: selectedPeriod,

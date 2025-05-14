@@ -70,7 +70,7 @@ const CodePanel = () => {
         setStrategyCode(localCode);
   
         const updateRequest = axios.put(
-          "http://localhost:8000/api/edit-strategy/",
+          `${process.env.NEXT_PUBLIC_API_URL}/api/edit-strategy/`,
           { id: editingStrategy.id, name: localName, code: localCode },
           { withCredentials: true, headers: { "Content-Type": "application/json" } }
         );
@@ -92,7 +92,7 @@ const CodePanel = () => {
     } else {
       try {
         const postRequest = axios.post(
-          "http://localhost:8000/api/add-strategy/",
+          `${process.env.NEXT_PUBLIC_API_URL}/api/add-strategy/`,
           { name: localName, code: localCode },
           { withCredentials: true, headers: { "Content-Type": "application/json" } }
         );

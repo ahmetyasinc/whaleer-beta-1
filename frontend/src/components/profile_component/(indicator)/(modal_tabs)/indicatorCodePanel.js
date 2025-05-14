@@ -71,7 +71,7 @@ const CodePanel = () => {
         setIndicatorCode(localCode);
   
         const updateRequest = axios.put(
-          "http://localhost:8000/api/edit-indicator/",
+          `${process.env.NEXT_PUBLIC_API_URL}/api/edit-indicator/`,
           { id: editingIndicator.id, name: localName, code: localCode },
           { withCredentials: true, headers: { "Content-Type": "application/json" } }
         );
@@ -93,7 +93,7 @@ const CodePanel = () => {
     } else {
       try {
         const postRequest = axios.post(
-          "http://localhost:8000/api/add-indicator/",
+          `${process.env.NEXT_PUBLIC_API_URL}/api/add-indicator/`,
           { name: localName, code: localCode },
           { withCredentials: true, headers: { "Content-Type": "application/json" } }
         );

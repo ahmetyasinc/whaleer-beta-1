@@ -10,10 +10,9 @@ export default function HomeClientComponent() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await fetch("http://localhost:8000/api/hero-infos/");
+                const res = await fetch("${process.env.NEXT_PUBLIC_API_URL}/api/hero-infos/");
                 const result = await res.json();
                 setData(result);
-                console.log(result);
             } catch (error) {
                 console.error("Veri çekme hatası:", error);
             } finally {

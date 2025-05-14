@@ -3,7 +3,7 @@ import LeftMenu from "@/components/profile_component/leftmenu";
 
 // API'den kullanıcı verisini almak için asenkron fonksiyon
 async function fetchUserFromAPI() {
-  const res = await fetch("http://127.0.0.1:8000/api/hero-infos/");
+  const res = await fetch("${process.env.NEXT_PUBLIC_API_URL}/api/hero-infos/");
   const data = await res.json();
   return data;
 }

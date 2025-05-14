@@ -1,0 +1,89 @@
+/* Çıkış Onay Modalı */
+.logout-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.logout-modal-content {
+    background-color: hwb(0 13% 87%);
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0px 0px 2px rgb(0, 0, 0);
+    text-align: center;
+    width: 320px; /* Modal genişliği */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* İçeriği ortala */
+    justify-content: center;
+}
+
+.logout-modal-content svg {
+    font-size: 55px; /* İkonun boyutunu büyüt */
+    color: #ff0000e1; /* İkon rengi */
+    margin-bottom: 12px; /* Yazı ile arasına boşluk bırak */
+}
+
+
+.logout-modal-buttons {
+    margin-top: 30px;
+    display: flex;
+    justify-content: space-around;
+    justify-content: flex-end; /* Butonları sağa kaydır */
+    gap: 10px; 
+}
+
+.confirm-btn, .cancel-btn {
+    padding: 5px 15px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.confirm-btn {
+    background-color: rgb(209, 3, 3);
+    color: white;
+}
+
+.cancel-btn {
+    background-color: gray;
+    color: white;
+}
+
+.logout-button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    padding: 0px 15px;
+}
+
+.logout-button:hover {
+    background-color: transparent;
+    color: hsl(209, 100%, 50%);
+    transition: 0.25s;
+}
+
+/* Hover Efektleri */
+.confirm-btn:hover {
+    background-color: darkred; /* Evet butonu hover olunca koyulaşsın */
+    transform: scale(1.01); /* Hafif büyütme efekti */
+}
+
+.cancel-btn:hover {
+    background-color: hwb(0 63% 37%); /* Hayır butonu hover olunca daha koyu gri */
+    transform: scale(1.01);
+}

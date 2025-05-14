@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .hard-gradient {
+    background: linear-gradient(
+      135deg,
+      rgb(0, 0, 0),
+      rgb(0, 39, 83) 65%,
+      #031636 65%,
+      rgb(0, 0, 0) 100%
+    );
+    background-repeat: no-repeat;
+    background-size: cover;
+    min-height: 100vh;
+  }
+
+  .light-gradient {
+    background: linear-gradient(
+      135deg,
+      rgb(193, 194, 194),
+      rgb(213, 250, 255) 65%,
+      #b7f2f7 65%,
+      rgb(146, 147, 231) 100%
+    );
+    background-repeat: no-repeat;
+    background-size: cover;
+    min-height: 100vh;
+  }
+}

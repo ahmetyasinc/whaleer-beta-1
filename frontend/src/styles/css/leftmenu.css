@@ -1,0 +1,151 @@
+/* Sidebar */
+.sidebar-left {
+    position: fixed;
+    top: 0;
+    left: -260px; /* Başlangıçta gizli */
+    width: 260px;
+    height: 100%;
+    background-color: rgb(7, 67, 95);
+    color: white;
+    transition: left 0.3s ease; /* Yumuşak açılma/kapama */
+    overflow-y: auto;
+    z-index: 1000;
+    border-radius: 0 4px 0 0;
+}
+ 
+/* Sidebar açıkken */
+.sidebar-left.open {
+    left: 0;
+}
+
+/* Sidebar Header (Avatar ve Kullanıcı Adı İçin) */
+.sidebar-header-left {
+    display: flex;
+    justify-content: space-between; /* Kullanıcı adı solda, avatar sağda */
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Kullanıcı adı sola hizalandı */
+.username-left {
+    margin: 0;
+    color: white;
+    flex-grow: 1; /* Kullanıcı adı genişleyerek sol tarafa oturur */
+    text-align: left; 
+}
+
+/* Profil Resmi (Avatar) Sağda ve Küçük */
+.profile-img-left {
+    width: 40px; /* Avatarı küçült */
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid white; /* Çerçeve ekle */
+    margin-left: 10px; /* Kullanıcı adı ile araya boşluk koy */
+}
+
+
+
+/* Sidebar linkleri */
+.sidebar-links-left {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-links-left li {
+    padding: 0.5em 1em;
+}
+
+/* Link içindeki ikon ve metin hizalamalarını yap */
+.sidebar-links-left li a {
+    color: white;
+    text-decoration: none;
+    padding-left: 15px; /* Fazla boşluğu azalttık */
+    display: flex; /* İçeriği yatay hizalamak için */
+    align-items: center; /* Dikey hizalama */
+    gap: 10px; /* İkon ile metin arasına boşluk koy */
+}
+
+/* Menü ikonları için stil */
+.menu-icon {
+    font-size: 20px; /* İkon boyutunu arttır */
+    margin-right: 15px; /* Yazı ile ikon arasına boşluk koy */
+    vertical-align: middle; /* İkonun hizasını düzgün ayarla */
+    display: inline-flex; /* Flex olarak hizalama */
+}
+
+/* İlk linki aşağı kaydır */
+.sidebar-links-left li:first-child {
+    margin-top: 15px;
+}
+
+/* Link hover efekti */
+.sidebar-links-left li a:hover {
+    background-color: transparent;
+    color: hsl(209, 100%, 50%);
+}
+
+
+/* Toggle Button */
+.toggle-btn-left {
+    width: 39px;
+    height: 39px;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background-color: rgb(7, 67, 95);
+    color: white;
+    border: none;
+    border-radius: 40%;
+    padding: 10px;
+    cursor: pointer;
+    z-index: 1101; 
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Sidebar açıldığında butonun sola kayması */
+.toggle-btn-left.move-left {
+    left: 270px !important;/* Sidebar açıkken butonu sola kaydır */
+}
+
+/* Toggle Buton İçindeki İkon */
+.toggle-btn-left i {
+    font-size: 26px;
+    transition: transform 0.2s ease;
+}
+
+/* Toggle Buton Hover Efekti (Sallanma + Büyütme) */
+.toggle-btn-left:hover {
+    background-color: hsl(199, 77%, 32%); /* Butona gelince rengi değiştir */
+    animation: shake-scale 0.4s ease-in-out infinite alternate; /* Sallanma ve büyütme efekti */
+}
+
+/* Sallanma ve Büyütme Animasyonu */
+@keyframes shake-scale {
+    0% {
+        transform: scale(1.07) rotate(5deg); /* %7 büyüt ve 5 derece sağa döndür */
+    }
+    100% {
+        transform: scale(1.07) rotate(-5deg); /* %7 büyüt ve 5 derece sola döndür */
+    }
+}
+
+/* Profil Resmi Çerçevesi ve Efektleri */
+.profile-img {
+    width: 40px; /* Yeni genişlik */
+    height: auto; /* Yükseklik otomatik */
+    border-radius: 50%; /* Yuvarlak avatar */
+    box-shadow: 0px 0px 9px rgba(0, 0, 0, 0.658); /* Hafif bir gölge efekti */
+    margin: 10px;
+}
+
+/* Sidebar İçindeki İkon Ayarları */
+.sidebar-links-left li a i {
+    font-size: 25px; /* İkon boyutunu artır */
+    margin-right: 15px; /* Yazı ile ikon arasına boşluk koy */
+    vertical-align: middle; /* İkonun hizasını düzgün ayarla */
+}

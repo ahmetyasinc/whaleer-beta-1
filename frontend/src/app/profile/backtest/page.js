@@ -1,6 +1,5 @@
 // Backtest.js
 import SyncedCharts from "@/components/profile_component/(indicator)/syncedCharts"; // SyncedCharts bileşenini import edin
-export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: "BackTest",

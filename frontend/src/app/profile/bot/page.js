@@ -1,6 +1,5 @@
 'use client';
 
-export const dynamic = 'force-dynamic'; // ✅ Bu satır olmalı
 
 import { FaLock } from 'react-icons/fa';
 //import { useState } from 'react';

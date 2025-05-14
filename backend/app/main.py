@@ -48,7 +48,7 @@ app.include_router(scan_router)
 # CORS Middleware ekle
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],  # Güvenlik için sadece frontend URL'sini koy
+    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://13.60.185.143:3000"],  # Güvenlik için sadece frontend URL'sini koy
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

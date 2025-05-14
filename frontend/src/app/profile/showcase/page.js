@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 export const metadata = {
     title: "Vitrin",
     description: "Backtest ve stratejilerin listelendiği sayfa.",

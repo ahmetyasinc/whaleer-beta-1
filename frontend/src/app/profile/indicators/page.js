@@ -2,6 +2,7 @@ import IndicatorHeader from "@/components/profile_component/(indicator)/indicato
 import TabbedGridLayout from "@/components/profile_component/(indicator)/tabbedGridLayout";
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
     title: "Göstergeler",

@@ -1,3 +1,6 @@
+export const dynamic = 'force-dynamic';
+
+
 export const metadata = {
     title: "Topluluk",
     description: "Topluluk sayfası.",

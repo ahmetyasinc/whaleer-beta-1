@@ -1,16 +1,11 @@
 // Backtest.js
-import SyncedCharts from "@/components/profile_component/(indicator)/syncedCharts"; // SyncedCharts bileşenini import edin
-
 export const metadata = {
   title: "BackTest",
   description: "Olusturulan stratejileri test etme sayfası.",
 };
 
+import ClientPage from './client-page'; // Yeni oluşturacağın istemci bileşeni
+
 export default function Backtest() {
-  return (
-    <div>
-      <h1>Backtest Sayfası</h1>
-      <SyncedCharts />  {/* SyncedCharts bileşenini burada kullanıyoruz */}
-    </div>
-  );
+  return <ClientPage />;
 }

@@ -53,11 +53,8 @@ async def login(response: Response, data: LoginRequest, db: AsyncSession = Depen
     if user.password != password:
         raise HTTPException(status_code=401, detail="Geçersiz kullanıcı adı veya şifre!")
 
-    print("giriş başarılı")
     access_token = create_access_token({"sub": str(user.id)})
     refresh_token = create_refresh_token({"sub": str(user.id)})
-    print("access token:", access_token)
-    print("refresh token:", refresh_token)
     response.set_cookie(
         key="access_token",
         value=access_token,

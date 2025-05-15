@@ -1,8 +1,6 @@
 'use client';
 
 import { FaLock } from 'react-icons/fa';
-import Image from 'next/image';
-import { useEffect, useState } from 'react';
 
 import ProfileHeader from "@/components/profile_component/(profile)/profileHeader";
 import RightBar from "@/components/profile_component/(profile)/rightBar";

@@ -2,7 +2,7 @@ import Hero from "@/components/home_component/Hero";
 
 export const metadata = {
   title: "Hakkında",
-  description: "Balina Yatırım ile kripto stratejileri oluştur, test et ve uygula.",
+  description: "whaleer ile kripto stratejileri oluştur, test et ve uygula.",
 };
 
 

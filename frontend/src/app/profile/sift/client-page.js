@@ -3,7 +3,7 @@
 import { FaLock } from 'react-icons/fa';
 import IndicatorHeatMap from "@/components/profile_component/(sift)/IndicatorHeatMap";
 import StrategySift from "@/components/profile_component/(sift)/strategySift";
-import WhaleerSift from "@/components/profile_component/(sift)/whaleerSift";
+import whaleerSift from "@/components/profile_component/(sift)/whaleerSift";
 
 const isBeta = true;
 
@@ -32,7 +32,7 @@ export default function ClientPage() {
     <div className="ml-16">
     <div className="grid grid-cols-3 gap-0">
       <div className="h-[calc(100vh-120px)]">
-        <WhaleerSift />
+        <whaleerSift />
       </div>
       <div className="h-[calc(100vh-120px)] z-20">
         <StrategySift />

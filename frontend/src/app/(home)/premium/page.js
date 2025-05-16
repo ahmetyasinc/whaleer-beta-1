@@ -1,7 +1,7 @@
 
 export const metadata = {
   title: "Premium Üyelik",
-  description: "Balina Yatırım ile kripto stratejileri oluştur, test et ve uygula.",
+  description: "whaleer ile kripto stratejileri oluştur, test et ve uygula.",
 };
 
 

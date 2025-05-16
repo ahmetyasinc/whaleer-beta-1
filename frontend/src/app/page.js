@@ -5,8 +5,8 @@ import Header from "@/components/home_component/Header";
 import HomeClientComponent from "@/components/HomeClientComponent"; // ✅ Doğru
 
 export const metadata = {
-    title: "Balina Yatırım",
-    description: "Balina Yatırım ile kripto stratejileri oluştur, test et ve uygula.",
+    title: "whaleer",
+    description: "whaleer ile kripto stratejileri oluştur, test et ve uygula.",
   };
 
 export default function Home() {

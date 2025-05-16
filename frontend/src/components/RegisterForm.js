@@ -80,7 +80,7 @@ export default function RegisterForm() {
             <div className="bg-white/0 backdrop-blur-lg border border-gray-400 rounded-lg shadow-lg overflow-hidden w-full max-w-md">
                 <div className="p-8">
                     <h2 className="text-center text-3xl font-extrabold text-white">Kayıt Ol</h2>
-                    <p className="mt-4 text-center text-gray-400">Balina Yatırıma kayıt olun</p>
+                    <p className="mt-4 text-center text-gray-400">whaleer'a kayıt olun</p>
 
                     <form onSubmit={handleSubmit} className="mt-8 space-y-6">
                         <div className="grid grid-cols-2 gap-4">

@@ -3,8 +3,8 @@ import './survey.css'; // Bu dosya sadece bu sayfaya özel olsun
 
 // src/app/survey/layout.js
 export const metadata = {
-    title: 'Kullanıcı Anketi - Whaleer',
-    description: 'Whaleer kullanıcı anketi',
+    title: 'Kullanıcı Anketi - whaleer',
+    description: 'whaleer kullanıcı anketi',
   };
   
   export default function SurveyLayout({ children }) {

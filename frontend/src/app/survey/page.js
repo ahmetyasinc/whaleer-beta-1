@@ -426,7 +426,7 @@ export default function SurveyPage() {
         </button>
 
         <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
-          Whaleer Kullanıcı Anketi
+          whaleer Kullanıcı Anketi
         </h1>
 
         {!isStarted ? (
@@ -437,7 +437,7 @@ export default function SurveyPage() {
                 Merhaba! 👋
               </p>
               <p className={`text-lg md:text-xl leading-relaxed text-justify ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                Whaleer olarak, algoritmik alım-satım dünyasında sadece strateji geliştirmekle kalmayıp, onu test edebileceğin, başkalarıyla paylaşabileceğin ve otomatik şekilde çalıştırabileceğin bir alan oluşturuyoruz.
+                whaleer olarak, algoritmik alım-satım dünyasında sadece strateji geliştirmekle kalmayıp, onu test edebileceğin, başkalarıyla paylaşabileceğin ve otomatik şekilde çalıştırabileceğin bir alan oluşturuyoruz.
               </p>
               <p className={`text-lg md:text-xl leading-relaxed text-justify ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                 Bu kısa anketi meraklı ve yetenekli kullanıcılarımızı daha iyi anlayabilmek için hazırladık. Yanıtların, platformumuzu daha güvenli, sezgisel ve verimli hale getirmemizde bize ışık tutacak.

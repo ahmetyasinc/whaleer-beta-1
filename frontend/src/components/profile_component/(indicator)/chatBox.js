@@ -97,14 +97,14 @@ const ChatBox = () => {
     >
       {/* Sürüklenebilir Alan */}
       <div className="drag-handle bg-[rgb(22,38,126)] cursor-move pt-[1px] rounded-b-3xl rounded-t-sm text-center h-7 font-bold justify-center">
-        WhaleerAI
+        whaleerAI
       </div>
 
       {/* Mesaj Alanı */}
       <div className="flex-1 overflow-y-auto p-2">
         {messages.length === 0 && (
           <div className="text-center text-gray-500 my-5 font-bold text-[16px]">
-            Ben yapay zeka asistanın WhaleerAI, Nasıl Yardımcı Olabilirim?
+            Ben yapay zeka asistanın whaleerAI, Nasıl Yardımcı Olabilirim?
           </div>
         )}
         {/* Mesajları yukarıdan aşağı eklemek için flex-col kullanıyoruz */}

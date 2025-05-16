@@ -15,31 +15,31 @@ const Footer = () => {
                   borderRadius: '50%',
                   objectFit: 'cover'
                 }}/>
-                <span className="fs-4 fw-bold text-light">Balina</span>
+                <span className="fs-4 fw-bold text-light">Whaleer</span>
               </a>
               <div className="footer-contact text-light text-start">
                 <p className="mb-2">İstanbul/Maltepe</p>
-                <p className="mb-3">Marmara Üni. RTE Külliyesi M4 1. kat tuvaletin karşısındaki cam oda</p>
+                <p className="mb-3">Marmara Üni. RTE Külliyesi M4 binası</p>
                 <p className="mb-2">
                   <strong>Telefon:</strong>
                   <span className="ms-2">+90 552 285 34 67</span>
                 </p>
                 <p className="mb-3">
                   <strong>Email:</strong>
-                  <span className="ms-2">bilal67bostan67@gmail.com</span>
+                  <span className="ms-2">whaleertrading@gmail.com</span>
                 </p>
               </div>
               <div className="social-links d-flex gap-3 mt-4">
-                <a href="#" className="text-light fs-5">
+                {/*<a href="#" className="text-light fs-5">
                   <i className="bi bi-twitter-x"></i>
                 </a>
                 <a href="#" className="text-light fs-5">
                   <i className="bi bi-facebook"></i>
-                </a>
-                <a href="#" className="text-light fs-5">
+                </a>*/}
+                <a href="https://www.instagram.com/thewhaleer?igsh=cjhieWpsemdvNzY5" className="text-light fs-5">
                   <i className="bi bi-instagram"></i>
                 </a>
-                <a href="#" className="text-light fs-5">
+                <a href="https://www.linkedin.com/company/106360097/" className="text-light fs-5">
                   <i className="bi bi-linkedin"></i>
                 </a>
               </div>

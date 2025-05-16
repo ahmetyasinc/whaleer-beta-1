@@ -14,7 +14,7 @@ export default function Hero({ userCount, traderCount, strategyCount, botCount }
                 </div>
                   
                 <h1 className="mb-4 text-left font-sans">
-                  Balina ile<br />
+                  Whaleer ile<br />
                   Eşsiz Stratejiler Oluştur <br />
                   <span className="accent-text">Kâr Etmeye Başla</span>
                 </h1>
@@ -23,8 +23,8 @@ export default function Hero({ userCount, traderCount, strategyCount, botCount }
                   <div className="row">
                     <div className="col-lg-12 mx-auto text-left">
                       <p className="mb-4 mb-md-5">
-                        Balina ile kendinize has stratejiler oluşturabilir, oluşturduğunuz stratejilerin geçmişte gösterdikleri performansı görebilir ve size tanıdığımız özel imkanlar ile karlı hale getirebilirsiniz.
-                        Balina Tarama özelliği ile oluşturduğunuz stratejilerin o an verdiği sinyalleri görebilirsiniz.
+                        Whaleer ile kendinize has stratejiler oluşturabilir, oluşturduğunuz stratejilerin geçmişte gösterdikleri performansı görebilir ve size tanıdığımız özel imkanlar ile karlı hale getirebilirsiniz.
+                        Whaleer Tarama özelliği ile oluşturduğunuz stratejilerin o an verdiği sinyalleri görebilirsiniz.
                       </p>
                     </div>
                   </div>
@@ -34,7 +34,7 @@ export default function Hero({ userCount, traderCount, strategyCount, botCount }
 
                 <div className="hero-buttons text-left">
                   <Link href="/deneme" className="btn btn-primary me-0 me-sm-2 mx-1">Şimdi Başla</Link>
-                  <a href="https://www.youtube.com/watch?v=Qa8A0qjh27Y" className="btn btn-link mt-2 mt-sm-0 glightbox">
+                  <a href="https://www.youtube.com/watch?v=VZcFJ_jtJpk&t=649s" className="btn btn-link mt-2 mt-sm-0 glightbox">
                     <i className="bi bi-play-circle me-1"></i>
                     Tanıtım Videosu
                   </a>

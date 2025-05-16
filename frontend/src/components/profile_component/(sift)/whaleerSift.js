@@ -22,7 +22,7 @@ const sampleCoins = [
   { symbol: 'ATOM', name: 'Cosmos', longSignals: 7, shortSignals: 3 },
 ];
 
-export default function WhaleerSift() {
+export default function whaleerSift() {
   const [selectedTimeRange, setSelectedTimeRange] = useState(timeRanges[0]);
   const [coinSearch, setCoinSearch] = useState('');
 
@@ -63,7 +63,7 @@ export default function WhaleerSift() {
 
   return (
     <div className="fixed top-2 h-screen w-[400px] bg-zinc-900 shadow-lg rounded p-4 text-white">
-      <h2 className="text-sm font-bold mb-3 text-center">Whaleer Tarama</h2>
+      <h2 className="text-sm font-bold mb-3 text-center">whaleer Tarama</h2>
 
       {/* Arama ve Filtreler */}
       <div className="mb-2">

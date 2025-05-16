@@ -40,7 +40,7 @@ export default function Header({ pageClass }) {
                 
                 <Link href="/" className="logo d-flex align-items-center me-auto me-xl-0">
                     <Image src="/img/logo1.jpg" alt="Logo" width={40} height={40} className="whaleavatar" priority unoptimized />
-                    <h1 className="sitename">Balina Yatırım</h1>
+                    <h1 className="sitename">Whaleer.com</h1>
                 </Link>
 
                 <nav id="navmenu" className="navmenu">

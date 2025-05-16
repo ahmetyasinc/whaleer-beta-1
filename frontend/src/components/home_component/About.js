@@ -10,8 +10,8 @@ export default function Hero() {
   
             <div className="col-xl-5" data-aos="fade-up" data-aos-delay="200">
               <span className="about-meta">Daha Fazla</span>
-              <h2 className="about-title">Balina Nedir?</h2>
-              <p className="about-description">Balina Tam Donanımlı Bir Trade Uygulamasıdır
+              <h2 className="about-title">Whaleer Nedir?</h2>
+              <p className="about-description">Whaleer Tam Donanımlı Bir Trade Uygulamasıdır
                 İndikatörler ve grafikler üzerinde kendi analizlerinizi yapabilir ve kendi indikatörlerinizi oluşturabilirsiniz.
                 Stratejilerinizi alım satım botları ile otomatikleştirebilir ve takibini yapmak zorunda kalmadan trade edebilirsiniz.
               </p>
@@ -19,7 +19,7 @@ export default function Hero() {
               <div className="row feature-list-wrapper">
                 <div className="col-md-6">
                   <ul className="feature-list">
-                    <li><i className="bi bi-check-circle-fill"></i> Ücretsiz Deneme Sürümü</li>
+                    <li><i className="bi bi-check-circle-fill"></i> Tamamen Ücretsiz Kullanım</li>
                     <li><i className="bi bi-check-circle-fill"></i> Güvenli yatırım </li>
                   </ul>
                 </div>
@@ -37,7 +37,7 @@ export default function Hero() {
                     <div className="profile d-flex align-items-center gap-3">
                       <img src="/img/logo1.jpg" alt="Logo" className="profile-image"/>
                       <div>
-                        <h4 className="profile-name">Balina Yatırım</h4>
+                        <h4 className="profile-name">whaleer.com</h4>
                       </div>
                     </div>
                   </div>

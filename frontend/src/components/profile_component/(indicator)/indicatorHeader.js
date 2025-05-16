@@ -91,7 +91,7 @@ const IndicatorHeader = () => {
           `}
       >
         <GiSpermWhale className="mr-[14px] text-[22px]" />
-        WhaleerAI
+        whaleerAI
       </button>
       <div className="h-[30px] w-[1px] bg-gray-600 mx-2"></div>*/}
 

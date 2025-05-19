@@ -12,11 +12,9 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
   const { indicatorData, removeSubIndicator } = useIndicatorDataStore();
 
   const [displayName, setDisplayName] = useState(`${indicatorId} (${subId})`);
-
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
 
   useEffect(() => {
-
     const indicatorInfo = indicatorData?.[indicatorId]?.subItems?.[subId];
     if (!chartContainerRef.current || !indicatorInfo?.result) return;
 
@@ -43,6 +41,32 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
 
     chartRef.current = chart;
 
+    // 1. Event dinleyici
+    const handleTimeRangeChange = (event) => {
+        const { start, end, sourceId } = event.detail;
+        const currentChartId = `${indicatorId}-${subId}`;
+        if (sourceId === currentChartId) return;
+        if (chartRef.current) {
+          chartRef.current.timeScale().setVisibleRange({ from: start, to: end });
+        }
+    };
+
+    window.addEventListener('chartTimeRangeChange', handleTimeRangeChange);
+
+    // 2. Event gönderici
+    const timeScale = chart.timeScale();
+    timeScale.subscribeVisibleTimeRangeChange((newRange) => {
+        const event = new CustomEvent('chartTimeRangeChange', {
+            detail: {
+                start: newRange.from,
+                end: newRange.to,
+                sourceId: `${indicatorId}-${subId}` // Hangi grafikten geldiğini belirt
+            }
+        });
+        window.dispatchEvent(event);
+    });
+
+    // Grafik serilerini oluştur
     result
       .filter((item) => item?.on_graph === false)
       .forEach(({ type, settings, data }) => {
@@ -93,7 +117,22 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
           .map(([time, value]) => ({ time, value }));
 
         series.setData(formattedData);
-      });
+    });
+
+    // 3. Başlangıç aralığını ayarla ve event gönder
+    chart.timeScale().fitContent();
+    const visibleRange = timeScale.getVisibleRange();
+    if (visibleRange) {
+      console.log("Buradayım ama neden?")
+        const event = new CustomEvent('chartTimeRangeChange', {
+            detail: {
+                start: visibleRange.from,
+                end: visibleRange.to,
+                isLocal: true
+            }
+        });
+        window.dispatchEvent(event);
+    }
 
     const resizeObserver = new ResizeObserver(() => {
       if (chartContainerRef.current) {
@@ -107,14 +146,15 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     resizeObserver.observe(chartContainerRef.current);
 
     return () => {
-      resizeObserver.disconnect();
-      if (chartRef.current) {
-        try {
-          chartRef.current.remove();
-        } catch (error) {
-          console.warn("Grafik temizlenirken hata oluştu:", error);
+        window.removeEventListener('chartTimeRangeChange', handleTimeRangeChange);
+        resizeObserver.disconnect();
+        if (chartRef.current) {
+            try {
+                chartRef.current.remove();
+            } catch (error) {
+                console.warn("Grafik temizlenirken hata oluştu:", error);
+            }
         }
-      }
     };
   }, [indicatorData, indicatorId, subId]);
 

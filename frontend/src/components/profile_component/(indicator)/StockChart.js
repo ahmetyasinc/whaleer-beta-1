@@ -10,7 +10,8 @@ import useCryptoStore from "@/store/indicator/cryptoPinStore"; // Zustand store'
 import IndicatorSettingsModal from './(modal_tabs)/indicatorSettingsModal';
 import StrategySettingsModal from './(modal_tabs)/strategySettingsModal';
 
-export default function ChartComponent({ symbol = "BTCUSDT", interval = "1d" }) {
+
+export default function ChartComponent() {
     const chartContainerRef = useRef(null);
     const chartRef = useRef(null);
     const [chartData, setChartData] = useState([]);
@@ -33,7 +34,6 @@ export default function ChartComponent({ symbol = "BTCUSDT", interval = "1d" }) 
     };
 
     const openStrategySettings = (strategyId, subId) => {
-        console.log(strategyId, subId)
         setActiveStrategyId(strategyId);
         setActiveSubStrategyId(subId);
         setSettingsStrategyModalOpen(true);
@@ -64,7 +64,7 @@ export default function ChartComponent({ symbol = "BTCUSDT", interval = "1d" }) 
             async function fetchData() {
                 try {
                     const response = await fetch(
-                        `${process.env.NEXT_PUBLIC_API_URL}/api/get-binance-data/?symbol=${selectedCrypto.binance_symbol || symbol}&interval=${selectedPeriod}`,
+                        `${process.env.NEXT_PUBLIC_API_URL}/api/get-binance-data/?symbol=${selectedCrypto.binance_symbol}&interval=${selectedPeriod}`,
                         {
                             method: "GET",
                             headers: {
@@ -132,12 +132,42 @@ export default function ChartComponent({ symbol = "BTCUSDT", interval = "1d" }) 
             },
             crosshair: {
                 mode: isMagnetMode ? CrosshairMode.Magnet : CrosshairMode.Normal,
-            }, 
+            }
         };
     
         // 🔹 Grafiği oluştur
         const chart = createChart(chartContainerRef.current, chartOptions);
         chartRef.current = chart;
+
+        // 1. Diğer grafiklerden gelen zaman aralığı değişikliklerini dinle
+        const handleTimeRangeChange = (event) => {
+
+
+            const { start, end, sourceId } = event.detail;
+            if (sourceId === 'main-chart') return;
+
+            if (chartRef.current) {
+                chartRef.current.timeScale().setVisibleRange({
+                    from: start,
+                    to: end,
+                });
+            }
+        };
+
+        window.addEventListener('chartTimeRangeChange', handleTimeRangeChange);
+
+        // 2. Bu grafikteki zaman aralığı değişikliklerini diğer grafiklere gönder
+        const timeScale = chart.timeScale();
+        timeScale.subscribeVisibleTimeRangeChange((newRange) => {
+          const event = new CustomEvent('chartTimeRangeChange', {
+              detail: {
+                start: newRange.from,
+                end: newRange.to,
+                sourceId: 'main-chart'
+              }
+          });
+          window.dispatchEvent(event);
+        });
 
         chart.applyOptions({
             watermark: {
@@ -165,11 +195,25 @@ export default function ChartComponent({ symbol = "BTCUSDT", interval = "1d" }) 
         // 🔸 Başlangıçta yakınlaştırmayı uygula
         const barsToShow = 150; // Ekranda görünmesini istediğin son mum sayısı
         chart.timeScale().fitContent();
-        chart.timeScale().setVisibleLogicalRange({
+        // Başlangıç aralığını ayarla ve event gönder
+        const initialRange = {
             from: chartData.length - barsToShow,
-            to: chartData.length,
-        });
+            to: chartData.length
+        };
+        chart.timeScale().setVisibleLogicalRange(initialRange);
 
+        const visibleRange = chart.timeScale().getVisibleRange();
+        if (visibleRange) {
+            
+            const event = new CustomEvent('chartTimeRangeChange', {
+                detail: {
+                    start: visibleRange.from,
+                    end: visibleRange.to,
+                    isLocal: true
+                }
+            });
+            window.dispatchEvent(event);
+        }
 
         //  STRATEGY MARKERS
         const allMarkers = [];
@@ -472,6 +516,7 @@ export default function ChartComponent({ symbol = "BTCUSDT", interval = "1d" }) 
         resizeObserver.observe(chartContainerRef.current);
         // Cleanup: Bileşen unmount olduğunda işlemleri temizle
         return () => {
+            window.removeEventListener('chartTimeRangeChange', handleTimeRangeChange);
             resizeObserver.disconnect();
             if (chartRef.current) {
                 try {

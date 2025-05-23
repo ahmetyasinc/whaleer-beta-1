@@ -61,7 +61,6 @@ const CodePanel = () => {
       const isNameUnchanged = localName === indicatorName;
       const isCodeUnchanged = localCode === indicatorCode;
       if (isNameUnchanged && isCodeUnchanged) {
-        console.log("⏭️ Değişiklik yok, kayıt yapılmadı.");
         setIsSaving(false);
         return;
       }

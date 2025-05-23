@@ -49,7 +49,7 @@ export default function Header({ pageClass }) {
                             <Link href="/" className={pathname === "/" ? "active" : ""}>Anasayfa</Link>
                         </li>
                         <li>
-                            <Link href="/how_to_use" className={pathname === "/how_to_use" ? "active" : ""}>Nasıl Kullanılır?</Link>
+                            <Link href="/features" className={pathname === "/features" ? "active" : ""}>Özellikler</Link>
                         </li>
                         <li>
                             <Link href="/premium" className={pathname === "/premium" ? "active" : ""}>Premium Üyelik</Link>
@@ -57,19 +57,8 @@ export default function Header({ pageClass }) {
                         <li>
                             <Link href="/about" className={pathname === "/about" ? "active" : ""}>Hakkında</Link>
                         </li>
-                        <li className="dropdown ml-5">
-                            <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="hover:text-blue-500 flex items-center">
-                                Özellikler <span className="ml-2">▼</span>
-                            </button>
-                            {isDropdownOpen && (
-                                <ul ref={dropdownRef} className="absolute top-full left-0 mt-2 bg-gray-800 rounded-md py-2 w-56">
-                                    <li><Link href="#features-tab-1" className="block px-6 py-2 hover:bg-gray-700">Strateji oluşturma</Link></li>
-                                    <li><Link href="#features-tab-2" className="block px-6 py-2 hover:bg-gray-700">Otomatik alım-satım botları</Link></li>
-                                    <li><Link href="#features-tab-3" className="block px-6 py-2 hover:bg-gray-700">Backtest yapma</Link></li>
-                                    <li><Link href="#features-tab-4" className="block px-6 py-2 hover:bg-gray-700">İndikatör ekleme</Link></li>
-                                    <li><Link href="#features-tab-5" className="block px-6 py-2 hover:bg-gray-700">Strateji taraması</Link></li>
-                                </ul>
-                            )}
+                        <li>
+                            <Link href="/document" className={pathname === "/document" ? "active" : ""}>Dökümantasyon</Link>
                         </li>
                     </ul>
                     <i className="mobile-nav-toggle d-xl-none bi bi-list"></i>

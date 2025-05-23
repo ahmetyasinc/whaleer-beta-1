@@ -282,7 +282,7 @@ export default function ChartComponent() {
               case "line":
                 series = chart.addLineSeries({
                   color: graph.settings?.color || "orange",
-                  lineWidth: graph.settings?.line_width || 2,
+                  lineWidth: graph.settings?.width || 2,
                 });
                 break;
               case "area":
@@ -405,7 +405,7 @@ export default function ChartComponent() {
                     case "line":
                       series = chart.addLineSeries({
                         color: settings?.color || "yellow",
-                        lineWidth: settings?.line_width || 2,
+                        lineWidth: settings?.width || 2,
                         lastValueVisible: false,
                         priceLineVisible: false,
                       });

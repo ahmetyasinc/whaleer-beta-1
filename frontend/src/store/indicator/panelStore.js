@@ -18,7 +18,6 @@ const usePanelStore = create((set, get) => ({
 
   addSyncedPanel: (panelId, subId) => {
     const panelKey = `panel-${panelId}-${subId}`;
-    console.log("addSyncedPanel: ", panelKey);
     set((state) => {
       if (!state.synced_panels.includes(panelKey)) {
         return { synced_panels: [...state.synced_panels, panelKey] };

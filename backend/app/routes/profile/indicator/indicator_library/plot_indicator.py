@@ -45,7 +45,7 @@ def plot(indicator_results, indicator_name: str, plot_type: str, on_graph: bool,
 
     elif plot_type == "histogram":
         plot_settings["color"] = kwargs.get("color", "#0000FF")  # Varsayılan çubuk rengi: Mavi
-        plot_settings["opacity"] = kwargs.get("opacity", 0.3)  # Varsayılan opacity: 0.3
+        plot_settings["opacity"] = kwargs.get("opacity", 0.5)  # Varsayılan opacity: 0.3
 
     elif plot_type == "area":
         plot_settings["color"] = kwargs.get("color", "#00FF00")  # Varsayılan doldurma rengi: Yeşil

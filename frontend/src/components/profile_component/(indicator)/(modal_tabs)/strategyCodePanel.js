@@ -60,7 +60,6 @@ const CodePanel = () => {
       const isNameUnchanged = localName === strategyName;
       const isCodeUnchanged = localCode === strategyCode;
       if (isNameUnchanged && isCodeUnchanged) {
-        console.log("⏭️ Değişiklik yok, kayıt yapılmadı.");
         setIsSaving(false);
         return;
       }

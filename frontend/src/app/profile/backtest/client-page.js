@@ -21,7 +21,6 @@ export default function ClientPage() {
         </h1>
       </div>
     </div>
-
     );
   }
   

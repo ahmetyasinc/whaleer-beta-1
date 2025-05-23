@@ -6,6 +6,15 @@ import useIndicatorDataStore from "@/store/indicator/indicatorDataStore";
 import IndicatorSettingsModal from "./(modal_tabs)/indicatorSettingsModal";
 import PropTypes from "prop-types";
 
+function hexToRgba(hex, opacity) {
+  hex = hex.replace("#", "");
+  if (hex.length !== 6) return "rgba(0,0,0,1)";
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+}
+
 export default function PanelChart({ indicatorName, indicatorId, subId }) {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
@@ -19,7 +28,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     if (!chartContainerRef.current || !indicatorInfo?.result) return;
 
     const { result } = indicatorInfo;
-    
+
     const firstNonGraphItem = result.find((r) => r.on_graph === false);
     if (firstNonGraphItem?.name) {
       setDisplayName(firstNonGraphItem.name);
@@ -41,32 +50,29 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
 
     chartRef.current = chart;
 
-    // 1. Event dinleyici
     const handleTimeRangeChange = (event) => {
-        const { start, end, sourceId } = event.detail;
-        const currentChartId = `${indicatorId}-${subId}`;
-        if (sourceId === currentChartId) return;
-        if (chartRef.current) {
-          chartRef.current.timeScale().setVisibleRange({ from: start, to: end });
-        }
+      const { start, end, sourceId } = event.detail;
+      const currentChartId = `${indicatorId}-${subId}`;
+      if (sourceId === currentChartId) return;
+      if (chartRef.current) {
+        chartRef.current.timeScale().setVisibleRange({ from: start, to: end });
+      }
     };
 
-    window.addEventListener('chartTimeRangeChange', handleTimeRangeChange);
+    window.addEventListener("chartTimeRangeChange", handleTimeRangeChange);
 
-    // 2. Event gönderici
     const timeScale = chart.timeScale();
     timeScale.subscribeVisibleTimeRangeChange((newRange) => {
-        const event = new CustomEvent('chartTimeRangeChange', {
-            detail: {
-                start: newRange.from,
-                end: newRange.to,
-                sourceId: `${indicatorId}-${subId}` // Hangi grafikten geldiğini belirt
-            }
-        });
-        window.dispatchEvent(event);
+      const event = new CustomEvent("chartTimeRangeChange", {
+        detail: {
+          start: newRange.from,
+          end: newRange.to,
+          sourceId: `${indicatorId}-${subId}`,
+        },
+      });
+      window.dispatchEvent(event);
     });
 
-    // Grafik serilerini oluştur
     result
       .filter((item) => item?.on_graph === false)
       .forEach(({ type, settings, data }) => {
@@ -76,18 +82,24 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
           case "line":
             series = chart.addLineSeries({
               color: settings?.color || "white",
-              lineWidth: settings?.width || 2,
+              lineWidth: settings?.width || 1,
               priceLineVisible: false,
             });
             break;
-          case "histogram":
+          case "histogram": {
+            console.log("Histogram settings:", settings);
             const defaultColor = settings?.color ?? "0, 128, 0";
-            const opacity = settings?.opacity ?? 0.3;
+            const opacity = settings?.opacity ?? 1;
+            const colorString = defaultColor.includes(",")
+              ? `rgba(${defaultColor}, ${opacity})`
+              : hexToRgba(defaultColor, opacity);
+
             series = chart.addHistogramSeries({
-              color: `rgba(${defaultColor}, ${opacity})`,
+              color: colorString,
               priceLineVisible: false,
             });
             break;
+          }
           case "area":
             series = chart.addAreaSeries({
               topColor: settings?.color || "rgba(33, 150, 243, 0.5)",
@@ -117,21 +129,19 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
           .map(([time, value]) => ({ time, value }));
 
         series.setData(formattedData);
-    });
+      });
 
-    // 3. Başlangıç aralığını ayarla ve event gönder
     chart.timeScale().fitContent();
     const visibleRange = timeScale.getVisibleRange();
     if (visibleRange) {
-      console.log("Buradayım ama neden?")
-        const event = new CustomEvent('chartTimeRangeChange', {
-            detail: {
-                start: visibleRange.from,
-                end: visibleRange.to,
-                isLocal: true
-            }
-        });
-        window.dispatchEvent(event);
+      const event = new CustomEvent("chartTimeRangeChange", {
+        detail: {
+          start: visibleRange.from,
+          end: visibleRange.to,
+          isLocal: true,
+        },
+      });
+      window.dispatchEvent(event);
     }
 
     const resizeObserver = new ResizeObserver(() => {
@@ -146,21 +156,20 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     resizeObserver.observe(chartContainerRef.current);
 
     return () => {
-        window.removeEventListener('chartTimeRangeChange', handleTimeRangeChange);
-        resizeObserver.disconnect();
-        if (chartRef.current) {
-            try {
-                chartRef.current.remove();
-            } catch (error) {
-                console.warn("Grafik temizlenirken hata oluştu:", error);
-            }
+      window.removeEventListener("chartTimeRangeChange", handleTimeRangeChange);
+      resizeObserver.disconnect();
+      if (chartRef.current) {
+        try {
+          chartRef.current.remove();
+        } catch (error) {
+          console.warn("Grafik temizlenirken hata oluştu:", error);
         }
+      }
     };
   }, [indicatorData, indicatorId, subId]);
 
   return (
     <div className="relative w-full h-full">
-      {/* Label - Sol üst köşe */}
       <div className="absolute top-2 left-2 z-10 flex items-center gap-2 bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-md">
         <span>{indicatorName}</span>
 
@@ -179,10 +188,8 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
         </button>
       </div>
 
-      {/* Grafik Alanı */}
       <div ref={chartContainerRef} className="absolute top-0 left-0 w-full h-full"></div>
 
-      {/* Ayar Modalı */}
       <IndicatorSettingsModal
         isOpen={settingsModalOpen}
         onClose={() => setSettingsModalOpen(false)}

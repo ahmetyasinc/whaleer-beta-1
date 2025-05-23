@@ -1,35 +1,75 @@
-
 export const metadata = {
   title: "Premium Üyelik",
   description: "whaleer ile kripto stratejileri oluştur, test et ve uygula.",
 };
 
-
-
 export default function HomePage() {
-    return (
-      <section id="hero" className="hero section">
-      <div className="container" data-aos="fade-up" data-aos-delay="100">
-        <div className="row align-items-center">
-          <div className="col-lg-6">
-            <div className="hero-content" data-aos="fade-up" data-aos-delay="200">
-            <h1 className="text-3xl font-bold">Premium Üyelik</h1>
-            Narratio vel narratio brevis est, prosa narratione quae narrat verum vel prope-rerum eventum. A novellis et aliis generibus narrationis differt quod brevis est, simplex argumentatio, unum et intensum effectum, plerumque per magnum eventum vel scaenam, et parvum notarum numerum efficit.
+  const plans = [
+    {
+      title: "Midye Planı",
+      price: "Ücretsiz",
+      features: [
+        "1 strateji oluştur",
+        "Sınırlı backtest",
+        "Temel destek",
+      ],
+    },
+    {
+      title: "Ahtapot Planı",
+      price: "$149/ay",
+      features: [
+        "Sınırsız strateji",
+        "Gelişmiş backtest",
+        "Gerçek zamanlı bot çalıştırma",
+        "Öncelikli destek",
+      ],
+    },
+    {
+      title: "Balina Planı",
+      price: "$299/ay",
+      features: [
+        "API erişimi",
+        "Ekip hesabı",
+        "Özel altyapı",
+        "7/24 destek",
+      ],
+    },
+  ];
 
-In historia, ubi circumscripta actio fit, concisa et densa est narratio. Characteres in certo eventu monstrantur ac saepe tantum notae quaedam resultant. Subiectum potest esse omnino imaginarium vel realeticum. Intentio in certo momento, saepe per coincidentiam creatam, permittit admirabiles exitus.
+  return (
+    <section
+      id="hero"
+      className="hero section bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white py-20"
+    >
+      <div className="container mx-auto px-4 min-h-screen">
+        <h1 className="text-5xl font-extrabold mb-4">Premium Üyelik</h1>
+        <p className="text-lg text-gray-300 mb-12 max-w-2xl mx-auto">
+          Whaleer ile stratejini geliştir, test et ve uygulamaya al. Hemen planını seç, avantajlardan faydalan!
+        </p>
 
-Quinque elementa principalia in historia sunt: ​​persona, argumentum, locus, tempus, narrator et aspectus, et in duo dividitur sicut res gestae et res fabulae. In historia, narratio est narratio, quae narrat verum vel prope-rerum eventum. A novellis et aliis generibus narrationis differt quod brevis est, simplex argumentatio, unum et intensum effectum, plerumque per magnum eventum vel scaenam, et parvum notarum numerum efficit.
-
-Narratio vel narratio brevis est, prosa narratione quae narrat verum vel prope-rerum eventum. A novellis et aliis generibus narrationis differt quod brevis est, simplex argumentatio, unum et intensum effectum, plerumque per magnum eventum vel scaenam, et parvum notarum numerum efficit.
-
-In historia, ubi circumscripta actio fit, concisa et densa est narratio. Characteres in certo eventu monstrantur ac saepe tantum notae quaedam resultant. Subiectum potest esse omnino imaginarium vel realeticum. Intentio in certo momento, saepe per coincidentiam creatam, permittit admirabiles exitus.
-
-Quinque elementa principalia in historia sunt: ​​persona, argumentum, locus, tempus, narrator et aspectus, et in duo dividitur sicut res gestae et res fabulae.
+        <div className="grid gap-10 md:grid-cols-3">
+          {plans.map((plan, index) => (
+            <div
+              key={index}
+              className="bg-gray-800 border border-gray-700 rounded-2xl shadow-lg hover:shadow-2xl transition duration-300 p-8 flex flex-col items-center"
+            >
+              <h2 className="text-2xl font-semibold text-white mb-2">{plan.title}</h2>
+              <p className="text-2xl font-bold text-indigo-400 mb-6">{plan.price}</p>
+              <ul className="text-gray-300 mb-8 space-y-3 text-sm w-full text-left">
+                {plan.features.map((feature, i) => (
+                  <li key={i} className="flex items-center gap-2">
+                    <span className="text-green-400">✓</span>
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <button className="mt-auto w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-xl transition">
+                Üye Ol
+              </button>
             </div>
-          </div>
+          ))}
         </div>
       </div>
     </section>
-    );
-  }
-  
+  );
+}

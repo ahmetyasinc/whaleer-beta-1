@@ -89,7 +89,7 @@ export default function RegisterForm() {
                                     type="text"
                                     name="first_name"
                                     placeholder="İsim"
-                                    className="appearance-none block w-full px-3 py-3 border border-gray-700 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    className="appearance-none block w-full px-3 py-3 border border-gray-700 bg-gray-600 text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                     required
                                     value={formData.first_name}
                                     onChange={handleChange}
@@ -100,7 +100,7 @@ export default function RegisterForm() {
                                     type="text"
                                     name="last_name"
                                     placeholder="Soyisim"
-                                    className="appearance-none block w-full px-3 py-3 border border-gray-700 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    className="appearance-none block w-full px-3 py-3 border border-gray-700 bg-gray-600 text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                     required
                                     value={formData.last_name}
                                     onChange={handleChange}
@@ -111,7 +111,7 @@ export default function RegisterForm() {
                             type="text"
                             name="username"
                             placeholder="Kullanıcı Adı"
-                            className="appearance-none block w-full px-3 py-3 border border-gray-700 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            className="appearance-none block w-full px-3 py-3 border border-gray-700 bg-gray-600 text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             required
                             value={formData.username}
                             onChange={handleChange}
@@ -120,7 +120,7 @@ export default function RegisterForm() {
                             type="email"
                             name="email"
                             placeholder="E-Posta"
-                            className="appearance-none block w-full px-3 py-3 border border-gray-700 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            className="appearance-none block w-full px-3 py-3 border border-gray-700 bg-gray-600 text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             required
                             value={formData.email}
                             onChange={handleChange}
@@ -129,7 +129,7 @@ export default function RegisterForm() {
                             type="password"
                             name="password"
                             placeholder="Şifre"
-                            className="appearance-none block w-full px-3 py-3 border border-gray-700 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            className="appearance-none block w-full px-3 py-3 border border-gray-700 bg-gray-600 text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             required
                             value={formData.password}
                             onChange={handleChange}
@@ -138,7 +138,7 @@ export default function RegisterForm() {
                             type="password"
                             name="confirmPassword"
                             placeholder="Şifreyi Onayla"
-                            className="appearance-none block w-full px-3 py-3 border border-gray-700 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            className="appearance-none block w-full px-3 py-3 border border-gray-700 bg-gray-600 text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             required
                             value={formData.confirmPassword}
                             onChange={handleChange}

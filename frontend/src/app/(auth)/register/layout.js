@@ -1,6 +1,6 @@
 export const metadata = {
-    title: "whaleer | Kayıt Ol",
-    description: "whaleer uygulamasına kayıt ol.",
+    title: "Whaleer | Kayıt Ol",
+    description: "Whaleer uygulamasına kayıt ol.",
 };
 
 export default function LoginLayout({ children }) {

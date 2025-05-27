@@ -5,7 +5,7 @@ import Header from "@/components/home_component/Header";
 import HomeClientComponent from "@/components/HomeClientComponent"; // ✅ Doğru
 
 export const metadata = {
-    title: "whaleer",
+    title: "Whaleer",
     description: "whaleer ile kripto stratejileri oluştur, test et ve uygula.",
   };
 

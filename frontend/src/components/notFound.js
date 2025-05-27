@@ -4,6 +4,7 @@ import { LuShipWheel } from "react-icons/lu";
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import Button from '@/ui/waterButton'; // Buton bileşenini içe aktar
 
 const NotFound = () => {
   const router = useRouter();
@@ -108,18 +109,10 @@ const NotFound = () => {
 
       {/* Ana Sayfa Butonu */}
       <div className="absolute top-[60%] ml-[110px] mt-0">
-        <button
-          onClick={handleClick}
-          className="flex items-center gap-2 pr-4 pl-3 py-2 bg-blue-800 hover:bg-blue-700 text-white font-bold rounded shadow-md transition duration-200"
-        >
-          <motion.div
-            animate={spin ? { rotate: 1080 } : { rotate: 0 }}
-            transition={{ duration: 2, ease: 'easeInOut' }}
-          >
-            <LuShipWheel className="text-2xl" />
-          </motion.div>
-          Ana Sayfaya Yelken Aç
-        </button>
+    <Button
+      onClick={handleClick}
+      icon={<LuShipWheel className="text-2xl" />}
+    />
       </div>
     </div>
   );

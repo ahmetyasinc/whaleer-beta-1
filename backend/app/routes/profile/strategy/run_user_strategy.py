@@ -17,6 +17,12 @@ from app.routes.profile.strategy.strategy_library.plot_strategy import plot_stra
 from app.routes.profile.strategy.strategy_library.import_strategy import indicator
 from app.routes.profile.strategy.strategy_library.print_strategy import custom_print
 
+def safe_import(name, globals=None, locals=None, fromlist=(), level=0):
+    allowed = ["numpy", "pandas", "math", "time"]
+    if any(name == mod or name.startswith(mod + ".") for mod in allowed):
+        return __import__(name, globals, locals, fromlist, level)
+    raise ImportError(f"Modül yükleme izni yok: {name}")
+
 async def run_user_strategy(strategy_name: str, user_code: str, data: list[dict], indicator_codes: list[str]):
     """
     Kullanıcının indikatör kodunu güvenli bir ortamda çalıştırır.
@@ -45,6 +51,7 @@ async def run_user_strategy(strategy_name: str, user_code: str, data: list[dict]
         # ✅ Sonra allowed_globals sözlüğünü tanımla
         allowed_globals = {
             "__builtins__": {
+                "__import__": safe_import,
                 "await": Await,
                 # ✅ Temel Python Fonksiyonları
                 "range": range,
@@ -174,6 +181,7 @@ async def run_updated_user_strategy(strategy_name: str, user_code: str, data: li
         # ✅ Sonra allowed_globals sözlüğünü tanımla
         allowed_globals = {
             "__builtins__": {
+                "__import__": safe_import,
                 "await": Await,
                 # ✅ Temel Python Fonksiyonları
                 "range": range,

@@ -89,7 +89,19 @@ const IndicatorSettingsModal = ({ isOpen, onClose, indicatorId, subId }) => {
                 onChange={(e) => handleChange(input.name, e.target.value)}
                 className="w-12 h-8 p-1"
               />
-            ) : (
+            ) : input.type === 'string' && input.options ? (
+                <select
+                  value={formState[input.name] ?? input.default}
+                  onChange={(e) => handleChange(input.name, e.target.value)}
+                  className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
+                >
+                  {input.options.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              ): (
               <input
                 type="text"
                 value={formState[input.name] ?? ''}

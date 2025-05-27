@@ -44,8 +44,6 @@ async def run_all_bots_async(bots, strategies_with_indicators, coin_data_dict, l
             elif isinstance(res, list):
                 all_results.extend(res)
 
-        print("here")
-
         # 🔹 Grupla ve JSON’a kaydet
         result_dict = aggregate_results_by_bot_id(all_results)
         # BURADA BİNANCE İŞLEMLERİ İÇİN TETİKLENME YAPILACAK

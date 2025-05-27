@@ -30,7 +30,7 @@ class InputShim:
     def bool(self, default=False, name=None, title=None, **kwargs):
         return bool(self._get("bool", name, title, default))
 
-    def string(self, default="", name=None, title=None, **kwargs):
+    def string(self, default="", name=None, title=None, options=None, **kwargs):
         return str(self._get("string", name, title, default))
 
     def color(self, default="", name=None, title=None, **kwargs):

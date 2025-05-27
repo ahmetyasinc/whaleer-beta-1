@@ -11,6 +11,12 @@ from app.routes.profile.indicator.indicator_library.plot_indicator import plot
 from app.routes.profile.indicator.indicator_library.print_indicator import custom_print
 from app.routes.profile.indicator.input.input import extract_user_inputs
 
+def safe_import(name, globals=None, locals=None, fromlist=(), level=0):
+    allowed = ["numpy", "pandas", "math", "time"]
+    if any(name == mod or name.startswith(mod + ".") for mod in allowed):
+        return __import__(name, globals, locals, fromlist, level)
+    raise ImportError(f"Modül yükleme izni yok: {name}")
+
 async def run_user_indicator(user_code: str, data: list[dict]):
     """
     Kullanıcının indikatör kodunu güvenli bir ortamda çalıştırır.
@@ -33,6 +39,7 @@ async def run_user_indicator(user_code: str, data: list[dict]):
         # Kullanıcı kodunun çalışma ortamını kısıtla (Tüm gerekli fonksiyonları ekledik!)
         allowed_globals = {
             "__builtins__": {
+                "__import__": safe_import,
                 # ✅ Temel Python Fonksiyonları
                 "range": range,
                 "len": len,
@@ -90,6 +97,7 @@ async def run_user_indicator(user_code: str, data: list[dict]):
             "input": EmptyClass(),
         }
 
+
         # Kullanıcı kodunu çalıştır
         exec(user_code, allowed_globals)
 
@@ -125,6 +133,7 @@ async def run_updated_user_indicator(user_code: str, data: list[dict], inputs: d
         # Kullanıcı kodunun çalışma ortamını kısıtla (Tüm gerekli fonksiyonları ekledik!)
         allowed_globals = {
             "__builtins__": {
+                "__import__": safe_import,
                 # ✅ Temel Python Fonksiyonları
                 "range": range,
                 "len": len,

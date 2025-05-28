@@ -14,7 +14,6 @@ from app.routes.profile.strategy.strategy_library.emptyclass import EmptyClass
 from app.routes.profile.strategy.strategy_library.input_shim import InputShim
 from app.routes.profile.strategy.strategy_library.mark_strategy import mark_strategy
 from app.routes.profile.strategy.strategy_library.plot_strategy import plot_strategy
-from app.routes.profile.strategy.strategy_library.import_strategy import indicator
 from app.routes.profile.strategy.strategy_library.print_strategy import custom_print
 
 def safe_import(name, globals=None, locals=None, fromlist=(), level=0):
@@ -107,7 +106,6 @@ async def run_user_strategy(strategy_name: str, user_code: str, data: list[dict]
             "ta": ta,
 
             # ✅ Grafik oluşturma fonksiyonu (plot)
-            #"reach": lambda *args, **kwargs: indicator(user_globals, *args, **kwargs),
             "mark": lambda *args, **kwargs: empty(*args, **kwargs),
             "plot": lambda *args, **kwargs: empty(*args, **kwargs),
             "input": EmptyClass(),
@@ -118,7 +116,7 @@ async def run_user_strategy(strategy_name: str, user_code: str, data: list[dict]
 
         allowed_globals.update(user_globals)
         allowed_globals["mark"] = lambda *args, **kwargs: mark_strategy(strategy_name, strategy_results, *args, **kwargs)
-        allowed_globals["plot"] = lambda *args, **kwargs: plot_strategy(strategy_name, strategy_graph, *args, **kwargs)
+        allowed_globals["plot"] = lambda *args, **kwargs: plot_strategy(strategy_name, strategy_graph,print_outputs, *args, **kwargs)
         allowed_globals["__builtins__"]["print"] = lambda *args, **kwargs: custom_print(print_outputs, *args, **kwargs)
         
         # Kullanıcı kodunu çalıştır

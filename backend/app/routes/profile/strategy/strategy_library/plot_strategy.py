@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
 import math
+from app.routes.profile.strategy.strategy_library.print_strategy import custom_print
 
-def plot_strategy(strategy_name, strategy_graph, df, commission=0.0, type="line"):
+
+def plot_strategy(strategy_name, strategy_graph, print_outputs, df, commission=0.0, *, color="orange", width=2, linestyle="line", info_return=False, info_trades=False):
     required_cols = ['position', 'close', 'percentage', 'stop_loss', 'take_profit']
     for col in required_cols:
         if col not in df.columns:
@@ -24,9 +26,9 @@ def plot_strategy(strategy_name, strategy_graph, df, commission=0.0, type="line"
 
     initial_balance = df['close'].iloc[0]
     balance = initial_balance
-    print(f"Başlangıç bakiyesi: {balance}")
     balances = []
     timestamps = []
+    trades = []
 
     active_position = 0.0
     entry_price = 0.0
@@ -46,7 +48,6 @@ def plot_strategy(strategy_name, strategy_graph, df, commission=0.0, type="line"
         tp = row['take_profit']
         ts = row['timestamp']
 
-        # --- AKTİF POZİSYON VARSA ---
         if active_position != 0:
             price_change = (price - price_prev) / price_prev
             if active_position < 0:
@@ -57,43 +58,44 @@ def plot_strategy(strategy_name, strategy_graph, df, commission=0.0, type="line"
             hit_tp = (price >= take_price) if active_position > 0 else (price <= take_price)
             hit_sl = (price <= stop_price) if active_position > 0 else (price >= stop_price)
 
-            # STOP NOKTALARI TETİKLENİRSE
             if hit_tp or hit_sl:
-                print(f"{ts}, Kapanma sebebi: {hit_sl, hit_tp}, Active Position: {active_position} - Take Profit: {take_price} - Stop Loss: {stop_price} - Kapanış fiyatı: {price}")
-                # Pozisyon kapanıyor
+                gain_pct = floating_gain * 100
+                trades.append({
+                    "- timestamp -": ts,
+                    "entry  -": entry_price,
+                    "exit  -": price,
+                    "type -": "long" if active_position > 0 else "short",
+                    "gain_(%)": round(gain_pct, 2),
+                })
                 balance *= (1 + floating_gain)
                 balance -= balance * commission
                 active_position = 0.0
-                entry_price = 0.0
-                leverage = 0.0
-                used_percentage = 0.0
-                stop_price = 0.0
-                take_price = 0.0
-
-            # POZİSYON HALA AÇIK İSE
+                entry_price = leverage = used_percentage = stop_price = take_price = 0.0
             else:
-                # Pozisyon açık: sadece floating kar
                 balance *= (1 + floating_gain)
 
-        # --- YENİ POZİSYON AÇILIYORSA ---
         if i > 0 and pos != 0 and pos != pos_prev:
-            # ÖNCEK POZİSYON KAPATACAKSA
             if active_position != 0:
-                print(f"{ts}, Pozisyon kapatılıyor: {active_position} - Kapanış fiyatı: {price} - Commission: {balance * commission}")
                 balance -= balance * commission
+                gain_pct = (price - entry_price) / entry_price * 100 if active_position != 0 else 0.0
+                trades.append({
+                    "- timestamp -": ts,
+                    "entry  -": entry_price,
+                    "exit  -": price,
+                    "type -": "long" if active_position > 0 else "short",
+                    "gain_(%)": round(gain_pct, 2),
+                })
             active_position = pos
             leverage = abs(pos)
             entry_price = price
             used_percentage = pct
             stop_price = sl
             take_price = tp
-            balance -= balance * commission  # giriş komisyonu
-            print(f"{ts}, Pozisyon açıldı: {active_position} - Giriş fiyatı: {entry_price} - Commission: {balance * commission}")
+            balance -= balance * commission
 
-        # Pozisyon yoksa sadece bakiyeyi güncelle
         balances.append(balance)
         timestamps.append(ts)
-            
+
     def is_valid(v):
         try:
             return not (pd.isna(v) or math.isinf(v))
@@ -102,8 +104,31 @@ def plot_strategy(strategy_name, strategy_graph, df, commission=0.0, type="line"
 
     graph_data = [(t, b) for t, b in zip(timestamps, balances) if is_valid(b)]
 
-    strategy_graph.append({
+    graph_entry = {
         "name": strategy_name,
-        "type": type,
-        "data": graph_data
-    })
+        "data": graph_data,
+        "style": {
+            "color": color,
+            "width": width,
+            "linestyle": linestyle
+        }
+    }
+    if info_return:
+        chart_balance = df["close"].iloc[-1]
+        chart_initial_balance = df["close"].iloc[0]
+        chart_return = (chart_balance- chart_initial_balance) / chart_initial_balance * 100
+        total_return = (balance - initial_balance) / initial_balance * 100
+        difference = (balance - chart_balance) / chart_balance * 100
+        custom_print(print_outputs, f"Total Stock Return: {chart_return:.2f}%")
+        custom_print(print_outputs, f"Total Strategy Return: {total_return:.2f}%")
+        custom_print(print_outputs, f"Difference: {difference:.2f}%")
+
+    if info_trades and trades:
+        trades_df = pd.DataFrame(trades)
+        custom_print(print_outputs, "Trades:")
+        custom_print(print_outputs, trades_df)
+
+
+    #print(json.dumps(graph_entry, indent=2, default=str))
+
+    strategy_graph.append(graph_entry)

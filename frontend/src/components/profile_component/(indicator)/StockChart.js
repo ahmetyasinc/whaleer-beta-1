@@ -273,16 +273,17 @@ export default function ChartComponent() {
           const subItems = strategyInfo?.subItems || {};
 
           Object.values(subItems).forEach((sub) => {
+            console.log("sub", sub);
             const graph = sub?.strategy_graph?.[0];
-            if (!graph?.data || !graph?.type) return;
+            if (!graph?.data || !graph?.style) return;
         
             let series;
         
-            switch (graph.type) {
+            switch (graph.style.linestyle) {
               case "line":
                 series = chart.addLineSeries({
-                  color: graph.settings?.color || "orange",
-                  lineWidth: graph.settings?.width || 2,
+                  color: graph.style?.color || "orange",
+                  lineWidth: graph.style?.width || 2,
                 });
                 break;
               case "area":

@@ -24,7 +24,6 @@ const AddStrategyButton = ({ strategyId }) => {
                 console.warn("Eksik veri ile API çağrısı engellendi.");
                 return;
             }
-            console.log(strategyId,selectedCrypto.binance_symbol,selectedPeriod,end)
 
             const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/run-strategy/`, {
                 strategy_id: strategyId,

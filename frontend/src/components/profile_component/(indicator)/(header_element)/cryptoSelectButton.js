@@ -68,7 +68,6 @@ const CryptoSelectButton = () => {
         const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/pin-binance_coin/`, {
           coin_id: crypto.id,
         });
-        console.log("Pinleme işlemi başarılı:", response.data);
       } catch (error) {
         console.error("Pinleme işlemi sırasında hata oluştu:", error);
       }

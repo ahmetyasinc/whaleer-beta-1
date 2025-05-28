@@ -190,7 +190,6 @@
       return syncWidths(raw);
     }, [panelWidth, filteredSubItems, isCodePanelOpen, isStrategyCodePanelOpen]);
 
-    //console.log("Memoized Layouts:", memoizedLayouts.lg.map(l => l.i));
 
     return (
       <div className="p-0 w-full min-h-screen">

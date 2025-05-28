@@ -159,6 +159,7 @@ const useIndicatorDataStore = create((set, get) => ({
         end: end,
       });
 
+      console.log("== İndicator ==")
       console.log("== RESPONSE ==")
       console.log(response)
   

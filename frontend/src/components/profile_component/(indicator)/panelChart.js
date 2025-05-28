@@ -87,7 +87,6 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
             });
             break;
           case "histogram": {
-            console.log("Histogram settings:", settings);
             const defaultColor = settings?.color ?? "0, 128, 0";
             const opacity = settings?.opacity ?? 1;
             const colorString = defaultColor.includes(",")

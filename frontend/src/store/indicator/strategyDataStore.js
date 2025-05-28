@@ -157,6 +157,7 @@ const useStrategyDataStore = create((set, get) => ({
                 end: end,
             });
 
+            console.log("== Strategy ==")
             console.log("== RESPONSE ==")
             console.log(response)
             

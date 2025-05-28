@@ -41,8 +41,13 @@ export default function ChartComponent() {
 
     useEffect(() => {
       const recalculateIndicators = async () => {
-        const state = useIndicatorDataStore.getState();
-        const allIndicators = state.indicatorData;
+        const indicatorState = useIndicatorDataStore.getState();
+        const strategyState = useStrategyDataStore.getState();
+
+        const allIndicators = indicatorState.indicatorData || {};
+        const allStrategies = strategyState.strategyData || {};
+        console.log("allIndicators, allStrategies");
+        console.log(allIndicators, allStrategies);
     
         for (const [indicatorId, indicator] of Object.entries(allIndicators)) {
           const subItems = indicator.subItems || {};
@@ -51,7 +56,19 @@ export default function ChartComponent() {
             const formattedInputs = Object.fromEntries(
               inputs.map(input => [input.name, input.default])
             );
-            await state.updateInputs(indicatorId, subId, formattedInputs);
+            console.log("Recalculating indicator:");
+            await indicatorState.updateInputs(indicatorId, subId, formattedInputs);
+          }
+        }
+        for (const [strategyId, strategy] of Object.entries(allStrategies)) {
+          const subItems = strategy.subItems || {};
+          for (const [subId, sub] of Object.entries(subItems)) {
+            const inputs = sub.inputs?.inputs || {};
+            const formattedInputs = Object.fromEntries(
+              inputs.map(input => [input.name, input.default])
+            );
+            console.log("Recalculating strategy:");
+            await strategyState.updateInputs(strategyId, subId, formattedInputs);
           }
         }
       };
@@ -86,6 +103,7 @@ export default function ChartComponent() {
                     const data = await response.json();
     
                     if (data.status === "success" && data.data) {
+
                         const formattedData = data.data.map((candle) => ({
                             time: Math.floor(new Date(candle.timestamp).getTime() / 1000),
                             open: candle.open,
@@ -93,7 +111,7 @@ export default function ChartComponent() {
                             low: candle.low,
                             close: candle.close,
                         }));
-    
+
                         setChartData(formattedData);
                     }
                 } catch (error) {
@@ -132,7 +150,17 @@ export default function ChartComponent() {
             },
             crosshair: {
                 mode: isMagnetMode ? CrosshairMode.Magnet : CrosshairMode.Normal,
-            }
+            },
+            timeScale: {
+              timeVisible: true, // Saat bilgisini göster
+              secondsVisible: false,
+              tickMarkFormatter: (time) => {
+                const date = new Date(time * 1000); // saniyeyi milisaniyeye çevir
+                const hours = date.getHours().toString().padStart(2, "0");
+                const minutes = date.getMinutes().toString().padStart(2, "0");
+                return `${hours}:${minutes}`;
+              },
+            },
         };
     
         // 🔹 Grafiği oluştur
@@ -273,7 +301,6 @@ export default function ChartComponent() {
           const subItems = strategyInfo?.subItems || {};
 
           Object.values(subItems).forEach((sub) => {
-            console.log("sub", sub);
             const graph = sub?.strategy_graph?.[0];
             if (!graph?.data || !graph?.style) return;
         

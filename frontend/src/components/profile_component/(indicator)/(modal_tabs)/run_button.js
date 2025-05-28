@@ -25,7 +25,8 @@ const RunButton = ({ indicatorId, onBeforeRun}) => {
                 console.warn("Eksik veri ile API çağrısı engellendi.");
                 return;
             }
-
+            console.log(indicatorId, selectedCrypto.binance_symbol, selectedPeriod, end);
+            
             const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/run-indicator/`, {
               indicator_id: indicatorId,
               binance_symbol: selectedCrypto.binance_symbol,

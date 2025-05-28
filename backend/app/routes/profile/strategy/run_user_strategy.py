@@ -235,7 +235,6 @@ async def run_updated_user_strategy(strategy_name: str, user_code: str, data: li
             "ta": ta,
 
             # ✅ Grafik oluşturma fonksiyonu (plot)
-            #"reach": lambda *args, **kwargs: indicator(user_globals, *args, **kwargs),
             "mark": lambda *args, **kwargs: empty(*args, **kwargs),
             "plot": lambda *args, **kwargs: empty(*args, **kwargs),
             "input": EmptyClass(),
@@ -246,7 +245,7 @@ async def run_updated_user_strategy(strategy_name: str, user_code: str, data: li
 
         allowed_globals.update(user_globals)
         allowed_globals["mark"] = lambda *args, **kwargs: mark_strategy(strategy_name, strategy_results, *args, **kwargs)
-        allowed_globals["plot"] = lambda *args, **kwargs: plot_strategy(strategy_name, strategy_graph, *args, **kwargs)
+        allowed_globals["plot"] = lambda *args, **kwargs: plot_strategy(strategy_name, strategy_graph,print_outputs, *args, **kwargs)
         allowed_globals["input"] = input_shim
         allowed_globals["__builtins__"]["print"] = lambda *args, **kwargs: custom_print(print_outputs, *args, **kwargs)
         

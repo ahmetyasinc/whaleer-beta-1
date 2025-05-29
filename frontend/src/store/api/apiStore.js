@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import { createApiKey, getApiKeys } from '../../api/apiKeys';
+import { createApiKey, getApiKeys, deleteApiKey, updateApiKey } from '../../api/apiKeys';
 
-const useApiStore = create((set) => ({
+const useApiStore = create((set,get) => ({
   apiList: [],
 
   loadApiKeys: async () => {
@@ -19,7 +19,6 @@ const useApiStore = create((set) => ({
 
   addApi: async (apiData) => {
     try {
-      console.log(apiData)
       const result = await createApiKey(apiData);
   
       if (result) {
@@ -36,18 +35,47 @@ const useApiStore = create((set) => ({
   },
   
 
-  deleteApi: (name) =>
-    set((state) => ({
-      apiList: state.apiList.filter((api) => api.name !== name),
-    })),
+  deleteApi: async (index) => {
+    try {
+      // 1. İlgili API nesnesini al
+      const apiToDelete = get().apiList[index];
+      if (!apiToDelete) {
+        console.warn("Belirtilen index geçersiz:", index);
+        return;
+      }
+      // 2. API isteğini gönder
+      await deleteApiKey(apiToDelete.id);
+
+      // 3. Başarılıysa state'ten çıkar
+      set((state) => ({
+        apiList: state.apiList.filter((_, i) => i !== index),
+      }));
+
+    } catch (error) {
+      console.error("API silme işlemi başarısız:", error);
+    }
+  },
+
     
 
-  updateApi: (name, updatedData) =>
-    set((state) => ({
-      apiList: state.apiList.map((api) =>
-        api.name === name ? { ...api, ...updatedData } : api
-      ),
-    })),
+  updateApi: async (id, name) => {
+    try {
+      id = name.id || id; // Eğer name içinde id varsa onu kullan, yoksa mevcut id'yi kullan
+      name = name.name || name; // Eğer name içinde name varsa onu kullan, yoksa mevcut name'i kullan
+      const result = await updateApiKey(id, name);
+      if (result) {
+        set((state) => ({
+          apiList: state.apiList.map((api) =>
+            api.id === id ? { ...api, name } : api
+          ),
+        }));
+      }
+    } catch (error) {
+      console.error("API güncelleme sırasında hata:", error);
+    }
+  },
+
+
 }));
 
 export default useApiStore;

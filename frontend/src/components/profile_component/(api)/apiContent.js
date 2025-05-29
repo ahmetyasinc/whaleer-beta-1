@@ -9,6 +9,8 @@ import useApiStore from '@/store/api/apiStore';
 import AddApiModal from '@/components/profile_component/(api)/addApiModal';
 import ConfirmApiModal from '@/components/profile_component/(api)/confirmApiModal';
 import ConfirmDeleteModal from '@/components/profile_component/(api)/confirmDeleteApi';
+import { getTotalUSDBalance } from '@/api/apiKeys';
+import { toast } from 'react-toastify';
 
 
 export default function ApiConnectionClient() {
@@ -53,23 +55,52 @@ export default function ApiConnectionClient() {
     }
   };
 
-  const handleConfirmSave = () => {
-    const createdAt = new Date().toLocaleDateString('tr-TR', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
+  const handleConfirmSave = async (userInputBalance) => {
+    try {
+      const { key, secretkey } = tempApiData;
 
-    addApi({ 
-      
-      ...tempApiData, 
-      createdAt, 
-      lastUsed: 'Never' 
-    });
+      // Gerçek Binance bakiyesini al
+      const realBalance = await getTotalUSDBalance(key, secretkey);
 
-    setIsConfirmModalOpen(false);
-    handleCloseModal();
-    setTempApiData(null);
+      // Karşılaştır
+      const difference = Math.abs(realBalance - parseFloat(userInputBalance));
+      if (difference > 3) {
+        console.log("Girdiğiniz bakiye ile Binance bakiyesi uyuşmuyor:", realBalance, userInputBalance);
+        toast.error("Girdiğiniz bakiye ile Binance hesabınızdaki bakiye uyuşmuyor!", {
+          position: "top-center",
+          autoClose: 3000,
+        });
+        return;
+      }
+
+      // Devam edebilir
+      const createdAt = new Date().toLocaleDateString('tr-TR', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+
+      addApi({
+        ...tempApiData,
+        createdAt,
+        lastUsed: 'Never',
+      });
+
+      toast.success("API başarıyla eklendi ve bakiye doğrulandı!", {
+        position: "top-center",
+        autoClose: 2500,
+      });
+
+      setIsConfirmModalOpen(false);
+      handleCloseModal();
+      setTempApiData(null);
+    } catch (error) {
+      console.error(error);
+      toast.error("Binance bakiyesi doğrulanamadı. Lütfen API bilgilerinizi kontrol edin.", {
+        position: "top-center",
+        autoClose: 3500,
+    });
+  }
   };
 
   // Handle delete confirmation
@@ -79,8 +110,6 @@ export default function ApiConnectionClient() {
   };
   
   const handleDeleteConfirm = () => {
-    setDeleteIndex(5);
-    console.log(deleteIndex)
     deleteApi(deleteIndex);
     setIsDeleteConfirmOpen(false);
     setDeleteIndex(null);

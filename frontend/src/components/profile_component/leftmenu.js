@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import "../../styles/css/leftmenu.css";
 import "../../styles/css/logOut_modal.css";
+import { BiLock } from "react-icons/bi"; // veya başka bir kilit ikonu
 
 import {
   BiUser, BiCandles, BiLineChart, BiBroadcast, BiSearchAlt, BiLogOut,
@@ -18,13 +19,13 @@ import { useLogout } from "@/utils/HookLogout";
 import axios from "axios";
 
 const menuItems = [
-  { href: "/profile", icon: <BiUser />, label: "Profil" },
-  { href: "/profile/showcase", icon: <BsGrid1X2 />, label: "Vitrin" },
+  { href: "/profile", icon: <BiUser />, label: "Profil", locked: true },
+  { href: "/profile/showcase", icon: <BsGrid1X2 />, label: "Vitrin", locked: true },
   { href: "/profile/indicators", icon: <BiCandles />, label: "İndikatörler" },
-  { href: "/profile/backtest", icon: <BiLineChart />, label: "Backtest" },
+  { href: "/profile/backtest", icon: <BiLineChart />, label: "Backtest", locked: true },
   { href: "/profile/apiconnect", icon: <BiBroadcast />, label: "API Bağlantısı" },
-  { href: "/profile/bot", icon: <LuBot />, label: "Otomatik Botlarım" },
-  { href: "/profile/sift", icon: <BiSearchAlt />, label: "Strateji Tarama" },
+  { href: "/profile/bot", icon: <LuBot />, label: "Otomatik Botlarım", locked: true },
+  { href: "/profile/sift", icon: <BiSearchAlt />, label: "Strateji Tarama", locked: true },
 ];
 
 const LeftMenu = () => {
@@ -92,8 +93,24 @@ const LeftMenu = () => {
               {pathname === item.href && (
                 <IoMdArrowDropright className="absolute left-[-10px] top-1/2 transform -translate-y-1/2 text-2xl text-white" />
               )}
-              <span className="menu-icon">{item.icon}</span>
-              {isOpen && <span className="link-label">{item.label}</span>}
+              <span className={`menu-icon ${item.locked ? "text-yellow-400" : ""}`}>
+                {item.icon}
+              </span>
+              {isOpen && (
+                  <span
+                    className={`link-label flex items-center gap-1 ${
+                      item.locked ? "text-yellow-400" : ""
+                    }`}
+                  >
+                    {item.label}
+                    {item.locked && (
+                      <BiLock 
+                        title="Bu özellik şu anda kilitli"
+                        className="text-yellow-400"
+                      />
+                    )}
+                  </span>
+                )}
             </Link>
           </li>
         ))}

@@ -40,22 +40,21 @@ export default function LoginForm() {
       );
 
         if (response.ok) {
-          // Toast hemen gösterilir
+          // Toast ortada gösterilir
           toast.success("Giriş başarılı, profil sayfasına yönlendiriliyorsunuz!", {
-            autoClose: 2000, // 2 saniye göster
+            position: "top-center", // Burada ortalanır (üstte)
+            autoClose: 1250,        // 1 saniye gösterilir
           });
         
-          // Toast gösterildikten 2 saniye sonra yönlendirme yapılır
+          // Toast gösterildikten 1.2 saniye sonra yönlendirme yapılır
           setTimeout(() => {
             router.push("/profile");
-          }, 2000);
-
+          }, 1500);
+        
           setTimeout(() => {
             setIsAuthenticated(true);
-          }, 2000);
-
+          }, 1500);
         }
-
        else {
         const errorData = await response.json();
         toast.error(`Giriş başarısız: ${errorData.detail}`);

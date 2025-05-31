@@ -13,7 +13,6 @@ export default function LoginPage() {
 
     useEffect(() => {
         if (isAuthenticated) {
-            console.log("Giriş yapmışsınız, yönlendiriliyor...");
             router.push('/profile');
         }
     }, [isAuthenticated]);

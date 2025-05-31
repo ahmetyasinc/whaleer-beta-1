@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, func
+from sqlalchemy import Column, Integer, String, Numeric, DateTime, ForeignKey, func, Text, TIMESTAMP, Float
 from app.database import Base
 
 class APIKey(Base):
@@ -11,3 +11,15 @@ class APIKey(Base):
     api_secret = Column(Text, nullable=True)
     user_id = Column(Integer, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    balance = Column(Float, nullable=False, default=0)
+
+
+class UserAPIBalance(Base):
+    __tablename__ = "user_api_balances"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=False)
+    api_id = Column(Integer, ForeignKey("api_keys.id"), nullable=False)  # Assuming api_keys table
+    coin_symbol = Column(String(10), nullable=False)
+    amount = Column(Numeric(20, 8), nullable=False, default=0)
+    updated_at = Column(DateTime(timezone=False), server_default=func.now(), onupdate=func.now())

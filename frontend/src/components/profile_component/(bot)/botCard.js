@@ -42,7 +42,10 @@ export const BotCard = ({ bot }) => {
             <p className="mb-1 text-[14px]"><span className="text-gray-300">API:</span> {bot.api}</p>
             <p className="mb-1 text-[14px]"><span className="text-gray-300">Strateji:</span> {bot.strategy}</p>
             <p className="mb-1 text-[14px]"><span className="text-gray-300">Periyot:</span> {bot.period}</p>
-            <p className="mb-1 text-[14px]"><span className="text-gray-300">Günler:</span> {bot.days.join(', ')}</p>
+            <p className="mb-1 text-[14px]">
+              <span className="text-gray-300">Günler:</span>{' '}
+              {Array.isArray(bot.days) ? bot.days.join(', ') : 'Tanımsız'}
+            </p>
             <p className="mb-1 text-[14px]"><span className="text-gray-300">Saatler:</span> {bot.startTime} - {bot.endTime}</p>
             <p className="mb-1 text-[14px]">
               <span className="text-gray-300">Durum:</span>{' '}

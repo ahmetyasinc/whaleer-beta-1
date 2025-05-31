@@ -30,7 +30,7 @@ export default function ConfirmApiModal({ isOpen, onClose, onConfirm, apiData })
             className="bg-[hsl(245,25%,10%)] rounded p-6 w-full max-w-sm shadow-lg text-white"
           >
             <h2 className="text-base font-semibold mb-4">
-              API bağlantınız başarılı. Lütfen hesabınızdaki USDT bakiyesini girerek kimliğinizi doğrulayın.
+              Lütfen hesabınızdaki USDT bakiyesini girerek kimliğinizi doğrulayın.
             </h2>
 
             <div className="mb-4">

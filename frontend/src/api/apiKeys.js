@@ -1,22 +1,27 @@
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 axios.defaults.withCredentials = true;
 
 export const createApiKey = async (apiData) => {
-    try {
-      const formattedData = {
-        exchange: apiData.exchange,
-        api_name: apiData.name,
-        api_key: apiData.key,
-        api_secret: apiData.secretkey,
-      };
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/create-api/`, formattedData);
-      return response.data;
-    } catch (error) {
-      console.error("API Key oluşturulurken hata:", error);
-      throw error;
+  try {
+    const formattedData = {
+      exchange: apiData.exchange,
+      api_name: apiData.name,
+      api_key: apiData.key,
+      api_secret: apiData.secretkey,
+    };
+    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/create-api/`, formattedData);
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.status === 400) {
+      throw new Error("Bu API zaten ekli.");
     }
+    console.error("API Key oluşturulurken hata:", error);
+    throw error;
+  }
 };
+
 
 export const getApiKeys = async () => {
     try {
@@ -39,6 +44,7 @@ export const getApiKeys = async () => {
           createdAt: createdDate,
           lastUsed: item.lastUsed || 'Never',
           id: item.id,
+          balance: item.balance || 0, // Eğer balance yoksa 0 olarak ayarla
         };
       });
   
@@ -80,7 +86,10 @@ export const getTotalUSDBalance = async (key, secretkey) => {
     });
     return response.data.balance; // API'den dönen bakiyeyi döndür
   } catch (error) {
-    console.error("Binance bakiyesi alınırken hata:", error);
-    throw error;
+    toast.error("API Anahtarlarınızı Kontrol ediniz!", {
+      position: "top-center",
+      autoClose: 3500,
+    });
+    return null; // Hata durumunda null döndür
   }
 };

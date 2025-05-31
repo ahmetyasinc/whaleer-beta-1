@@ -49,11 +49,11 @@ export default function LoginForm() {
           // Toast gösterildikten 1.2 saniye sonra yönlendirme yapılır
           setTimeout(() => {
             router.push("/profile");
-          }, 1500);
+          }, 1200);
         
           setTimeout(() => {
             setIsAuthenticated(true);
-          }, 1500);
+          }, 1200);
         }
        else {
         const errorData = await response.json();

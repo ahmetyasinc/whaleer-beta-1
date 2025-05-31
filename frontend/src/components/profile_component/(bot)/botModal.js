@@ -7,6 +7,9 @@ import { FiSearch } from 'react-icons/fi';
 
 
 export const BotModal = ({ onClose, mode = "create", bot = null }) => {
+  const [balance, setBalance] = useState(0); // Kullanıcının toplam bakiyesi
+  const [allocatedAmount, setAllocatedAmount] = useState(0); // Bu bota ayrılan miktar
+  const [percentage, setPercentage] = useState(0); // Slider'daki yüzde
   const [botName, setBotName] = useState('');
   const [api, setApi] = useState('');
   const [strategy, setStrategy] = useState('');
@@ -20,8 +23,8 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const availableCoins = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "SUIUSDT", "MATICUSDT", "TRXUSDT", "LTCUSDT", "AVAXUSDT", "LINKUSDT", "DOTUSDT", "SHIBUSDT", "ADAUSDT", "XMRUSDT", "ETCUSDT", "FILUSDT", "ICPUSDT", "AAVEUSDT", "MANAUSDT", "SANDUSDT", "CHZUSDT"];
   const apiList = useApiStore((state) => state.apiList);
-  const strategies = useStrategyStore((state) => state.strategies);
-
+  const strategies = useStrategyStore((state) => state.all_strategies);
+  const [candleCount, setCandleCount] = useState(0);
 
   const filteredCoins = availableCoins.filter(
     (coin) =>
@@ -57,7 +60,6 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
     setCryptoList(cryptoList.filter((c) => c !== symbol));
   };
   
-
   useEffect(() => {
     if (mode === 'edit' && bot) {
       setBotName(bot.name || '');
@@ -68,10 +70,29 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
       setDays(bot.days || []);
       setStartTime(bot.startTime || '');
       setEndTime(bot.endTime || '');
-      setCryptoList(bot.cryptos || []); // 🟢 bu satır kritik
+      setCryptoList(bot.cryptos || []);
+      setCandleCount(bot.candleCount || 0);
+      setAllocatedAmount(bot.balance || 0);
+      setBalance(bot.total_balance || 0); // mevcut toplam bakiye
+    
+      // 🆕 Yüzde hesapla
+      if (bot.balance && bot.total_balance) {
+        const calculatedPct = (bot.balance / bot.total_balance) * 100;
+        setPercentage(Math.min(100, Math.round(calculatedPct)));
+      }
     }
   }, [mode, bot]);
-  
+
+  useEffect(() => {
+    if (mode !== 'edit' && api) {
+      const selectedApi = apiList.find((item) => item.name === api);
+      if (selectedApi && selectedApi.balance !== undefined) {
+        setBalance(selectedApi.balance);
+      }
+    }
+  }, [api, mode, apiList]);
+
+
 
   const toggleDay = (day) => {
     if (days.includes(day)) {
@@ -87,7 +108,7 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
 
   const handleSave = () => {
     const botData = {
-      id: bot?.id || Date.now(),
+      id: bot?.id,
       name: botName,
       api,
       strategy,
@@ -97,6 +118,9 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
       startTime,
       endTime,
       cryptos: cryptoList,
+      candleCount,
+      initial_usd_value: allocatedAmount,
+      balance: balance,
     };
   
     if (mode === 'edit') {
@@ -108,15 +132,14 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
     onClose();
   };
   
-  
-
   return (
     <div className="fixed inset-0 bg-black/50 bg-opacity-60 flex items-center justify-center z-50">
       <div className="bg-gray-900 p-6 rounded-xl w-full max-w-4xl shadow-2xl relative border-y border-x border-gray-950 flex gap-6">
         {/* Sol - Form Alanı */}
         <div className="w-2/3 pr-4 ">
-          <h2 className="text-2xl font-bold text-white mb-6">Yeni Bot Oluştur</h2>
-  
+          <h2 className="text-2xl font-bold text-white mb-6">
+            {mode === 'edit' ? 'Botu Düzenle' : 'Yeni Bot Oluştur'}
+          </h2>
           <label className="block mb-2 text-gray-200 font-medium">Bot İsmi</label>
           <input
             type="text"
@@ -127,7 +150,7 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
             onChange={(e) => setBotName(e.target.value)}
           />
   
-          <div className="grid grid-cols-3 gap-4 mb-6 ">
+          <div className="grid grid-cols-4 gap-4 mb-6 ">
             <div>
               <label className="block mb-1 text-gray-300">API</label>
               <select
@@ -170,16 +193,27 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
                 onChange={(e) => setPeriod(e.target.value)}
               >
                 <option value="" disabled hidden>Seç</option>
-                <option value="1m">1dk</option>
-                <option value="5m">5dk</option>
-                <option value="15m">15dk</option>
-                <option value="15m">30dk</option>
-                <option value="15m">1sa</option>
-                <option value="15m">2sa</option>
-                <option value="15m">4sa</option>
-                <option value="15m">1g</option>
-                <option value="15m">1h</option>
+                <option value="1m">1 dk</option>
+                <option value="5m">5 dk</option>
+                <option value="15m">15 dk</option>
+                <option value="30m">30 dk</option>
+                <option value="1h">1 saat</option>
+                <option value="2h">2 saat</option>
+                <option value="4h">4 saat</option>
+                <option value="1d">1 gün</option>
+                <option value="1w">1 hafta</option>
               </select>
+            </div>
+            <div className="mb-6">
+              <label className="block mb-1 text-gray-300">Mum Sayısı</label>
+              <input
+                type="number"
+                min="1"
+                placeholder="Örn: 100"
+                className="w-full p-2 bg-gray-800 text-white rounded"
+                value={candleCount}
+                onChange={(e) => setCandleCount(Number(e.target.value))}
+              />
             </div>
           </div>
   
@@ -199,10 +233,49 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
               ))}
             </div>
           </div>
-  
+            <div className="mb-6">
+            <label className="block mb-2 text-gray-200 font-medium">Bot için Bakiye Ayır</label>
+
+            <div className="flex items-center gap-3 mb-2">
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={percentage}
+                onChange={(e) => {
+                  const pct = Number(e.target.value);
+                  setPercentage(pct);
+                  setAllocatedAmount(((balance * pct) / 100).toFixed(2));
+                }}
+                className="w-full accent-blue-500"
+              />
+              <span className="text-gray-300 text-sm w-12 text-right">{percentage}%</span>
+            </div>
+              
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400 text-sm">Toplam Bakiye: ${balance}</span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  max={balance}
+                  step="0.01"
+                  value={allocatedAmount}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    setAllocatedAmount(value);
+                    setPercentage(Math.min(100, ((value / balance) * 100).toFixed(0)));
+                  }}
+                  className="w-24 px-2 py-1 bg-gray-800 text-white rounded text-sm"
+                />
+                <span className="text-gray-400 text-sm">$</span>
+              </div>
+            </div>
+          </div>
           <div className="mb-6">
             <label className="block mb-2 text-gray-200 font-medium">Botun çalışma aralığı</label>
-            <div className="flex justify-start gap-2">
+
+            <div className="flex justify-start gap-2 mb-2">
               <input
                 type="time"
                 className="bg-gray-800 text-white px-2 py-1 rounded"
@@ -216,8 +289,19 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
                 onChange={(e) => setEndTime(e.target.value)}
               />
             </div>
+
+            {/* 🆕 TAM GÜN BUTONU */}
+            <button
+              onClick={() => {
+                setStartTime("00:00");
+                setEndTime("23:59");
+              }}
+              className="text-sm text-blue-400 hover:text-blue-300 underline"
+            >
+              Tüm gün çalışsın
+            </button>
           </div>
-  
+
           <div className="flex justify-end gap-3">
             <button
               onClick={onClose}

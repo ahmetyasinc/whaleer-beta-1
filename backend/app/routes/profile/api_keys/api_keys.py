@@ -5,7 +5,7 @@ from app.models.profile.api_keys.api_keys import APIKey
 from sqlalchemy.future import select
 from app.database import get_db
 from app.schemas.api_keys.api_keys import APIKeyBase, APIKeyCreate, APIKeyOut
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 import aiohttp
 import hmac
 import hashlib
@@ -13,6 +13,8 @@ import time
 from urllib.parse import urlencode
 from app.database import get_db
 from pydantic import BaseModel
+
+from app.routes.profile.api_keys.insert_initial_balance import insert_initial_balances_from_binance
 
 class UpdateApiRequest(BaseModel):
     id: int
@@ -26,16 +28,49 @@ protected_router = APIRouter()
 
 @protected_router.get("/api/get-apis/")
 async def get_user_apis(db: AsyncSession = Depends(get_db), user_id: dict = Depends(verify_token)):
-    result = await db.execute(select(APIKey).where(APIKey.user_id == int(user_id)))
+    result = await db.execute(
+        select(APIKey).where(APIKey.user_id == int(user_id)).order_by(APIKey.id)
+    )
     api_keys = result.scalars().all()
     return api_keys
 
+
 @protected_router.post("/api/create-api/")
-async def create_api_key(api_key: APIKeyCreate, db: AsyncSession = Depends(get_db), user_id: dict = Depends(verify_token)):
+async def create_api_key(
+    api_key: APIKeyCreate,
+    db: AsyncSession = Depends(get_db),
+    user_id: dict = Depends(verify_token)
+):
+    # 1. Mevcut API anahtarı var mı kontrol et
+    result = await db.execute(
+        select(APIKey).where(
+            APIKey.api_key == api_key.api_key,
+            APIKey.user_id == int(user_id)
+        )
+    )
+    existing_api = result.scalars().first()
+
+    if existing_api:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Bu API anahtarı zaten mevcut."
+        )
+
+    # 2. Yeni kayıt oluştur
     db_api_key = APIKey(**api_key.dict(), user_id=int(user_id))
     db.add(db_api_key)
     await db.commit()
     await db.refresh(db_api_key)
+
+    # 3. Binance'den bakiye al ve user_api_balances'a yaz
+    await insert_initial_balances_from_binance(
+        api_id=db_api_key.id,
+        user_id=db_api_key.user_id,
+        api_key=db_api_key.api_key,
+        api_secret=db_api_key.api_secret or '',
+        db=db
+    )
+
     return db_api_key
 
 

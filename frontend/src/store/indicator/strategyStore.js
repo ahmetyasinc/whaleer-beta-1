@@ -4,6 +4,7 @@ const useStrategyStore = create((set) => ({
     tecnic: [],
     community: [],
     strategies: [], // Kaydedilen indikatörler listesi
+    all_strategies: [], // Tüm indikatörler listesi
     favorites: [], // Favori indikatörler listesi
     isVisible: {}, // İndikatörlerin açık/kapalı durumlarını saklayan obje
 

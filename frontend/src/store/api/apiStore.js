@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { createApiKey, getApiKeys, deleteApiKey, updateApiKey } from '../../api/apiKeys';
+import { toast } from 'react-toastify';
 
 const useApiStore = create((set,get) => ({
   apiList: [],
@@ -7,6 +8,7 @@ const useApiStore = create((set,get) => ({
   loadApiKeys: async () => {
     try {
       const keys = await getApiKeys();
+      console.log("Yüklenen API Key'ler:", keys);
       if (Array.isArray(keys)) {
         set({ apiList: keys });
       } else {
@@ -20,19 +22,33 @@ const useApiStore = create((set,get) => ({
   addApi: async (apiData) => {
     try {
       const result = await createApiKey(apiData);
-  
       if (result) {
         set((state) => ({
-          apiList: [...state.apiList, apiData],
+          apiList: [...state.apiList, { ...apiData, id: result.id }],
         }));
+          toast.success("Bakiye doğrulandı! API Ekleniyor.", {
+          position: "top-center",
+          autoClose: 2500,
+        });
       } else {
         console.warn("API'den boş sonuç döndü, state güncellenmedi.");
       }
     } catch (error) {
-      console.error("API ekleme sırasında hata:", error);
-      // İstersen hata durumunu state'e de yazabilirsin
+      // 400 için kullanıcıya özel mesaj döndür
+      if (error.message === "Bu API zaten ekli.") {
+        toast.error("Bu API zaten eklenmiş!", {
+          position: "top-center",
+          autoClose: 3000,
+        });
+      } else {
+        toast.error("API eklenirken bir hata oluştu.", {
+          position: "top-center",
+          autoClose: 3000,
+        });
+      }
     }
   },
+
   
 
   deleteApi: async (index) => {

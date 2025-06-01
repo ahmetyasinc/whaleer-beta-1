@@ -2,9 +2,10 @@
 
 import { FaLock } from 'react-icons/fa';
 import ApiConnectionClient from '@/components/profile_component/(api)/apiContent';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-
-const isBeta = true;
+const isBeta = false;
 
 export default function ClientPage() {
   if (isBeta) {
@@ -28,6 +29,7 @@ export default function ClientPage() {
 
   return (
     <div className="min-h-screen hard-gradient text-white">
+    <ToastContainer/>
     <ApiConnectionClient />
     </div>
   );

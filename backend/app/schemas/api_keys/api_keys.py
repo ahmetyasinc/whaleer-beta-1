@@ -5,6 +5,7 @@ class APIKeyBase(BaseModel):
     api_name: str
     api_key: str
     api_secret: str | None = None
+    balance: float | None = 0.0
 
 class APIKeyCreate(APIKeyBase):
     pass

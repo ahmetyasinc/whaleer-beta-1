@@ -11,11 +11,16 @@ protected_router = APIRouter()
 # GET all bots for user
 @protected_router.get("/api/get-bots", response_model=list[BotsOut])
 async def get_all_bots(db: AsyncSession = Depends(get_db), user_id: dict = Depends(verify_token)):
-    result = await db.execute(select(Bots).where(Bots.user_id == int(user_id)))
+    result = await db.execute(
+        select(Bots)
+        .where(Bots.user_id == int(user_id))
+        .order_by(Bots.id) 
+    )
     return result.scalars().all()
 
+
 # POST new bot (otomatik user_id eklenir)
-@protected_router.post("/api/add-bots", response_model=BotsOut)
+@protected_router.post("/api/create-bots", response_model=BotsOut)
 async def create_bot(bot: BotsCreate, db: AsyncSession = Depends(get_db), user_id: dict = Depends(verify_token)):
     new_bot = Bots(**bot.dict(), user_id=int(user_id))
     db.add(new_bot)
@@ -24,19 +29,29 @@ async def create_bot(bot: BotsCreate, db: AsyncSession = Depends(get_db), user_i
     return new_bot
 
 # PATCH update bot (sadece kendi botunu güncelleyebilir)
-@protected_router.patch("/api/bots/{bot_id}", response_model=BotsOut)
-async def update_bot(bot_id: int, bot_data: BotsUpdate, db: AsyncSession = Depends(get_db), user_id: dict = Depends(verify_token)):
-    result = await db.execute(select(Bots).where(Bots.id == bot_id, Bots.user_id == int(user_id)))
+@protected_router.put("/api/update-bot/{bot_id}", response_model=BotsOut)
+async def update_bot(
+    bot_id: int,
+    bot_data: BotsUpdate,
+    db: AsyncSession = Depends(get_db),
+    user_id: dict = Depends(verify_token)
+):
+    print(bot_id, bot_data, user_id)
+    result = await db.execute(
+        select(Bots).where(Bots.id == bot_id, Bots.user_id == int(user_id))
+    )
     bot = result.scalar_one_or_none()
+
     if not bot:
         raise HTTPException(status_code=404, detail="Bot not found or unauthorized")
 
     for field, value in bot_data.dict(exclude_unset=True).items():
         setattr(bot, field, value)
-
+    print(bot.name, bot.period, bot.stocks, bot.candle_count, bot.active_days, bot.active_hours, bot.active)
     await db.commit()
     await db.refresh(bot)
     return bot
+
 
 # DELETE bot (sadece kendi botunu silebilir)
 @protected_router.delete("/api/bots/{bot_id}")
@@ -50,7 +65,7 @@ async def delete_bot(bot_id: int, db: AsyncSession = Depends(get_db), user_id: d
     return {"detail": "Bot deleted"}
 
 # PATCH activate (sadece kendi botunu aktif hale getirebilir)
-@protected_router.patch("/api/bots/{bot_id}/activate")
+@protected_router.post("/api/bots/{bot_id}/activate")
 async def activate_bot(bot_id: int, db: AsyncSession = Depends(get_db), user_id: dict = Depends(verify_token)):
     result = await db.execute(select(Bots).where(Bots.id == bot_id, Bots.user_id == int(user_id)))
     bot = result.scalar_one_or_none()
@@ -61,7 +76,7 @@ async def activate_bot(bot_id: int, db: AsyncSession = Depends(get_db), user_id:
     return {"detail": "Bot activated"}
 
 # PATCH deactivate (sadece kendi botunu pasif hale getirebilir)
-@protected_router.patch("/api/bots/{bot_id}/deactivate")
+@protected_router.post("/api/bots/{bot_id}/deactivate")
 async def deactivate_bot(bot_id: int, db: AsyncSession = Depends(get_db), user_id: dict = Depends(verify_token)):
     result = await db.execute(select(Bots).where(Bots.id == bot_id, Bots.user_id == int(user_id)))
     bot = result.scalar_one_or_none()

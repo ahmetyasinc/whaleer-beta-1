@@ -1,30 +1,31 @@
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 axios.defaults.withCredentials = true;
 
-// API Key oluşturma fonksiyonu
 export const createApiKey = async (apiData) => {
-    try {
-      const formattedData = {
-        exchange: apiData.exchange,
-        api_name: apiData.name,
-        api_key: apiData.key,
-        api_secret: apiData.secretkey,
-      };
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/create-api/`, formattedData);
-      console.log("API Key oluşturuldu:", response.data);
-      return response.data;
-    } catch (error) {
-      console.error("API Key oluşturulurken hata:", error);
-      throw error;
+  try {
+    const formattedData = {
+      exchange: apiData.exchange,
+      api_name: apiData.name,
+      api_key: apiData.key,
+      api_secret: apiData.secretkey,
+    };
+    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/create-api/`, formattedData);
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.status === 400) {
+      throw new Error("Bu API zaten ekli.");
     }
+    console.error("API Key oluşturulurken hata:", error);
+    throw error;
+  }
 };
+
 
 export const getApiKeys = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/get-apis/`);
-      console.log("API Key listesi alındı:", response.data);
-  
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/get-apis/`);  
       const formattedData = response.data.map(item => {
         // created_at tarihini istediğin formata çevir
         const createdDate = item.created_at 
@@ -42,6 +43,8 @@ export const getApiKeys = async () => {
           secretkey: item.api_secret,
           createdAt: createdDate,
           lastUsed: item.lastUsed || 'Never',
+          id: item.id,
+          balance: item.balance || 0, // Eğer balance yoksa 0 olarak ayarla
         };
       });
   
@@ -52,14 +55,41 @@ export const getApiKeys = async () => {
     }
 };
 
-
-export const deleteApiKey = async (name) => {
+export const deleteApiKey = async (id) => {
   try {
-    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/delete-api/`, { name });
-    console.log("API Key silindi:", response.data);
+    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/delete-api/`, { id });
     return response.data;
   } catch (error) {
     console.error("API Key silinirken hata:", error);
     throw error;
+  }
+};
+
+export const updateApiKey = async (id, name) => {
+  try {
+    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/update-api/`, {
+      id,
+      name,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("API Key güncellenirken hata:", error);
+    throw error;
+  }
+};
+
+export const getTotalUSDBalance = async (key, secretkey) => {
+  try {
+    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/get-balance/`, {
+      key,
+      secretkey,
+    });
+    return response.data.balance; // API'den dönen bakiyeyi döndür
+  } catch (error) {
+    toast.error("API Anahtarlarınızı Kontrol ediniz!", {
+      position: "top-center",
+      autoClose: 3500,
+    });
+    return null; // Hata durumunda null döndür
   }
 };

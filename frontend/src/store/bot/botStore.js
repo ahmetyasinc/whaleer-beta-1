@@ -45,7 +45,6 @@ export const useBotStore = create((set) => ({
     try {
       await deleteBot(id);
       set((state) => ({ bots: state.bots.filter((bot) => bot.id !== id) }));
-      console.log("Bot store'dan da silindi.");
     } catch (error) {
       console.error("Bot silinirken hata:", error);
     }
@@ -67,7 +66,7 @@ export const useBotStore = create((set) => ({
         id: result.id,
         name: result.name,
         api: matchedApi?.name || "",
-        strategy: String(matchedStrategy?.id),
+        strategy: String(matchedStrategy?.name),
         period: result.period,
         isActive: result.active,
         days: result.active_days,
@@ -84,8 +83,6 @@ export const useBotStore = create((set) => ({
           bot.id === result.id ? newBot : bot
         ),
       }));
-
-      console.log("Bot başarıyla güncellendi:", newBot);
 
     } catch (error) {
       console.error("Bot güncellenirken hata:", error);

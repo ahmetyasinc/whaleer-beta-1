@@ -93,7 +93,6 @@ async def run_user_indicator(user_code: str, data: list[dict]):
 
             # ✅ Grafik oluşturma fonksiyonu (plot)
             "plot": lambda *args, **kwargs: plot(indicator_results, *args, **kwargs),
-            "reach": lambda *args, **kwargs: empty(*args, **kwargs),
             "input": EmptyClass(),
         }
 

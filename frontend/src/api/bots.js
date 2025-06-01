@@ -47,9 +47,11 @@ export const createBot = async (botData) => {
     // api_id ve strategy_id'yi isimlerden bul
     const apiList = useApiStore.getState().apiList;
     const strategies = useStrategyStore.getState().all_strategies;
+    console.log("API Listesi:", apiList, "Stratejiler:", strategies);
 
     const selectedApi = apiList.find((item) => item.name === botData.api);
     const selectedStrategy = strategies.find((item) => String(item.id) === String(botData.strategy));
+    console.log("Seçilen API:", selectedApi, "Seçilen Strateji:", selectedStrategy);
 
     if (!selectedApi || !selectedStrategy) {
       throw new Error('Geçersiz API veya strateji seçimi.');
@@ -90,10 +92,13 @@ export const updateBot = async (id, botData) => {
   try {
     const apiList = useApiStore.getState().apiList;
     const strategies = useStrategyStore.getState().all_strategies;
-
     const selectedApi = apiList.find((item) => item.name === botData.api);
-    const selectedStrategy = strategies.find((item) => String(item.name) === String(botData.strategy));
-
+    let selectedStrategy;
+    if (botData.strategy && typeof botData.strategy === 'string') {
+      selectedStrategy = strategies.find((item) => String(item.name) === String(botData.strategy));
+    } else {
+      selectedStrategy = strategies.find((item) => String(item.id) === String(botData.strategy));
+    }
     if (!selectedApi || !selectedStrategy) {
       throw new Error('Geçersiz API veya strateji seçimi.');
     }
@@ -112,13 +117,11 @@ export const updateBot = async (id, botData) => {
       balance: Number(botData.balance),
     };
 
-    console.log("Güncelleme için gönderilen veri:", payload);
     const response = await axios.put(
       `${process.env.NEXT_PUBLIC_API_URL}/api/update-bot/${id}/`,
       payload
     );
 
-    console.log("Bot başarıyla güncellendi:", response.data);
     return response.data;
 
   } catch (error) {
@@ -130,7 +133,6 @@ export const updateBot = async (id, botData) => {
 export const deleteBot = async (id) => {
   try {
     const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/bots/${id}`);
-    console.log("Bot başarıyla silindi:", response.data);
     return response.data;
   } catch (error) {
     console.error("Bot silinirken hata:", error);
@@ -142,7 +144,6 @@ export const toggleBotActiveApi = async (id, isActive) => {
   try {
     const endpoint = isActive ? "deactivate" : "activate";
     const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/bots/${id}/${endpoint}`);
-    console.log(`Bot başarıyla ${isActive ? "pasif" : "aktif"} hale getirildi:`, response.data);
     return response.data;
   } catch (error) {
     console.error("Bot durumu değiştirilirken hata:", error);

@@ -8,7 +8,7 @@ def load_bot_holding(bot_id):
         cursor = conn.cursor(cursor_factory=RealDictCursor)
 
         cursor.execute("""
-            SELECT user_id, bot_id, symbol, percentage
+            SELECT user_id, bot_id, symbol, amount
             FROM bot_holdings
             WHERE bot_id = %s;
         """, (bot_id,))
@@ -30,8 +30,8 @@ def load_bot_positions(bot_id):
         cursor = conn.cursor(cursor_factory=RealDictCursor)
 
         cursor.execute("""
-            SELECT symbol, side, leverage, amount, percentage
-            FROM bot_positions
+            SELECT symbol, side, leverage, quantity, price
+            FROM bot_trades
             WHERE bot_id = %s AND state = 1;
         """, (bot_id,))
 

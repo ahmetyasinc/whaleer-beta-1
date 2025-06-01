@@ -4,7 +4,7 @@ import { useBotStore } from '@/store/bot/botStore';
 import useApiStore from '@/store/api/apiStore'; // yolunu doğru ver
 import useStrategyStore from '@/store/indicator/strategyStore';
 import { FiSearch } from 'react-icons/fi';
-
+import { toast } from 'react-toastify';
 
 export const BotModal = ({ onClose, mode = "create", bot = null }) => {
   const [balance, setBalance] = useState(0); // Kullanıcının toplam bakiyesi
@@ -31,30 +31,8 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
       coin.toLowerCase().includes(searchQuery.toLowerCase()) &&
       !cryptoList.includes(coin)
   );
-  
-  
+
   const dayList = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
-
-  const botData = {
-    id: bot?.id || Date.now(),
-    name: botName,
-    api,
-    strategy,
-    period,
-    isActive,
-    days,
-    startTime,
-    endTime,
-    cryptos: cryptoList, // 🟢 yeni alan
-  };
-  
-
-  const addCrypto = () => {
-    if (selectedCrypto && !cryptoList.includes(selectedCrypto)) {
-      setCryptoList([...cryptoList, selectedCrypto]);
-      setSelectedCrypto('');
-    }
-  };
   
   const removeCrypto = (symbol) => {
     setCryptoList(cryptoList.filter((c) => c !== symbol));
@@ -90,9 +68,13 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
         setBalance(selectedApi.balance);
       }
     }
+    if (mode === 'edit' && bot) {
+      const selectedApi = apiList.find((item) => item.name === api);
+      if (selectedApi && selectedApi.balance !== undefined) {
+        setBalance(selectedApi.balance);
+      }
+    }
   }, [api, mode, apiList]);
-
-
 
   const toggleDay = (day) => {
     if (days.includes(day)) {
@@ -105,15 +87,51 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
   const addBot = useBotStore((state) => state.addBot);
   const updateBot = useBotStore((state) => state.updateBot);
   
-
   const handleSave = () => {
+    const errors = [];
+
+    if (!botName.trim()) errors.push("Bot ismi gerekli.");
+    if (!api) errors.push("API seçimi yapılmalı.");
+    if (!strategy) errors.push("Strateji seçimi yapılmalı.");
+    if (!period) errors.push("Periyot seçilmeli.");
+    if (!candleCount || candleCount <= 0) errors.push("Mum sayısı geçerli değil.");
+    if (days.length === 0) errors.push("En az bir gün seçilmeli.");
+    if (!startTime || !endTime) errors.push("Çalışma saatleri girilmeli.");
+    if (!allocatedAmount || allocatedAmount <= 10) errors.push("Bakiye 10$ değerinden büyük ayarlanmalı.");
+    if (cryptoList.length === 0) errors.push("En az bir kripto seçilmeli.");
+
+    // 🕓 Saat farkı kontrolü (en az 1 saat)
+    if (startTime && endTime) {
+      const [startH, startM] = startTime.split(":").map(Number);
+      const [endH, endM] = endTime.split(":").map(Number);
+
+      const start = startH * 60 + startM;
+      const end = endH * 60 + endM;
+
+      if (end - start < 60) {
+        toast.error("Bitiş saati, başlangıç saatinden en az 1 saat sonra olmalı.", { autoClose: 2000 });
+        return;
+      }
+    }
+
+    if (errors.length > 0) {
+      errors.forEach((err) => toast.error(err, { autoClose: 2000 }));
+      return;
+    }
+
+    if (allocatedAmount > balance) {
+      toast.error("Ayırmak istediğiniz miktar, toplam bakiyenizden büyük olamaz.", { autoClose: 2000 });
+      return;
+    }
+    console.log("Bot verileri:", {strategy});
+
     const botData = {
       id: bot?.id,
       name: botName,
       api,
-      strategy,
+      strategy: bot?.strategy || strategy,
       period,
-      isActive:false,
+      isActive: false,
       days,
       startTime,
       endTime,
@@ -122,15 +140,19 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
       initial_usd_value: allocatedAmount,
       balance: balance,
     };
-  
+
     if (mode === 'edit') {
       updateBot(botData);
+      toast.success("Bot güncellendi!", { autoClose: 2000 });
     } else {
       addBot(botData);
+      toast.success("Bot oluşturuldu!", { autoClose: 2000 });
     }
-  
+
     onClose();
   };
+
+
   
   return (
     <div className="fixed inset-0 bg-black/50 bg-opacity-60 flex items-center justify-center z-50">

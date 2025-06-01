@@ -7,6 +7,8 @@ import { useBotStore } from '@/store/bot/botStore';
 import useApiStore from '@/store/api/apiStore';
 import { load_strategies } from '@/api/load_strategies';
 import { HiPlusSmall } from 'react-icons/hi2';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function BotsPageClient() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -39,9 +41,9 @@ export default function BotsPageClient() {
           </div>
         </button>
       </header>
-
+      <ToastContainer position="top-center" />
       {modalOpen && <BotModal onClose={() => setModalOpen(false)} />}
-
+      
       <div className="px-6 grid grid-cols-1 md:grid-cols-2 gap-3">
         {bots.map((bot) => (
           <BotCard key={bot.id} bot={bot} />

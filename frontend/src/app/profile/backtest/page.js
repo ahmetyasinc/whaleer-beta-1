@@ -1,4 +1,6 @@
 // Backtest.js
+//import SyncedCharts from "@/components/profile_component/(indicator)/syncedCharts";
+
 export const metadata = {
   title: "BackTest",
   description: "Olusturulan stratejileri test etme sayfası.",

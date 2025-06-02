@@ -3,7 +3,6 @@
 import useBacktestStore from '@/store/backtest/backtestStore';
 
 export default function TradesList({ trades }) {
-
   const { selectedCrypto } = useBacktestStore();
 
   const formatCurrency = (value) =>
@@ -19,19 +18,22 @@ export default function TradesList({ trades }) {
   };
 
   const formatPercentage = (value) => {
-    return `${value.toFixed(2)}%`;
+    const num = Number(value);
+    if (isNaN(num)) return '–';     // sayı değilse çizgi döndür
+    return `${num.toFixed(2)}%`;
   };
+
 
   const formatTypeLabel = (type) => {
     switch (type) {
       case 'LONG_OPEN':
-        return 'LONG Aç';
+        return 'LONG AÇ';
       case 'LONG_CLOSE':
-        return 'LONG Kapat';
+        return 'LONG KAPAT';
       case 'SHORT_OPEN':
-        return 'SHORT Aç';
+        return 'SHORT AÇ';
       case 'SHORT_CLOSE':
-        return 'SHORT Kapat';
+        return 'SHORT KAPAT';
       default:
         return type;
     }
@@ -58,6 +60,8 @@ export default function TradesList({ trades }) {
             <tr className="border-b border-gray-700">
               <th className="text-left text-gray-400 font-medium py-2">Tarih</th>
               <th className="text-left text-gray-400 font-medium py-2">İşlem</th>
+              <th className="text-left text-gray-400 font-medium py-2">Katsayı</th>
+              <th className="text-left text-gray-400 font-medium py-2">Yüzdelik</th>
               <th className="text-right text-gray-400 font-medium py-2">Miktar</th>
               <th className="text-right text-gray-400 font-medium py-2">Tutar</th>
               <th className="text-right text-gray-400 font-medium py-2">Komisyon</th>
@@ -70,7 +74,7 @@ export default function TradesList({ trades }) {
               const isClose = trade.type.endsWith('CLOSE');
               const investedAmount = trade.amount * trade.price;
               const commission = trade.commission || 0;
-              const pnlPercentage = isClose ? (trade.pnl / investedAmount) * 100 : null;
+              const pnlPercentage = trade.pnlPercentage || null;
 
               return (
                 <tr key={trade.id} className="border-b border-gray-700 hover:bg-gray-800">
@@ -86,6 +90,14 @@ export default function TradesList({ trades }) {
                     >
                       {formatTypeLabel(trade.type)}
                     </span>
+                  </td>
+
+                  <td className="py-3 text-left text-gray-300 font-mono">
+                    {(trade.leverage)}
+                  </td>
+
+                  <td className="py-3 text-left text-gray-300 font-mono">
+                    {(trade.usedPercentage)}%
                   </td>
 
                   <td className="py-3 text-right text-gray-300 font-mono">

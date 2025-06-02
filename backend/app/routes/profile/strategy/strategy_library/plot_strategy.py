@@ -3,9 +3,8 @@ import numpy as np
 import math
 from app.routes.profile.strategy.strategy_library.print_strategy import custom_print
 
-
 def plot_strategy(strategy_name, strategy_graph, print_outputs, df, commission=0.0, *, color="orange", width=2, linestyle="line", info_return=False, info_trades=False):
-    required_cols = ['position', 'close', 'percentage', 'stop_loss', 'take_profit']
+    required_cols = ['position', 'close', 'percentage']
     for col in required_cols:
         if col not in df.columns:
             raise ValueError(f"DataFrame içinde '{col}' sütunu bulunmalıdır!")
@@ -129,6 +128,5 @@ def plot_strategy(strategy_name, strategy_graph, print_outputs, df, commission=0
         custom_print(print_outputs, trades_df)
 
 
-    #print(json.dumps(graph_entry, indent=2, default=str))
 
     strategy_graph.append(graph_entry)

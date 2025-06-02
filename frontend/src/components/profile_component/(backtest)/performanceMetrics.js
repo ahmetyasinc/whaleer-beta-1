@@ -13,11 +13,25 @@ export default function PerformanceMetrics({ performance }) {
     return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
   };
 
+  const formatPercentageRate = (value) => {
+    return `${value > 0 ? '' : ''}${value.toFixed(2)}%`;
+  };
+
   const metrics = [
     {
       label: 'Getiri Oranı',
       value: formatPercentage(performance.returnPercentage),
       color: performance.returnPercentage >= 0 ? 'text-green-400' : 'text-red-400',
+    },
+    {
+      label: 'Toplam Kar/Zarar',
+      value: formatCurrency(performance.totalPnL),
+      color: performance.totalPnL >= 0 ? 'text-green-400' : 'text-red-400',
+    },
+    {
+      label: 'Al-Tut Getirisi',
+      value: formatPercentage(performance.buyHoldReturn),
+      color: performance.sharpeRatio >= 1 ? 'text-green-400' : 'text-yellow-400',
     },
     {
       label: 'Toplam İşlem',
@@ -35,16 +49,6 @@ export default function PerformanceMetrics({ performance }) {
       color: 'text-red-400',
     },
     {
-      label: 'Toplam Kar/Zarar',
-      value: formatCurrency(performance.totalPnL),
-      color: performance.totalPnL >= 0 ? 'text-green-400' : 'text-red-400',
-    },
-    {
-      label: 'Başarı Oranı',
-      value: formatPercentage(performance.winRate),
-      color: performance.winRate >= 50 ? 'text-green-400' : 'text-red-400',
-    },
-    {
       label: 'Başlangıç Bakiye',
       value: formatCurrency(performance.initialBalance),
       color: 'text-gray-300',
@@ -55,9 +59,9 @@ export default function PerformanceMetrics({ performance }) {
       color: 'text-gray-300',
     },
     {
-      label: 'Max Düşüş',
-      value: formatCurrency(performance.maxDrawdown),
-      color: 'text-red-400',
+      label: 'Başarı Oranı',
+      value: formatPercentageRate(performance.winRate),
+      color: performance.winRate >= 50 ? 'text-green-400' : 'text-red-400',
     },
     {
       label: 'Sharpe Oranı',
@@ -65,28 +69,28 @@ export default function PerformanceMetrics({ performance }) {
       color: performance.sharpeRatio >= 1 ? 'text-green-400' : 'text-yellow-400',
     },
     {
+      label: 'Sortino Oranı',
+      value: performance.sortinoRatio.toFixed(3),
+      color: performance.sortinoRatio >= 1 ? 'text-green-400' : 'text-yellow-400',
+    },
+    {
       label: 'Kâr faktörü',
       value: performance.profitFactor.toFixed(3),
       color: performance.profitFactor >= 1 ? 'text-green-400' : 'text-yellow-400',
     },
     {
-      label: 'Al-Tut Getirisi',
-      value: performance.buyHoldReturn.toFixed(2),
-      color: performance.sharpeRatio >= 1 ? 'text-green-400' : 'text-yellow-400',
+      label: 'Max Düşüş',
+      value: formatCurrency(performance.maxDrawdown),
+      color: 'text-red-400',
     },
     {
-      label: 'Sortino Oranı',
-      value: performance.sortinoRatio.toFixed(3),
-      color: performance.sortinoRatio >= 1 ? 'text-green-400' : 'text-yellow-400',
-    },
-        {
       label: 'En karlı İşlem',
-      value: performance.mostProfitableTrade.toFixed(2),
+      value: formatPercentage(performance.mostProfitableTrade),
       color: 'text-green-400',
     },
     {
       label: 'En zararlı İşlem',
-      value: performance.mostLosingTrade.toFixed(2),
+      value: formatPercentage(performance.mostLosingTrade),
       color: 'text-red-400',
     },
     {
@@ -96,12 +100,12 @@ export default function PerformanceMetrics({ performance }) {
     },
     {
       label: 'Komisyon maliyeti',
-      value: performance.commisionCost.toFixed(3),
+      value: formatCurrency(performance.commisionCost.toFixed(3)),
       color: 'text-orange-400',
     },
     {
       label: 'İşlem hacmi',
-      value: performance.volume.toFixed(2),
+      value: formatCurrency(performance.volume.toFixed(2)),
       color: 'text-blue-500',
     }
   ];

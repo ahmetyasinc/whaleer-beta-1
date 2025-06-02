@@ -22,7 +22,7 @@ const menuItems = [
   { href: "/profile", icon: <BiUser />, label: "Profil", locked: true },
   { href: "/profile/showcase", icon: <BsGrid1X2 />, label: "Vitrin", locked: true },
   { href: "/profile/indicators", icon: <BiCandles />, label: "İndikatörler" },
-  { href: "/profile/backtest", icon: <BiLineChart />, label: "Backtest", locked: true },
+  { href: "/profile/backtest", icon: <BiLineChart />, label: "Backtest" },
   { href: "/profile/apiconnect", icon: <BiBroadcast />, label: "API Bağlantısı" },
   { href: "/profile/bot", icon: <LuBot />, label: "Otomatik Botlarım", locked: false },
   { href: "/profile/sift", icon: <BiSearchAlt />, label: "Strateji Tarama", locked: true },

@@ -91,7 +91,6 @@ async def run_user_strategy(strategy_name: str, user_code: str, data: list[dict]
 
                 # ✅ Kullanıcının Print Çıktılarını Kaydetmesi İçin
                 "print": lambda *args, **kwargs: empty(*args, **kwargs)
-                #"print": lambda *args, **kwargs: custom_print(print_outputs, *args, **kwargs)
             },
 
             # ✅ NumPy ve Pandas için İzinler

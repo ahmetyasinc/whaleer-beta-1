@@ -12,6 +12,7 @@ from app.routes.profile.strategy.strategy import protected_router as strategy_ro
 from app.routes.profile.strategy.strategy_adjustment import protected_router as strategy_adjustment_router
 from app.routes.profile.strategy.strategy_run import protected_router as strategy_run_router
 from app.routes.profile.strategy.strategy_imports import protected_router as strategy_imports_router
+from app.routes.profile.backtest.backtest import protected_router as backtest_router
 from app.routes.profile.api_keys.api_keys import protected_router as api_keys_router
 from app.routes.profile.bots.bots import protected_router as bots_router
 from app.routes.profile.scan.scan import protected_router as scan_router
@@ -39,6 +40,8 @@ app.include_router(strategy_run_router)
 app.include_router(strategy_imports_router)
 # API KEYS ROUTES
 app.include_router(api_keys_router)
+# BACKTEST ROUTES
+app.include_router(backtest_router)
 # BOT ROUTES
 app.include_router(bots_router)
 # SCAN ROUTES

@@ -10,7 +10,7 @@ import ArchivedBacktestCard from '@/components/profile_component/(backtest)/arch
 import useBacktestStore from '@/store/backtest/backtestStore';
 import { FiAlignLeft, FiArchive } from "react-icons/fi";
 
-const isBeta = true;
+const isBeta = false;
 
 export default function ClientPage() {
   const { 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createChart } from 'lightweight-charts';
 import useBacktestStore from '@/store/backtest/backtestStore';
 
@@ -16,19 +16,15 @@ export default function BacktestChart() {
   const returnsChartRef = useRef(null);
   const histogramSeriesRef = useRef(null);
 
+  // Görünürlük state'leri
+  const [showCandlestick, setShowCandlestick] = useState(true);
+  const [showLine, setShowLine] = useState(true);
+
   // Store verilerini al
   const chartData = useBacktestStore((state) => state.backtestResults?.chartData || []);
   const candles = useBacktestStore((state) => state.backtestResults?.candles || []);
   const returns = useBacktestStore((state) => state.backtestResults?.returns || []);
   const period = useBacktestStore((state) => state.selectedPeriod);
-
-  // Debug: returns verisini kontrol et
-  useEffect(() => {
-    console.log('Returns data type:', typeof returns);
-    console.log('Returns is array:', Array.isArray(returns));
-    console.log('Returns length:', returns?.length);
-    console.log('First few returns:', returns?.slice(0, 3));
-  }, [returns]);
 
   // Chart konfigürasyonu
   const getChartConfig = (height = 500) => ({
@@ -54,6 +50,17 @@ export default function BacktestChart() {
       mode: 1, // Normal crosshair mode
     },
   });
+
+  // Grafik görünürlüğünü toggle et (en az biri görünür kalmalı)
+  const toggleCandlestick = () => {
+    if (showCandlestick && !showLine) return; // Son görünür grafik ise toggle yapma
+    setShowCandlestick(!showCandlestick);
+  };
+
+  const toggleLine = () => {
+    if (showLine && !showCandlestick) return; // Son görünür grafik ise toggle yapma
+    setShowLine(!showLine);
+  };
 
   // Ana chart'ı oluştur
   useEffect(() => {
@@ -182,11 +189,20 @@ export default function BacktestChart() {
         low: +c.low,
         close: +c.close,
       }));
-      candlestickSeriesRef.current.setData(formatted);
+      
+      if (showCandlestick) {
+        candlestickSeriesRef.current.setData(formatted);
+      } else {
+        candlestickSeriesRef.current.setData([]);
+      }
     }
 
     if (lineSeriesRef.current && chartData.length > 0) {
-      lineSeriesRef.current.setData(chartData);
+      if (showLine) {
+        lineSeriesRef.current.setData(chartData);
+      } else {
+        lineSeriesRef.current.setData([]);
+      }
     }
 
     if (mainChartRef.current) {
@@ -196,7 +212,7 @@ export default function BacktestChart() {
         },
       });
     }
-  }, [candles, chartData, period]);
+  }, [candles, chartData, period, showCandlestick, showLine]);
 
   // Returns chart verilerini güncelle
   useEffect(() => {
@@ -233,8 +249,45 @@ export default function BacktestChart() {
       {/* Ana Chart - Candlestick ve Line */}
       <div className="flex-1 relative">
         <div ref={mainChartContainerRef} className="w-full h-78" />
-        <div className="absolute top-2 left-2 text-gray-400 text-sm font-light pointer-events-none z-10">
-          Price Chart
+        
+        {/* Chart başlığı ve toggle butonları */}
+        <div className="absolute top-2 left-2 flex items-center gap-4 text-sm font-light pointer-events-auto z-10">
+          <span className="text-gray-400">Price Chart</span>
+          
+          {/* Toggle butonları */}
+          <div className="flex gap-2">
+            <button
+              onClick={toggleCandlestick}
+              disabled={showCandlestick && !showLine}
+              className={`px-2 py-1 rounded text-xs border transition-colors ${
+                showCandlestick
+                  ? 'bg-green-600 border-green-500 text-white'
+                  : 'bg-gray-700 border-gray-600 text-gray-400'
+              } ${
+                showCandlestick && !showLine 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:bg-opacity-80 cursor-pointer'
+              }`}
+            >
+              Candles
+            </button>
+            
+            <button
+              onClick={toggleLine}
+              disabled={showLine && !showCandlestick}
+              className={`px-2 py-1 rounded text-xs border transition-colors ${
+                showLine
+                  ? 'bg-blue-600 border-blue-500 text-white'
+                  : 'bg-gray-700 border-gray-600 text-gray-400'
+              } ${
+                showLine && !showCandlestick 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:bg-opacity-80 cursor-pointer'
+              }`}
+            >
+              Line
+            </button>
+          </div>
         </div>
       </div>
       

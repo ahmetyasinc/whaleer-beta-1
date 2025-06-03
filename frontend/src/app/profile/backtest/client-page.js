@@ -1,4 +1,5 @@
 'use client';
+import { useEffect } from 'react';
 
 import { FaLock } from 'react-icons/fa';
 import BacktestHeader from '@/components/profile_component/(backtest)/backtestHeader';
@@ -10,33 +11,26 @@ import ArchivedBacktestCard from '@/components/profile_component/(backtest)/arch
 import useBacktestStore from '@/store/backtest/backtestStore';
 import { FiAlignLeft, FiArchive } from "react-icons/fi";
 
-const isBeta = false;
-
 export default function ClientPage() {
+
+  const getArchivedBacktests = useBacktestStore((state) => state.getArchivedBacktests);
+  useEffect(() => {
+    const loadData = async () => {
+      await getArchivedBacktests();
+    };
+  
+    loadData();
+  }, []);
+  
+
   const { 
     backtestResults, 
     isBacktestLoading, 
     backtestError,
-    archivedBacktests 
+    archivedBacktests,
+    isArchiveLoading,
+    archiveError
   } = useBacktestStore();
-
-  if (isBeta) {
-    return (
-      <div className="relative min-h-screen w-full overflow-hidden">
-        <div
-          className="absolute inset-0 bg-center bg-no-repeat bg-cover blur-lg"
-          style={{ backgroundImage: "url('/pages/backtest.png')" }}
-        ></div>
-        <div className="absolute inset-0 bg-white bg-opacity-10 z-10" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center z-20">
-          <FaLock className="text-yellow-500 text-6xl mb-4" />
-          <h1 className="text-white text-xl font-semibold">
-            Bu sayfa yakında sizlerle buluşacak
-          </h1>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen">
@@ -51,7 +45,31 @@ export default function ClientPage() {
           </h1>
           
           <div className="p-3 h-[calc(100%-60px)] overflow-y-auto">
-            {archivedBacktests.length === 0 ? (
+            {isArchiveLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center text-white">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                  <div className="text-lg">Arşiv yükleniyor...</div>
+                  <div className="text-gray-400 text-sm mt-2">
+                    Backtest arşivleriniz getiriliyor.
+                  </div>
+                </div>
+              </div>
+            ) : archiveError ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center text-red-400 bg-red-900/20 p-6 rounded-lg">
+                  <div className="text-4xl mb-4">❌</div>
+                  <div className="text-lg font-semibold mb-2">Arşiv Yüklenirken Hata</div>
+                  <div className="text-sm">{archiveError}</div>
+                  <button 
+                    onClick={() => getArchivedBacktests()}
+                    className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors"
+                  >
+                    Tekrar Dene
+                  </button>
+                </div>
+              </div>
+            ) : archivedBacktests.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center text-gray-400">
                 <FiArchive className="text-4xl mb-3" />
                 <div className="text-lg font-medium mb-2">Arşiv Boş</div>

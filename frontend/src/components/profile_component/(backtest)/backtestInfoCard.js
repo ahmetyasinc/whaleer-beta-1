@@ -18,7 +18,6 @@ export default function BacktestInfoCard() {
 
   const handleSave = () => {
     archiveBacktest();
-    console.log('Backtest arşivlendi!');
   };
 
   const handleOptimize = () => {

@@ -27,6 +27,7 @@ def empty(*args, **kwargs):
     pass
 
 def calculate_performance(df: pd.DataFrame, commission=0.0, risk_free_rate=0.02) -> dict:
+    
     required_cols = ['position', 'close', 'percentage']
     for col in required_cols:
         if col not in df.columns:
@@ -48,6 +49,7 @@ def calculate_performance(df: pd.DataFrame, commission=0.0, risk_free_rate=0.02)
     returns = []
     total_volume = 0.0  # İşlem hacmi takibi
 
+    tpOrSlHit = False  # Take Profit veya Stop Loss tetiklendi mi?
     active_position = 0.0
     entry_price = 0.0
     leverage = 0.0
@@ -68,7 +70,11 @@ def calculate_performance(df: pd.DataFrame, commission=0.0, risk_free_rate=0.02)
         tp = row.get('take_profit', 0.0)
         ts = row['timestamp']
 
-        # Pozisyon kapanışı (TP/SL ile)
+        # Yeni pozisyon açma koşulları
+        if tpOrSlHit and pos != pos_prev:
+            tpOrSlHit = False
+
+        # Pozisyon açıksa kontrolleri yap
         if active_position != 0:
             price_change = (price - price_prev) / price_prev
             if active_position < 0:
@@ -78,9 +84,12 @@ def calculate_performance(df: pd.DataFrame, commission=0.0, risk_free_rate=0.02)
             hit_tp = (price >= take_price) if active_position > 0 else (price <= take_price)
             hit_sl = (price <= stop_price) if active_position > 0 else (price >= stop_price)
 
+            # Stop loss veya take profit tetiklendiğinde
             if hit_tp or hit_sl:
-                pnl = floating_gain * balance
-                pnl_pct = floating_gain * 100
+                gain_pct = take_price if hit_tp else stop_price
+                diff = (gain_pct - entry_price) / entry_price if active_position > 0 else (entry_price - gain_pct) / entry_price
+                pnl = gain_pct - price if active_position > 0 else price - gain_pct # bu mumdaki kar dolar
+                pnl_pct = diff * 100 #işlemdeki kar yüzdesi
                 trade_type = "LONG_CLOSE" if active_position > 0 else "SHORT_CLOSE"
                 
                 # Trade süresini hesapla
@@ -109,13 +118,46 @@ def calculate_performance(df: pd.DataFrame, commission=0.0, risk_free_rate=0.02)
                 active_position = 0.0
                 entry_price = leverage = used_percentage = stop_price = take_price = 0.0
                 trade_entry_time = None
+                tpOrSlHit = True
+            # Pozisyon kapatma koşulu
+            elif pos == 0: 
+                gain_pct = (price - entry_price) / entry_price if active_position > 0 else (entry_price - price) / entry_price
+                pnl = floating_gain * balance
+                pnl_pct = gain_pct * leverage * used_percentage * 100
+
+                close_type = "LONG_CLOSE" if active_position > 0 else "SHORT_CLOSE"
+                active_position = 0.0
+                # Trade süresini hesapla
+                if trade_entry_time:
+                    trade_duration = (ts - trade_entry_time).total_seconds() / 3600  # saat cinsinden
+                    total_trade_duration += trade_duration
+
+                # İşlem hacmini hesapla (pozisyon büyüklüğü * fiyat)
+                trade_amount = used_percentage * balance / entry_price
+                trade_volume = trade_amount * price
+                total_volume += trade_volume
+
+                trades.append({
+                    "id": len(trades) + 1,
+                    "date": ts,
+                    "type": close_type,
+                    "leverage": leverage,
+                    "usedPercentage": used_percentage * 100,
+                    "amount": trade_amount,
+                    "price": price,
+                    "commission": balance * commission,
+                    "pnlPercentage": round(pnl_pct, 2)
+                })
+                balance += pnl
+                balance -= balance * commission
+            # İşlem Kapanmayacak kar hesapla
             else:
                 balance *= (1 + floating_gain)
-
-        if i > 0 and pos != 0 and pos != pos_prev:
+        
+        if i > 0 and pos != 0 and pos != active_position and not tpOrSlHit:
+            # Önceki pozisyonu kapat
             if active_position != 0:
                 gain_pct = (price - entry_price) / entry_price if active_position > 0 else (entry_price - price) / entry_price
-                pnl = gain_pct * leverage * used_percentage * balance
                 pnl_pct = gain_pct * leverage * used_percentage * 100
                 close_type = "LONG_CLOSE" if active_position > 0 else "SHORT_CLOSE"
                 
@@ -140,7 +182,6 @@ def calculate_performance(df: pd.DataFrame, commission=0.0, risk_free_rate=0.02)
                     "commission": balance * commission,
                     "pnlPercentage": round(pnl_pct, 2)
                 })
-                balance += pnl
                 balance -= balance * commission
 
             # Yeni pozisyon açılıyor
@@ -253,13 +294,13 @@ def calculate_performance(df: pd.DataFrame, commission=0.0, risk_free_rate=0.02)
             "finalBalance": round(balance, 2),
             "maxDrawdown": round(-max_drawdown * 100, 2),
             "sharpeRatio": round(sharpe_ratio, 3),
-            "profitFactor": round(sum(wins) / abs(sum(losses)), 2) if losses else float('inf'),
+            "profitFactor": round(sum(wins) / abs(sum(losses)), 2) if losses else None,
             "buyHoldReturn": round((df['close'].iloc[-1] - initial_balance) / initial_balance * 100, 2),
             "sortinoRatio": round(sortino_ratio, 3),
             "mostProfitableTrade": round(most_win, 2),
             "mostLosingTrade": round(most_loss, 2),
             "durationOftradeRatio": round(duration_ratio, 4),
-            "commisionCost": round(initial_balance * commission * len(trades), 2),
+            "commissionCost": round(initial_balance * commission * len(trades), 2),
             "volume": round(total_volume, 2)
         },
         "trades": trades[::-1],

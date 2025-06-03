@@ -13,7 +13,7 @@ import asyncio
 import time
 from decimal import Decimal
 
-async def run_backtest_logic(strategy_id: int, period: str, crypto: str, user_id: int, db):
+async def run_backtest_logic(strategy_id: int, period: str, crypto: dict, user_id: int, db):
     # Strategy'yi çek
     strategy_obj = await db.execute(
         select(Strategy).where(
@@ -44,7 +44,7 @@ async def run_backtest_logic(strategy_id: int, period: str, crypto: str, user_id
             BinanceData.close,
             BinanceData.volume,
         )
-        .where(BinanceData.interval == period, BinanceData.coin_id == crypto)
+        .where(BinanceData.interval == period, BinanceData.coin_id == crypto["binance_symbol"])
         .order_by(BinanceData.timestamp.desc())
         .limit(5000)
     )
@@ -123,8 +123,16 @@ async def run_backtest_logic(strategy_id: int, period: str, crypto: str, user_id
 
     # Kodları çalıştır
     for indicator_code in indicator_codes:
-        exec(indicator_code, allowed_globals)
-    exec(strategy_code, allowed_globals)
+        try:
+            exec(indicator_code, allowed_globals)
+        except Exception as e:
+            print(f"Indicator kodu çalıştırılırken hata oluştu: {e}")
+    
+    try:
+        exec(strategy_code, allowed_globals)
+    except Exception as e:
+        print(f"Strateji kodu çalıştırılırken hata oluştu: {e}")
+
 
     # Veriyi kontrol et
     if "position" not in df.columns or "percentage" not in df.columns:
@@ -138,5 +146,11 @@ async def run_backtest_logic(strategy_id: int, period: str, crypto: str, user_id
         "performance": result["performance"],
         "trades": result["trades"],
         "returns": result["returns"],
-        "candles": candlestick_data  # ✅ Mum verisi
+        "candles": candlestick_data,  # ✅ Mum verisi
+        "commission": allowed_globals.get("commission", 0.0),
+        "period": period,
+        "strategy_name": strategy.name,
+        "strategy_id": strategy.id,
+        "code": strategy.code,
+        "crypto": crypto,
     }

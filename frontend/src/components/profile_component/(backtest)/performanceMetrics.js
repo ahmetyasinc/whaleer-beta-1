@@ -75,8 +75,8 @@ export default function PerformanceMetrics({ performance }) {
     },
     {
       label: 'Kâr faktörü',
-      value: performance.profitFactor.toFixed(3),
-      color: performance.profitFactor >= 1 ? 'text-green-400' : 'text-yellow-400',
+      value: performance.profitFactor != null ? performance.profitFactor.toFixed(3) : 'N/A',
+      color: performance.profitFactor != null && performance.profitFactor >= 1 ? 'text-green-400' : 'text-yellow-400',
     },
     {
       label: 'Max Düşüş',
@@ -100,12 +100,12 @@ export default function PerformanceMetrics({ performance }) {
     },
     {
       label: 'Komisyon maliyeti',
-      value: formatCurrency(performance.commisionCost.toFixed(3)),
+      value: formatCurrency(performance.commissionCost),
       color: 'text-orange-400',
     },
     {
       label: 'İşlem hacmi',
-      value: formatCurrency(performance.volume.toFixed(2)),
+      value: formatCurrency(performance.volume),
       color: 'text-blue-500',
     }
   ];

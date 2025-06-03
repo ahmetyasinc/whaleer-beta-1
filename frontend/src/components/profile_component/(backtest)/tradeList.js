@@ -63,10 +63,10 @@ export default function TradesList({ trades }) {
               <th className="text-left text-gray-400 font-medium py-2">Katsayı</th>
               <th className="text-left text-gray-400 font-medium py-2">Yüzdelik</th>
               <th className="text-right text-gray-400 font-medium py-2">Miktar</th>
-              <th className="text-right text-gray-400 font-medium py-2">Tutar</th>
+              <th className="text-right text-gray-400 font-medium py-2">Bakiye</th>
               <th className="text-right text-gray-400 font-medium py-2">Komisyon</th>
               <th className="text-right text-gray-400 font-medium py-2">K/Z (%)</th>
-              <th className="text-right text-gray-400 font-medium py-2">{selectedCrypto?.symbol || 'Seçilmemiş'}-Fiyat</th>
+              <th className="text-right text-gray-400 font-medium py-2">Fiyat (Close)</th>
             </tr>
           </thead>
           <tbody>

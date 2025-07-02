@@ -1,0 +1,3 @@
+{"timestamp": "2025-07-02 18:38:11,202", "level": "INFO", "levelname": "INFO", "taskName": "Scheduler-Task-ListenKeyMonitoring", "message": "TriggerManager başlatıldı", "status": "started", "interval_seconds": 600}
+{"timestamp": "2025-07-02 18:49:28,788", "level": "INFO", "levelname": "INFO", "taskName": "Scheduler-Task-ListenKeyMonitoring", "message": "TriggerManager kapatılıyor", "status": "stopping"}
+{"timestamp": "2025-07-02 18:49:28,789", "level": "INFO", "levelname": "INFO", "taskName": "Scheduler-Task-Task-1", "message": "Listenkey izleme sistemi durduruluyor", "status": "stopping", "operation": "monitoring_stop"}

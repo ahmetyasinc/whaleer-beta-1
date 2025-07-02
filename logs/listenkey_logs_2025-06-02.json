@@ -1,0 +1,117 @@
+{"timestamp": "2025-06-02 18:19:55,239", "level": "INFO", "message": "[Taha Emre] Önceki listenKey: svEXi2b9P9aeleoL2hyaDdS40ofSH54vhAxbRVw11MbLpvDyOTMumbWvwiG4"}
+{"timestamp": "2025-06-02 18:19:56,576", "level": "INFO", "message": "[Taha Emre] ListenKey geçerli. Yenileniyor..."}
+{"timestamp": "2025-06-02 18:19:57,645", "level": "INFO", "message": "ListenKey başarıyla yenilendi"}
+{"timestamp": "2025-06-02 18:44:16,876", "level": "INFO", "message": "ListenKey kontrol ediliyor"}
+{"timestamp": "2025-06-02 18:44:17,258", "level": "INFO", "message": "ListenKey kontrol ediliyor"}
+{"timestamp": "2025-06-02 18:44:17,537", "level": "INFO", "message": "ListenKey kontrol ediliyor"}
+{"timestamp": "2025-06-02 18:44:18,643", "level": "WARNING", "message": "ListenKey geçersiz, yeniden oluşturulacak"}
+{"timestamp": "2025-06-02 18:44:18,920", "level": "WARNING", "message": "ListenKey geçersiz, yeniden oluşturulacak"}
+{"timestamp": "2025-06-02 18:44:19,181", "level": "INFO", "message": "ListenKey geçerli, yenileniyor"}
+{"timestamp": "2025-06-02 18:44:20,052", "level": "ERROR", "message": "ListenKey alınamadı"}
+{"timestamp": "2025-06-02 18:44:20,053", "level": "ERROR", "message": "Beklenmeyen hata oluştu"}
+{"timestamp": "2025-06-02 18:44:20,054", "level": "INFO", "message": "ListenKey başarıyla yenilendi"}
+{"timestamp": "2025-06-02 18:44:20,055", "level": "ERROR", "message": "ListenKey yönetim hatası"}
+{"timestamp": "2025-06-02 18:44:20,060", "level": "INFO", "message": "ListenKey oluşturuldu ve DB'ye kaydedildi"}
+{"timestamp": "2025-06-02 18:44:20,060", "level": "INFO", "message": "Yeni ListenKey oluşturuldu"}
+{"timestamp": "2025-06-02 18:56:23,051", "level": "INFO", "message": "ListenKey geçerli, yenileniyor"}
+{"timestamp": "2025-06-02 18:56:23,393", "level": "INFO", "message": "ListenKey geçerli, yenileniyor"}
+{"timestamp": "2025-06-02 18:56:23,650", "level": "INFO", "message": "ListenKey geçerli, yenileniyor"}
+{"timestamp": "2025-06-02 18:56:24,739", "level": "WARNING", "message": "ListenKey geçersiz, yeniden oluşturulacak"}
+{"timestamp": "2025-06-02 18:56:25,037", "level": "WARNING", "message": "ListenKey geçersiz, yeniden oluşturulacak"}
+{"timestamp": "2025-06-02 18:56:25,314", "level": "WARNING", "message": "ListenKey geçersiz, yeniden oluşturulacak"}
+{"timestamp": "2025-06-02 18:56:27,243", "level": "ERROR", "message": "ListenKey alınamadı"}
+{"timestamp": "2025-06-02 18:56:27,243", "level": "ERROR", "message": "Beklenmeyen hata oluştu"}
+{"timestamp": "2025-06-02 18:56:27,244", "level": "ERROR", "message": "ListenKey yönetim hatası"}
+{"timestamp": "2025-06-02 18:56:27,252", "level": "ERROR", "message": "ListenKey alınamadı"}
+{"timestamp": "2025-06-02 18:56:27,252", "level": "ERROR", "message": "Beklenmeyen hata oluştu"}
+{"timestamp": "2025-06-02 18:56:27,253", "level": "ERROR", "message": "ListenKey yönetim hatası"}
+{"timestamp": "2025-06-02 18:56:27,287", "level": "ERROR", "message": "ListenKey alınamadı"}
+{"timestamp": "2025-06-02 18:56:27,288", "level": "ERROR", "message": "Beklenmeyen hata oluştu"}
+{"timestamp": "2025-06-02 18:56:27,288", "level": "ERROR", "message": "ListenKey yönetim hatası"}
+{"timestamp": "2025-06-02 19:01:08,681", "level": "INFO", "message": "ListenKey geçerli, yenileniyor"}
+{"timestamp": "2025-06-02 19:01:09,054", "level": "INFO", "message": "ListenKey geçerli, yenileniyor"}
+{"timestamp": "2025-06-02 19:01:09,341", "level": "INFO", "message": "ListenKey geçerli, yenileniyor"}
+{"timestamp": "2025-06-02 19:01:10,475", "level": "WARNING", "message": "ListenKey geçersiz, yeniden oluşturulacak"}
+{"timestamp": "2025-06-02 19:01:10,834", "level": "WARNING", "message": "ListenKey geçersiz, yeniden oluşturulacak"}
+{"timestamp": "2025-06-02 19:01:11,190", "level": "WARNING", "message": "ListenKey geçersiz, yeniden oluşturulacak"}
+{"timestamp": "2025-06-02 19:01:13,114", "level": "ERROR", "message": "ListenKey alınamadı"}
+{"timestamp": "2025-06-02 19:01:13,114", "level": "ERROR", "message": "Beklenmeyen hata oluştu"}
+{"timestamp": "2025-06-02 19:01:13,114", "level": "ERROR", "message": "ListenKey alınamadı"}
+{"timestamp": "2025-06-02 19:01:13,114", "level": "ERROR", "message": "Beklenmeyen hata oluştu"}
+{"timestamp": "2025-06-02 19:01:13,114", "level": "ERROR", "message": "ListenKey yönetim hatası"}
+{"timestamp": "2025-06-02 19:01:13,115", "level": "ERROR", "message": "ListenKey yönetim hatası"}
+{"timestamp": "2025-06-02 19:01:13,128", "level": "ERROR", "message": "ListenKey alınamadı"}
+{"timestamp": "2025-06-02 19:01:13,128", "level": "ERROR", "message": "Beklenmeyen hata oluştu"}
+{"timestamp": "2025-06-02 19:01:13,128", "level": "ERROR", "message": "ListenKey yönetim hatası"}
+{"timestamp": "2025-06-02 19:02:35,331", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "user_id": "aa", "api_name": [31], "api_id": "dfs"}
+{"timestamp": "2025-06-02 19:02:35,698", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "user_id": "Taha Emre", "api_name": [26], "api_id": "Bz0O3ko1kmwpcMVp8ir53feBig09FrybUeozTIMcBfZ7f3eu1JWOKUYqGQSzQa3g"}
+{"timestamp": "2025-06-02 19:02:36,000", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "user_id": "Ahmet Yasin", "api_name": [17], "api_id": "Obk2x1xCEn6aoJbnmroDIi8ghwjBWJM9yLp0HbfYOZoImvxgPrCiPIxjqmPW7sO3"}
+{"timestamp": "2025-06-02 19:02:37,099", "level": "WARNING", "message": "ListenKey geçersiz, yeniden oluşturulacak", "user_id": "aa", "api_name": [31], "api_id": null}
+{"timestamp": "2025-06-02 19:02:37,394", "level": "WARNING", "message": "ListenKey geçersiz, yeniden oluşturulacak", "user_id": "Ahmet Yasin", "api_name": [17], "api_id": null}
+{"timestamp": "2025-06-02 19:02:37,686", "level": "WARNING", "message": "ListenKey geçersiz, yeniden oluşturulacak", "user_id": "Taha Emre", "api_name": [26], "api_id": null}
+{"timestamp": "2025-06-02 19:02:38,690", "level": "ERROR", "message": "ListenKey alınamadı", "user_id": "aa", "api_name": null, "api_id": null}
+{"timestamp": "2025-06-02 19:02:38,690", "level": "ERROR", "message": "Beklenmeyen hata oluştu", "user_id": "aa", "api_name": null, "api_id": null}
+{"timestamp": "2025-06-02 19:02:38,690", "level": "ERROR", "message": "ListenKey yönetim hatası", "user_id": "aa", "api_name": [31], "api_id": "dfs"}
+{"timestamp": "2025-06-02 19:02:38,693", "level": "ERROR", "message": "ListenKey alınamadı", "user_id": "Ahmet Yasin", "api_name": null, "api_id": null}
+{"timestamp": "2025-06-02 19:02:38,693", "level": "ERROR", "message": "Beklenmeyen hata oluştu", "user_id": "Ahmet Yasin", "api_name": null, "api_id": null}
+{"timestamp": "2025-06-02 19:02:38,693", "level": "ERROR", "message": "ListenKey alınamadı", "user_id": "Taha Emre", "api_name": null, "api_id": null}
+{"timestamp": "2025-06-02 19:02:38,693", "level": "ERROR", "message": "Beklenmeyen hata oluştu", "user_id": "Taha Emre", "api_name": null, "api_id": null}
+{"timestamp": "2025-06-02 19:02:38,694", "level": "ERROR", "message": "ListenKey yönetim hatası", "user_id": "Ahmet Yasin", "api_name": [17], "api_id": "Obk2x1xCEn6aoJbnmroDIi8ghwjBWJM9yLp0HbfYOZoImvxgPrCiPIxjqmPW7sO3"}
+{"timestamp": "2025-06-02 19:02:38,694", "level": "ERROR", "message": "ListenKey yönetim hatası", "user_id": "Taha Emre", "api_name": [26], "api_id": "Bz0O3ko1kmwpcMVp8ir53feBig09FrybUeozTIMcBfZ7f3eu1JWOKUYqGQSzQa3g"}
+{"timestamp": "2025-06-02 19:20:30,734", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "levelname": "INFO", "taskName": "Task-3", "api_id": "dfs", "user_id": "aa", "api_name": 31, "listen_key": 4, "status": "refreshing"}
+{"timestamp": "2025-06-02 19:20:31,080", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "levelname": "INFO", "taskName": "Task-4", "api_id": "Bz0O3ko1kmwpcMVp8ir53feBig09FrybUeozTIMcBfZ7f3eu1JWOKUYqGQSzQa3g", "user_id": "Taha Emre", "api_name": 26, "listen_key": 4, "status": "refreshing"}
+{"timestamp": "2025-06-02 19:20:31,362", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "levelname": "INFO", "taskName": "Task-5", "api_id": "Obk2x1xCEn6aoJbnmroDIi8ghwjBWJM9yLp0HbfYOZoImvxgPrCiPIxjqmPW7sO3", "user_id": "Ahmet Yasin", "api_name": 17, "listen_key": 4, "status": "refreshing"}
+{"timestamp": "2025-06-02 19:20:33,177", "level": "INFO", "message": "ListenKey kontrol sonucu", "levelname": "INFO", "taskName": "Task-4", "api_id": "Bz0O3ko1kmwpcMVp8ir53feBig09FrybUeozTIMcBfZ7f3eu1JWOKUYqGQSzQa3g", "api_name": 26, "user_id": "Taha Emre", "listen_key": 4, "status": "invalid"}
+{"timestamp": "2025-06-02 19:20:33,177", "level": "WARNING", "message": "ListenKey geçersiz, yeniden oluşturulacak", "levelname": "WARNING", "taskName": "Task-4", "user_id": "Taha Emre", "api_name": 26, "listen_key": 4, "status": "invalid"}
+{"timestamp": "2025-06-02 19:20:33,536", "level": "INFO", "message": "ListenKey kontrol sonucu", "levelname": "INFO", "taskName": "Task-5", "api_id": "Obk2x1xCEn6aoJbnmroDIi8ghwjBWJM9yLp0HbfYOZoImvxgPrCiPIxjqmPW7sO3", "api_name": 17, "user_id": "Ahmet Yasin", "listen_key": 4, "status": "invalid"}
+{"timestamp": "2025-06-02 19:20:33,536", "level": "WARNING", "message": "ListenKey geçersiz, yeniden oluşturulacak", "levelname": "WARNING", "taskName": "Task-5", "user_id": "Ahmet Yasin", "api_name": 17, "listen_key": 4, "status": "invalid"}
+{"timestamp": "2025-06-02 19:20:33,824", "level": "INFO", "message": "ListenKey kontrol sonucu", "levelname": "INFO", "taskName": "Task-3", "api_id": "dfs", "api_name": 31, "user_id": "aa", "listen_key": 4, "status": "invalid"}
+{"timestamp": "2025-06-02 19:20:33,825", "level": "WARNING", "message": "ListenKey geçersiz, yeniden oluşturulacak", "levelname": "WARNING", "taskName": "Task-3", "user_id": "aa", "api_name": 31, "listen_key": 4, "status": "invalid"}
+{"timestamp": "2025-06-02 19:20:34,881", "level": "ERROR", "message": "ListenKey alınamadı", "levelname": "ERROR", "taskName": "Task-3", "api_id": "dfs", "api_name": 31, "user_id": "aa", "status_code": 401, "error": "{\"code\":-2014,\"msg\":\"API-key format invalid.\"}"}
+{"timestamp": "2025-06-02 19:20:34,881", "level": "ERROR", "message": "Beklenmeyen hata oluştu", "levelname": "ERROR", "taskName": "Task-3", "api_id": "dfs", "api_name": 31, "user_id": "aa"}
+{"timestamp": "2025-06-02 19:20:34,881", "level": "ERROR", "message": "ListenKey yönetim hatası", "levelname": "ERROR", "taskName": "Task-3", "user_id": "aa", "api_id": "dfs", "api_name": 31, "listen_key": 4, "status": "error"}
+{"timestamp": "2025-06-02 19:20:34,934", "level": "ERROR", "message": "ListenKey alınamadı", "levelname": "ERROR", "taskName": "Task-4", "api_id": "Bz0O3ko1kmwpcMVp8ir53feBig09FrybUeozTIMcBfZ7f3eu1JWOKUYqGQSzQa3g", "api_name": 26, "user_id": "Taha Emre", "status_code": 401, "error": "{\"code\":-2015,\"msg\":\"Invalid API-key, IP, or permissions for action.\"}"}
+{"timestamp": "2025-06-02 19:20:34,935", "level": "ERROR", "message": "Beklenmeyen hata oluştu", "levelname": "ERROR", "taskName": "Task-4", "api_id": "Bz0O3ko1kmwpcMVp8ir53feBig09FrybUeozTIMcBfZ7f3eu1JWOKUYqGQSzQa3g", "api_name": 26, "user_id": "Taha Emre"}
+{"timestamp": "2025-06-02 19:20:34,935", "level": "ERROR", "message": "ListenKey yönetim hatası", "levelname": "ERROR", "taskName": "Task-4", "user_id": "Taha Emre", "api_id": "Bz0O3ko1kmwpcMVp8ir53feBig09FrybUeozTIMcBfZ7f3eu1JWOKUYqGQSzQa3g", "api_name": 26, "listen_key": 4, "status": "error"}
+{"timestamp": "2025-06-02 19:20:34,945", "level": "ERROR", "message": "ListenKey alınamadı", "levelname": "ERROR", "taskName": "Task-5", "api_id": "Obk2x1xCEn6aoJbnmroDIi8ghwjBWJM9yLp0HbfYOZoImvxgPrCiPIxjqmPW7sO3", "api_name": 17, "user_id": "Ahmet Yasin", "status_code": 401, "error": "{\"code\":-2015,\"msg\":\"Invalid API-key, IP, or permissions for action.\"}"}
+{"timestamp": "2025-06-02 19:20:34,945", "level": "ERROR", "message": "Beklenmeyen hata oluştu", "levelname": "ERROR", "taskName": "Task-5", "api_id": "Obk2x1xCEn6aoJbnmroDIi8ghwjBWJM9yLp0HbfYOZoImvxgPrCiPIxjqmPW7sO3", "api_name": 17, "user_id": "Ahmet Yasin"}
+{"timestamp": "2025-06-02 19:20:34,945", "level": "ERROR", "message": "ListenKey yönetim hatası", "levelname": "ERROR", "taskName": "Task-5", "user_id": "Ahmet Yasin", "api_id": "Obk2x1xCEn6aoJbnmroDIi8ghwjBWJM9yLp0HbfYOZoImvxgPrCiPIxjqmPW7sO3", "api_name": 17, "listen_key": 4, "status": "error"}
+{"timestamp": "2025-06-02 19:22:57,061", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "levelname": "INFO", "taskName": "Task-3", "api_id": 31, "user_id": 4, "api_name": "aa", "listen_key": "44", "status": "refreshing"}
+{"timestamp": "2025-06-02 19:22:57,463", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "levelname": "INFO", "taskName": "Task-4", "api_id": 26, "user_id": 4, "api_name": "Taha Emre", "listen_key": "svEXi2b9P9aeleoL2hyaDdS40ofSH54vhAxbRVw11MbLpvDyOTMumbWvwiG4", "status": "refreshing"}
+{"timestamp": "2025-06-02 19:22:57,758", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "levelname": "INFO", "taskName": "Task-5", "api_id": 17, "user_id": 4, "api_name": "Ahmet Yasin", "listen_key": "S9Lsc3wrAqjGA3QqFZb5GGcC8tSjM04MKqiMc1cGV6dqaclyMt0VWcP219lN", "status": "refreshing"}
+{"timestamp": "2025-06-02 19:22:59,258", "level": "INFO", "message": "ListenKey kontrol sonucu", "levelname": "INFO", "taskName": "Task-3", "api_id": 31, "api_name": "aa", "user_id": 4, "listen_key": "44", "status": "invalid"}
+{"timestamp": "2025-06-02 19:22:59,258", "level": "WARNING", "message": "ListenKey geçersiz, yeniden oluşturulacak", "levelname": "WARNING", "taskName": "Task-3", "user_id": 4, "api_name": "aa", "listen_key": "44", "status": "invalid"}
+{"timestamp": "2025-06-02 19:22:59,555", "level": "INFO", "message": "ListenKey kontrol sonucu", "levelname": "INFO", "taskName": "Task-4", "api_id": 26, "api_name": "Taha Emre", "user_id": 4, "listen_key": "svEXi2b9P9aeleoL2hyaDdS40ofSH54vhAxbRVw11MbLpvDyOTMumbWvwiG4", "status": "valid"}
+{"timestamp": "2025-06-02 19:22:59,555", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "levelname": "INFO", "taskName": "Task-4", "user_id": 4, "api_name": "Taha Emre", "listen_key": "svEXi2b9P9aeleoL2hyaDdS40ofSH54vhAxbRVw11MbLpvDyOTMumbWvwiG4", "status": "refreshing"}
+{"timestamp": "2025-06-02 19:22:59,843", "level": "INFO", "message": "ListenKey kontrol sonucu", "levelname": "INFO", "taskName": "Task-5", "api_id": 17, "api_name": "Ahmet Yasin", "user_id": 4, "listen_key": "S9Lsc3wrAqjGA3QqFZb5GGcC8tSjM04MKqiMc1cGV6dqaclyMt0VWcP219lN", "status": "valid"}
+{"timestamp": "2025-06-02 19:22:59,843", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "levelname": "INFO", "taskName": "Task-5", "user_id": 4, "api_name": "Ahmet Yasin", "listen_key": "S9Lsc3wrAqjGA3QqFZb5GGcC8tSjM04MKqiMc1cGV6dqaclyMt0VWcP219lN", "status": "refreshing"}
+{"timestamp": "2025-06-02 19:23:01,363", "level": "ERROR", "message": "ListenKey alınamadı", "levelname": "ERROR", "taskName": "Task-3", "api_id": 31, "api_name": "aa", "user_id": 4, "status_code": 401, "error": "{\"code\":-2014,\"msg\":\"API-key format invalid.\"}"}
+{"timestamp": "2025-06-02 19:23:01,363", "level": "ERROR", "message": "Beklenmeyen hata oluştu", "levelname": "ERROR", "taskName": "Task-3", "api_id": 31, "api_name": "aa", "user_id": 4}
+{"timestamp": "2025-06-02 19:23:01,364", "level": "ERROR", "message": "ListenKey yönetim hatası", "levelname": "ERROR", "taskName": "Task-3", "user_id": 4, "api_id": 31, "api_name": "aa", "listen_key": "44", "status": "error"}
+{"timestamp": "2025-06-02 19:23:01,506", "level": "INFO", "message": "ListenKey başarıyla yenilendi", "levelname": "INFO", "taskName": "Task-5", "api_id": 17, "api_name": "Ahmet Yasin", "user_id": 4, "status_code": 200, "listen_key": "S9Lsc3wrAqjGA3QqFZb5GGcC8tSjM04MKqiMc1cGV6dqaclyMt0VWcP219lN"}
+{"timestamp": "2025-06-02 19:23:01,506", "level": "INFO", "message": "ListenKey başarıyla yenilendi", "levelname": "INFO", "taskName": "Task-4", "api_id": 26, "api_name": "Taha Emre", "user_id": 4, "status_code": 200, "listen_key": "svEXi2b9P9aeleoL2hyaDdS40ofSH54vhAxbRVw11MbLpvDyOTMumbWvwiG4"}
+{"timestamp": "2025-06-02 19:25:50,179", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "levelname": "INFO", "taskName": "Task-3", "api_id": 26, "user_id": 4, "api_name": "Taha Emre", "listen_key": "svEXi2b9P9aeleoL2hyaDdS40ofSH54vhAxbRVw11MbLpvDyOTMumbWvwiG4", "status": "refreshing"}
+{"timestamp": "2025-06-02 19:25:50,568", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "levelname": "INFO", "taskName": "Task-4", "api_id": 17, "user_id": 4, "api_name": "Ahmet Yasin", "listen_key": "S9Lsc3wrAqjGA3QqFZb5GGcC8tSjM04MKqiMc1cGV6dqaclyMt0VWcP219lN", "status": "refreshing"}
+{"timestamp": "2025-06-02 19:25:50,888", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "levelname": "INFO", "taskName": "Task-5", "api_id": 31, "user_id": 4, "api_name": "aa", "listen_key": "44", "status": "refreshing"}
+{"timestamp": "2025-06-02 19:25:53,961", "level": "INFO", "message": "ListenKey kontrol sonucu", "levelname": "INFO", "taskName": "Task-4", "api_id": 17, "api_name": "Ahmet Yasin", "user_id": 4, "listen_key": "S9Lsc3wrAqjGA3QqFZb5GGcC8tSjM04MKqiMc1cGV6dqaclyMt0VWcP219lN", "status": "valid"}
+{"timestamp": "2025-06-02 19:25:53,961", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "levelname": "INFO", "taskName": "Task-4", "user_id": 4, "api_name": "Ahmet Yasin", "listen_key": "S9Lsc3wrAqjGA3QqFZb5GGcC8tSjM04MKqiMc1cGV6dqaclyMt0VWcP219lN", "status": "refreshing"}
+{"timestamp": "2025-06-02 19:25:54,268", "level": "INFO", "message": "ListenKey kontrol sonucu", "levelname": "INFO", "taskName": "Task-5", "api_id": 31, "api_name": "aa", "user_id": 4, "listen_key": "44", "status": "invalid"}
+{"timestamp": "2025-06-02 19:25:54,268", "level": "WARNING", "message": "ListenKey geçersiz, yeniden oluşturulacak", "levelname": "WARNING", "taskName": "Task-5", "user_id": 4, "api_name": "aa", "listen_key": "44", "status": "invalid"}
+{"timestamp": "2025-06-02 19:25:54,618", "level": "INFO", "message": "ListenKey kontrol sonucu", "levelname": "INFO", "taskName": "Task-3", "api_id": 26, "api_name": "Taha Emre", "user_id": 4, "listen_key": "svEXi2b9P9aeleoL2hyaDdS40ofSH54vhAxbRVw11MbLpvDyOTMumbWvwiG4", "status": "valid"}
+{"timestamp": "2025-06-02 19:25:54,618", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "levelname": "INFO", "taskName": "Task-3", "user_id": 4, "api_name": "Taha Emre", "listen_key": "svEXi2b9P9aeleoL2hyaDdS40ofSH54vhAxbRVw11MbLpvDyOTMumbWvwiG4", "status": "refreshing"}
+{"timestamp": "2025-06-02 19:25:55,535", "level": "INFO", "message": "ListenKey başarıyla yenilendi", "levelname": "INFO", "taskName": "Task-4", "api_id": 17, "api_name": "Ahmet Yasin", "user_id": 4, "status_code": 200, "listen_key": "S9Lsc3wrAqjGA3QqFZb5GGcC8tSjM04MKqiMc1cGV6dqaclyMt0VWcP219lN"}
+{"timestamp": "2025-06-02 19:25:55,536", "level": "INFO", "message": "ListenKey oluşturuldu ve DB'ye kaydedildi", "levelname": "INFO", "taskName": "Task-5", "api_id": 31, "api_name": "aa", "user_id": 4, "status_code": 200, "listen_key": "jK1LcidDHgkru7v9e9pclc1BcSkB3Pd4PjJp5M0EG3184CoXkGkS84sLKDhx"}
+{"timestamp": "2025-06-02 19:25:55,536", "level": "INFO", "message": "Yeni ListenKey oluşturuldu", "levelname": "INFO", "taskName": "Task-5", "user_id": 4, "api_name": "aa", "listen_key": "jK1LcidDHgkru7v9e9pclc1BcSkB3Pd4PjJp5M0EG3184CoXkGkS84sLKDhx", "status": "created"}
+{"timestamp": "2025-06-02 19:25:55,564", "level": "INFO", "message": "ListenKey başarıyla yenilendi", "levelname": "INFO", "taskName": "Task-3", "api_id": 26, "api_name": "Taha Emre", "user_id": 4, "status_code": 200, "listen_key": "svEXi2b9P9aeleoL2hyaDdS40ofSH54vhAxbRVw11MbLpvDyOTMumbWvwiG4"}
+{"timestamp": "2025-06-02 19:27:02,838", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "levelname": "INFO", "taskName": "Task-3", "api_id": 26, "user_id": 4, "api_name": "Taha Emre", "listen_key": "svEXi2b9P9aeleoL2hyaDdS40ofSH54vhAxbRVw11MbLpvDyOTMumbWvwiG4", "status": "refreshing"}
+{"timestamp": "2025-06-02 19:27:03,209", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "levelname": "INFO", "taskName": "Task-4", "api_id": 17, "user_id": 4, "api_name": "Ahmet Yasin", "listen_key": "S9Lsc3wrAqjGA3QqFZb5GGcC8tSjM04MKqiMc1cGV6dqaclyMt0VWcP219lN", "status": "refreshing"}
+{"timestamp": "2025-06-02 19:27:03,502", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "levelname": "INFO", "taskName": "Task-5", "api_id": 31, "user_id": 4, "api_name": "aa", "listen_key": "jK1LcidDHgkru7v9e9pclc1BcSkB3Pd4PjJp5M0EG3184CoXkGkS84sLKDhx", "status": "refreshing"}
+{"timestamp": "2025-06-02 19:27:04,750", "level": "INFO", "message": "ListenKey kontrol sonucu", "levelname": "INFO", "taskName": "Task-4", "api_id": 17, "api_name": "Ahmet Yasin", "user_id": 4, "listen_key": "S9Lsc3wrAqjGA3QqFZb5GGcC8tSjM04MKqiMc1cGV6dqaclyMt0VWcP219lN", "status": "valid"}
+{"timestamp": "2025-06-02 19:27:04,750", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "levelname": "INFO", "taskName": "Task-4", "user_id": 4, "api_name": "Ahmet Yasin", "listen_key": "S9Lsc3wrAqjGA3QqFZb5GGcC8tSjM04MKqiMc1cGV6dqaclyMt0VWcP219lN", "status": "refreshing"}
+{"timestamp": "2025-06-02 19:27:05,041", "level": "INFO", "message": "ListenKey kontrol sonucu", "levelname": "INFO", "taskName": "Task-5", "api_id": 31, "api_name": "aa", "user_id": 4, "listen_key": "jK1LcidDHgkru7v9e9pclc1BcSkB3Pd4PjJp5M0EG3184CoXkGkS84sLKDhx", "status": "valid"}
+{"timestamp": "2025-06-02 19:27:05,042", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "levelname": "INFO", "taskName": "Task-5", "user_id": 4, "api_name": "aa", "listen_key": "jK1LcidDHgkru7v9e9pclc1BcSkB3Pd4PjJp5M0EG3184CoXkGkS84sLKDhx", "status": "refreshing"}
+{"timestamp": "2025-06-02 19:27:05,368", "level": "INFO", "message": "ListenKey kontrol sonucu", "levelname": "INFO", "taskName": "Task-3", "api_id": 26, "api_name": "Taha Emre", "user_id": 4, "listen_key": "svEXi2b9P9aeleoL2hyaDdS40ofSH54vhAxbRVw11MbLpvDyOTMumbWvwiG4", "status": "valid"}
+{"timestamp": "2025-06-02 19:27:05,368", "level": "INFO", "message": "ListenKey geçerli, yenileniyor", "levelname": "INFO", "taskName": "Task-3", "user_id": 4, "api_name": "Taha Emre", "listen_key": "svEXi2b9P9aeleoL2hyaDdS40ofSH54vhAxbRVw11MbLpvDyOTMumbWvwiG4", "status": "refreshing"}
+{"timestamp": "2025-06-02 19:27:06,896", "level": "INFO", "message": "ListenKey başarıyla yenilendi", "levelname": "INFO", "taskName": "Task-4", "api_id": 17, "api_name": "Ahmet Yasin", "user_id": 4, "status_code": 200, "listen_key": "S9Lsc3wrAqjGA3QqFZb5GGcC8tSjM04MKqiMc1cGV6dqaclyMt0VWcP219lN"}
+{"timestamp": "2025-06-02 19:27:06,897", "level": "INFO", "message": "ListenKey başarıyla yenilendi", "levelname": "INFO", "taskName": "Task-5", "api_id": 31, "api_name": "aa", "user_id": 4, "status_code": 200, "listen_key": "jK1LcidDHgkru7v9e9pclc1BcSkB3Pd4PjJp5M0EG3184CoXkGkS84sLKDhx"}
+{"timestamp": "2025-06-02 19:27:07,460", "level": "INFO", "message": "ListenKey başarıyla yenilendi", "levelname": "INFO", "taskName": "Task-3", "api_id": 26, "api_name": "Taha Emre", "user_id": 4, "status_code": 200, "listen_key": "svEXi2b9P9aeleoL2hyaDdS40ofSH54vhAxbRVw11MbLpvDyOTMumbWvwiG4"}

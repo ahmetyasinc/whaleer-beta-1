@@ -17,5 +17,6 @@ class Bots(Base):
     active_hours = Column(Text, nullable=False, default='00:00-23:59')
     created_at = Column(TIMESTAMP, server_default=func.now())
     initial_usd_value = Column(Integer, nullable=False, default=1000)
+    current_usd_value = Column(Integer, nullable=False, default=1000)
     name = Column(String(100), nullable=False, default='New Bot')
     balance = Column(Float, nullable=True, default=None)

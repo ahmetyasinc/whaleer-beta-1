@@ -2,6 +2,40 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from config import DB_CONFIG
 
+def calculate_fullness_percentage(fullness_usdt, current_usd_value):
+    try:
+        if not current_usd_value or current_usd_value == 0:
+            return 100.0  # USD değeri yoksa %100 kabul edebilirsin
+        return round((float(fullness_usdt) / float(current_usd_value)) * 100, 2)
+    except Exception as e:
+        print(f"Hesaplama hatası: {e}")
+        return 0.0
+
+
+def get_bot_percentage(bot_id):
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+        cursor.execute("""
+            SELECT fullness, current_usd_value
+            FROM bots
+            WHERE id = %s;
+        """, (bot_id,))
+        
+        bot = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if not bot:
+            return 0.0
+        
+        return calculate_fullness_percentage(bot['fullness'], bot['current_usd_value'])
+
+    except Exception as e:
+        print(f"Veritabanı hatası: {e}")
+        return 0.0
+
 def load_bot_holding(bot_id):
     try:
         conn = psycopg2.connect(**DB_CONFIG)
@@ -29,10 +63,11 @@ def load_bot_positions(bot_id):
         conn = psycopg2.connect(**DB_CONFIG)
         cursor = conn.cursor(cursor_factory=RealDictCursor)
 
+        # Yeni tablo yapısına göre sorgu güncellendi
         cursor.execute("""
-            SELECT symbol, side, leverage, quantity, price
+            SELECT symbol, side, quantity, price
             FROM bot_trades
-            WHERE bot_id = %s AND state = 1;
+            WHERE bot_id = %s AND status = 'open';  -- open pozisyonları çekiyoruz
         """, (bot_id,))
 
         positions = cursor.fetchall()

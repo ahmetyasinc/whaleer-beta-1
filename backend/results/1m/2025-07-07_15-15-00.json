@@ -1,0 +1,8 @@
+{
+    "83": [
+        {
+            "status": "error",
+            "error": "'percentage'\nTraceback (most recent call last):\n  File \"C:\\Users\\ahmet\\OneDrive\\Masa\u00fcst\u00fc\\Balina Megasolo\\aws\\beta-1\\whaleer\\backend\\trade_engine\\process\\run_bot.py\", line 97, in run_bot\n    results = control_the_results(bot['id'], results)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\ahmet\\OneDrive\\Masa\u00fcst\u00fc\\Balina Megasolo\\aws\\beta-1\\whaleer\\backend\\trade_engine\\control\\control_the_results.py\", line 25, in control_the_results\n    holding_dict = {h['symbol']: h['percentage'] for h in holdings}\n                                 ~^^^^^^^^^^^^^^\nKeyError: 'percentage'\n"
+        }
+    ]
+}

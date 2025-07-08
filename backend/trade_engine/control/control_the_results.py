@@ -1,4 +1,4 @@
-from data.bot_features import load_bot_holding, load_bot_positions, load_bot_value
+from data.bot_features import load_bot_holding, load_bot_positions, load_bot_value, get_bot_percentage
 
 def control_the_results(bot_id, results):
 
@@ -29,16 +29,7 @@ def control_the_results(bot_id, results):
 
     current_value = load_bot_value(bot_id)
 
-    # holdings + açık pozisyonlardaki toplam yüzde
-    fulness = 0
-
-    # Holding içindeki yüzdeleri topla
-    fulness += (sum(holding_dict.values())/100)
-
-    # Open positions içindeki yüzdeleri topla (aynı coinler olabilir, bu yüzden ayrı ayrı ekleniyor)
-    for pos in open_position_map.values():
-        percentage = pos.get('percentage', 0)
-        fulness += float(percentage) / 100
+    fulness = get_bot_percentage(bot_id)
 
     filtered_results = []
     
@@ -80,11 +71,6 @@ def control_the_results(bot_id, results):
             percentage_pos = float(open_position_map[symbol]['percentage'])
         except KeyError:
             percentage_pos = 0.0
-
-        #if bot_id == 56:
-        #    print(f"bot_id: {bot_id}, usd: {current_value}, fulness: {fulness}")
-        #    print(f"prev_pos: {prev_pos}, curr_pos: {curr_pos}, prev_per: {prev_per}, curr_per: {curr_per}")
-        #    print(f"prev_state: {prev_state}, curr_state: {curr_state}")
 
         # KAPAMA İŞLEMLERİ İÇİN KONTROL ET
         match (prev_state, curr_state):

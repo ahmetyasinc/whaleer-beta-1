@@ -34,7 +34,7 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
         return {"bot_id": bot['id'], "status": "no_data", "duration": 0.0}
 
     try:
-        print(f"Bot ID: {bot['id']} çalıştırılıyor... BURADA //////////////////////")
+        print(f"Bot ID: {bot['id']} çalıştırılıyor...")
         results = []
 
         for coin_id in bot['stocks']:
@@ -72,8 +72,6 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
                 "input": EmptyClass(),
             }
 
-            print("Allowed globals for bot ID:")
-            print(allowed_globals['input'])
             for indicator in indicator_list:
                 exec(indicator['code'], allowed_globals)
 

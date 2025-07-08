@@ -69,6 +69,7 @@ export const createBot = async (botData) => {
       active_days: botData.days,
       active_hours: `${botData.startTime}-${botData.endTime}`,
       initial_usd_value: Number(botData.initial_usd_value),
+      current_usd_value: Number(botData.initial_usd_value),
       balance: Number(botData.balance),
     };
 

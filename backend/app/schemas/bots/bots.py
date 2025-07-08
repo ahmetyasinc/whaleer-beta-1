@@ -13,6 +13,7 @@ class BotsBase(BaseModel):
     active_hours: str
     name: str | None = None
     initial_usd_value: float | None = 1000
+    current_usd_value: float | None = 1000
     balance: float | None = None
 
 

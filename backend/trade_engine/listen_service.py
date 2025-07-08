@@ -70,9 +70,7 @@ async def execute_bot_logic(interval):
             if not strategies_with_indicators or not coin_data_dict or not bots:
                 print(f"❌ {interval} için aktif bot bulunamadı.")
                 return
-
             await run_all_bots_async(bots, strategies_with_indicators, coin_data_dict, last_time, interval)
-
             elapsed = time.time() - start_time
             print(f"✅ {last_time}, {interval} için botlar tamamlandı. Süre: {elapsed:.2f} saniye.")
         except Exception as e:

@@ -3,7 +3,7 @@
 import { FaLock } from 'react-icons/fa';
 import SyncedCharts from "@/components/profile_component/(indicator)/syncedCharts"; // SyncedCharts bileşenini import edin
 
-const isBeta = true;
+const isBeta = false;
 
 export default function ClientPage() {
   if (isBeta) {

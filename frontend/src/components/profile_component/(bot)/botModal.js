@@ -5,6 +5,7 @@ import useApiStore from '@/store/api/apiStore'; // yolunu doğru ver
 import useStrategyStore from '@/store/indicator/strategyStore';
 import { FiSearch } from 'react-icons/fi';
 import { toast } from 'react-toastify';
+import ChooseStrategy from './chooseStrategy';
 
 export const BotModal = ({ onClose, mode = "create", bot = null }) => {
   const [balance, setBalance] = useState(0); // Kullanıcının toplam bakiyesi
@@ -156,7 +157,7 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
   
   return (
     <div className="fixed inset-0 bg-black/50 bg-opacity-60 flex items-center justify-center z-50">
-      <div className="bg-gray-900 p-6 rounded-xl w-full max-w-4xl shadow-2xl relative border-y border-x border-gray-950 flex gap-6">
+      <div className="bg-gray-900 p-6 rounded-xl w-full max-w-4xl shadow-2xl relative border-y border-x h-[85vh] overflow-y-auto border-gray-950 flex gap-6">
         {/* Sol - Form Alanı */}
         <div className="w-2/3 pr-4 ">
           <h2 className="text-2xl font-bold text-white mb-6">
@@ -192,19 +193,7 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
             </div>
             <div>
               <label className="block mb-1 text-gray-300">Strateji</label>
-              <select
-                className="w-full p-2 bg-gray-800 text-white rounded"
-                value={strategy}
-                onChange={(e) => setStrategy(e.target.value)}
-              >
-                <option value="" disabled hidden>Seç</option>
-                          
-                {strategies.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
+              <ChooseStrategy/>
 
             </div>
             <div>
@@ -324,7 +313,7 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
             </button>
           </div>
 
-          <div className="flex justify-end gap-3">
+          <div className="flex right-2 gap-3 pb-3">
             <button
               onClick={onClose}
               className="px-4 py-2 bg-gray-600 text-gray-200 rounded-lg hover:bg-gray-500"

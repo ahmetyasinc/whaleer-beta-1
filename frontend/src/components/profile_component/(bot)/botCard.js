@@ -6,16 +6,43 @@ import { FaRegTrashAlt } from 'react-icons/fa';
 import { FiEdit3 } from 'react-icons/fi';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { IoSearch } from "react-icons/io5";
-import RunBotToggle from './runBotToggle'; // Import the RunBotToggle component
-import SpinningWheel from './spinningWheel'; // Import the SpinningWheel component
+import RunBotToggle from './runBotToggle';
+import SpinningWheel from './spinningWheel';
+import ExamineBot from "./examineBot";
 
 export const BotCard = ({ bot }) => {
   const removeBot = useBotStore((state) => state.removeBot);
-  const [editing, setEditing] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef(null);
   const updateBot = useBotStore((state) => state.updateBot);
   const toggleBotActive = useBotStore((state) => state.toggleBotActive);
+
+  const [editing, setEditing] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isExamineOpen, setIsExamineOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Örnek trade verisi - gerçek uygulamada bot nesnesinden gelecek
+  const trades = bot.trades || [
+    {
+      date: "2025-07-08 12:30",
+      symbol: "BTCUSDT",
+      price: 58600.50,
+      direction: "LONG",
+      status: "opened",
+    },
+    {
+      date: "2025-07-08 15:45",
+      symbol: "BTCUSDT",
+      price: 59150.20,
+      direction: "LONG",
+      status: "closed",
+    },
+  ];
+
+  // Açık pozisyonlar - gerçek uygulamada bot nesnesinden gelecek
+  const openPositions = bot.openPositions || [
+    { symbol: "ETHUSDT", amount: 0.5, cost: 3200, pnl: 75 },
+    { symbol: "BNBUSDT", amount: 1.2, cost: 420, pnl: -12 },
+  ];
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -23,28 +50,23 @@ export const BotCard = ({ bot }) => {
         setMenuOpen(false);
       }
     };
-  
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-  
+
   return (
     <>
       <div className="rounded-md px-4 py-4 shadow-xl relative bg-[hsl(227,82%,2%)] text-gray-200">
-        {/* Üçlü Yatay Grid */}
+        {/* Grid */}
         <div className="grid grid-cols-3 gap-4">
-
-          {/* Sol: Bot Bilgileri */}
+          {/* Sol */}
           <div className="border-r border-gray-700 pr-4">
             <h3 className="text-[18px] pl-1 font-semibold mb-2 text-white border-b border-gray-600 pb-[10px]">{bot.name}</h3>
             <p className="mb-1 text-[14px]"><span className="text-gray-300">API:</span> {bot.api}</p>
             <p className="mb-1 text-[14px]"><span className="text-gray-300">Strateji:</span> {bot.strategy}</p>
             <p className="mb-1 text-[14px]"><span className="text-gray-300">Periyot:</span> {bot.period}</p>
             <p className="mb-1 text-[14px]">
-              <span className="text-gray-300">Günler:</span>{' '}
-              {Array.isArray(bot.days) ? bot.days.join(', ') : 'Tanımsız'}
+              <span className="text-gray-300">Günler:</span> {Array.isArray(bot.days) ? bot.days.join(', ') : 'Tanımsız'}
             </p>
             <p className="mb-1 text-[14px]"><span className="text-gray-300">Saatler:</span> {bot.startTime} - {bot.endTime}</p>
             <p className="mb-1 text-[14px]">
@@ -56,16 +78,13 @@ export const BotCard = ({ bot }) => {
             <p className="mb-1 text-[14px]"><span className="text-gray-300">Edilen Kâr/Zarar:</span></p>
           </div>
 
-          {/* Orta: Coin Listesi - Sabit yükseklik ve scroll özellikleri eklendi */}
+          {/* Orta */}
           <div className="flex flex-col px-2 border-r border-gray-700 pr-4">
             <h4 className="text-sm text-gray-400 font-semibold mb-2">Kripto Paralar</h4>
             <div className="h-44 overflow-y-auto mr-4 scrollbar-hide">
               {bot.cryptos?.length > 0 ? (
                 bot.cryptos.map((coin) => (
-                  <div
-                    key={coin}
-                    className="w-full text-center text-[14px] bg-gray-800 px-2 py-1 rounded text-white mb-1"
-                  >
+                  <div key={coin} className="w-full text-center text-[14px] bg-gray-800 px-2 py-1 rounded text-white mb-1">
                     {coin}
                   </div>
                 ))
@@ -75,7 +94,7 @@ export const BotCard = ({ bot }) => {
             </div>
           </div>
 
-          {/* Sağ: Toggle Switch */}
+          {/* Sağ */}
           <div className="flex flex-col justify-center items-center">
             <label className="flex items-center gap-3">
               <SpinningWheel isActive={bot.isActive} />
@@ -90,7 +109,7 @@ export const BotCard = ({ bot }) => {
           </div>
         </div>
 
-        {/* Menü (sağ üst) */}
+        {/* Menü */}
         <div className="absolute top-2 right-2">
           <div className="relative inline-block text-left" ref={menuRef}>
             <button
@@ -124,6 +143,7 @@ export const BotCard = ({ bot }) => {
 
                 <button
                   onClick={() => {
+                    setIsExamineOpen(true);
                     setMenuOpen(false);
                   }}
                   className="flex items-center gap-2 w-full px-4 py-2 text-sm text-yellow-400 hover:bg-gray-700"
@@ -135,12 +155,21 @@ export const BotCard = ({ bot }) => {
           </div>
         </div>
 
-        {/* Düzenleme Modalı */}
+        {/* Modallar */}
         {editing && (
           <BotModal
             mode="edit"
             bot={bot}
             onClose={() => setEditing(false)}
+          />
+        )}
+        {isExamineOpen && (
+          <ExamineBot
+            isOpen={isExamineOpen}
+            onClose={() => setIsExamineOpen(false)}
+            botName={bot.name}
+            trades={trades}
+            openPositions={openPositions}
           />
         )}
       </div>

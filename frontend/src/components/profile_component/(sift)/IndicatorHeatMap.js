@@ -102,7 +102,7 @@ export default function IndicatorHeatMap() {
   };
 
   return (
-    <div className="fixed top-2 h-screen w-[400px] bg-zinc-900 shadow-lg rounded p-4 text-white">
+    <div className="h-full w-full bg-zinc-900 shadow-lg rounded p-2 text-white">
       <h2 className="text-sm font-bold mb-3 text-center">Teknik Tarama</h2>
 
       {/* Arama Çubuğu */}

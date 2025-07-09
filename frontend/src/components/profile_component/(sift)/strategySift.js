@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import useStrategyStore from '@/store/indicator/strategyStore';
 import StrategySiftModal from './strategySiftModal';
+import ChooseStrategy from "./chooseStrategy";
 
 // Periyotlar ve mum offsetleri
 const periods = ['1dk','3dk','5dk', '15dk', '30dk', '1saat', '2saat', '4saat', '6saat', '1gun', '1hafta'];
@@ -41,7 +42,10 @@ export default function StrategySift() {
   const [selectedOffset, setSelectedOffset] = useState(candleOffsets[0]);
   const [longCoins, setLongCoins] = useState(dummyLongCoins);
   const [shortCoins, setShortCoins] = useState(dummyShortCoins);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isStrategyModalOpen, setIsStrategyModalOpen] = useState(false);
+  const [isCoinModalOpen, setIsCoinModalOpen] = useState(false);
+
+  
 
 
   // Stratejiler yüklendiğinde ilk stratejiyi seçmek için
@@ -62,10 +66,10 @@ export default function StrategySift() {
     const isLong = direction === 'LONG';
     return (
       <div className="mt-2">
-        <h3 className={`text-xs font-bold mb-1 ${isLong ? 'text-green-500' : 'text-red-500'}`}>
+        <h3 className={`text-xs font-bold mb-2 ${isLong ? 'text-green-500' : 'text-red-500'}`}>
           {isLong ? 'LONG Sinyali' : 'SHORT Sinyali'}
         </h3>
-        <div className="max-h-[160px] overflow-y-auto pr-1">
+        <div className="max-h-[220px] overflow-y-auto pr-1">
           {coins.map((coin, index) => (
             <div 
               key={index} 
@@ -89,29 +93,18 @@ export default function StrategySift() {
   };
 
   return (
-    <div className="fixed top-2 h-screen w-[400px] bg-zinc-900 shadow-lg rounded p-4 text-white">
+    <div className="h-full w-full bg-zinc-900 shadow-lg p-2 rounded text-white">
       <h2 className="text-sm font-bold text-center mb-4">Strateji Tarama</h2>
 
       <div className="grid grid-cols-2 gap-3 mb-4">
-        {/* Strateji Dropdown */}
-        <div>
+
+        {/* Strateji seçme butonu */}
+        <div className="mb-2">
           <label className="block text-xs mb-1">Strateji</label>
-          <select
-            value={selectedStrategy}
-            onChange={(e) => setSelectedStrategy(e.target.value)}
-            className="w-full p-[6px] rounded bg-zinc-800 text-white border-1 border-zinc-500 text-sm"
-          >
-            {allStrategies.length > 0 ? (
-              allStrategies.map((strat) => (
-                <option key={strat.id} value={strat.id}>
-                  {strat.name || strat.id}
-                </option>
-              ))
-            ) : (
-              <option value="">Strateji seçin</option>
-            )}
-          </select>
+
+          <ChooseStrategy isOpen={isStrategyModalOpen} onClose={() => setIsStrategyModalOpen(false)} />
         </div>
+
 
         {/* Periyot Dropdown */}
         <div>
@@ -148,13 +141,14 @@ export default function StrategySift() {
         {/* Coin Ekle Butonu */}
         <div className="flex items-end">
           <button
-            onClick={() => setIsModalOpen(true)}
-            className="w-full bg-blue-700 hover:bg-blue-900 text-white pt-[7px] pb-[8px] rounded text-sm"
+            onClick={() => setIsCoinModalOpen(true)}
+            className="w-full bg-zinc-800 border-1 border-gray-500 text-white pt-[7px] pb-[8px] rounded text-sm"
           >
             Coin Ekle
           </button>
-          <StrategySiftModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+          <StrategySiftModal isOpen={isCoinModalOpen} onClose={() => setIsCoinModalOpen(false)} />
         </div>
+
       </div>
 
       {/* Sonuç Bölümü - İki Bölmeli Yapı */}
@@ -165,7 +159,7 @@ export default function StrategySift() {
         </div>
         
         {/* Short Sinyali Veren Coinler */}
-        <div className="flex-1 overflow-hidden mt-2 ">
+        <div className="flex-1 overflow-hidden mt-3 ">
           <CoinList coins={shortCoins} direction="SHORT" />
         </div>
       </div>

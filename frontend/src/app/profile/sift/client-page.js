@@ -3,9 +3,9 @@
 import { FaLock } from 'react-icons/fa';
 import IndicatorHeatMap from "@/components/profile_component/(sift)/IndicatorHeatMap";
 import StrategySift from "@/components/profile_component/(sift)/strategySift";
-import whaleerSift from "@/components/profile_component/(sift)/whaleerSift";
+import WhaleerSift from "@/components/profile_component/(sift)/whaleerSift";
 
-const isBeta = true;
+const isBeta = false;
 
 export default function ClientPage() {
   if (isBeta) {
@@ -28,19 +28,20 @@ export default function ClientPage() {
   }
   
 
-  return (
-    <div className="ml-16">
-    <div className="grid grid-cols-3 gap-0">
-      <div className="h-[calc(100vh-120px)]">
-        <whaleerSift />
+return (
+  <div className="px-16 h-screen overflow-hidden">
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-3 h-full py-3">
+      <div className="w-full h-full bg-zinc-900 shadow-lg rounded p-2 text-white overflow-auto">
+        <WhaleerSift />
       </div>
-      <div className="h-[calc(100vh-120px)] z-20">
+      <div className="w-full h-full bg-zinc-900 shadow-lg rounded p-2 text-white z-20 overflow-auto">
         <StrategySift />
       </div>
-      <div className="h-[calc(100vh-120px)] z-10">
+      <div className="w-full h-full bg-zinc-900 shadow-lg rounded p-2 text-white z-10 overflow-auto">
         <IndicatorHeatMap />
       </div>
     </div>
   </div>
-  );
+);
+
 }

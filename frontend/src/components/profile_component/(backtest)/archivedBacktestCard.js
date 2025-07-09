@@ -38,7 +38,7 @@ export default function ArchivedBacktestCard({ archivedItem }) {
 
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 mb-3 border-1 border-gray-700 hover:border-gray-600 transition-colors">
+    <div className="bg-gray-900 rounded-lg p-4 mb-3 border-1 border-gray-700 transition-colors">
       {/* Üst Kısım - Temel Bilgiler */}
       <div className="flex justify-between items-start mb-3">
         <div className="flex flex-col gap-1">

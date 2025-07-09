@@ -1,27 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { IoIosCode, IoIosStarOutline, IoMdSearch, IoMdStar } from "react-icons/io";
-import AddStrategyButton from "./add_strategy_button";
+import { IoIosStarOutline, IoMdSearch, IoMdStar } from "react-icons/io";
 import useStrategyStore from "@/store/indicator/strategyStore";
-import CodeModal from "./CodeModal";
 import axios from "axios";
 
 axios.defaults.withCredentials = true;
 
-const TechnicalStrategies = () => {
+const TechnicalStrategies = ({ onSelect }) => {
   const {
     favorites,
-    toggleFavorite,
     setTecnicStrategies,
     setPersonalStrategies,
     setCommunityStrategies,
-    tecnic
+    tecnic,
   } = useStrategyStore();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedIndicator, setSelectedIndicator] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (tecnic.length > 0) return;
@@ -30,11 +25,12 @@ const TechnicalStrategies = () => {
       try {
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/all-strategies/`);
         const tecnic_strategies = response.data.tecnic_strategies || [];
-        const personal_strategies = response.data.personal_strategies || [];
-        const public_strategies = response.data.public_strategies || [];
-
         setTecnicStrategies(tecnic_strategies);
+
+        const personal_strategies = response.data.personal_strategies || [];
         setPersonalStrategies(personal_strategies);
+
+        const public_strategies = response.data.public_strategies || [];
         setCommunityStrategies(public_strategies);
       } catch (error) {
         console.error("Veri çekme hatası:", error);
@@ -42,34 +38,11 @@ const TechnicalStrategies = () => {
     };
 
     fetchStrategies();
-  }, [tecnic.length]);
-
-  const handleToggleFavorite = async (strategy) => {
-    const isAlreadyFavorite = favorites.some((fav) => fav.id === strategy.id);
-    toggleFavorite(strategy);
-
-    try {
-      if (isAlreadyFavorite) {
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/strategy-remove-favourite/`, {
-          data: { strategy_id: strategy.id }
-        });
-      } else {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/strategy-add-favorite/`, {
-          strategy_id: strategy.id
-        });
-      }
-    } catch (error) {
-      console.error("Favori işlemi sırasında hata oluştu:", error);
-    }
-  };
-
-  const openCodeModal = (strategy) => {
-    setSelectedIndicator(strategy); // 'strategy' artık 'indicator' olarak kullanılacak
-    setIsModalOpen(true);
-  };
+  }, [tecnic.length, setTecnicStrategies]);
 
   return (
     <div className="text-white">
+      {/* Arama Çubuğu */}
       <div className="bg-gray-800 flex items-center border-b border-gray-800 mb-2">
         <input
           type="text"
@@ -81,6 +54,7 @@ const TechnicalStrategies = () => {
         <IoMdSearch className="text-gray-400 text-[20px] mr-2" />
       </div>
 
+      {/* Liste */}
       <div className="flex flex-col gap-2 w-full mt-2 max-h-[440px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
         {tecnic
           .filter((strategy) =>
@@ -91,39 +65,30 @@ const TechnicalStrategies = () => {
               key={strategy.id}
               className="bg-gray-900 hover:bg-gray-800 pl-1 pr-2 flex items-center justify-between w-full h-[40px]"
             >
+              {/* Sol */}
               <div className="flex items-center">
-                <button
-                  className="bg-transparent p-2 rounded-md hover:bg-gray-800"
-                  onClick={() => handleToggleFavorite(strategy)}
-                >
+                <div className="bg-transparent p-2 rounded-md hover:bg-gray-800">
                   {favorites.some((fav) => fav.id === strategy.id) ? (
                     <IoMdStar className="text-lg text-yellow-500" />
                   ) : (
                     <IoIosStarOutline className="text-lg text-gray-600" />
                   )}
-                </button>
+                </div>
                 <span className="text-[14px]">{strategy.name}</span>
               </div>
 
+              {/* Sağ */}
               <div className="flex gap-2">
-                <AddStrategyButton strategyId={strategy.id} />
                 <button
-                  className="bg-transparent p-2 rounded-md hover:bg-gray-800"
-                  onClick={() => openCodeModal(strategy)}
+                  onClick={() => onSelect(strategy)} // 👈 Strateji seçimini tetikleyen yer
+                  className="bg-blue-600 px-2 rounded-md py-[1px] h-[26px] mr-3 hover:bg-blue-800 text-white text-xs"
                 >
-                  <IoIosCode className="text-[hsl(305,57%,44%)] hover:text-[#eb48dd] text-2xl cursor-pointer" />
+                  Seç
                 </button>
               </div>
             </div>
           ))}
       </div>
-
-      {/* Kod Modalı */}
-      <CodeModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        indicator={selectedIndicator}
-      />
     </div>
   );
 };

@@ -8,7 +8,7 @@ import Portfolio from "@/components/profile_component/(profile)/portfolio";
 import StrategyIndicatorCard from "@/components/profile_component/(profile)/strategyIndicatorCard";
 import BotCard from "@/components/profile_component/(profile)/profileBotCard";
 
-const isBeta = true;
+const isBeta = false;
 
 export default function ClientProfilePage() {
   if (isBeta) {

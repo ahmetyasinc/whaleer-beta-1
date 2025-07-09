@@ -32,8 +32,8 @@ const IndicatorHeader = () => {
   return (
     <div className="w-full bg-black shadow-md flex justify-between items-center py-3 fixed top-0 left-0 right-0 z-50 h-[61px] pl-16">
       
-    {/* Butonlar ve Dropdown Grubu */}
-    <div className="flex gap-2 items-center w-full">
+      {/* Butonlar ve Dropdown Grubu */}
+      <div className="flex gap-2 items-center w-full">
 
       {/* Kripto Seçim Butonu */}
       <CryptoSelectButton selectedCrypto={selectedCrypto} setSelectedCrypto={setSelectedCrypto} />

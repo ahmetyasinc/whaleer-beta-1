@@ -62,8 +62,8 @@ export default function whaleerSift() {
   );
 
   return (
-    <div className="fixed top-2 h-screen w-[400px] bg-zinc-900 shadow-lg rounded p-4 text-white">
-      <h2 className="text-sm font-bold mb-3 text-center">whaleer Tarama</h2>
+    <div className="h-full w-full bg-zinc-900 shadow-lg rounded p-2 text-white">
+      <h2 className="text-sm font-bold mb-3 text-center">Whaleer Radarı</h2>
 
       {/* Arama ve Filtreler */}
       <div className="mb-2">
@@ -95,11 +95,11 @@ export default function whaleerSift() {
 
       {/* Long Sinyali En Çok Olan Coinler */}
       <div className="mb-4">
-        <h3 className="text-sm font-semibold mb-2 border-b border-zinc-700 pb-1 flex items-center">
+        <h3 className="text-sm font-semibold mb-3 border-b border-zinc-700 pb-1 flex items-center">
           <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
           En Çok Long Sinyal
         </h3>
-        <div className="max-h-[180px] overflow-y-auto">
+        <div className="max-h-[220px] overflow-y-auto">
           {topLongCoins.length > 0 ? (
             topLongCoins.map((coin) => (
               <CoinCard key={`long-${coin.symbol}`} coin={coin} />
@@ -112,11 +112,11 @@ export default function whaleerSift() {
 
       {/* Short Sinyali En Çok Olan Coinler */}
       <div>
-        <h3 className="text-sm font-semibold mb-2 border-b border-zinc-700 pb-1 flex items-center">
+        <h3 className="text-sm font-semibold mb-3 border-b border-zinc-700 pb-1 flex items-center">
           <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
           En Çok Short Sinyal
         </h3>
-        <div className="max-h-[180px] overflow-y-auto">
+        <div className="max-h-[220px] overflow-y-auto">
           {topShortCoins.length > 0 ? (
             topShortCoins.map((coin) => (
               <CoinCard key={`short-${coin.symbol}`} coin={coin} />

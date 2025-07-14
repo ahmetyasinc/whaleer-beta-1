@@ -1,8 +1,0 @@
-{
-    "83": [
-        {
-            "status": "error",
-            "error": "name 'input' is not defined\nTraceback (most recent call last):\n  File \"c:\\Users\\ahmet\\OneDrive\\Masa\u00fcst\u00fc\\Balina Megasolo\\last\\balina\\backend\\trade_engine\\process\\run_bot.py\", line 72, in run_bot\n    exec(indicator['code'], allowed_globals)\n  File \"<string>\", line 1, in <module>\nNameError: name 'input' is not defined\n"
-        }
-    ]
-}

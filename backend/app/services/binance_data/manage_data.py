@@ -103,7 +103,7 @@ async def binance_websocket(db_pool):
                         # ✅ 5️⃣ Veriyi veritabanına kaydet
                         async with db_pool.acquire() as conn:
 
-                            await fill_data_from_binance(conn, coin_id, interval, timestamp)
+                            #await fill_data_from_binance(conn, coin_id, interval, timestamp)
 
                             await conn.execute(
                                 """

@@ -24,12 +24,18 @@ def control_the_results(bot_id, results):
     holdings = load_bot_holding(bot_id)
     holding_dict = {h['symbol']: h['percentage'] for h in holdings}
 
+    #print(f"holding_dict: {holding_dict}")
+
     open_positions = load_bot_positions(bot_id)
     open_position_map = {p['symbol']: p for p in open_positions}
+
+    #print(f"open_position_map: {open_position_map}")
 
     current_value = load_bot_value(bot_id)
 
     fulness = get_bot_percentage(bot_id)
+
+    #print(f"current_value: {current_value}, fulness: {fulness}")
 
     filtered_results = []
     
@@ -62,6 +68,8 @@ def control_the_results(bot_id, results):
         # STATE İSİMLENDİRMELERİNİ YAP
         prev_state = get_state(prev_pos, prev_per)
         curr_state = get_state(curr_pos, curr_per)
+
+        #print(f"prev_state: {prev_state}, curr_state: {curr_state}")
 
         symbol = result.get('coin_id')
         percentage_hold = holding_dict.get(symbol, float('0'))
@@ -123,13 +131,12 @@ def control_the_results(bot_id, results):
             case ("long", "none"):
                 if percentage_pos != 0:
                     new_result = sanitize_result(result)
-                    if open_position_map[symbol]['side']== "short":
+                    if open_position_map[symbol]['position_side']== "short":
                         new_result['side'] = "buy"
                         new_result['positionside'] = "short"
-                    elif open_position_map[symbol]['side']== "long":
+                    elif open_position_map[symbol]['position_side']== "long":
                         new_result['side'] = "sell"
-                        new_result['positionside'] = "long"
-                    new_result['reduceOnly'] = True
+                        new_result['positionside'] = "long"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
                     value = percentage_pos/100
                     new_result['value'] = current_value * value
                     fulness -= value
@@ -138,10 +145,10 @@ def control_the_results(bot_id, results):
             case ("long", "spot"):
                 if percentage_pos != 0:
                     new_result = sanitize_result(result)
-                    if open_position_map[symbol]['side']== "short":
+                    if open_position_map[symbol]['position_side']== "short":
                         new_result['side'] = "buy"
                         new_result['positionside'] = "short"
-                    elif open_position_map[symbol]['side']== "long":
+                    elif open_position_map[symbol]['position_side']== "long":
                         new_result['side'] = "sell"
                         new_result['positionside'] = "long"
                     new_result['reduceOnly'] = True
@@ -153,7 +160,7 @@ def control_the_results(bot_id, results):
             case ("long", "long"):
                 curr_position = curr_pos * curr_per
                 prev_position = prev_pos * prev_per
-                if curr_position < prev_position and percentage_pos != 0 and curr_position < percentage_pos and open_position_map[symbol]['side']== "long":
+                if curr_position < prev_position and percentage_pos != 0 and curr_position < percentage_pos and open_position_map[symbol]['position_side']== "long":
                     new_result = sanitize_result(result)
                     new_result['side'] = "sell"
                     new_result['positionside'] = "long"
@@ -166,10 +173,10 @@ def control_the_results(bot_id, results):
             case ("long", "short"):
                 if percentage_pos != 0:
                     new_result = sanitize_result(result)
-                    if open_position_map[symbol]['side']== "short":
+                    if open_position_map[symbol]['position_side']== "short":
                         new_result['side'] = "buy"
                         new_result['positionside'] = "short"
-                    elif open_position_map[symbol]['side']== "long":
+                    elif open_position_map[symbol]['position_side']== "long":
                         new_result['side'] = "sell"
                         new_result['positionside'] = "long"
                     new_result['reduceOnly'] = True
@@ -181,10 +188,10 @@ def control_the_results(bot_id, results):
             case ("short", "none"):
                 if percentage_pos != 0:
                     new_result = sanitize_result(result)
-                    if open_position_map[symbol]['side']== "short":
+                    if open_position_map[symbol]['position_side']== "short":
                         new_result['side'] = "buy"
                         new_result['positionside'] = "short"
-                    elif open_position_map[symbol]['side']== "long":
+                    elif open_position_map[symbol]['position_side']== "long":
                         new_result['side'] = "sell"
                         new_result['positionside'] = "long"
                     new_result['reduceOnly'] = True
@@ -196,10 +203,10 @@ def control_the_results(bot_id, results):
             case ("short", "spot"):
                 if percentage_pos != 0:
                     new_result = sanitize_result(result)
-                    if open_position_map[symbol]['side']== "short":
+                    if open_position_map[symbol]['position_side']== "short":
                         new_result['side'] = "buy"
                         new_result['positionside'] = "short"
-                    elif open_position_map[symbol]['side']== "long":
+                    elif open_position_map[symbol]['position_side']== "long":
                         new_result['side'] = "sell"
                         new_result['positionside'] = "long"
                     new_result['reduceOnly'] = True
@@ -250,6 +257,8 @@ def control_the_results(bot_id, results):
         prev_state = get_state(prev_pos, prev_per)
         curr_state = get_state(curr_pos, curr_per)
         
+        #print(f"prev_states: {prev_state}, curr_state: {curr_state}")
+
         symbol = result.get('coin_id')
         percentage_hold = holding_dict.get(symbol, float('0'))
         if percentage_hold == None:
@@ -258,6 +267,7 @@ def control_the_results(bot_id, results):
             percentage_pos = float(open_position_map[symbol]['percentage'])
         except KeyError:
             percentage_pos = 0
+            
 
         # AÇMA İŞLEMLERİ İÇİN KONTROL ET
         match (prev_state, curr_state):
@@ -265,6 +275,7 @@ def control_the_results(bot_id, results):
                 continue
             case ("none", "spot"): #TRUE
                 value = curr_pos * (curr_per/100)
+                #print(f"curr_pos: {curr_pos}, curr_per: {curr_per}, value: {value}, minValue: {minValue}, current_value: {current_value}, fulness: {fulness}")
                 if (value*current_value) < minValue:
                     continue
                 if (value < (1-fulness)):
@@ -289,6 +300,7 @@ def control_the_results(bot_id, results):
                 continue
             case ("none", "short"):
                 value = curr_per/100
+                #print(f"prev_pos: {prev_pos}, prev_per: {prev_per}, curr_pos: {curr_pos}, curr_per: {curr_per}, value: {value}, minValue: {minValue}, current_value: {current_value}, fulness: {fulness}")
                 if (value*current_value) < minValue:
                     continue
                 if value < (1-fulness):

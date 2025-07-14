@@ -6,7 +6,7 @@ def calculate_fullness_percentage(fullness_usdt, current_usd_value):
     try:
         if not current_usd_value or current_usd_value == 0:
             return 100.0  # USD değeri yoksa %100 kabul edebilirsin
-        return round((float(fullness_usdt) / float(current_usd_value)) * 100, 2)
+        return round((float(fullness_usdt) / float(current_usd_value)), 2)
     except Exception as e:
         print(f"Hesaplama hatası: {e}")
         return 0.0
@@ -42,7 +42,7 @@ def load_bot_holding(bot_id):
         cursor = conn.cursor(cursor_factory=RealDictCursor)
 
         cursor.execute("""
-            SELECT user_id, bot_id, symbol, amount
+            SELECT bot_id, symbol, percentage
             FROM bot_holdings
             WHERE bot_id = %s;
         """, (bot_id,))
@@ -65,9 +65,9 @@ def load_bot_positions(bot_id):
 
         # Yeni tablo yapısına göre sorgu güncellendi
         cursor.execute("""
-            SELECT symbol, side, quantity, price
-            FROM bot_trades
-            WHERE bot_id = %s AND status = 'open';  -- open pozisyonları çekiyoruz
+            SELECT symbol, position_side, amount, percentage
+            FROM bot_positions
+            WHERE bot_id = %s AND status = 'open';
         """, (bot_id,))
 
         positions = cursor.fetchall()

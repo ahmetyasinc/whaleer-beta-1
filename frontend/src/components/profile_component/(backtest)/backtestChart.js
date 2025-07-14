@@ -1,4 +1,4 @@
-'use client';
+/*'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { createChart } from 'lightweight-charts';
@@ -246,15 +246,15 @@ export default function BacktestChart() {
 
   return (
     <div className="w-full h-full flex flex-col space-y-2">
-      {/* Ana Chart - Candlestick ve Line */}
+
       <div className="flex-1 relative">
         <div ref={mainChartContainerRef} className="w-full h-78" />
         
-        {/* Chart başlığı ve toggle butonları */}
+
         <div className="absolute top-2 left-2 flex items-center gap-4 text-sm font-light pointer-events-auto z-10">
           <span className="text-gray-400">Price Chart</span>
           
-          {/* Toggle butonları */}
+
           <div className="flex gap-2">
             <button
               onClick={toggleCandlestick}
@@ -291,7 +291,281 @@ export default function BacktestChart() {
         </div>
       </div>
       
-      {/* Returns Chart - Histogram */}
+
+      <div className="flex-shrink-0 relative">
+        <div ref={returnsChartContainerRef} className="w-full h-36" />
+        <div className="absolute top-2 left-2 text-gray-400 text-sm font-light pointer-events-none z-10">
+          Returns
+        </div>
+      </div>
+    </div>
+  );
+}
+*/
+
+
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { createChart } from 'lightweight-charts';
+import useBacktestStore from '@/store/backtest/backtestStore';
+
+export default function BacktestChart() {
+  const mainChartContainerRef = useRef(null);
+  const mainChartRef = useRef(null);
+  const candlestickSeriesRef = useRef(null);
+  const lineSeriesRef = useRef(null);
+
+  const returnsChartContainerRef = useRef(null);
+  const returnsChartRef = useRef(null);
+  const histogramSeriesRef = useRef(null);
+
+  const [showCandlestick, setShowCandlestick] = useState(true);
+  const [showLine, setShowLine] = useState(true);
+
+  const chartData = useBacktestStore((state) => state.backtestResults?.chartData || []);
+  const candles = useBacktestStore((state) => state.backtestResults?.candles || []);
+  const returns = useBacktestStore((state) => state.backtestResults?.returns || []);
+  const period = useBacktestStore((state) => state.selectedPeriod);
+
+  const getChartConfig = (height = 500) => ({
+    width: 0,
+    height,
+    layout: {
+      textColor: 'white',
+      background: { type: 'solid', color: 'rgb(0, 4, 10)' },
+    },
+    grid: {
+      vertLines: { color: '#111', style: 1 },
+      horzLines: { color: '#111', style: 1 },
+    },
+    timeScale: {
+      borderColor: '#334155',
+      timeVisible: true,
+      secondsVisible: ['1m', '5m', '15m'].includes(period),
+    },
+    priceScale: {
+      borderColor: '#334155',
+    },
+    crosshair: {
+      mode: 1,
+    },
+  });
+
+  const toggleCandlestick = () => {
+    if (showCandlestick && !showLine) return;
+    setShowCandlestick(!showCandlestick);
+  };
+
+  const toggleLine = () => {
+    if (showLine && !showCandlestick) return;
+    setShowLine(!showLine);
+  };
+
+  useEffect(() => {
+    const container = mainChartContainerRef.current;
+    if (!container) return;
+
+    const mainChart = createChart(container, {
+      ...getChartConfig(300),
+      width: container.clientWidth,
+    });
+
+    mainChartRef.current = mainChart;
+
+    const candlestickSeries = mainChart.addCandlestickSeries();
+    candlestickSeriesRef.current = candlestickSeries;
+
+    const lineSeries = mainChart.addLineSeries({
+      color: '#3b82f6',
+      lineWidth: 2,
+    });
+    lineSeriesRef.current = lineSeries;
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (mainChartContainerRef.current) {
+        mainChart.applyOptions({ width: mainChartContainerRef.current.clientWidth });
+      }
+    });
+    resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+      mainChart.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    const container = returnsChartContainerRef.current;
+    if (!container) return;
+
+    const returnsChart = createChart(container, {
+      ...getChartConfig(150),
+      width: container.clientWidth,
+    });
+
+    returnsChartRef.current = returnsChart;
+
+    const histogramSeries = returnsChart.addHistogramSeries({
+      color: '#22c55e',
+      priceFormat: { type: 'percent', precision: 4 },
+    });
+    histogramSeriesRef.current = histogramSeries;
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (returnsChartContainerRef.current) {
+        returnsChart.applyOptions({ width: returnsChartContainerRef.current.clientWidth });
+      }
+    });
+    resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+      returnsChart.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mainChartRef.current || !returnsChartRef.current) return;
+
+    const mainChart = mainChartRef.current;
+    const returnsChart = returnsChartRef.current;
+
+    const handleMainCrosshairMove = (param) => {
+      if (param.time) {
+        returnsChart.timeScale().setVisibleLogicalRange(
+          mainChart.timeScale().getVisibleLogicalRange()
+        );
+      }
+    };
+
+    const handleReturnsCrosshairMove = (param) => {
+      if (param.time) {
+        mainChart.timeScale().setVisibleLogicalRange(
+          returnsChart.timeScale().getVisibleLogicalRange()
+        );
+      }
+    };
+
+    const syncTimeScales = () => {
+      const mainRange = mainChart.timeScale().getVisibleLogicalRange();
+      const returnsRange = returnsChart.timeScale().getVisibleLogicalRange();
+      if (mainRange && returnsRange) {
+        if (
+          Math.abs(mainRange.from - returnsRange.from) > 0.1 ||
+          Math.abs(mainRange.to - returnsRange.to) > 0.1
+        ) {
+          returnsChart.timeScale().setVisibleLogicalRange(mainRange);
+        }
+      }
+    };
+
+    mainChart.subscribeCrosshairMove(handleMainCrosshairMove);
+    returnsChart.subscribeCrosshairMove(handleReturnsCrosshairMove);
+    mainChart.timeScale().subscribeVisibleLogicalRangeChange(syncTimeScales);
+
+    return () => {
+      mainChart.unsubscribeCrosshairMove(handleMainCrosshairMove);
+      returnsChart.unsubscribeCrosshairMove(handleReturnsCrosshairMove);
+      mainChart.timeScale().unsubscribeVisibleLogicalRangeChange(syncTimeScales);
+    };
+  }, [mainChartRef.current, returnsChartRef.current]);
+
+  useEffect(() => {
+    if (candlestickSeriesRef.current && candles.length > 0) {
+      const formatted = candles.map(c => ({
+        time: c.time,
+        open: +c.open,
+        high: +c.high,
+        low: +c.low,
+        close: +c.close,
+      }));
+      candlestickSeriesRef.current.setData(showCandlestick ? formatted : []);
+    }
+
+    if (lineSeriesRef.current && chartData.length > 0) {
+      lineSeriesRef.current.setData(showLine ? chartData : []);
+    }
+
+    if (mainChartRef.current) {
+      mainChartRef.current.applyOptions({
+        timeScale: {
+          secondsVisible: ['1m', '5m', '15m'].includes(period),
+        },
+      });
+    }
+  }, [candles, chartData, period, showCandlestick, showLine]);
+
+  useEffect(() => {
+    if (histogramSeriesRef.current && Array.isArray(returns) && returns.length > 0) {
+      try {
+        const formattedReturns = returns
+          .filter(item => Array.isArray(item) && item.length >= 2)
+          .map(([time, value]) => ({
+            time,
+            value: +value,
+            color: value >= 0 ? '#22c55e' : '#ef4444',
+          }));
+
+        if (formattedReturns.length > 0) {
+          histogramSeriesRef.current.setData(formattedReturns);
+        }
+      } catch (error) {
+        console.error('Returns data formatting error:', error);
+        console.log('Returns data:', returns);
+      }
+    }
+
+    if (returnsChartRef.current) {
+      returnsChartRef.current.applyOptions({
+        timeScale: {
+          secondsVisible: ['1m', '5m', '15m'].includes(period),
+        },
+      });
+    }
+  }, [returns, period]);
+
+  return (
+    <div className="w-full h-full flex flex-col space-y-2">
+      <div className="flex-1 relative">
+        <div ref={mainChartContainerRef} className="w-full h-78" />
+        <div className="absolute top-2 left-2 flex items-center gap-4 text-sm font-light pointer-events-auto z-10">
+          <span className="text-gray-400">Price Chart</span>
+          <div className="flex gap-2">
+            <button
+              onClick={toggleCandlestick}
+              disabled={showCandlestick && !showLine}
+              className={`px-2 py-1 rounded text-xs border transition-colors ${
+                showCandlestick
+                  ? 'bg-green-600 border-green-500 text-white'
+                  : 'bg-gray-700 border-gray-600 text-gray-400'
+              } ${
+                showCandlestick && !showLine
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:bg-opacity-80 cursor-pointer'
+              }`}
+            >
+              Candles
+            </button>
+            <button
+              onClick={toggleLine}
+              disabled={showLine && !showCandlestick}
+              className={`px-2 py-1 rounded text-xs border transition-colors ${
+                showLine
+                  ? 'bg-blue-600 border-blue-500 text-white'
+                  : 'bg-gray-700 border-gray-600 text-gray-400'
+              } ${
+                showLine && !showCandlestick
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:bg-opacity-80 cursor-pointer'
+              }`}
+            >
+              Line
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="flex-shrink-0 relative">
         <div ref={returnsChartContainerRef} className="w-full h-36" />
         <div className="absolute top-2 left-2 text-gray-400 text-sm font-light pointer-events-none z-10">

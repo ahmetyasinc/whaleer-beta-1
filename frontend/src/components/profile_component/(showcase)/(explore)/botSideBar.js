@@ -67,7 +67,7 @@ export default function BotSidebar() {
         ) : (
           followedBots.map((bot) => (
             <div
-              key={bot.id}
+              key={`${bot.id}_${bot.followDate}`}
               className="relative bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md"
             >
               <div className="absolute top-1 right-1 flex gap-1">

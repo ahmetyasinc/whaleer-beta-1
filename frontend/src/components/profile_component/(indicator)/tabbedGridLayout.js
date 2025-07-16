@@ -34,6 +34,7 @@
       syncWidths
     } = usePanelStore();
 
+    
 
     const filteredSubItems = Object.entries(indicatorData)
     .flatMap(([indicatorId, indicatorObj]) =>

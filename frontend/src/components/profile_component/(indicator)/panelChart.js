@@ -34,11 +34,12 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       setDisplayName(firstNonGraphItem.name);
     }
 
+
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
       height: chartContainerRef.current.clientHeight,
       layout: {
-        background: { color: "rgb(0, 4, 10)" },
+        background: { color: "rgb(0, 0, 7)" },
         textColor: "#FFF",
       },
       grid: {

@@ -25,7 +25,7 @@ const integratedData = {
         {
           id: "bot_59_1",
           name: "Bitcoin Master Bot",
-          isActive: true,
+          isActive: false,
           profitRate: "99.4",
           runningTime: 164,
           totalTrades: 1247,
@@ -345,6 +345,7 @@ const useBotDataStore = create((set, get) => ({
     
     if (!isAlreadyFollowed) {
       const followedBot = {
+        bot_id: botData.bot_id,
         id: botData.bot_id,
         name: botData.name,
         creator: botData.creator,

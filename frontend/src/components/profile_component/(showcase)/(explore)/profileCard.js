@@ -131,12 +131,18 @@ const UserProfileCard = ({ isAnimating, onUserClick }) => {
         <h3 className="text-sm font-semibold text-white mb-3">Oluşturduğu Botlar</h3>
         <div className="space-y-2 max-h-60 overflow-y-auto">
           {userData.bots?.map((bot) => (
-            <div key={bot.id} className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-lg p-3 hover:bg-gray-600 transition-colors cursor-pointer">
+            <div key={bot.id} className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-lg p-3 hover:bg-gray-600 transition-colors">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <FaRobot className="w-4 h-4 text-blue-400" />
                   <span className="text-sm font-medium text-white">{bot.name}</span>
-                  <span className={`w-2 h-2 rounded-full ${bot.isActive ? 'bg-green-400' : 'bg-red-400'}`}></span>
+                  <div className="relative group w-fit">
+                    <span className="absolute top-3 left-1/2 transform -translate-x-1/2 z-20 px-3 py-1.5 text-xs font-medium text-white bg-[rgb(28,83,81)] rounded-md shadow-md transition-transform duration-200 ease-in-out scale-0 group-hover:scale-100">
+                      {bot.isActive ? 'Bot Aktif' : 'Bot Aktif Değil'}
+                    </span>
+                    <span className={`w-2 h-2 rounded-full block ${bot.isActive ? 'bg-green-400' : 'bg-red-400'}`}></span>
+                  </div>
+
                 </div>
                 <span className={`text-xs font-medium ${
                   parseFloat(bot.profitRate || 0) > 0 ? 'text-green-400' : 'text-red-400'

@@ -1,37 +1,26 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSiftCoinStore } from '@/store/sift/strategySiftCoinStore';
 import useStrategyStore from '@/store/indicator/strategyStore';
 import StrategySiftModal from './strategySiftModal';
-import ChooseStrategy from "./chooseStrategy";
+import StrategyButton from "./chooseStrategy";  
+import axios from "axios";
 
 // Periyotlar ve mum offsetleri
 const periods = ['1dk','3dk','5dk', '15dk', '30dk', '1saat', '2saat', '4saat', '6saat', '1gun', '1hafta'];
 const candleOffsets = ['Son mum', '2. mum', '3. mum', '4. mum', '5. mum'];
 
 // Örnek coin verileri
-const dummyLongCoins = [
-  { symbol: 'BTC/USDT', price: '62,483' },
-  { symbol: 'ETH/USDT', price: '3,127' },
-  { symbol: 'SOL/USDT', price: '138.5' },
-  { symbol: 'BNB/USDT', price: '574.3' },
-  { symbol: 'ADA/USDT', price: '0.451' },
-  { symbol: 'DOGE/USDT', price: '0.127' },
-  { symbol: 'XRP/USDT', price: '0.542' },
-  { symbol: 'DOT/USDT', price: '6.84' },
-];
+const dummyLongCoins = [];
 
-const dummyShortCoins = [
-  { symbol: 'SHIB/USDT', price: '0.00002145' },
-  { symbol: 'AVAX/USDT', price: '32.48' },
-  { symbol: 'LINK/USDT', price: '17.26' },
-  { symbol: 'MATIC/USDT', price: '0.758' },
-  { symbol: 'ATOM/USDT', price: '9.24' },
-];
+const dummyShortCoins = [];
 
 export default function StrategySift() {
   // Zustand store'dan sadece strategies arrayini çekiyoruz
   const { strategies } = useStrategyStore();
+  const { selectedCoins } = useSiftCoinStore();
+
 
   // Sadece strategies arrayini kullanıyoruz
   const allStrategies = strategies;
@@ -45,18 +34,99 @@ export default function StrategySift() {
   const [isStrategyModalOpen, setIsStrategyModalOpen] = useState(false);
   const [isCoinModalOpen, setIsCoinModalOpen] = useState(false);
 
-  
-
-
-  // Stratejiler yüklendiğinde ilk stratejiyi seçmek için
+  // Stratejiler yüklendiğinde ilk stratejiyi seçmek için - sadece bir kez çalışsın
   useEffect(() => {
-    if (allStrategies.length > 0 && !selectedStrategy) {
+    if (allStrategies.length > 0 && selectedStrategy === '') {
       setSelectedStrategy(allStrategies[0].id);
     }
-  }, [allStrategies, selectedStrategy]);
+    if (selectedStrategy) {
+      setSelectedStrategy(selectedStrategy);
+    }
+  }, [selectedStrategy]);
+  // selectedStrategy dependency'sini kaldırdık
+
+  const extractTarget = (label) => {
+    if (label === "Son mum") return 1;
+
+    const match = label.match(/\d+/);
+    return match ? parseInt(match[0]) : 1;
+  };
+
+  const extraxtPeriod = (label) => {
+    if (label === "1dk") return "1m";
+    if (label === "3dk") return "3m";
+    if (label === "5dk") return "5m";
+    if (label === "15dk") return "15m";
+    if (label === "30dk") return "30m";
+    if (label === "1saat") return "1h";
+    if (label === "2saat") return "2h";
+    if (label === "4saat") return "4h";
+    if (label === "6saat") return "6h";
+    if (label === "1gun") return "1d";
+    if (label === "1hafta") return "1w";
+    else return "1m";
+  };
+
+  const scan = async () => {
+    try {
+      axios.defaults.withCredentials = true;
+
+      // 1. Payload'u hazırla
+      const payload = {
+        strategy_id: selectedStrategy,
+        symbols: selectedCoins.map(c => c.symbol.replace("/", "")),
+        interval: extraxtPeriod(selectedPeriod), // veya selectedPeriod'dan dönüştür
+        candles: 200,
+        target: extractTarget(selectedOffset),// örneğin "5. mum" => 5 gibi parse edilmeli
+      };
+    
+      console.log("Gönderilen veri:", payload);
+
+      // 2. API isteği gönder
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/scan/`, // endpoint örnek
+        payload
+      );
+
+      const result = response.data;
+      console.log("Gelen veri:", result)
+      // 3. Long ve Short coinleri ayır
+      const longResults = [];
+      const shortResults = [];
+
+      Object.entries(result).forEach(([symbol, value]) => {
+        const price = [...longCoins, ...shortCoins].find(c => c.symbol.replace("/", "") === symbol)?.price || value;
+        const coinData = {
+          symbol: symbol.replace("USDT", "/USDT"),
+          price: price,
+          score: Math.abs(value),
+        };
+        if (value > 0) {
+          longResults.push(coinData);
+        } else if (value < 0) {
+          shortResults.push(coinData);
+        }
+      });
+
+      // 4. Skora göre sırala
+      const sortFn = (a, b) => b.score - a.score;
+
+      setLongCoins(longResults.sort(sortFn));
+      setShortCoins(shortResults.sort(sortFn));
+
+    } catch (error) {
+      console.error("Tarama hatası:", error);
+    }
+  };
 
   const handleCoinAdd = () => {
     console.log('Coin eklendi.');
+  };
+
+  // Strateji seçim handler'ı
+  const handleStrategySelect = (strategyId) => {
+    setSelectedStrategy(strategyId);
+    setIsStrategyModalOpen(false);
   };
 
   // Seçili strateji nesnesini bul
@@ -79,7 +149,7 @@ export default function StrategySift() {
                 <div className={`w-2 h-2 rounded-full ${isLong ? 'bg-green-500' : 'bg-red-500'} mr-2`}></div>
                 <div className="font-medium text-sm">{coin.symbol}</div>
               </div>
-              <div className="text-sm">{coin.price}$</div>
+              <div className="text-sm">Katsayı: {coin.price}</div>
             </div>
           ))}
           {coins.length === 0 && (
@@ -98,11 +168,13 @@ export default function StrategySift() {
 
       <div className="grid grid-cols-2 gap-3 mb-4">
 
-        {/* Strateji seçme butonu */}
+        {/* Strateji seçme */}
         <div className="mb-2">
           <label className="block text-xs mb-1">Strateji</label>
-
-          <ChooseStrategy isOpen={isStrategyModalOpen} onClose={() => setIsStrategyModalOpen(false)} />
+          <StrategyButton 
+            onStrategySelect={handleStrategySelect}
+            selectedStrategy={selectedStrategy}
+          />
         </div>
 
 
@@ -150,6 +222,15 @@ export default function StrategySift() {
         </div>
 
       </div>
+
+      {/* TARAMA YAP Butonu */}
+      <button
+        onClick={() => scan()}
+        className="mb-3 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded text-sm transition"
+      >
+        Tarama Yap
+      </button>
+
 
       {/* Sonuç Bölümü - İki Bölmeli Yapı */}
       <div className="border-t border-zinc-700 pt-2 flex flex-col">

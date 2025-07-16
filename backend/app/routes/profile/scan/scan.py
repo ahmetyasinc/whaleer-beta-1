@@ -17,9 +17,7 @@ async def run_scan(
     """
     Belirli bir strateji ile belirli coinlerde tarama yapar.
     """
-    print(f"Tarama başlatıldı. Strateji ID: {payload.strategy_id}")
-    start_time = time.time()
-
+    
     strategy_code = load_strategy_code(payload.strategy_id)
     indicator_codes = load_indicators(payload.strategy_id)
 
@@ -30,26 +28,19 @@ async def run_scan(
 
     for symbol in payload.symbols:
         df = get_candles(symbol, payload.interval, payload.candles)
+        
         if df.empty:
             print(f"DataFrame is empty for symbol: {symbol}")
             continue
         
-        result_entry = run_strategy_code(strategy_code, indicator_codes, df)
+        result_entry = run_strategy_code(strategy_code, indicator_codes, df,payload.target)
 
         if result_entry is not None:
             results[symbol] = float(result_entry)
         else:
             results[symbol] = None
 
-    end_time = time.time()
-    elapsed = round(end_time - start_time, 3)  # saniye cinsinden, 3 ondalık basamak
-
-    print(f"Taramanın süresi: {elapsed} saniye. Strateji ID: {payload.strategy_id}")
-
-    return {
-        "results": results,
-        "duration_seconds": elapsed
-    }
+    return results
 
 
 async def scan_symbol(symbol: str, strategy_code: str, indicator_codes: list, interval: str, candles: int):

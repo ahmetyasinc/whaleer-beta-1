@@ -47,11 +47,14 @@ export const createBot = async (botData) => {
     // api_id ve strategy_id'yi isimlerden bul
     const apiList = useApiStore.getState().apiList;
     const strategies = useStrategyStore.getState().all_strategies;
-    console.log("API Listesi:", apiList, "Stratejiler:", strategies);
 
     const selectedApi = apiList.find((item) => item.name === botData.api);
-    const selectedStrategy = strategies.find((item) => String(item.id) === String(botData.strategy));
-    console.log("Seçilen API:", selectedApi, "Seçilen Strateji:", selectedStrategy);
+    let selectedStrategy;
+    if (botData.strategy && typeof botData.strategy === 'string') {
+      selectedStrategy = strategies.find((item) => String(item.name) === String(botData.strategy));
+    } else if (typeof botData.strategy === 'object' && botData.strategy.id) {
+      selectedStrategy = botData.strategy;
+    }
 
     if (!selectedApi || !selectedStrategy) {
       throw new Error('Geçersiz API veya strateji seçimi.');

@@ -22,7 +22,7 @@ export const useBotStore = create((set) => ({
         id: createdBot.id,
         name: createdBot.name,
         api: matchedApi?.name || "",
-        strategy: String(matchedStrategy?.id),
+        strategy: matchedStrategy?.name || "",
         period: createdBot.period,
         isActive: createdBot.active,
         days: createdBot.active_days,

@@ -5,9 +5,11 @@ import useApiStore from '@/store/api/apiStore'; // yolunu doğru ver
 import useStrategyStore from '@/store/indicator/strategyStore';
 import { FiSearch } from 'react-icons/fi';
 import { toast } from 'react-toastify';
-import ChooseStrategy from './chooseStrategy';
+import StrategyButton from './chooseStrategy';
+import useBotChooseStrategyStore from '@/store/bot/botChooseStrategyStore';
 
 export const BotModal = ({ onClose, mode = "create", bot = null }) => {
+  const { selectedStrategy } = useBotChooseStrategyStore();
   const [balance, setBalance] = useState(0); // Kullanıcının toplam bakiyesi
   const [allocatedAmount, setAllocatedAmount] = useState(0); // Bu bota ayrılan miktar
   const [percentage, setPercentage] = useState(0); // Slider'daki yüzde
@@ -54,7 +56,6 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
       setAllocatedAmount(bot.balance || 0);
       setBalance(bot.total_balance || 0); // mevcut toplam bakiye
     
-      // 🆕 Yüzde hesapla
       if (bot.balance && bot.total_balance) {
         const calculatedPct = (bot.balance / bot.total_balance) * 100;
         setPercentage(Math.min(100, Math.round(calculatedPct)));
@@ -93,7 +94,9 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
 
     if (!botName.trim()) errors.push("Bot ismi gerekli.");
     if (!api) errors.push("API seçimi yapılmalı.");
-    if (!strategy) errors.push("Strateji seçimi yapılmalı.");
+    //if (!strategy) errors.push("Strateji seçimi yapılmalı.");
+    if (!selectedStrategy || !selectedStrategy.name) errors.push("Strateji seçimi yapılmalı.");
+
     if (!period) errors.push("Periyot seçilmeli.");
     if (!candleCount || candleCount <= 0) errors.push("Mum sayısı geçerli değil.");
     if (days.length === 0) errors.push("En az bir gün seçilmeli.");
@@ -130,7 +133,7 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
       id: bot?.id,
       name: botName,
       api,
-      strategy: bot?.strategy || strategy,
+      strategy: selectedStrategy?.name,
       period,
       isActive: false,
       days,
@@ -193,7 +196,7 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
             </div>
             <div>
               <label className="block mb-1 text-gray-300">Strateji</label>
-              <ChooseStrategy/>
+              <StrategyButton onSelect={(selected) => setStrategy(selected)}/>
 
             </div>
             <div>

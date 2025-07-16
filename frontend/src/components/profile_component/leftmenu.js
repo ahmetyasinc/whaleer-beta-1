@@ -18,9 +18,11 @@ import { BsGrid1X2 } from "react-icons/bs";
 import { useLogout } from "@/utils/HookLogout";
 import axios from "axios";
 
+//import LogoIcon from "/img/logo5.png";
+
 const menuItems = [
   { href: "/profile", icon: <BiUser />, label: "Profil", locked: true },
-  { href: "/profile/showcase", icon: <BsGrid1X2 />, label: "Vitrin", locked: true },
+  { href: "/profile/showcase", icon: <BsGrid1X2 />, label: "Vitrin", locked: false },
   { href: "/profile/indicators", icon: <BiCandles />, label: "İndikatörler" },
   { href: "/profile/backtest", icon: <BiLineChart />, label: "Backtest" },
   { href: "/profile/apiconnect", icon: <BiBroadcast />, label: "API Bağlantısı" },
@@ -130,7 +132,13 @@ const LeftMenu = () => {
         className="toggle-btn-left"
         onClick={() => setIsOpen(!isOpen)}
       >
-        {isOpen ? <BiChevronLeft size={26} /> : <BiMenu size={26} />}
+        {isOpen ? (
+          <BiChevronLeft size={26} />
+        ) : (
+          <img src="/img/logo5_2.png" alt="Menu" width={26} height={26} />
+        )}
+
+
       </button>
 
       {/* Çıkış Onay Modalı */}

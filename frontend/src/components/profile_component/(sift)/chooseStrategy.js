@@ -7,16 +7,21 @@ import TechnicalStrategies from "./technicalStrategies";
 import MyStrategies from "./personalStrategies";
 import CommunityStrategy from "./communityStrategies";
 import useSiftChooseStrategyStore from "@/store/sift/siftChooseStrategyStore";
+import useStrategyStore from '@/store/indicator/strategyStore';
 
-const StrategyButton = () => {
+const StrategyButton = ({ onStrategySelect, selectedStrategy }) => {
   const { 
-    selectedStrategy, 
     isModalOpen, 
     activeTab,
     setIsModalOpen,
     setActiveTab,
-    selectStrategyAndCloseModal
   } = useSiftChooseStrategyStore();
+
+  // Get all strategies to find the selected one by ID
+  const { strategies } = useStrategyStore();
+  
+  // Find the selected strategy object by ID
+  const selectedStrategyObj = strategies.find(s => s.id === selectedStrategy);
 
   const tabs = [
     { name: "Teknikler", icon: <BiBarChartAlt2 className="text-[19px]" /> },
@@ -24,11 +29,15 @@ const StrategyButton = () => {
     { name: "Topluluk", icon: <MdOutlinePeopleAlt className="text-[18px]" /> },
   ];
 
+  const handleStrategySelect = (strategy) => {
+    // Call the parent's onStrategySelect with the strategy ID
+    onStrategySelect(strategy.id);
+    setIsModalOpen(false);
+  };
+
   const renderContent = () => {
     const props = { 
-      onSelect: (strategy) => {
-        selectStrategyAndCloseModal(strategy);
-      }
+      onSelect: handleStrategySelect
     };
     
     switch (activeTab) {
@@ -49,7 +58,7 @@ const StrategyButton = () => {
         className="w-full p-[6px] right-1 rounded bg-zinc-800 text-white border-1 border-zinc-500 text-sm"
         onClick={() => setIsModalOpen(true)}
       >
-        {selectedStrategy ? selectedStrategy.name : "Strateji Seçin"}
+        {selectedStrategyObj ? selectedStrategyObj.name : "Strateji Seçin"}
       </button>
 
       {isModalOpen && (

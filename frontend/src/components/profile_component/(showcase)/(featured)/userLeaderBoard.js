@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   FiChevronDown,
   FiTrendingUp,
@@ -13,6 +13,8 @@ import {
 const UserLeaderBoard = () => {
   const [sortBy, setSortBy] = useState('monthlyProfit');
   const [sortOrder, setSortOrder] = useState('desc'); // 'asc' veya 'desc'
+  const [setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const users = [
     { id: 1, username: 'TradeMaster', monthlyProfit: 15.4, successRate: 85, totalBots: 12, soldBots: 8, monthlyTransactions: 324 },
@@ -26,6 +28,24 @@ const UserLeaderBoard = () => {
     { id: 9, username: 'GridKing', monthlyProfit: 6.4, successRate: 74, totalBots: 7, soldBots: 3, monthlyTransactions: 174 },
     { id: 10, username: 'TrendSeeker', monthlyProfit: 14.1, successRate: 89, totalBots: 13, soldBots: 11, monthlyTransactions: 402 }
   ];
+
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch(`/api/leaderboard?sortBy=${sortBy}&sortOrder=${sortOrder}`);
+        const data = await res.json();
+        setUsers(data);
+        setLoading(false);
+      } catch (err) {
+        console.error('Kullanıcılar alınamadı:', err);
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, [sortBy, sortOrder]);
+  
   
   const sortOptions = [
     { value: 'monthlyProfit', label: 'Aylık Kâra Göre', icon: FiTrendingUp },

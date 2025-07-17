@@ -338,7 +338,6 @@ const useBotDataStore = create((set, get) => ({
     get().loadBotData(id);
   },
 
-  // Bot takip etme fonksiyonu
   followBot: (botData) => {
     const { followedBots } = get();
     const isAlreadyFollowed = followedBots.some(bot => bot.bot_id === botData.bot_id);
@@ -362,7 +361,6 @@ const useBotDataStore = create((set, get) => ({
     }
   },
 
-  // Bot takipten çıkarma fonksiyonu
   unfollowBot: (botId) => {
     const { followedBots } = get();
     const updatedBots = followedBots.filter(bot => bot.bot_id !== botId);
@@ -370,14 +368,12 @@ const useBotDataStore = create((set, get) => ({
     console.log('Bot takipten çıkarıldı:', botId);
   },
 
-  // Bot inceleme fonksiyonu (navigation'a geçiş)
   inspectBot: (botId) => {
     set({ currentBotId: botId });
     get().loadBotData(botId);
     console.log('Bot inceleniyor:', botId);
   },
 
-  // Süre formatı
   formatDuration: (days) => {
     if (days < 1) return 'Bugün';
     if (days === 1) return '1 gün';

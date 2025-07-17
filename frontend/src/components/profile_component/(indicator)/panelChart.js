@@ -34,7 +34,6 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       setDisplayName(firstNonGraphItem.name);
     }
 
-
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
       height: chartContainerRef.current.clientHeight,

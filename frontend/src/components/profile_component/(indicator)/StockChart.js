@@ -164,6 +164,7 @@ export default function ChartComponent() {
         };
     
 
+
         // 🔹 Grafiği oluştur
         const chart = createChart(chartContainerRef.current, chartOptions);
         chartRef.current = chart;
@@ -555,9 +556,9 @@ export default function ChartComponent() {
                 }
             }
         };
-    
+
     }, [chartData, indicatorData, strategyData]); // 🔥 `chartData` değiştiğinde çalışır
-    
+
     // Mıknatıs modu değiştiğinde sadece crosshair modunu güncelle!
     useEffect(() => {
     if (chartRef.current) {

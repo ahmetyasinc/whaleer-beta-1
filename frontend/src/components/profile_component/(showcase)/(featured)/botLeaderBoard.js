@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   FiChevronDown,
   FiTrendingUp,
@@ -15,6 +15,9 @@ import {
 const BotLeaderBoard = () => {
   const [sortBy, setSortBy] = useState('profit');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [setBots] = useState([]);
+  const [loading, setLoading] = useState(true);
+
 
   const bots = [
     { id: 1, name: 'Bitcoin Master', creator: 'Ali Kaan Özdemir', profit: 12, successRate: 78, profitFactor: 1.45, weeklyTrades: 32, price: 299 },
@@ -49,6 +52,25 @@ const BotLeaderBoard = () => {
     { id: 30, name: 'GridManager', creator: 'Fatma Uçar', profit: 77, successRate: 79, profitFactor: 1.4, weeklyTrades: 27, price: 199 }
   ];
   
+
+
+  useEffect(() => {
+    const fetchBots = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/bot-leaderboard?sortBy=${sortBy}&sortOrder=${sortOrder}`);
+        const data = await response.json();
+        setBots(data);
+      } catch (error) {
+        console.error('Bot verisi alınamadı:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchBots();
+  }, [sortBy, sortOrder]);
+
 
   const sortOptions = [
     { value: 'profit', label: 'Kâra Göre', icon: FiTrendingUp },
@@ -184,7 +206,7 @@ const BotLeaderBoard = () => {
                   </div>
                 </div>
               ))}
-</div>
+          </div>
 
         </div>
   );

@@ -83,6 +83,7 @@ export default function BacktestInfoCard() {
             Arşivle
           </button>
 
+          {/*
           <button
             onClick={handleOptimize}
             className="bg-purple-800 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition text-sm font-medium flex items-center gap-2"
@@ -90,6 +91,7 @@ export default function BacktestInfoCard() {
             <MdRocketLaunch className="w-4 h-4" />
             Stratejiyi optimize Et
           </button>
+          */}
 
           <button
             onClick={handleClear}

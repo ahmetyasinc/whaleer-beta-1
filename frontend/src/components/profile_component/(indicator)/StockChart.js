@@ -169,22 +169,76 @@ export default function ChartComponent() {
 
         // 1. Diğer grafiklerden gelen zaman aralığı değişikliklerini dinle
         const handleTimeRangeChange = (event) => {
+          const { start, end, sourceId } = event.detail;
+          if (sourceId === 'main-chart') return;
 
+          let adjustedStart = start;
+          let adjustedEnd = end;
 
-            const { start, end, sourceId } = event.detail;
-            if (sourceId === 'main-chart') return;
+          console.log(`[StockChart] Fark değeri: ${selectedPeriod}`);
+          const coefficient = 1000;
+          let minBars = coefficient; // Varsayılan değer
+          
+          switch (selectedPeriod) {
+            case "1m":      // 1 Dakika
+              minBars = coefficient;
+              break;
+            case "3m":      // 3 Dakika
+              minBars = coefficient * 3;
+              break;
+            case "5m":      // 5 Dakika
+              minBars = coefficient * 5;
+              break;
+            case "15m":     // 15 Dakika
+              minBars = coefficient * 15;
+              break;
+            case "30m":     // 30 Dakika
+              minBars = coefficient * 30;
+              break;
+            case "1h":      // 1 Saat
+              minBars = coefficient * 60;
+              break;
+            case "2h":      // 2 Saat
+              minBars = coefficient * 120;
+              break;
+            case "4h":      // 4 Saat
+              minBars = coefficient * 240;
+              break;
+            case "1d":      // 1 Gün
+              minBars = coefficient * 1440; // 24 saat * 60 dakika
+              break;
+            case "1w":      // 1 Hafta
+              minBars = coefficient * 10080; // 7 gün * 24 saat * 60 dakika
+              break;
+            default:
+              minBars = coefficient; // fallback
+              break;
+          }
 
-            if (chartRef.current) {
-                chartRef.current.timeScale().setVisibleRange({
-                    from: start,
-                    to: end,
-                });
-            }
+          if (end - start < minBars) {
+            const center = (start + end) / 2;
+            adjustedStart = center - minBars / 2;
+            adjustedEnd = center + minBars / 2;
+            const event = new CustomEvent('chartTimeRangeChange', {
+                detail: {
+                  start: adjustedStart,
+                  end: adjustedEnd,
+                  sourceId: 'main-chart'
+                }
+            });
+            window.dispatchEvent(event);
+          }
+          if (chartRef.current) {
+            chartRef.current.timeScale().setVisibleRange({
+              from: adjustedStart,
+              to: adjustedEnd,
+            });
+          }
         };
 
-        window.addEventListener('chartTimeRangeChange', handleTimeRangeChange);
+        window.addEventListener('chartTimeRangeChange', handleTimeRangeChange);//eventi dinler yukarıda
 
-        // 2. Bu grafikteki zaman aralığı değişikliklerini diğer grafiklere gönder
+        // Bu grafikteki zaman aralığı değişikliklerini diğer grafiklere gönder
         const timeScale = chart.timeScale();
         timeScale.subscribeVisibleTimeRangeChange((newRange) => {
           const event = new CustomEvent('chartTimeRangeChange', {
@@ -194,8 +248,25 @@ export default function ChartComponent() {
                 sourceId: 'main-chart'
               }
           });
-          window.dispatchEvent(event);
+          window.dispatchEvent(event);// event'i yayınla
         });
+
+        // Crosshair hareketlerini diğer grafiklere gönder
+        chart.subscribeCrosshairMove((param) => {
+          const hoveredTime = param?.time;
+
+          if (hoveredTime !== undefined) {
+            const event = new CustomEvent("chartCrosshairMove", {
+              detail: {
+                time: hoveredTime,
+                sourceId: 'main-chart'
+              }
+            });
+          
+            window.dispatchEvent(event);
+          }
+        });
+
 
         chart.applyOptions({
             watermark: {

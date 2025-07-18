@@ -5,6 +5,8 @@ import { createChart } from "lightweight-charts";
 import useIndicatorDataStore from "@/store/indicator/indicatorDataStore";
 import IndicatorSettingsModal from "./(modal_tabs)/indicatorSettingsModal";
 import PropTypes from "prop-types";
+import useCryptoStore from "@/store/indicator/cryptoPinStore"; // Zustand store'u import et
+
 
 function hexToRgba(hex, opacity) {
   hex = hex.replace("#", "");
@@ -16,6 +18,7 @@ function hexToRgba(hex, opacity) {
 }
 
 export default function PanelChart({ indicatorName, indicatorId, subId }) {
+  const { selectedPeriod } = useCryptoStore();
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
   const { indicatorData, removeSubIndicator } = useIndicatorDataStore();
@@ -54,15 +57,125 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       const { start, end, sourceId } = event.detail;
       const currentChartId = `${indicatorId}-${subId}`;
       if (sourceId === currentChartId) return;
-      if (chartRef.current) {
-        chartRef.current.timeScale().setVisibleRange({ from: start, to: end });
+
+      let adjustedStart = start;
+      let adjustedEnd = end;
+
+      console.log(`[PanelChart - ${currentChartId}] Fark değeri: ${selectedPeriod}`);
+
+      const coefficient = 1000;
+      let minBars = coefficient; // Varsayılan değer
+
+      switch (selectedPeriod) {
+        case "1m":      // 1 Dakika
+          minBars = coefficient;
+          break;
+        case "3m":      // 3 Dakika
+          minBars = coefficient * 3;
+          break;
+        case "5m":      // 5 Dakika
+          minBars = coefficient * 5;
+          break;
+        case "15m":     // 15 Dakika
+          minBars = coefficient * 15;
+          break;
+        case "30m":     // 30 Dakika
+          minBars = coefficient * 30;
+          break;
+        case "1h":      // 1 Saat
+          minBars = coefficient * 60;
+          break;
+        case "2h":      // 2 Saat
+          minBars = coefficient * 120;
+          break;
+        case "4h":      // 4 Saat
+          minBars = coefficient * 240;
+          break;
+        case "1d":      // 1 Gün
+          minBars = coefficient * 1440; // 24 saat * 60 dakika
+          break;
+        case "1w":      // 1 Hafta
+          minBars = coefficient * 10080; // 7 gün * 24 saat * 60 dakika
+          break;
+        default:
+          minBars = coefficient; // fallback
+          break;
       }
+      
+      if (end - start < minBars) {
+        const center = (start + end) / 2;
+        adjustedStart = center - minBars / 2;
+        adjustedEnd = center + minBars / 2;
+        // Yeni aralığı ayarlamak için event yayılıyor
+        const event = new CustomEvent("chartTimeRangeChange", {
+          detail: {
+            start: adjustedStart,
+            end: adjustedEnd,
+            sourceId: `${currentChartId}`,
+          },
+        });
+        window.dispatchEvent(event)
+
+
+      }
+    
+      //console.log(`[PanelChart - ${currentChartId}] Event alındı <${sourceId}> → zaman güncelleniyor`, {
+      //  start: adjustedStart,
+      //  end: adjustedEnd,
+      //});
+    
+      if (chartRef.current) {
+        chartRef.current.timeScale().setVisibleRange({
+          from: adjustedStart,
+          to: adjustedEnd,
+        });
+      } 
+    };
+    let ghostLineSeries = null;
+
+    const handleCrosshairMove = (event) => {
+      const { time, sourceId } = event.detail;
+      const currentChartId = `${indicatorId}-${subId}`;
+      if (sourceId === currentChartId) return;
+      if (!chartRef.current || time === undefined || time === null) return;
+    
+      const chart = chartRef.current;
+      const timeScale = chart.timeScale();
+      const logicalRange = timeScale.getVisibleLogicalRange();
+    
+      const series = chartSeriesRef.current; // candleSeries gibi bir şey
+      const priceScale = series?.getPriceScale();
+      const priceRange = priceScale?.getPriceRange(logicalRange);
+    
+      const minValue = priceRange?.minValue ?? 0;
+      const maxValue = priceRange?.maxValue ?? 1;
+    
+      if (!ghostLineSeries) {
+        ghostLineSeries = chart.addLineSeries({
+          color: 'rgba(255,255,255,0.4)',
+          lineWidth: 1,
+          priceLineVisible: false,
+          crossHairMarkerVisible: false,
+        });
+      }
+    
+      const offset = 0.00001;
+      ghostLineSeries.setData([
+        { time: time - offset, value: maxValue },
+        { time: time + offset, value: minValue },
+      ]);
     };
 
-    window.addEventListener("chartTimeRangeChange", handleTimeRangeChange);
+
+
+    window.addEventListener("chartCrosshairMove", handleCrosshairMove);
+    window.addEventListener("chartTimeRangeChange", handleTimeRangeChange); //eventi dinler yukarıda
 
     const timeScale = chart.timeScale();
     timeScale.subscribeVisibleTimeRangeChange((newRange) => {
+      const currentChartId = `${indicatorId}-${subId}`;
+      //console.log(`[PanelChart] Fark değeri: ${newRange.to- newRange.from}`);
+      //console.log(`[PanelChart - ${currentChartId}] Zaman değişti → Event yayılıyor`, newRange);
       const event = new CustomEvent("chartTimeRangeChange", {
         detail: {
           start: newRange.from,
@@ -70,7 +183,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
           sourceId: `${indicatorId}-${subId}`,
         },
       });
-      window.dispatchEvent(event);
+      window.dispatchEvent(event);//eventi yayınlar
     });
 
     result
@@ -155,6 +268,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     resizeObserver.observe(chartContainerRef.current);
 
     return () => {
+      window.removeEventListener("chartCrosshairMove", handleCrosshairMove);
       window.removeEventListener("chartTimeRangeChange", handleTimeRangeChange);
       resizeObserver.disconnect();
       if (chartRef.current) {

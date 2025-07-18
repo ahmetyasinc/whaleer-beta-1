@@ -136,8 +136,15 @@ const useBacktestStore = create((set, get) => ({
 
   loadArchivedBacktest: (archivedItem) => {
     console.log("Yüklenen arşivlenmiş backtest:", archivedItem);
-    set({ backtestResults: archivedItem});
+
+    set({
+      backtestResults: archivedItem,
+      selectedStrategy: archivedItem.strategy || null,
+      selectedCrypto: archivedItem.crypto || null,
+      selectedPeriod: archivedItem.period || '',
+    });
   },
+
 
   clearBacktestResults: () => set({
     backtestResults: null,

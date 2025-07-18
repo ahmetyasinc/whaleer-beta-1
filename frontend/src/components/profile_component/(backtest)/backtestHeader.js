@@ -40,7 +40,7 @@ export default function BacktestHeader() {
           </button>
           */}
           <button
-            className="bg-gray-900 text-white px-4 h-[35px] rounded hover:bg-gray-800 transition flex items-center gap-2"
+            className="bg-black border-1 border-gray-700 text-white px-4 h-[35px] rounded-lg hover:border-gray-600 transition flex items-center gap-2"
             onClick={() => setIsOpen(true)}
           >
             <FaPlus className="w-3 h-3 mt-[2px]" />

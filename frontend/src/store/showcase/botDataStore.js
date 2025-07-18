@@ -25,7 +25,7 @@ const integratedData = {
         {
           id: "bot_59_1",
           name: "Bitcoin Master Bot",
-          isActive: true,
+          isActive: false,
           profitRate: "99.4",
           runningTime: 164,
           totalTrades: 1247,
@@ -338,13 +338,13 @@ const useBotDataStore = create((set, get) => ({
     get().loadBotData(id);
   },
 
-  // Bot takip etme fonksiyonu
   followBot: (botData) => {
     const { followedBots } = get();
     const isAlreadyFollowed = followedBots.some(bot => bot.bot_id === botData.bot_id);
     
     if (!isAlreadyFollowed) {
       const followedBot = {
+        bot_id: botData.bot_id,
         id: botData.bot_id,
         name: botData.name,
         creator: botData.creator,
@@ -361,7 +361,6 @@ const useBotDataStore = create((set, get) => ({
     }
   },
 
-  // Bot takipten çıkarma fonksiyonu
   unfollowBot: (botId) => {
     const { followedBots } = get();
     const updatedBots = followedBots.filter(bot => bot.bot_id !== botId);
@@ -369,14 +368,12 @@ const useBotDataStore = create((set, get) => ({
     console.log('Bot takipten çıkarıldı:', botId);
   },
 
-  // Bot inceleme fonksiyonu (navigation'a geçiş)
   inspectBot: (botId) => {
     set({ currentBotId: botId });
     get().loadBotData(botId);
     console.log('Bot inceleniyor:', botId);
   },
 
-  // Süre formatı
   formatDuration: (days) => {
     if (days < 1) return 'Bugün';
     if (days === 1) return '1 gün';

@@ -99,9 +99,9 @@ const BotCard = ({ isAnimating }) => {
 
 
           <div className="flex items-center gap-2 sm:gap-3 mt-3">
-            <span className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap ${
+            <span className={`px-3 sm:px-3 py-2 rounded-full text-sm sm:text-sm font-medium whitespace-nowrap ${
               parseFloat(botData.totalMargin) > 0
-                ? 'bg-green-900 text-green-300'
+                ? 'bg-green-800 text-green-200'
                 : 'bg-red-900 text-red-300'
             }`}>
               {parseFloat(botData.totalMargin) > 0 ? '+' : ''}{botData.totalMargin}%
@@ -110,7 +110,7 @@ const BotCard = ({ isAnimating }) => {
               onClick={handleFollowBot}
               className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg transition-all duration-200 text-xs sm:text-sm font-medium whitespace-nowrap ${
                 isFollowed
-                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  ? 'bg-green-600 text-white hover:bg-green-700 border-1 border-gray-900'
                   : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
               }`}
             >
@@ -141,13 +141,14 @@ const BotCard = ({ isAnimating }) => {
               : 'bg-gray-700 text-gray-400 cursor-not-allowed'
           }`}
         >
-          <div className={`flex items-center justify-center h-full ${botData.for_sale ? 'flex-col' : ''}`}>
-            <span className="font-semibold">Satın Al</span>
+          <div className={`flex items-center justify-center h-full ${botData.for_sale ? 'flex-col justify-between' : ''}`}>
             {botData.for_sale && (
-              <span className="text-xs mt-1">{botData.sell_price} USDT</span>
+              <span className="text-lg font-bold">{botData.sell_price} $</span>
             )}
+            <span className="text-[10px] text-white/80">Satın Al</span>
           </div>
         </button>
+          
           
         {/* Kirala Butonu */}
         <button
@@ -158,13 +159,14 @@ const BotCard = ({ isAnimating }) => {
               : 'bg-gray-700 text-gray-400 cursor-not-allowed'
           }`}
         >
-          <div className={`flex items-center justify-center h-full ${botData.for_rent ? 'flex-col' : ''}`}>
-            <span className="font-semibold">Kirala</span>
+          <div className={`flex items-center justify-center h-full ${botData.for_rent ? 'flex-col justify-between' : ''}`}>
             {botData.for_rent && (
-              <span className="text-xs mt-1">Günlük {botData.rent_price} USDT</span>
+              <span className="text-lg font-bold">{botData.rent_price} $</span>
             )}
+            <span className="text-[10px] text-white/80">Günlük Kirala</span>
           </div>
         </button>
+
       </div>
         {/* Stats */}
         <div className="flex flex-col space-y-2 mb-6">

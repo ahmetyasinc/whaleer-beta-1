@@ -5,7 +5,6 @@
   import StockChart from "@/components/profile_component/(indicator)/StockChart";
   import PanelChart from "./panelChart";
   import usePanelStore from "@/store/indicator/panelStore";
-  import ChatBox from "./chatBox";
   import useCodePanelStore from "@/store/indicator/indicatorCodePanelStore";
   import CodePanel from "./(modal_tabs)/indicatorCodePanel"; // yeni bileşen
   import "react-grid-layout/css/styles.css";
@@ -27,12 +26,12 @@
       synced_panels,
       panelWidth, 
       setPanelWidth, 
-      isChatBoxVisible, 
       layouts, 
       updateLayouts,
       updateItemLayout,
       syncWidths
     } = usePanelStore();
+
 
 
     const filteredSubItems = Object.entries(indicatorData)
@@ -48,6 +47,7 @@
           indicatorName: indicatorObj.name
         }))
     );
+
 
     // Layout değişikliklerinin yönetimi için referans
     const [isResizing, setIsResizing] = useState(false);
@@ -243,14 +243,7 @@
             {isStrategyCodePanelOpen && <StrategyCodePanel />}
           </div>
                 
-          {/* ChatBox paneli de aynı şekilde yönetilir */}
-          <div
-            key="f"
-            className="relative w-full h-full m-0"
-            style={{ display: isChatBoxVisible ? "block" : "none" }}
-          >
-            {isChatBoxVisible && <ChatBox />}
-          </div>
+
 
           </ResponsiveGridLayout>
         )}

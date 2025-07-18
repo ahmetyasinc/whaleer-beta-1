@@ -142,7 +142,7 @@ export default function ChartComponent() {
         const chartOptions = {
             layout: {
                 textColor: "white",
-                background: { type: "solid", color: "rgb(0, 4, 10)" }, //#111 önceki hali 
+                background: { type: "solid", color: "rgb(0, 0, 7)" }, //#111 önceki hali 
             },
             grid: {
                 vertLines: { color: "#111", style: 1 },
@@ -163,6 +163,8 @@ export default function ChartComponent() {
             },
         };
     
+
+
         // 🔹 Grafiği oluştur
         const chart = createChart(chartContainerRef.current, chartOptions);
         chartRef.current = chart;
@@ -625,9 +627,9 @@ export default function ChartComponent() {
                 }
             }
         };
-    
+
     }, [chartData, indicatorData, strategyData]); // 🔥 `chartData` değiştiğinde çalışır
-    
+
     // Mıknatıs modu değiştiğinde sadece crosshair modunu güncelle!
     useEffect(() => {
     if (chartRef.current) {

@@ -25,6 +25,7 @@ const usePanelStore = create((set, get) => ({
       return {};
     });
   },
+  
 
   removeSyncedPanel: (panelId, subId) => {
     const panelKey = `panel-${panelId}-${subId}`;

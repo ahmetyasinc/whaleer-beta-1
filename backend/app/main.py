@@ -16,6 +16,7 @@ from app.routes.profile.backtest.backtest import protected_router as backtest_ro
 from app.routes.profile.api_keys.api_keys import protected_router as api_keys_router
 from app.routes.profile.bots.bots import protected_router as bots_router
 from app.routes.profile.scan.scan import protected_router as scan_router
+from app.routes.profile.whaleer_ai.whaleer_ai import protected_router as whaleer_ai_router
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -46,6 +47,8 @@ app.include_router(backtest_router)
 app.include_router(bots_router)
 # SCAN ROUTES
 app.include_router(scan_router)
+# WHALEER AI ROUTES
+app.include_router(whaleer_ai_router)
 
 
 # CORS Middleware ekle

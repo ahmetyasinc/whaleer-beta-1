@@ -31,13 +31,13 @@ export default function ProfileHeader() {
           </div>
         </div>
 
-        {/* Gösterge Yayınla Butonu */}
+        {/* Gösterge Yayınla Butonu 
         <div className="absolute bottom-4 right-4">
           <button className="flex items-center bg-[rgb(15,26,77)] hover:bg-blue-900 text-white px-4 py-2 rounded-md text-sm font-medium shadow transition">
             <FaUpload className="w-4 h-4 mr-2" />
             Gösterge Yayınla
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

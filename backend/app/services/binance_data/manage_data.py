@@ -27,16 +27,16 @@ async def binance_websocket(db_pool):
         "btcusdt@kline_1d",   # 1 gün
         "btcusdt@kline_1w",   # 1 hafta
 #
-        #"ethusdt@kline_1m",   # 1 dakika
-        #"ethusdt@kline_3m",   # 3 dakika
-        #"ethusdt@kline_5m",   # 5 dakika
-        #"ethusdt@kline_15m",  # 15 dakika
-        #"ethusdt@kline_30m",  # 30 dakika
-        #"ethusdt@kline_1h",   # 1 saat
-        #"ethusdt@kline_2h",   # 2 saat
-        #"ethusdt@kline_4h",   # 4 saat
-        #"ethusdt@kline_1d",   # 1 gün
-        #"ethusdt@kline_1w",   # 1 hafta
+        "ethusdt@kline_1m",   # 1 dakika
+        "ethusdt@kline_3m",   # 3 dakika
+        "ethusdt@kline_5m",   # 5 dakika
+        "ethusdt@kline_15m",  # 15 dakika
+        "ethusdt@kline_30m",  # 30 dakika
+        "ethusdt@kline_1h",   # 1 saat
+        "ethusdt@kline_2h",   # 2 saat
+        "ethusdt@kline_4h",   # 4 saat
+        "ethusdt@kline_1d",   # 1 gün
+        "ethusdt@kline_1w",   # 1 hafta
 #
         #"bnbusdt@kline_1m",   # 1 dakika
         #"bnbusdt@kline_3m",   # 3 dakika

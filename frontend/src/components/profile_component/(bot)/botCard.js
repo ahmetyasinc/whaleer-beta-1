@@ -1,6 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { useBotStore } from '@/store/bot/botStore';
+import useBotExamineStore from "@/store/bot/botExamineStore";
+import { useBotStore } from "@/store/bot/botStore";
 import { BotModal } from './botModal';
 import { FaRegTrashAlt } from 'react-icons/fa';
 import { FiEdit3 } from 'react-icons/fi';
@@ -11,38 +12,16 @@ import SpinningWheel from './spinningWheel';
 import ExamineBot from "./examineBot";
 
 export const BotCard = ({ bot }) => {
+  
   const removeBot = useBotStore((state) => state.removeBot);
   const updateBot = useBotStore((state) => state.updateBot);
   const toggleBotActive = useBotStore((state) => state.toggleBotActive);
+  const { fetchAndStoreBotAnalysis } = useBotExamineStore.getState();
 
   const [editing, setEditing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isExamineOpen, setIsExamineOpen] = useState(false);
   const menuRef = useRef(null);
-
-  // Örnek trade verisi - gerçek uygulamada bot nesnesinden gelecek
-  const trades = bot.trades || [
-    {
-      date: "2025-07-08 12:30",
-      symbol: "BTCUSDT",
-      price: 58600.50,
-      direction: "LONG",
-      status: "opened",
-    },
-    {
-      date: "2025-07-08 15:45",
-      symbol: "BTCUSDT",
-      price: 59150.20,
-      direction: "LONG",
-      status: "closed",
-    },
-  ];
-
-  // Açık pozisyonlar - gerçek uygulamada bot nesnesinden gelecek
-  const openPositions = bot.openPositions || [
-    { symbol: "ETHUSDT", amount: 0.5, cost: 3200, pnl: 75 },
-    { symbol: "BNBUSDT", amount: 1.2, cost: 420, pnl: -12 },
-  ];
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -144,6 +123,7 @@ export const BotCard = ({ bot }) => {
                 <button
                   onClick={() => {
                     setIsExamineOpen(true);
+                    fetchAndStoreBotAnalysis(bot.id);
                     setMenuOpen(false);
                   }}
                   className="flex items-center gap-2 w-full px-4 py-2 text-sm text-yellow-400 hover:bg-gray-700"
@@ -167,9 +147,7 @@ export const BotCard = ({ bot }) => {
           <ExamineBot
             isOpen={isExamineOpen}
             onClose={() => setIsExamineOpen(false)}
-            botName={bot.name}
-            trades={trades}
-            openPositions={openPositions}
+            botId={bot.id}
           />
         )}
       </div>

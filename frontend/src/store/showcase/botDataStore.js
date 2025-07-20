@@ -1,6 +1,9 @@
 import { create } from 'zustand';
+import { chartData } from "@/store/showcase/randomData";
+
 
 const useBotDataStore = create((set, get) => ({
+  
   // State
   currentBotId: null,
   currentUserData: null,
@@ -21,6 +24,7 @@ const useBotDataStore = create((set, get) => ({
     set({ currentBotId: id });
     get().loadBotData(id);
   },
+  
 
   followBot: (botData) => {
     const { followedBots } = get();
@@ -105,314 +109,221 @@ const useBotDataStore = create((set, get) => ({
   generateSingleBot: (id) => {
     const staticBot1 = {
       user: {
-        id: id,
-        username: `trader_${id}`,
-        displayName: "Mehmet Yıldız",
-        description: "GridBotX ile profesyonel kripto trading. EMA Crossover stratejisi kullanarak otomatik alım-satım işlemleri gerçekleştiriyorum.",
-        joinDate: "2021-06-15",
-        location: "İstanbul",
-        email: "trader1@example.com",
-        gsm: "+90 555 123 45 67",
-        instagram: "@trader1",
-        linkedin: "linkedin.com/in/trader1",
-        github: "github.com/trader1",
-        totalFollowers: 1342,
-        totalSold: 23,
-        totalRented: 58,
-        avg_bots_profit_lifetime: 47.8,
-        bots_winRate_LifeTime: 76.2,
-        allbots: 5,
-        bots: [
-          {
-            id: `bot_${id}_1`,
-            name: "GridBotX",
-            isActive: true,
-            profitRate: "38.5",
-            runningTime: 215,
-            totalTrades: 1045,
-            winRate: "71.2"
-          },
-          {
-            id: `bot_${id}_2`,
-            name: "BreakoutHunter",
-            isActive: false,
-            profitRate: "-12.3",
-            runningTime: 118,
-            totalTrades: 764,
-            winRate: "63.9"
-          }
-        ]
+    id: "u_001",
+    username: "ayse_trader",
+    displayName: "Ayşe Demir",
+    description: "MomentumX ile yüksek hacimli momentum fırsatlarını değerlendiriyorum.",
+    joinDate: "2022-01-05",
+    location: "Ankara",
+    email: "ayse@example.com",
+    gsm: "+90 533 111 22 33",
+    instagram: "@ayse_trader",
+    linkedin: "linkedin.com/in/aysedemir",
+    github: "github.com/aysedemir",
+    totalFollowers: 2345,
+    totalSold: 15,
+    totalRented: 42,
+    avg_bots_profit_lifetime: 58.4,
+    bots_winRate_LifeTime: 81.6,
+    allbots: 3,
+    bots: [
+      {
+        id: "bot_u001_1",
+        name: "MomentumX",
+        isActive: true,
+        profitRate: "52.3",
+        runningTime: 178,
+        totalTrades: 890,
+        winRate: "79.1"
       },
+      {
+        id: "bot_u001_2",
+        name: "ReboundSniper",
+        isActive: false,
+        profitRate: "12.8",
+        runningTime: 74,
+        totalTrades: 320,
+        winRate: "69.5"
+      }
+    ]
+  },
       bot: {
-        bot_id: id,
-        name: `GridBotX ${id}`,
-        creator: "Mehmet Yıldız",
-        profitRate: 38.5,
-        startDate: "2024-03-08 / 14:23",
-        runningTime: 142,
-        winRate: 71.2,
-        totalMargin: 124.6,
-        dayMargin: 1.5,
-        weekMargin: 6.8,
-        monthMargin: 18.3,
-        profitFactor: 2.6,
-        riskFactor: 1.2,
-        totalTrades: 1045,
-        dayTrades: 5,
-        weekTrades: 23,
-        monthTrades: 89,
-        strategy: "EMA Crossover",
-        soldCount: 12,
-        rentedCount: 34,
-        avg_fullness: 82,
-        for_rent: true,
-        for_sale: false,
-        rent_price: 45,
-        sell_price: 560,
-        coins: ["BTC", "ETH", "SOL"],
-        trades: [
-          {
-            id: "trade_1",
-            pair: "BTCUSDT",
-            type: "LONG",
-            action: "Pozisyon Açıldı",
-            time: "10:45"
-          },
-          {
-            id: "trade_2",
-            pair: "ETHUSDT",
-            type: "SHORT",
-            action: "Pozisyon Kapatıldı",
-            time: "13:17"
-          }
-        ],
-        positions: [
-          {
-            id: "position_1",
-            pair: "BTCUSDT",
-            type: "LONG",
-            profit: 3.4
-          },
-          {
-            id: "position_2",
-            pair: "ETHUSDT",
-            type: "SHORT",
-            profit: -1.9
-          }
-        ]
-      },
-      chartData: Array.from({ length: 31 }, (_, i) => ({
-        time: `2024-01-${String(i + 1).padStart(2, '0')}`,
-        value: 10000 + i * 150
-      })),
+    bot_id: "b_001",
+    name: "MomentumX",
+    creator: "AyşeDemir",
+    profitRate: 52.3,
+    startDate: "2024-02-10 / 10:12",
+    runningTime: 178,
+    winRate: 79.1,
+    totalMargin: 156.7,
+    dayMargin: 2.2,
+    weekMargin: 8.4,
+    monthMargin: 21.9,
+    profitFactor: 3.1,
+    riskFactor: 0.9,
+    totalTrades: 890,
+    dayTrades: 6,
+    weekTrades: 31,
+    monthTrades: 103,
+    strategy: "Momentum + Volume Spike",
+    soldCount: 15,
+    rentedCount: 42,
+    avg_fullness: 87,
+    for_rent: true,
+    for_sale: true,
+    rent_price: 39,
+    sell_price: 620,
+    coins: ["BTC", "LTC", "ADA"],
+    trades: [
+      { id: "trade_1", pair: "BTCUSDT", type: "LONG", action: "Pozisyon Açıldı", time: "09:05" },
+      { id: "trade_2", pair: "ADAUSDT", type: "LONG", action: "Pozisyon Kapatıldı", time: "11:23" }
+    ],
+    positions: [
+      { id: "position_1", pair: "BTCUSDT", type: "LONG", profit: 4.5 },
+      { id: "position_2", pair: "ADAUSDT", type: "LONG", profit: 2.1 }
+    ]
+  },
+      chartData: chartData,
       tradingData: [] // Eklendi
     };
     const staticBot2 = {
       user: {
-        id: id,
-        username: `trader_${id}`,
-        displayName: "Mehmet Yıldız",
-        description: "GridBotX ile profesyonel kripto trading. EMA Crossover stratejisi kullanarak otomatik alım-satım işlemleri gerçekleştiriyorum.",
-        joinDate: "2021-06-15",
-        location: "İstanbul",
-        email: "trader1@example.com",
-        gsm: "+90 555 123 45 67",
-        instagram: "@trader1",
-        linkedin: "linkedin.com/in/trader1",
-        github: "github.com/trader1",
-        totalFollowers: 1342,
-        totalSold: 23,
-        totalRented: 58,
-        avg_bots_profit_lifetime: 47.8,
-        bots_winRate_LifeTime: 76.2,
-        allbots: 5,
-        bots: [
-          {
-            id: `bot_${id}_1`,
-            name: "GridBotX",
-            isActive: true,
-            profitRate: "38.5",
-            runningTime: 215,
-            totalTrades: 1045,
-            winRate: "71.2"
-          },
-          {
-            id: `bot_${id}_2`,
-            name: "BreakoutHunter",
-            isActive: false,
-            profitRate: "-12.3",
-            runningTime: 118,
-            totalTrades: 764,
-            winRate: "63.9"
-          }
-        ]
-      },
+    id: "u_002",
+    username: "bkaya",
+    displayName: "Baran Kaya",
+    description: "ScalperOne ile düşük riskli ve hızlı işlemler üzerine çalışıyorum.",
+    joinDate: "2023-03-12",
+    location: "İzmir",
+    email: "baran@example.com",
+    gsm: "+90 542 222 33 44",
+    instagram: "@baran.trader",
+    linkedin: "linkedin.com/in/barankaya",
+    github: "github.com/barankaya",
+    totalFollowers: 842,
+    totalSold: 8,
+    totalRented: 27,
+    avg_bots_profit_lifetime: 26.1,
+    bots_winRate_LifeTime: 65.4,
+    allbots: 2,
+    bots: [
+      {
+        id: "bot_u002_1",
+        name: "ScalperOne",
+        isActive: true,
+        profitRate: "22.9",
+        runningTime: 89,
+        totalTrades: 2023,
+        winRate: "66.7"
+      }
+    ]
+  },
       bot: {
-        bot_id: id,
-        name: `GridBotX ${id}`,
-        creator: "Mehmet Yıldız",
-        profitRate: 38.5,
-        startDate: "2024-03-08 / 14:23",
-        runningTime: 142,
-        winRate: 71.2,
-        totalMargin: 124.6,
-        dayMargin: 1.5,
-        weekMargin: 6.8,
-        monthMargin: 18.3,
-        profitFactor: 2.6,
-        riskFactor: 1.2,
-        totalTrades: 1045,
-        dayTrades: 5,
-        weekTrades: 23,
-        monthTrades: 89,
-        strategy: "EMA Crossover",
-        soldCount: 12,
-        rentedCount: 34,
-        avg_fullness: 82,
-        for_rent: true,
-        for_sale: false,
-        rent_price: 45,
-        sell_price: 560,
-        coins: ["BTC", "ETH", "SOL"],
-        trades: [
-          {
-            id: "trade_1",
-            pair: "BTCUSDT",
-            type: "LONG",
-            action: "Pozisyon Açıldı",
-            time: "10:45"
-          },
-          {
-            id: "trade_2",
-            pair: "ETHUSDT",
-            type: "SHORT",
-            action: "Pozisyon Kapatıldı",
-            time: "13:17"
-          }
-        ],
-        positions: [
-          {
-            id: "position_1",
-            pair: "BTCUSDT",
-            type: "LONG",
-            profit: 3.4
-          },
-          {
-            id: "position_2",
-            pair: "ETHUSDT",
-            type: "SHORT",
-            profit: -1.9
-          }
-        ]
-      },
-      chartData: Array.from({ length: 31 }, (_, i) => ({
-        time: `2024-01-${String(i + 1).padStart(2, '0')}`,
-        value: 10000 + i * 150
-      })),
+    bot_id: "b_002",
+    name: "ScalperOne",
+    creator: "Baran Kaya",
+    profitRate: 22.9,
+    startDate: "2024-05-01 / 09:00",
+    runningTime: 89,
+    winRate: 66.7,
+    totalMargin: 42.3,
+    dayMargin: 0.8,
+    weekMargin: 3.1,
+    monthMargin: 9.2,
+    profitFactor: 1.6,
+    riskFactor: 0.7,
+    totalTrades: 2023,
+    dayTrades: 31,
+    weekTrades: 150,
+    monthTrades: 620,
+    strategy: "High-Frequency Scalping",
+    soldCount: 8,
+    rentedCount: 27,
+    avg_fullness: 74,
+    for_rent: true,
+    for_sale: false,
+    rent_price: 22,
+    sell_price: 490,
+    coins: ["SOL", "DOGE", "BNB"],
+    trades: [
+      { id: "trade_1", pair: "SOLUSDT", type: "SHORT", action: "Pozisyon Açıldı", time: "14:10" },
+      { id: "trade_2", pair: "DOGEUSDT", type: "LONG", action: "Pozisyon Kapatıldı", time: "15:42" }
+    ],
+    positions: [
+      { id: "position_1", pair: "SOLUSDT", type: "SHORT", profit: 0.9 },
+      { id: "position_2", pair: "DOGEUSDT", type: "LONG", profit: 1.4 }
+    ]
+  },
+      chartData: chartData,
       tradingData: [] // Eklendi
     };
     const staticBot3 = {
       user: {
-        id: id,
-        username: `trader_${id}`,
-        displayName: "Mehmet Yıldız",
-        description: "GridBotX ile profesyonel kripto trading. EMA Crossover stratejisi kullanarak otomatik alım-satım işlemleri gerçekleştiriyorum.",
-        joinDate: "2021-06-15",
-        location: "İstanbul",
-        email: "trader1@example.com",
-        gsm: "+90 555 123 45 67",
-        instagram: "@trader1",
-        linkedin: "linkedin.com/in/trader1",
-        github: "github.com/trader1",
-        totalFollowers: 1342,
-        totalSold: 23,
-        totalRented: 58,
-        avg_bots_profit_lifetime: 47.8,
-        bots_winRate_LifeTime: 76.2,
-        allbots: 5,
-        bots: [
-          {
-            id: `bot_${id}_1`,
-            name: "GridBotX",
-            isActive: true,
-            profitRate: "38.5",
-            runningTime: 215,
-            totalTrades: 1045,
-            winRate: "71.2"
-          },
-          {
-            id: `bot_${id}_2`,
-            name: "BreakoutHunter",
-            isActive: false,
-            profitRate: "-12.3",
-            runningTime: 118,
-            totalTrades: 764,
-            winRate: "63.9"
-          }
-        ]
-      },
+    id: "u_003",
+    username: "ecey",
+    displayName: "Ece Yılmaz",
+    description: "TrendMaster ile orta-uzun vadeli trend dönüşlerini takip ediyorum.",
+    joinDate: "2021-11-22",
+    location: "Bursa",
+    email: "ece@example.com",
+    gsm: "+90 546 987 12 34",
+    instagram: "@trendgirl",
+    linkedin: "linkedin.com/in/eceyilmaz",
+    github: "github.com/eceyilmaz",
+    totalFollowers: 3180,
+    totalSold: 21,
+    totalRented: 55,
+    avg_bots_profit_lifetime: 61.9,
+    bots_winRate_LifeTime: 78.4,
+    allbots: 4,
+    bots: [
+      {
+        id: "bot_u003_1",
+        name: "TrendMaster",
+        isActive: true,
+        profitRate: "61.9",
+        runningTime: 301,
+        totalTrades: 540,
+        winRate: "78.4"
+      }
+    ]
+  },
       bot: {
-        bot_id: id,
-        name: `GridBotX ${id}`,
-        creator: "Mehmet Yıldız",
-        profitRate: 38.5,
-        startDate: "2024-03-08 / 14:23",
-        runningTime: 142,
-        winRate: 71.2,
-        totalMargin: 124.6,
-        dayMargin: 1.5,
-        weekMargin: 6.8,
-        monthMargin: 18.3,
-        profitFactor: 2.6,
-        riskFactor: 1.2,
-        totalTrades: 1045,
-        dayTrades: 5,
-        weekTrades: 23,
-        monthTrades: 89,
-        strategy: "EMA Crossover",
-        soldCount: 12,
-        rentedCount: 34,
-        avg_fullness: 82,
-        for_rent: true,
-        for_sale: false,
-        rent_price: 45,
-        sell_price: 560,
-        coins: ["BTC", "ETH", "SOL"],
-        trades: [
-          {
-            id: "trade_1",
-            pair: "BTCUSDT",
-            type: "LONG",
-            action: "Pozisyon Açıldı",
-            time: "10:45"
-          },
-          {
-            id: "trade_2",
-            pair: "ETHUSDT",
-            type: "SHORT",
-            action: "Pozisyon Kapatıldı",
-            time: "13:17"
-          }
-        ],
-        positions: [
-          {
-            id: "position_1",
-            pair: "BTCUSDT",
-            type: "LONG",
-            profit: 3.4
-          },
-          {
-            id: "position_2",
-            pair: "ETHUSDT",
-            type: "SHORT",
-            profit: -1.9
-          }
-        ]
-      },
-      chartData: Array.from({ length: 31 }, (_, i) => ({
-        time: `2024-01-${String(i + 1).padStart(2, '0')}`,
-        value: 10000 + i * 150
-      })),
+    bot_id: "b_003",
+    name: "TrendMaster",
+    creator: "Ece Yılmaz",
+    profitRate: 61.9,
+    startDate: "2023-10-15 / 16:45",
+    runningTime: 301,
+    winRate: 78.4,
+    totalMargin: 189.5,
+    dayMargin: 1.1,
+    weekMargin: 7.9,
+    monthMargin: 24.6,
+    profitFactor: 3.3,
+    riskFactor: 1.1,
+    totalTrades: 540,
+    dayTrades: 3,
+    weekTrades: 14,
+    monthTrades: 58,
+    strategy: "Trend Reversal + MACD",
+    soldCount: 21,
+    rentedCount: 55,
+    avg_fullness: 92,
+    for_rent: true,
+    for_sale: true,
+    rent_price: 52,
+    sell_price: 720,
+    coins: ["BTC", "ETH", "AVAX"],
+    trades: [
+      { id: "trade_1", pair: "AVAXUSDT", type: "LONG", action: "Pozisyon Açıldı", time: "12:33" },
+      { id: "trade_2", pair: "ETHUSDT", type: "SHORT", action: "Pozisyon Kapatıldı", time: "17:20" }
+    ],
+    positions: [
+      { id: "position_1", pair: "AVAXUSDT", type: "LONG", profit: 5.6 },
+      { id: "position_2", pair: "ETHUSDT", type: "SHORT", profit: 1.2 }
+    ]
+  },
+      chartData: chartData,
       tradingData: [] // Eklendi
     };
     const staticBot4 = {
@@ -513,17 +424,14 @@ const useBotDataStore = create((set, get) => ({
           }
         ]
       },
-      chartData: Array.from({ length: 31 }, (_, i) => ({
-        time: `2024-01-${String(i + 1).padStart(2, '0')}`,
-        value: 10000 + i * 150
-      })),
+      chartData: chartData,
       tradingData: [] // Eklendi
     };
     const staticBot5 = {
       user: {
         id: id,
         username: `trader_${id}`,
-        displayName: "Mehmet Yıldız",
+        displayName: "Kemal Bayat",
         description: "GridBotX ile profesyonel kripto trading. EMA Crossover stratejisi kullanarak otomatik alım-satım işlemleri gerçekleştiriyorum.",
         joinDate: "2021-06-15",
         location: "İstanbul",
@@ -562,7 +470,7 @@ const useBotDataStore = create((set, get) => ({
       bot: {
         bot_id: id,
         name: `GridBotX ${id}`,
-        creator: "Mehmet Yıldız",
+        creator: "Kemal Bayat",
         profitRate: 38.5,
         startDate: "2024-03-08 / 14:23",
         runningTime: 142,
@@ -617,10 +525,7 @@ const useBotDataStore = create((set, get) => ({
           }
         ]
       },
-      chartData: Array.from({ length: 31 }, (_, i) => ({
-        time: `2024-01-${String(i + 1).padStart(2, '0')}`,
-        value: 10000 + i * 150
-      })),
+      chartData: chartData,
       tradingData: [] // Eklendi
     };
 

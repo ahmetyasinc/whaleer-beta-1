@@ -5,7 +5,7 @@ from typing import Optional
 
 SECRET_KEY = "38842270259879952027900728229105"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 1 saat
+ACCESS_TOKEN_EXPIRE_MINUTES = 360  # 1 saat
 REFRESH_TOKEN_EXPIRE_DAYS = 7   # 7 gün
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):    

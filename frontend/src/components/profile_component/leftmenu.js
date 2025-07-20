@@ -6,10 +6,11 @@ import { usePathname } from "next/navigation";
 import "../../styles/css/leftmenu.css";
 import "../../styles/css/logOut_modal.css";
 import { BiLock } from "react-icons/bi"; // veya başka bir kilit ikonu
+import { FaRegLightbulb } from "react-icons/fa";
 
 import {
   BiUser, BiCandles, BiLineChart, BiBroadcast, BiSearchAlt, BiLogOut,
-  BiMenu, BiChevronLeft,
+  BiChevronLeft,
 } from "react-icons/bi";
 import { IoMdArrowDropright } from "react-icons/io";
 import { IoWarningOutline } from "react-icons/io5";
@@ -28,6 +29,7 @@ const menuItems = [
   { href: "/profile/apiconnect", icon: <BiBroadcast />, label: "API Bağlantısı" },
   { href: "/profile/bot", icon: <LuBot />, label: "Otomatik Botlarım", locked: false },
   { href: "/profile/sift", icon: <BiSearchAlt />, label: "Strateji Tarama", locked: true },
+  { href: "/profile/whaleerai", icon: <FaRegLightbulb />, label: "WhaleerAI", locked: false },
 ];
 
 const LeftMenu = () => {

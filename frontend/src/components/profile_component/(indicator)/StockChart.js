@@ -254,20 +254,20 @@ export default function ChartComponent() {
         });
 
         // Crosshair hareketlerini diğer grafiklere gönder
-        chart.subscribeCrosshairMove((param) => {
-          const hoveredTime = param?.time;
-
-          if (hoveredTime !== undefined) {
-            const event = new CustomEvent("chartCrosshairMove", {
-              detail: {
-                time: hoveredTime,
-                sourceId: 'main-chart'
-              }
-            });
-          
-            window.dispatchEvent(event);
-          }
-        });
+        //chart.subscribeCrosshairMove((param) => {
+        //  const hoveredTime = param?.time;
+//
+        //  if (hoveredTime !== undefined) {
+        //    const event = new CustomEvent("chartCrosshairMove", {
+        //      detail: {
+        //        time: hoveredTime,
+        //        sourceId: 'main-chart'
+        //      }
+        //    });
+        //  
+        //    window.dispatchEvent(event);
+        //  }
+        //});
 
 
         chart.applyOptions({

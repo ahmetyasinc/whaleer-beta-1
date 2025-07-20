@@ -72,6 +72,7 @@ async def run_backtest_logic(strategy_id: int, period: str, crypto: dict, user_i
 
     # JSON'a dönüştür
     candlestick_data = df_data_json[["time", "open", "high", "low", "close"]].to_dict(orient="records")
+    print("Here 1")
 
     # allowed_globals hazırla
     allowed_globals = {
@@ -133,14 +134,17 @@ async def run_backtest_logic(strategy_id: int, period: str, crypto: dict, user_i
     except Exception as e:
         print(f"Strateji kodu çalıştırılırken hata oluştu: {e}")
 
+    print("Here 2")
+    print(df["position"].head())
+    print(df["percentage"].head())
 
     # Veriyi kontrol et
     if "position" not in df.columns or "percentage" not in df.columns:
         raise HTTPException(status_code=400, detail="Strategy must output 'position' and 'percentage'.")
 
+    print("Here 3")
     # Performans hesapla
     result = calculate_performance(df, allowed_globals.get("commission", 0.0))
-
     return {
         "chartData": result["chartData"],
         "performance": result["performance"],

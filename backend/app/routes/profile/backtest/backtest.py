@@ -28,7 +28,6 @@ async def run_backtest(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token)
 ):
-    print(payload.crypto)
     return await run_backtest_logic(
         strategy_id=payload.strategy,
         period=payload.period,

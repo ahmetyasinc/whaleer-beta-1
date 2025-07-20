@@ -133,42 +133,42 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     };
     let ghostLineSeries = null;
 
-    const handleCrosshairMove = (event) => {
-      const { time, sourceId } = event.detail;
-      const currentChartId = `${indicatorId}-${subId}`;
-      if (sourceId === currentChartId) return;
-      if (!chartRef.current || time === undefined || time === null) return;
-    
-      const chart = chartRef.current;
-      const timeScale = chart.timeScale();
-      const logicalRange = timeScale.getVisibleLogicalRange();
-    
-      const series = chartSeriesRef.current; // candleSeries gibi bir şey
-      const priceScale = series?.getPriceScale();
-      const priceRange = priceScale?.getPriceRange(logicalRange);
-    
-      const minValue = priceRange?.minValue ?? 0;
-      const maxValue = priceRange?.maxValue ?? 1;
-    
-      if (!ghostLineSeries) {
-        ghostLineSeries = chart.addLineSeries({
-          color: 'rgba(255,255,255,0.4)',
-          lineWidth: 1,
-          priceLineVisible: false,
-          crossHairMarkerVisible: false,
-        });
-      }
-    
-      const offset = 0.00001;
-      ghostLineSeries.setData([
-        { time: time - offset, value: maxValue },
-        { time: time + offset, value: minValue },
-      ]);
-    };
+    //const handleCrosshairMove = (event) => {
+    //  const { time, sourceId } = event.detail;
+    //  const currentChartId = `${indicatorId}-${subId}`;
+    //  if (sourceId === currentChartId) return;
+    //  if (!chartRef.current || time === undefined || time === null) return;
+    //
+    //  const chart = chartRef.current;
+    //  const timeScale = chart.timeScale();
+    //  const logicalRange = timeScale.getVisibleLogicalRange();
+    //
+    //  const series = chartSeriesRef.current; // candleSeries gibi bir şey
+    //  const priceScale = series?.getPriceScale();
+    //  const priceRange = priceScale?.getPriceRange(logicalRange);
+    //
+    //  const minValue = priceRange?.minValue ?? 0;
+    //  const maxValue = priceRange?.maxValue ?? 1;
+    //
+    //  if (!ghostLineSeries) {
+    //    ghostLineSeries = chart.addLineSeries({
+    //      color: 'rgba(255,255,255,0.4)',
+    //      lineWidth: 1,
+    //      priceLineVisible: false,
+    //      crossHairMarkerVisible: false,
+    //    });
+    //  }
+    //
+    //  const offset = 0.00001;
+    //  ghostLineSeries.setData([
+    //    { time: time - offset, value: maxValue },
+    //    { time: time + offset, value: minValue },
+    //  ]);
+    //};
 
 
 
-    window.addEventListener("chartCrosshairMove", handleCrosshairMove);
+    //window.addEventListener("chartCrosshairMove", handleCrosshairMove);
     window.addEventListener("chartTimeRangeChange", handleTimeRangeChange); //eventi dinler yukarıda
 
     const timeScale = chart.timeScale();
@@ -268,7 +268,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     resizeObserver.observe(chartContainerRef.current);
 
     return () => {
-      window.removeEventListener("chartCrosshairMove", handleCrosshairMove);
+      //window.removeEventListener("chartCrosshairMove", handleCrosshairMove);
       window.removeEventListener("chartTimeRangeChange", handleTimeRangeChange);
       resizeObserver.disconnect();
       if (chartRef.current) {

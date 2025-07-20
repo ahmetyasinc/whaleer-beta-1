@@ -117,6 +117,11 @@ const useAiStore = create((set, get) => ({
 
 export default useAiStore;*/
 
+import axios from 'axios';
+
+axios.defaults.withCredentials = true;
+
+
 import { create } from 'zustand';
 
 const useAiStore = create((set, get) => ({
@@ -260,17 +265,47 @@ print(f"\\nOrtalama Maaş: {ortalama_maas}")`
   },
 
   // Send message and get AI response
+  // Send message and get AI response from backend
   sendMessage: async (message) => {
     const state = get();
-    
+
     // Add user message
     state.addMessage(message, true);
-    
-    // Simulate AI response delay
-    setTimeout(() => {
-      state.addMessage(state.staticAiResponse, false);
-    }, 1000);
+
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/chat2`, // kendi endpoint'ine göre düzenle
+        { message }
+      );
+
+      const { explanation, codes } = response.data;
+
+      // Format backend response for UI
+      state.addMessage(
+        {
+          message: explanation,
+          codes: codes.map((c, i) => ({
+            id: Date.now().toString() + Math.random().toString(36).substring(2, 8),
+            title: c.title || `Kod ${i + 1}`,
+            language: 'python',
+            content: c.code
+          }))
+        },
+        false
+      );
+
+    } catch (error) {
+      console.error("Mesaj gönderimi başarısız:", error);
+      state.addMessage(
+        {
+          message: "Bir hata oluştu, lütfen daha sonra tekrar deneyin.",
+          codes: []
+        },
+        false
+      );
+    }
   },
+
 
   // Delete chat
   deleteChat: (chatId) => {

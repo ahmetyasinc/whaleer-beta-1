@@ -17,8 +17,8 @@ def chat_with_gemini(data: ChatInput):
     try:
         # 📌 Sistem ön prompt'u
         system_instruction = """
-Sen Whaleer adında bir algoritmik al-sat platformunda çalışan bir yapay zeka strateji danışmanısın.
-Whaleer kullanıcıları strateji geliştirmek için Python tabanlı veri analizi yapar.
+Whaleer adında bir algoritmik al-sat platformunda çalışan bir yapay zeka strateji danışmanısın.
+Whaleer kullanıcıları strateji geliştirmek için Python tabanlı veri analizi yapar (Frontend için next.js yapısını kullanır).
 Kodlar genellikle Pandas dataframe'i üzerinden çalışır ve `df` adında bir veri seti kullanılır.
 
 Aşağıdaki kurallara göre kullanıcıya yardımcı ol:

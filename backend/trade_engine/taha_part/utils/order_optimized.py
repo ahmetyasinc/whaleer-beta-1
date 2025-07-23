@@ -14,8 +14,8 @@ from trade_engine.taha_part.utils.dict_preparing import (
     extract_symbol_trade_types,
     get_symbols_filters_dict
 )
-from trade_engine.taha_part.db.db_config import get_api_credentials_by_bot_id
-from trade_engine.taha_part.utils.price_cache_new import get_price
+from backend.trade_engine.taha_part.db.db_config import get_api_credentials_by_bot_id
+from backend.trade_engine.taha_part.utils.price_cache_new import get_price
 
 # Sabitler
 API_URLS = {
@@ -173,10 +173,10 @@ async def send_order_optimized(prepared_orders: dict) -> dict:
                     })
         
         if not all_orders:
-            logger.info("📋 Gönderilecek emir bulunamadı")
+            print("📋 Gönderilecek emir bulunamadı")
             return responses
         
-        logger.info(f"📤 {len(all_orders)} emir paralel gönderilecek")
+        print(f"📤 {len(all_orders)} emir paralel gönderilecek")
         
         # Emirleri paralel gönder
         send_tasks = []
@@ -202,9 +202,9 @@ async def send_order_optimized(prepared_orders: dict) -> dict:
                 responses[trade_type].append({"error": result["error"]})
         
         total_sent = sum(len(orders) for orders in responses.values())
-        logger.info(f"📤 {total_sent} emir paralel gönderildi")
-        logger.info(f"⚡ Paralel gönderim süresi: {send_time:.2f}s")
-        logger.info(f"📊 Emir başına ortalama: {send_time/max(total_sent, 1):.3f}s")
+        print(f"📤 {total_sent} emir paralel gönderildi")
+        print(f"⚡ Paralel gönderim süresi: {send_time:.2f}s")
+        print(f"📊 Emir başına ortalama: {send_time/max(total_sent, 1):.3f}s")
         
         return responses
         
@@ -273,7 +273,7 @@ async def _send_single_order(order_item: dict) -> Optional[dict]:
             async with session.post(api_url, headers=headers, data=params) as response:
                 if response.status == 200:
                     response_data = await response.json()
-                    logger.info(f"✅ {trade_type} emri başarıyla gönderildi")
+                    print(f"✅ {trade_type} emri başarıyla gönderildi")
                     return {
                         "success": True,
                         "trade_type": trade_type,
@@ -458,7 +458,7 @@ async def prepare_order_data_optimized(order_data: dict) -> dict:
         # Paralel API credential çekimi
         start_time = time.time()
         api_results = await asyncio.gather(*api_tasks, return_exceptions=True)
-        logger.info(f"🚀 API credentials paralel çekim süresi: {time.time() - start_time:.2f}s")
+        print(f"🚀 API credentials paralel çekim süresi: {time.time() - start_time:.2f}s")
         
         # 3. Emir processing'i paralel yap
         order_tasks = []
@@ -486,7 +486,7 @@ async def prepare_order_data_optimized(order_data: dict) -> dict:
         # Paralel emir işleme
         start_time = time.time()
         processed_orders = await asyncio.gather(*order_tasks, return_exceptions=True)
-        logger.info(f"🚀 Emir processing paralel süresi: {time.time() - start_time:.2f}s")
+        print(f"🚀 Emir processing paralel süresi: {time.time() - start_time:.2f}s")
         
         # 4. Sonuçları organize et
         for result in processed_orders:
@@ -500,7 +500,7 @@ async def prepare_order_data_optimized(order_data: dict) -> dict:
         
         # Özet log
         total_orders = sum(len(orders) for orders in prepared_orders.values())
-        logger.info(f"📋 Toplam {total_orders} emir hazırlandı (optimized)")
+        print(f"📋 Toplam {total_orders} emir hazırlandı (optimized)")
         
         return prepared_orders
         

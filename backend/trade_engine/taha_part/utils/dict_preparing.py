@@ -2,7 +2,7 @@ from typing import Dict, Optional
 import logging
 from psycopg2.extras import RealDictCursor
 import asyncio
-from trade_engine.config import get_db_connection
+from backend.trade_engine.config import get_db_connection
 import logging
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ def extract_symbol_trade_types(order_data: dict) -> Dict[str, list]:
                 trade_type = order.get("trade_type")
                 
                 if not coin_id or not trade_type:
-                    logger.warning(f"Bot ID {bot_id} için coin_id veya trade_type eksik")
+                    print(f"Bot ID {bot_id} için coin_id veya trade_type eksik")
                     continue
                 
                 # trade_type'ı spot/futures formatına dönüştür
@@ -41,7 +41,7 @@ def extract_symbol_trade_types(order_data: dict) -> Dict[str, list]:
                 elif trade_type in ["futures", "test_futures"]:
                     normalized_trade_type = "futures"
                 else:
-                    logger.warning(f"Geçersiz trade_type: {trade_type}")
+                    print(f"Geçersiz trade_type: {trade_type}")
                     continue
                 
                 # ✅ YENİ: Symbol için liste oluştur veya genişlet
@@ -55,7 +55,7 @@ def extract_symbol_trade_types(order_data: dict) -> Dict[str, list]:
                 else:
                     logger.debug(f"🔄 {coin_id} -> {normalized_trade_type} zaten mevcut")
         
-        logger.info(f"📊 Extract edilen semboller: {dict(symbol_trade_types)}")
+        print(f"📊 Extract edilen semboller: {dict(symbol_trade_types)}")
         
         # ✅ YENİ: Detaylı analiz log'u
         total_entries = sum(len(trade_types) for trade_types in symbol_trade_types.values())
@@ -63,12 +63,12 @@ def extract_symbol_trade_types(order_data: dict) -> Dict[str, list]:
         spot_only = [symbol for symbol, trade_types in symbol_trade_types.items() if trade_types == ["spot"]]
         futures_only = [symbol for symbol, trade_types in symbol_trade_types.items() if trade_types == ["futures"]]
         
-        logger.info(f"📊 Extract analizi:")
-        logger.info(f"  📈 Toplam entry: {total_entries}")
-        logger.info(f"  🔢 Unique semboller: {len(symbol_trade_types)}")
-        logger.info(f"  🔵 Sadece spot: {len(spot_only)} -> {spot_only}")
-        logger.info(f"  🟠 Sadece futures: {len(futures_only)} -> {futures_only}")
-        logger.info(f"  🟣 Karışık (spot+futures): {len(mixed_symbols)} -> {mixed_symbols}")
+        print(f"📊 Extract analizi:")
+        print(f"  📈 Toplam entry: {total_entries}")
+        print(f"  🔢 Unique semboller: {len(symbol_trade_types)}")
+        print(f"  🔵 Sadece spot: {len(spot_only)} -> {spot_only}")
+        print(f"  🟠 Sadece futures: {len(futures_only)} -> {futures_only}")
+        print(f"  🟣 Karışık (spot+futures): {len(mixed_symbols)} -> {mixed_symbols}")
         
         return symbol_trade_types
         
@@ -117,7 +117,7 @@ async def get_symbols_filters_dict(symbols_and_types: Dict[str, list]) -> Dict[s
     """
     try:
         if not symbols_and_types:
-            logger.warning("⚠️ Sembol listesi boş")
+            print("⚠️ Sembol listesi boş")
             return {}
         
         # Input format conversion: Liste'den tuple'a dönüştür
@@ -131,10 +131,10 @@ async def get_symbols_filters_dict(symbols_and_types: Dict[str, list]) -> Dict[s
                 flattened_requests.append((symbol, trade_types))
         
         if not flattened_requests:
-            logger.warning("⚠️ Flatten edilmiş sembol listesi boş")
+            print("⚠️ Flatten edilmiş sembol listesi boş")
             return {}
             
-        logger.info(f"🔄 Format conversion: {len(symbols_and_types)} symbols -> {len(flattened_requests)} requests")
+        print(f"🔄 Format conversion: {len(symbols_and_types)} symbols -> {len(flattened_requests)} requests")
         
         # Database connection - with statement kullan
         conn = get_db_connection()
@@ -166,7 +166,7 @@ async def get_symbols_filters_dict(symbols_and_types: Dict[str, list]) -> Dict[s
             conn.close()
         
         if not symbols_result:
-            logger.warning("⚠️ Belirtilen semboller için filtreler bulunamadı")
+            print("⚠️ Belirtilen semboller için filtreler bulunamadı")
             return {}
         
         # Dict formatına dönüştür - sembol bazında grupla
@@ -192,8 +192,8 @@ async def get_symbols_filters_dict(symbols_and_types: Dict[str, list]) -> Dict[s
         total_filters = sum(len(filters) for filters in symbols_dict.values())
         mixed_symbols = [symbol for symbol, filters in symbols_dict.items() if len(filters) > 1]
         
-        logger.info(f"✅ {len(symbols_dict)} sembol için {total_filters} filtre yüklendi")
-        logger.info(f"🟣 Karışık trade_type'lı semboller: {len(mixed_symbols)} -> {mixed_symbols}")
+        print(f"✅ {len(symbols_dict)} sembol için {total_filters} filtre yüklendi")
+        print(f"🟣 Karışık trade_type'lı semboller: {len(mixed_symbols)} -> {mixed_symbols}")
         
         return symbols_dict
         
@@ -219,7 +219,7 @@ async def get_single_symbol_filters(symbol: str, trade_type: str) -> Optional[Di
     """
     try:
         if not symbol or not trade_type:
-            logger.warning("⚠️ Sembol veya trade_type boş")
+            print("⚠️ Sembol veya trade_type boş")
             return None
         
         # Direct DB connection - load_bot_holding pattern'i gibi
@@ -241,7 +241,7 @@ async def get_single_symbol_filters(symbol: str, trade_type: str) -> Optional[Di
         conn.close()
         
         if not symbol_result:
-            logger.warning(f"⚠️ {symbol} sembolü için {trade_type} filtresi bulunamadı")
+            print(f"⚠️ {symbol} sembolü için {trade_type} filtresi bulunamadı")
             return None
         
         return {

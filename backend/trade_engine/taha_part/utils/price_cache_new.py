@@ -109,11 +109,11 @@ class WebSocketConnectionManager:
     async def start_connection_pool(self):
         """Connection pool'u başlat - tek seferlik"""
         if self.is_running:
-            logger.warning("⚠️ Connection pool zaten çalışıyor")
+            print("⚠️ Connection pool zaten çalışıyor")
             return
         
         self.is_running = True
-        logger.info("🚀 WebSocket Connection Pool başlatılıyor...")
+        print("🚀 WebSocket Connection Pool başlatılıyor...")
         
         # Her market için connection task'ı başlat
         _connection_tasks["spot"] = asyncio.create_task(self._maintain_spot_connection())
@@ -123,7 +123,7 @@ class WebSocketConnectionManager:
         # Bağlantıların kurulması için kısa bekle
         await asyncio.sleep(2)
         
-        logger.info("✅ WebSocket Connection Pool başlatıldı")
+        print("✅ WebSocket Connection Pool başlatıldı")
     
     async def stop_connection_pool(self):
         """Connection pool'u durdur"""
@@ -131,7 +131,7 @@ class WebSocketConnectionManager:
             return
         
         self.is_running = False
-        logger.info("🔴 WebSocket Connection Pool durduruluyor...")
+        print("🔴 WebSocket Connection Pool durduruluyor...")
         
         # Tüm task'ları iptal et
         for task_name, task in _connection_tasks.items():
@@ -151,7 +151,7 @@ class WebSocketConnectionManager:
                 await conn["session"].close()
             conn["connected"] = False
         
-        logger.info("✅ WebSocket Connection Pool durduruldu")
+        print("✅ WebSocket Connection Pool durduruldu")
     
     async def _maintain_spot_connection(self):
         """Spot WebSocket bağlantısını sürekli canlı tut"""
@@ -185,7 +185,7 @@ class WebSocketConnectionManager:
             conn["connected"] = True
             conn["last_reconnect_time"] = time.time()
             
-            logger.info(f"🟢 {market_type.title()} WebSocket bağlandı")
+            print(f"🟢 {market_type.title()} WebSocket bağlandı")
             
             # Mesajları dinle
             async for msg in conn["websocket"]:
@@ -261,11 +261,11 @@ class WebSocketConnectionManager:
                         
                         # Çok uzun süre sessizse kopma var
                         if silence_duration > self.max_silence_seconds:
-                            logger.warning(f"⚠️ {market_type.title()} kopma tespit edildi: {silence_duration:.1f}s sessizlik")
+                            print(f"⚠️ {market_type.title()} kopma tespit edildi: {silence_duration:.1f}s sessizlik")
                             
                             # Bağlantıyı test et
                             if conn["connected"]:
-                                logger.info(f"🔄 {market_type.title()} bağlantısı test ediliyor...")
+                                print(f"🔄 {market_type.title()} bağlantısı test ediliyor...")
                                 
                                 # WebSocket'i kapat - otomatik yeniden bağlanacak
                                 if conn["websocket"] and not conn["websocket"].closed:
@@ -276,7 +276,7 @@ class WebSocketConnectionManager:
                         if conn["last_reconnect_time"]:
                             reconnect_duration = current_time - conn["last_reconnect_time"]
                             if reconnect_duration > 30:  # 30 saniyeden fazla bağlanamıyorsa
-                                logger.warning(f"⚠️ {market_type.title()} uzun süredir bağlanamıyor: {reconnect_duration:.1f}s")
+                                print(f"⚠️ {market_type.title()} uzun süredir bağlanamıyor: {reconnect_duration:.1f}s")
                 
                 # 30 saniyede bir kontrol
                 await asyncio.sleep(30)
@@ -437,7 +437,7 @@ async def force_reconnect(market_type: str = None):
     for market in markets:
         conn = _connection_pool[market]
         
-        logger.info(f"🔄 {market.title()} bağlantısı zorla yenileniyor...")
+        print(f"🔄 {market.title()} bağlantısı zorla yenileniyor...")
         
         # Mevcut bağlantıyı kapat
         if conn["websocket"] and not conn["websocket"].closed:
@@ -475,12 +475,12 @@ async def wait_for_cache_ready(timeout_seconds: int = 30) -> bool:
     
     while time.time() - start_time < timeout_seconds:
         if is_cache_ready():
-            logger.info("✅ Price cache hazır")
+            print("✅ Price cache hazır")
             return True
         
         await asyncio.sleep(1)
     
-    logger.warning("⚠️ Price cache timeout süresi aşıldı")
+    print("⚠️ Price cache timeout süresi aşıldı")
     return False
 
 # Kullanım Örneği - en basit

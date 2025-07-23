@@ -9,10 +9,10 @@ import base64
 from typing import Dict, Optional, Union  # Dict ve Union import'unu ekle
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives import serialization
-from trade_engine.taha_part.utils.price_cache_new import get_price, start_connection_pool, start_websocket_services
-from trade_engine.taha_part.utils.dict_preparing import get_symbols_filters_dict, extract_symbol_trade_types
-from trade_engine.taha_part.db.db_config import get_api_credentials_by_bot_id
-from trade_engine.taha_part.utils.margin_leverage_controls import (
+from backend.trade_engine.taha_part.utils.price_cache_new import get_price, start_connection_pool, start_websocket_services
+from backend.trade_engine.taha_part.utils.dict_preparing import get_symbols_filters_dict, extract_symbol_trade_types
+from backend.trade_engine.taha_part.db.db_config import get_api_credentials_by_bot_id
+from backend.trade_engine.taha_part.utils.margin_leverage_controls import (
 get_symbol_margin_leverage_info,sync_symbol_with_database, get_all_api_margin_leverage_infos)
 # Logger ayarları
 logger = logging.getLogger(__name__)
@@ -166,7 +166,7 @@ async def send_order(prepared_orders: dict) -> dict:
                         async with session.post(api_url, headers=headers, data=params) as response:
                             if response.status == 200:
                                 responses[trade_type].append(await response.json())
-                                logger.info(f"✅ {trade_type} emri başarıyla gönderildi")
+                                print(f"✅ {trade_type} emri başarıyla gönderildi")
                             else:
                                 error_text = await response.text()
                                 logger.error(f"❌ {trade_type} API hatası: {response.status} - {error_text}")
@@ -202,7 +202,7 @@ async def prepare_order_data(order_data: dict) -> dict:
         symbol_trade_types = extract_symbol_trade_types(order_data)
         filters = await get_symbols_filters_dict(symbol_trade_types)
         
-        logger.info(f"✅ {len(filters)} sembol filtresi yüklendi")
+        print(f"✅ {len(filters)} sembol filtresi yüklendi")
         
         for bot_id, orders in order_data.items():
             for order in orders:
@@ -249,7 +249,7 @@ async def prepare_order_data(order_data: dict) -> dict:
                 
                 # 🔧 Futures emirleri için API ID bazlı margin/leverage kontrolü
                 if trade_type in ["futures", "test_futures"]:
-                    logger.info(f"🔧 {coin_id} için futures pozisyon hazırlığı başlatılıyor (API ID: {api_id})")
+                    print(f"🔧 {coin_id} için futures pozisyon hazırlığı başlatılıyor (API ID: {api_id})")
                     
                     # Config'den istenen ayarları al
                     config_settings = MARGIN_LEVERAGE_CONFIG.get(api_id, {}).get(coin_id, {})
@@ -261,12 +261,12 @@ async def prepare_order_data(order_data: dict) -> dict:
                         
                         # Boolean kontrolü
                         if not isinstance(margin_type_bool, bool):
-                            logger.warning(f"⚠️ Config'de margin_type boolean değil: {margin_type_bool}, True kullanılacak")
+                            print(f"⚠️ Config'de margin_type boolean değil: {margin_type_bool}, True kullanılacak")
                             margin_type_bool = True
                         
                         margin_type_str = "ISOLATED" if margin_type_bool else "CROSSED"
                         
-                        logger.info(f"📊 Config ayarları - {coin_id}: margin_type={margin_type_bool} ({margin_type_str}), leverage={desired_leverage}x")
+                        print(f"📊 Config ayarları - {coin_id}: margin_type={margin_type_bool} ({margin_type_str}), leverage={desired_leverage}x")
                         
                         try:
                             # Margin type güncelle - boolean değer gönder
@@ -291,7 +291,7 @@ async def prepare_order_data(order_data: dict) -> dict:
                             
                             # Sonuçları logla
                             if margin_result["success"] and leverage_result["success"]:
-                                logger.info(f"✅ API ID {api_id} - {coin_id} pozisyon ayarları tamamlandı")
+                                print(f"✅ API ID {api_id} - {coin_id} pozisyon ayarları tamamlandı")
                                 
                                 # Config'i güncelle
                                 config_updated = update_margin_leverage_config(
@@ -302,19 +302,19 @@ async def prepare_order_data(order_data: dict) -> dict:
                                 )
                                 
                                 if config_updated:
-                                    logger.info(f"✅ Config sync edildi - API ID {api_id}, {coin_id}")
+                                    print(f"✅ Config sync edildi - API ID {api_id}, {coin_id}")
                                 else:
-                                    logger.warning(f"⚠️ Config sync hatası - API ID {api_id}, {coin_id}")
+                                    print(f"⚠️ Config sync hatası - API ID {api_id}, {coin_id}")
                                     
                             else:
-                                logger.warning(f"⚠️ API ID {api_id} - {coin_id} pozisyon ayarlarında sorun:")
-                                logger.warning(f"   Margin: {margin_result['message']}")
-                                logger.warning(f"   Leverage: {leverage_result['message']}")
+                                print(f"⚠️ API ID {api_id} - {coin_id} pozisyon ayarlarında sorun:")
+                                print(f"   Margin: {margin_result['message']}")
+                                print(f"   Leverage: {leverage_result['message']}")
                                 
                         except Exception as e:
                             logger.error(f"❌ API ID {api_id} - {coin_id} pozisyon ayarlama hatası: {str(e)}")
                     else:
-                        logger.info(f"📝 API ID {api_id} için {coin_id} config'i bulunamadı - varsayılan ayarlar")
+                        print(f"📝 API ID {api_id} için {coin_id} config'i bulunamadı - varsayılan ayarlar")
                 
                 # ... (geri kalan kod aynı)
                 
@@ -326,7 +326,7 @@ async def prepare_order_data(order_data: dict) -> dict:
                         logger.error(f"❌ {coin_id} için {normalized_trade_type} fiyatı bulunamadı")
                         continue
                     
-                    logger.info(f"📊 {coin_id} güncel fiyat: ${current_price:.6f}")
+                    print(f"📊 {coin_id} güncel fiyat: ${current_price:.6f}")
                     
                 except Exception as e:
                     logger.error(f"❌ {coin_id} için fiyat alınamadı: {str(e)}")
@@ -351,7 +351,7 @@ async def prepare_order_data(order_data: dict) -> dict:
                     # Hesaplanan quantity'yi al
                     calculated_quantity = qty_result["quantity"]
                     
-                    logger.info(f"✅ {coin_id} quantity hesaplandı: {value}$ → {calculated_quantity} @ ${current_price:.6f}")
+                    print(f"✅ {coin_id} quantity hesaplandı: {value}$ → {calculated_quantity} @ ${current_price:.6f}")
                     
                 except Exception as e:
                     logger.error(f"❌ {coin_id} quantity hesaplama hatası: {str(e)}")
@@ -409,14 +409,14 @@ async def prepare_order_data(order_data: dict) -> dict:
                     "params": params
                 })
                 
-                logger.info(f"🎯 {coin_id} emri hazırlandı: {trade_type} | {side} | {order_type} | {calculated_quantity}")
+                print(f"🎯 {coin_id} emri hazırlandı: {trade_type} | {side} | {order_type} | {calculated_quantity}")
 
         # Hazırlanan emirlerin özetini logla
         total_orders = sum(len(orders) for orders in prepared_orders.values())
-        logger.info(f"📋 Toplam {total_orders} emir hazırlandı:")
+        print(f"📋 Toplam {total_orders} emir hazırlandı:")
         for market_type, orders in prepared_orders.items():
             if orders:
-                logger.info(f"  {market_type}: {len(orders)} emir")
+                print(f"  {market_type}: {len(orders)} emir")
 
         return prepared_orders
 
@@ -432,7 +432,7 @@ async def step_qty_control(filters: Dict, coin_id: str, trade_type: str, value: 
     Liste formatındaki filtreleri destekler: filters["BTCUSDT"] = [{"trade_type": "spot", ...}, {...}]
     """
     try:
-        logger.info(f"🔍 Quantity kontrolü başlatılıyor - {coin_id} {trade_type}")
+        print(f"🔍 Quantity kontrolü başlatılıyor - {coin_id} {trade_type}")
         
         # Trade type'ı normalize et
         if trade_type in ["spot", "test_spot"]:
@@ -440,10 +440,10 @@ async def step_qty_control(filters: Dict, coin_id: str, trade_type: str, value: 
         elif trade_type in ["futures", "test_futures"]:
             normalized_trade_type = "futures"
         else:
-            logger.warning(f"Geçersiz trade_type: {trade_type}")
+            print(f"Geçersiz trade_type: {trade_type}")
             normalized_trade_type = trade_type
         
-        logger.info(f"📊 Normalized trade_type: {trade_type} -> {normalized_trade_type}")
+        print(f"📊 Normalized trade_type: {trade_type} -> {normalized_trade_type}")
         
         # ✅ YENİ: Liste formatında filtre arama
         coin_filter = None
@@ -457,18 +457,18 @@ async def step_qty_control(filters: Dict, coin_id: str, trade_type: str, value: 
                 for filter_item in filter_data:
                     if isinstance(filter_item, dict) and filter_item.get("trade_type") == normalized_trade_type:
                         coin_filter = filter_item
-                        logger.info(f"✅ Liste formatında filtre bulundu: {coin_id} -> {normalized_trade_type}")
+                        print(f"✅ Liste formatında filtre bulundu: {coin_id} -> {normalized_trade_type}")
                         break
             
             # Eski format desteği (backward compatibility)
             elif isinstance(filter_data, dict):
                 if filter_data.get("trade_type") == normalized_trade_type:
                     coin_filter = filter_data
-                    logger.info(f"✅ Dict formatında filtre bulundu: {coin_id} -> {normalized_trade_type}")
+                    print(f"✅ Dict formatında filtre bulundu: {coin_id} -> {normalized_trade_type}")
         
         # Filtre bulunamadıysa varsayılan değerler
         if not coin_filter:
-            logger.warning(f"⚠️ {coin_id} için {normalized_trade_type} filtresi bulunamadı - varsayılan değerler kullanılacak")
+            print(f"⚠️ {coin_id} için {normalized_trade_type} filtresi bulunamadı - varsayılan değerler kullanılacak")
             
             # Varsayılan filtre değerleri
             default_filters = {
@@ -483,14 +483,14 @@ async def step_qty_control(filters: Dict, coin_id: str, trade_type: str, value: 
             })
             coin_filter["trade_type"] = normalized_trade_type
             
-            logger.info(f"🔧 Varsayılan filtre kullanılıyor: {coin_filter}")
+            print(f"🔧 Varsayılan filtre kullanılıyor: {coin_filter}")
         
         # Filtre değerlerini al
         step_size = float(coin_filter.get("step_size", 0.00001))
         min_qty = float(coin_filter.get("min_qty", 0.00001))
         filter_trade_type = coin_filter.get("trade_type")
         
-        logger.info(f"📊 Filtre değerleri - step_size: {step_size}, min_qty: {min_qty}, trade_type: {filter_trade_type}")
+        print(f"📊 Filtre değerleri - step_size: {step_size}, min_qty: {min_qty}, trade_type: {filter_trade_type}")
         
         # Temel validasyonlar
         if not step_size or not min_qty:
@@ -515,11 +515,11 @@ async def step_qty_control(filters: Dict, coin_id: str, trade_type: str, value: 
         quantity_steps = int(raw_quantity / step_size)
         final_quantity = quantity_steps * step_size
         
-        logger.info(f"🔢 Hesaplama - raw: {raw_quantity:.8f}, steps: {quantity_steps}, final: {final_quantity:.8f}")
+        print(f"🔢 Hesaplama - raw: {raw_quantity:.8f}, steps: {quantity_steps}, final: {final_quantity:.8f}")
         
         # Minimum quantity kontrolü
         if final_quantity < min_qty:
-            logger.warning(f"⚠️ Minimum quantity altında: {final_quantity} < {min_qty}")
+            print(f"⚠️ Minimum quantity altında: {final_quantity} < {min_qty}")
             return {
                 "quantity": "0",
                 "status": "error",
@@ -531,7 +531,7 @@ async def step_qty_control(filters: Dict, coin_id: str, trade_type: str, value: 
             formatted_quantity = str(int(final_quantity))
         else:
             decimal_places = _get_decimal_places(step_size)
-            logger.info(f"📝 Formatlama - decimal_places: {decimal_places}")
+            print(f"📝 Formatlama - decimal_places: {decimal_places}")
             formatted_quantity = f"{final_quantity:.{decimal_places}f}"
             
             # Sondaki sıfırları kaldır
@@ -539,7 +539,7 @@ async def step_qty_control(filters: Dict, coin_id: str, trade_type: str, value: 
             if not formatted_quantity or formatted_quantity == '':
                 formatted_quantity = "0"
         
-        logger.info(f"✅ Başarılı - formatted_quantity: {formatted_quantity}")
+        print(f"✅ Başarılı - formatted_quantity: {formatted_quantity}")
         
         return {
             "quantity": formatted_quantity,
@@ -593,7 +593,7 @@ def normalize_price_to_tick_size(price: float, tick_size: float) -> str:
     """
     try:
         if not price or not tick_size or tick_size <= 0:
-            logger.warning(f"⚠️ Geçersiz price veya tick_size: {price}, {tick_size}")
+            print(f"⚠️ Geçersiz price veya tick_size: {price}, {tick_size}")
             return str(price) if price else "0"
         
         # En yakın tick_size'a yuvarlama
@@ -611,7 +611,7 @@ def normalize_price_to_tick_size(price: float, tick_size: float) -> str:
             if not formatted_price:
                 formatted_price = "0"
         
-        logger.info(f"📝 Price formatting: {price} -> {formatted_price} (tick_size: {tick_size})")
+        print(f"📝 Price formatting: {price} -> {formatted_price} (tick_size: {tick_size})")
         
         return formatted_price
         
@@ -634,7 +634,7 @@ async def validate_and_format_prices(filters: Dict, coin_id: str, order: Dict) -
         # Trade type'ı normalize et
         normalized_trade_type = "spot" if trade_type in ["spot", "test_spot"] else "futures"
         
-        logger.info(f"🔍 Price validation başlatılıyor - {coin_id} {trade_type}")
+        print(f"🔍 Price validation başlatılıyor - {coin_id} {trade_type}")
         
         # ✅ YENİ: Liste formatında filtre arama (step_qty_control ile aynı mantık)
         coin_filter = None
@@ -647,23 +647,23 @@ async def validate_and_format_prices(filters: Dict, coin_id: str, order: Dict) -
                 for filter_item in filter_data:
                     if isinstance(filter_item, dict) and filter_item.get("trade_type") == normalized_trade_type:
                         coin_filter = filter_item
-                        logger.info(f"✅ Liste formatında filtre bulundu: {coin_id} -> {normalized_trade_type}")
+                        print(f"✅ Liste formatında filtre bulundu: {coin_id} -> {normalized_trade_type}")
                         break
             
             # Eski format desteği
             elif isinstance(filter_data, dict):
                 if filter_data.get("trade_type") == normalized_trade_type:
                     coin_filter = filter_data
-                    logger.info(f"✅ Dict formatında filtre bulundu: {coin_id} -> {normalized_trade_type}")
+                    print(f"✅ Dict formatında filtre bulundu: {coin_id} -> {normalized_trade_type}")
         
         # Filter bulunamadıysa varsayılan değerler
         if not coin_filter:
-            logger.warning(f"⚠️ {coin_id} için {normalized_trade_type} filtresi bulunamadı - varsayılan tick_size kullanılacak")
+            print(f"⚠️ {coin_id} için {normalized_trade_type} filtresi bulunamadı - varsayılan tick_size kullanılacak")
             tick_size = 0.01  # Varsayılan tick_size
         else:
             tick_size = float(coin_filter.get("tick_size", 0.01))
         
-        logger.info(f"📊 Tick size: {tick_size}")
+        print(f"📊 Tick size: {tick_size}")
         
         # Price parametrelerini kontrol et ve formatla
         result = {
@@ -676,19 +676,19 @@ async def validate_and_format_prices(filters: Dict, coin_id: str, order: Dict) -
         if "price" in order and order["price"] is not None:
             price_value = float(order["price"])
             result["price"] = normalize_price_to_tick_size(price_value, tick_size)
-            logger.info(f"✅ Price formatlandı: {order['price']} -> {result['price']}")
+            print(f"✅ Price formatlandı: {order['price']} -> {result['price']}")
         
         # StopPrice kontrolü
         if "stopPrice" in order and order["stopPrice"] is not None:
             stop_price_value = float(order["stopPrice"])
             result["stopPrice"] = normalize_price_to_tick_size(stop_price_value, tick_size)
-            logger.info(f"✅ StopPrice formatlandı: {order['stopPrice']} -> {result['stopPrice']}")
+            print(f"✅ StopPrice formatlandı: {order['stopPrice']} -> {result['stopPrice']}")
         
         # ActivationPrice kontrolü
         if "activationPrice" in order and order["activationPrice"] is not None:
             activation_price_value = float(order["activationPrice"])
             result["activationPrice"] = normalize_price_to_tick_size(activation_price_value, tick_size)
-            logger.info(f"✅ ActivationPrice formatlandı: {order['activationPrice']} -> {result['activationPrice']}")
+            print(f"✅ ActivationPrice formatlandı: {order['activationPrice']} -> {result['activationPrice']}")
         
         return result
         
@@ -722,10 +722,10 @@ async def update_margin_type(api_key: str, private_key: str, symbol: str, trade_
         elif isinstance(margin_type, str) and margin_type in ["ISOLATED", "CROSSED"]:
             margin_type_str = margin_type
         else:
-            logger.warning(f"⚠️ Geçersiz margin_type: {margin_type}, True (ISOLATED) kullanılacak")
+            print(f"⚠️ Geçersiz margin_type: {margin_type}, True (ISOLATED) kullanılacak")
             margin_type_str = "ISOLATED"
         
-        logger.info(f"🔧 Margin type güncelleniyor - {symbol} -> {margin_type_str}")
+        print(f"🔧 Margin type güncelleniyor - {symbol} -> {margin_type_str}")
         
         # Trade type kontrolü
         if trade_type not in ["futures", "test_futures"]:
@@ -769,7 +769,7 @@ async def update_margin_type(api_key: str, private_key: str, symbol: str, trade_
             async with session.post(margin_url, headers=headers, data=margin_params) as response:
                 if response.status == 200:
                     margin_response = await response.json()
-                    logger.info(f"✅ Margin type başarıyla güncellendi: {symbol} -> {margin_type_str}")
+                    print(f"✅ Margin type başarıyla güncellendi: {symbol} -> {margin_type_str}")
                     
                     return {
                         "success": True,
@@ -778,11 +778,11 @@ async def update_margin_type(api_key: str, private_key: str, symbol: str, trade_
                     }
                 else:
                     error_text = await response.text()
-                    logger.warning(f"⚠️ Margin type API hatası: {response.status} - {error_text}")
+                    print(f"⚠️ Margin type API hatası: {response.status} - {error_text}")
                     
                     # Zaten doğru margin type'ta ise başarılı say
                     if "No need to change margin type" in error_text:
-                        logger.info(f"✅ Margin type zaten {margin_type_str}: {symbol}")
+                        print(f"✅ Margin type zaten {margin_type_str}: {symbol}")
                         return {
                             "success": True,
                             "message": f"Margin type zaten {margin_type_str}",
@@ -819,7 +819,7 @@ async def update_leverage(api_key: str, private_key: str, symbol: str, trade_typ
         dict: Güncelleme sonucu
     """
     try:
-        logger.info(f"📊 Leverage güncelleniyor - {symbol} -> {leverage}x")
+        print(f"📊 Leverage güncelleniyor - {symbol} -> {leverage}x")
         
         # Trade type kontrolü
         if trade_type not in ["futures", "test_futures"]:
@@ -871,7 +871,7 @@ async def update_leverage(api_key: str, private_key: str, symbol: str, trade_typ
             async with session.post(leverage_url, headers=headers, data=leverage_params) as response:
                 if response.status == 200:
                     leverage_response = await response.json()
-                    logger.info(f"✅ Leverage başarıyla güncellendi: {symbol} -> {leverage}x")
+                    print(f"✅ Leverage başarıyla güncellendi: {symbol} -> {leverage}x")
                     
                     return {
                         "success": True,
@@ -880,7 +880,7 @@ async def update_leverage(api_key: str, private_key: str, symbol: str, trade_typ
                     }
                 else:
                     error_text = await response.text()
-                    logger.warning(f"⚠️ Leverage API hatası: {response.status} - {error_text}")
+                    print(f"⚠️ Leverage API hatası: {response.status} - {error_text}")
                     
                     return {
                         "success": False,
@@ -913,17 +913,17 @@ def update_margin_leverage_config(api_id: int, symbol: str, new_margin_type: boo
     try:
         # Boolean kontrolü
         if not isinstance(new_margin_type, bool):
-            logger.warning(f"⚠️ margin_type boolean olmalı, {type(new_margin_type)} geldi")
+            print(f"⚠️ margin_type boolean olmalı, {type(new_margin_type)} geldi")
             new_margin_type = True  # Varsayılan ISOLATED
         
         if not isinstance(new_leverage, int) or new_leverage < 1:
-            logger.warning(f"⚠️ leverage pozitif integer olmalı, {new_leverage} geldi")
+            print(f"⚠️ leverage pozitif integer olmalı, {new_leverage} geldi")
             new_leverage = 1  # Varsayılan leverage
         
         margin_type_str = "ISOLATED" if new_margin_type else "CROSSED"
         
-        logger.info(f"🔄 Config güncelleniyor - API ID {api_id}, {symbol}")
-        logger.info(f"   Yeni ayarlar: margin_type={new_margin_type} ({margin_type_str}), leverage={new_leverage}")
+        print(f"🔄 Config güncelleniyor - API ID {api_id}, {symbol}")
+        print(f"   Yeni ayarlar: margin_type={new_margin_type} ({margin_type_str}), leverage={new_leverage}")
         
         # Global config'e erişim
         global MARGIN_LEVERAGE_CONFIG
@@ -931,7 +931,7 @@ def update_margin_leverage_config(api_id: int, symbol: str, new_margin_type: boo
         # API ID yoksa oluştur
         if api_id not in MARGIN_LEVERAGE_CONFIG:
             MARGIN_LEVERAGE_CONFIG[api_id] = {}
-            logger.info(f"✅ Yeni API ID oluşturuldu: {api_id}")
+            print(f"✅ Yeni API ID oluşturuldu: {api_id}")
         
         # Sembol config'ini güncelle - boolean olarak sakla
         MARGIN_LEVERAGE_CONFIG[api_id][symbol] = {
@@ -939,7 +939,7 @@ def update_margin_leverage_config(api_id: int, symbol: str, new_margin_type: boo
             "leverage": new_leverage
         }
         
-        logger.info(f"✅ Config güncellendi - API ID {api_id}, {symbol}")
+        print(f"✅ Config güncellendi - API ID {api_id}, {symbol}")
         logger.debug(f"   Güncellenmiş config: {MARGIN_LEVERAGE_CONFIG[api_id][symbol]}")
         
         return True
@@ -963,7 +963,7 @@ async def main():
         return
     
     print("✅ Price cache hazır")
-    asyncio.sleep(5) 
+    asyncio.sleep(5)
     test_order_data = {
                 "111": [
                     {

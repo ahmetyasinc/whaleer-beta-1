@@ -1,6 +1,6 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from config import DB_CONFIG
+from backend.trade_engine.config import DB_CONFIG
 
 def calculate_fullness_percentage(fullness_usdt, current_usd_value):
     try:

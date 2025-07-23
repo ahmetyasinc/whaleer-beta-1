@@ -1,5 +1,5 @@
 import pandas as pd
-from config import engine  # engine doğrudan config.py'den geliyor
+from backend.trade_engine.config import engine  # engine doğrudan config.py'den geliyor
 import asyncio
 import time
 

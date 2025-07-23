@@ -6,11 +6,11 @@ import ta
 import asyncio
 from decimal import Decimal
 
-from control.control_the_results import control_the_results
+from backend.trade_engine.control.control_the_results import control_the_results
 
 
-from .library.empty import empty
-from .library.emptyclass import EmptyClass
+from backend.trade_engine.process.library.empty import empty
+from backend.trade_engine.process.library.emptyclass import EmptyClass
 
 
 def run_bot(bot, strategy_code, indicator_list, coin_data_dict):

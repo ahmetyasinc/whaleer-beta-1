@@ -1,31 +1,19 @@
-import pandas as pd
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
-from .save import save_result_to_json, aggregate_results_by_bot_id
-from .run_bot import run_bot
+from backend.trade_engine.process.save import save_result_to_json, aggregate_results_by_bot_id
+from backend.trade_engine.process.run_bot import run_bot
 
 from concurrent.futures import ProcessPoolExecutor
 from os import cpu_count  # CPU çekirdek sayısını otomatik almak için
 
 # Gerekli importlar - temel kütüphaneler
 import asyncio
-import logging
-
-# Price cache sistemi
-from trade_engine.taha_part.utils.price_cache_new import (
-    start_connection_pool,
-    wait_for_cache_ready
-)
 
 # Emir gönderim sistemi
-from trade_engine.taha_part.utils.order_final_optimized import (
+from backend.trade_engine.taha_part.utils.order_final_optimized import (
     prepare_order_data,
     send_order
 )
-
-# Logger kurulumu
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(_name_)
 
 async def run_all_bots_async(bots, strategies_with_indicators, coin_data_dict, last_time, interval):
     loop = asyncio.get_running_loop()
@@ -68,6 +56,6 @@ async def run_all_bots_async(bots, strategies_with_indicators, coin_data_dict, l
         result_dict = aggregate_results_by_bot_id(all_results)
         result=await send_order(await prepare_order_data(result_dict))
         print(result)
-        await save_result_to_json(result_dict, last_time, interval)
+        #await save_result_to_json(result_dict, last_time, interval)
 
         return all_results

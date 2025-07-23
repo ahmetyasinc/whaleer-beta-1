@@ -143,7 +143,7 @@ async def update_bot_margin_status(bot_id: int, is_isolated: bool = True) -> boo
             """
             await execute_query(update_query, [is_isolated, bot_id])
             
-            logger.info(f"✅ Bot {bot_id} margin durumu güncellendi: is_isolated = {is_isolated}")
+            print(f"✅ Bot {bot_id} margin durumu güncellendi: is_isolated = {is_isolated}")
             
         else:
             # Yeni kayıt ekle - user_id'yi bots tablosundan al
@@ -158,7 +158,7 @@ async def update_bot_margin_status(bot_id: int, is_isolated: bool = True) -> boo
                 """
                 await execute_query(insert_query, [user_id, bot_id, is_isolated])
                 
-                logger.info(f"✅ Bot {bot_id} için yeni margin kaydı eklendi: is_isolated = {is_isolated}")
+                print(f"✅ Bot {bot_id} için yeni margin kaydı eklendi: is_isolated = {is_isolated}")
             else:
                 logger.error(f"❌ Bot {bot_id} için user_id bulunamadı")
                 return False
@@ -500,7 +500,7 @@ async def get_symbols_filters_dict(symbols_and_types: Dict[str, str]) -> Dict[st
     """
     try:
         if not symbols_and_types:
-            logger.warning("⚠️ Sembol listesi boş")
+            print("⚠️ Sembol listesi boş")
             return {}
         
         # Batch sorgu için parametreleri hazırla
@@ -523,7 +523,7 @@ async def get_symbols_filters_dict(symbols_and_types: Dict[str, str]) -> Dict[st
         symbols_result = await fetch_data(symbols_query, params)
         
         if not symbols_result:
-            logger.warning("⚠️ Belirtilen semboller için filtreler bulunamadı")
+            print("⚠️ Belirtilen semboller için filtreler bulunamadı")
             return {}
         
         # Dict formatına dönüştür
@@ -537,7 +537,7 @@ async def get_symbols_filters_dict(symbols_and_types: Dict[str, str]) -> Dict[st
                 "trade_type": row["trade_type"]
             }
         
-        logger.info(f"✅ {len(symbols_dict)} sembol filtresi yüklendi")
+        print(f"✅ {len(symbols_dict)} sembol filtresi yüklendi")
         return symbols_dict
         
     except Exception as e:
@@ -561,7 +561,7 @@ async def get_single_symbol_filters(symbol: str, trade_type: str) -> Optional[Di
     """
     try:
         if not symbol or not trade_type:
-            logger.warning("⚠️ Sembol veya trade_type boş")
+            print("⚠️ Sembol veya trade_type boş")
             return None
         
         single_symbol_query = """
@@ -573,7 +573,7 @@ async def get_single_symbol_filters(symbol: str, trade_type: str) -> Optional[Di
         symbol_result = await fetch_data(single_symbol_query, [symbol, trade_type])
         
         if not symbol_result:
-            logger.warning(f"⚠️ {symbol} sembolü için {trade_type} filtresi bulunamadı")
+            print(f"⚠️ {symbol} sembolü için {trade_type} filtresi bulunamadı")
             return None
         
         # İlk (ve tek) sonucu al

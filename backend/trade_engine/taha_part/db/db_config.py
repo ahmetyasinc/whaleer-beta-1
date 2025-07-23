@@ -2,14 +2,14 @@
 import sys, json, logging,os
 from typing import Dict, List, Optional, Any
 from psycopg2.extras import RealDictCursor
-from trade_engine.config import DB_CONFIG, get_db_connection
-from trade_engine.taha_part.utils.dict_preparing import get_symbols_filters_dict, get_single_symbol_filters
+from backend.trade_engine.config import DB_CONFIG, get_db_connection
+from backend.trade_engine.taha_part.utils.dict_preparing import get_symbols_filters_dict, get_single_symbol_filters
 logger = logging.getLogger(__name__)
 import sys, json, logging, os
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 from psycopg2.extras import RealDictCursor
-from trade_engine.taha_part.utils.dict_preparing import get_symbols_filters_dict, get_single_symbol_filters
+from backend.trade_engine.taha_part.utils.dict_preparing import get_symbols_filters_dict, get_single_symbol_filters
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ async def get_api_credentials_by_bot_id(bot_id: int, trade_type: str = "spot") -
                 bot_result = cursor.fetchone()
                 
                 if not bot_result:
-                    logger.warning(f"⚠️ Bot ID {bot_id} bulunamadı")
+                    print(f"⚠️ Bot ID {bot_id} bulunamadı")
                     return {}
                 
                 api_id = bot_result["api_id"]
@@ -55,12 +55,12 @@ async def get_api_credentials_by_bot_id(bot_id: int, trade_type: str = "spot") -
                 api_result = cursor.fetchone()
                 
                 if not api_result:
-                    logger.warning(f"⚠️ API ID {api_id} için kimlik bilgileri bulunamadı")
+                    print(f"⚠️ API ID {api_id} için kimlik bilgileri bulunamadı")
                     return {}
                 
                 # API ID'yi de dahil et
                 result = dict(api_result)
-                logger.info(f"✅ Bot {bot_id} için {trade_type} API bilgileri alındı (API ID: {api_id})")
+                print(f"✅ Bot {bot_id} için {trade_type} API bilgileri alındı (API ID: {api_id})")
                 return result
                 
     except Exception as e:
@@ -85,7 +85,7 @@ async def get_user_id_by_bot_id(bot_id: int) -> Optional[int]:
                 if result:
                     return result['user_id']
                 else:
-                    logger.warning(f"⚠️ Bot ID {bot_id} için user bulunamadı")
+                    print(f"⚠️ Bot ID {bot_id} için user bulunamadı")
                     return None
                     
     except Exception as e:
@@ -99,7 +99,7 @@ async def save_trade_to_db(bot_id: int, user_id: int, trade_result: dict, order_
     try:
         # Hata durumunda kayıt yapma
         if "error" in trade_result:
-            logger.warning(f"⚠️ Hatalı emir kaydedilmeyecek: {trade_result.get('error')}")
+            print(f"⚠️ Hatalı emir kaydedilmeyecek: {trade_result.get('error')}")
             return False
             
         # Gerekli alanları extract et
@@ -164,7 +164,7 @@ async def save_trade_to_db(bot_id: int, user_id: int, trade_result: dict, order_
                 
                 conn.commit()
         
-        logger.info(f"✅ Trade kaydedildi: {symbol} | {side} | {executed_qty} | Order ID: {order_id}")
+        print(f"✅ Trade kaydedildi: {symbol} | {side} | {executed_qty} | Order ID: {order_id}")
         return True
         
     except Exception as e:
@@ -205,7 +205,7 @@ async def get_all_api_margin_leverage_infos() -> Dict[int, Dict[str, Any]]:
                 results = cursor.fetchall()
         
         if not results:
-            logger.warning("⚠️ Hiç margin/leverage bilgisi bulunamadı")
+            print("⚠️ Hiç margin/leverage bilgisi bulunamadı")
             return {}
         
         # Sonuçları organize et
@@ -219,7 +219,7 @@ async def get_all_api_margin_leverage_infos() -> Dict[int, Dict[str, Any]]:
                 all_infos[api_id] = margin_leverage_data
                 logger.debug(f"📊 API ID {api_id}: {len(margin_leverage_data)} sembol")
         
-        logger.info(f"✅ {len(all_infos)} API ID için margin/leverage bilgisi alındı")
+        print(f"✅ {len(all_infos)} API ID için margin/leverage bilgisi alındı")
         return all_infos
         
     except Exception as e:
@@ -258,17 +258,17 @@ async def get_user_margin_leverage_info(api_id: int) -> Optional[Dict[str, Any]]
                 result = cursor.fetchone()
         
         if not result:
-            logger.warning(f"⚠️ API ID {api_id} için margin/leverage bilgisi bulunamadı")
+            print(f"⚠️ API ID {api_id} için margin/leverage bilgisi bulunamadı")
             return None
         
         # JSON verisini kontrol et
         margin_leverage_data = result["margin_leverage_infos"]
         
         if not margin_leverage_data:
-            logger.info(f"📊 API ID {api_id} için margin/leverage bilgisi boş")
+            print(f"📊 API ID {api_id} için margin/leverage bilgisi boş")
             return {}
         
-        logger.info(f"✅ API ID {api_id} için margin/leverage bilgisi alındı: {len(margin_leverage_data)} sembol")
+        print(f"✅ API ID {api_id} için margin/leverage bilgisi alındı: {len(margin_leverage_data)} sembol")
         return margin_leverage_data
         
     except Exception as e:
@@ -323,7 +323,7 @@ async def update_symbol_margin_leverage(api_id: int, symbol: str, leverage: int,
                         WHERE api_id = %s
                     """, (json.dumps(current_data), api_id))
                     
-                    logger.info(f"✅ {symbol} margin/leverage bilgisi güncellendi (API ID: {api_id})")
+                    print(f"✅ {symbol} margin/leverage bilgisi güncellendi (API ID: {api_id})")
                     
                 else:
                     # Yeni kayıt oluştur
@@ -339,7 +339,7 @@ async def update_symbol_margin_leverage(api_id: int, symbol: str, leverage: int,
                         VALUES (%s, %s, CURRENT_TIMESTAMP)
                     """, (api_id, json.dumps(new_data)))
                     
-                    logger.info(f"✅ {symbol} için yeni margin/leverage kaydı oluşturuldu (API ID: {api_id})")
+                    print(f"✅ {symbol} için yeni margin/leverage kaydı oluşturuldu (API ID: {api_id})")
                 
                 conn.commit()
         
@@ -372,10 +372,10 @@ async def get_symbol_margin_leverage(api_id: int, symbol: str) -> Optional[Dict[
         symbol_info = all_info.get(symbol)
         
         if symbol_info:
-            logger.info(f"✅ {symbol} için margin/leverage bilgisi bulundu (API ID: {api_id})")
+            print(f"✅ {symbol} için margin/leverage bilgisi bulundu (API ID: {api_id})")
             return symbol_info
         else:
-            logger.warning(f"⚠️ {symbol} için margin/leverage bilgisi bulunamadı (API ID: {api_id})")
+            print(f"⚠️ {symbol} için margin/leverage bilgisi bulunamadı (API ID: {api_id})")
             return None
             
     except Exception as e:
@@ -426,13 +426,13 @@ async def delete_symbol_margin_leverage(api_id: int, symbol: str) -> bool:
                         """, (json.dumps(current_data), api_id))
                         
                         conn.commit()
-                        logger.info(f"✅ {symbol} margin/leverage bilgisi silindi (API ID: {api_id})")
+                        print(f"✅ {symbol} margin/leverage bilgisi silindi (API ID: {api_id})")
                         return True
                     else:
-                        logger.warning(f"⚠️ {symbol} API ID {api_id} için bulunamadı")
+                        print(f"⚠️ {symbol} API ID {api_id} için bulunamadı")
                         return False
                 else:
-                    logger.warning(f"⚠️ API ID {api_id} için margin/leverage bilgisi bulunamadı")
+                    print(f"⚠️ API ID {api_id} için margin/leverage bilgisi bulunamadı")
                     return False
         
     except Exception as e:
@@ -475,7 +475,7 @@ async def get_active_apis_margin_leverage_infos() -> Dict[int, Dict[str, Any]]:
                 results = cursor.fetchall()
         
         if not results:
-            logger.warning("⚠️ Aktif botlar için margin/leverage bilgisi bulunamadı")
+            print("⚠️ Aktif botlar için margin/leverage bilgisi bulunamadı")
             return {}
         
         # Sonuçları organize et
@@ -489,7 +489,7 @@ async def get_active_apis_margin_leverage_infos() -> Dict[int, Dict[str, Any]]:
                 active_infos[api_id] = margin_leverage_data
                 logger.debug(f"📊 Aktif bot API ID {api_id}: {len(margin_leverage_data)} sembol")
         
-        logger.info(f"✅ {len(active_infos)} aktif bot için margin/leverage bilgisi alındı")
+        print(f"✅ {len(active_infos)} aktif bot için margin/leverage bilgisi alındı")
         return active_infos
         
     except Exception as e:

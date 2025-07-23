@@ -6,22 +6,22 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives import serialization
 
 # Proje bağımlılıkları
-from trade_engine.taha_part.utils.dict_preparing import (
+from backend.trade_engine.taha_part.utils.dict_preparing import (
     extract_symbol_trade_types,
     get_symbols_filters_dict
 )
-from trade_engine.taha_part.db.db_config import (
+from backend.trade_engine.taha_part.db.db_config import (
     get_api_credentials_by_bot_id,
     get_user_id_by_bot_id,
     save_trade_to_db
 )
-from trade_engine.taha_part.utils.order_final import (
+from backend.trade_engine.taha_part.utils.order_final import (
     update_margin_type,
     update_leverage,
     step_qty_control,
     validate_and_format_prices
 )
-from trade_engine.taha_part.utils.price_cache_new import get_price
+from backend.trade_engine.taha_part.utils.price_cache_new import get_price
 
 # Logger - production için ERROR seviyesi
 logger = logging.getLogger(__name__)
@@ -65,7 +65,7 @@ async def execute_orders(order_data: dict, silent_mode: bool = True) -> dict:
     """
     try:
         if not silent_mode:
-            logger.info(f"📋 {len(order_data)} bot için işlem başlıyor")
+            print(f"📋 {len(order_data)} bot için işlem başlıyor")
         
         # 1. Emirleri hazırla
         prepared_orders = await prepare_orders_production(order_data)
@@ -81,7 +81,7 @@ async def execute_orders(order_data: dict, silent_mode: bool = True) -> dict:
         stats = _calculate_order_stats(results)
         
         if not silent_mode:
-            logger.info(f"✅ Tamamlandı: {stats['success_count']} başarılı, {stats['error_count']} hata")
+            print(f"✅ Tamamlandı: {stats['success_count']} başarılı, {stats['error_count']} hata")
         
         return _create_success_response(stats, results)
         

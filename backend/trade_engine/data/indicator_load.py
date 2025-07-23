@@ -1,5 +1,5 @@
 from sqlalchemy import text
-from config import engine
+from backend.trade_engine.config import engine
 
 def load_indicators(strategy_id):
     try:

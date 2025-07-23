@@ -3,13 +3,14 @@ import sys
 import time
 import psycopg
 
-from data.last_data_load import load_last_data
-from process.trade_engine import run_trade_engine
-from process.process import run_all_bots_async
-
-from trade_engine.taha_part.utils.price_cache_new import (
-    start_connection_pool
+from backend.trade_engine.taha_part.utils.price_cache_new import (
+    start_connection_pool,
+    wait_for_cache_ready
 )
+
+from backend.trade_engine.data.last_data_load import load_last_data
+from backend.trade_engine.process.trade_engine import run_trade_engine
+from backend.trade_engine.process.process import run_all_bots_async
 
 if sys.platform.startswith('win'):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -86,6 +87,7 @@ async def listen_for_notifications():
         async with conn.cursor() as cur:
             await cur.execute("LISTEN new_data;")
             await start_connection_pool()
+            await wait_for_cache_ready()
             print("📡 PostgreSQL'den tetikleme bekleniyor...")
 
             async for notify in conn.notifies():

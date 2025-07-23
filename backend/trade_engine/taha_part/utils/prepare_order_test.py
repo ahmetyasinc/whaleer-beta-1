@@ -7,10 +7,10 @@ import json
 from collections import defaultdict
 
 # Project imports - config.py uyumlu import'lar
-from trade_engine.config import DB_CONFIG, get_db_connection
-from trade_engine.taha_part.db.db_config import get_api_credentials_by_bot_id
-from trade_engine.taha_part.utils.dict_preparing import get_symbols_filters_dict, extract_symbol_trade_types
-from trade_engine.taha_part.utils.price_cache_new import (
+from backend.trade_engine.config import DB_CONFIG, get_db_connection
+from backend.trade_engine.taha_part.db.db_config import get_api_credentials_by_bot_id
+from backend.trade_engine.taha_part.utils.dict_preparing import get_symbols_filters_dict, extract_symbol_trade_types
+from backend.trade_engine.taha_part.utils.price_cache_new import (
     start_connection_pool, 
     stop_connection_pool,
     get_price,
@@ -20,7 +20,7 @@ from trade_engine.taha_part.utils.price_cache_new import (
     get_cached_symbol_count
 )
 # Margin/Leverage Cache imports - get_margin_leverage_cache kullanımı
-from trade_engine.taha_part.utils.margin_leverage_controls import (
+from backend.trade_engine.taha_part.utils.margin_leverage_controls import (
     initialize_margin_leverage_cache,
     get_margin_leverage_cache,
     get_symbol_margin_leverage_info,
@@ -28,7 +28,7 @@ from trade_engine.taha_part.utils.margin_leverage_controls import (
     reload_margin_leverage_cache
 )
 # Local imports - modüler yapı
-from trade_engine.taha_part.utils.order_final import prepare_order_data, send_order, MARGIN_LEVERAGE_CONFIG
+from backend.trade_engine.taha_part.utils.order_final import prepare_order_data, send_order, MARGIN_LEVERAGE_CONFIG
 
 
 # Logger konfigürasyonu
@@ -48,7 +48,7 @@ def debug_margin_leverage_config():
     """
     MARGIN_LEVERAGE_CONFIG'i debug eder ve boolean kontrollerini test eder
     """
-    logger.info("🔍 MARGIN_LEVERAGE_CONFIG debug başlatılıyor...")
+    print("🔍 MARGIN_LEVERAGE_CONFIG debug başlatılıyor...")
     
     if not MARGIN_LEVERAGE_CONFIG:
         logger.error("❌ MARGIN_LEVERAGE_CONFIG boş!")
@@ -58,14 +58,14 @@ def debug_margin_leverage_config():
     total_api_ids = len(MARGIN_LEVERAGE_CONFIG)
     total_symbols = sum(len(symbols) for symbols in MARGIN_LEVERAGE_CONFIG.values())
     
-    logger.info(f"📊 Config özeti:")
-    logger.info(f"   Total API IDs: {total_api_ids}")
-    logger.info(f"   Total symbols: {total_symbols}")
+    print(f"📊 Config özeti:")
+    print(f"   Total API IDs: {total_api_ids}")
+    print(f"   Total symbols: {total_symbols}")
     
     # Her API ID için detaylı kontrol
     for api_id, symbols_config in MARGIN_LEVERAGE_CONFIG.items():
-        logger.info(f"\n📋 API ID {api_id} konfigürasyonu:")
-        logger.info(f"   Toplam sembol: {len(symbols_config)}")
+        print(f"\n📋 API ID {api_id} konfigürasyonu:")
+        print(f"   Toplam sembol: {len(symbols_config)}")
         
         for symbol, config in symbols_config.items():
             margin_type_bool = config.get('margin_type', True)
@@ -73,26 +73,26 @@ def debug_margin_leverage_config():
             
             # Boolean kontrolü
             if not isinstance(margin_type_bool, bool):
-                logger.warning(f"   ⚠️ {symbol}: margin_type boolean değil! Tip: {type(margin_type_bool)}, Değer: {margin_type_bool}")
+                print(f"   ⚠️ {symbol}: margin_type boolean değil! Tip: {type(margin_type_bool)}, Değer: {margin_type_bool}")
                 continue
             
             # String dönüşümü
             margin_type_str = "ISOLATED" if margin_type_bool else "CROSSED"
             
-            logger.info(f"   ✅ {symbol}: margin_type={margin_type_bool} ({margin_type_str}), leverage={leverage}")
+            print(f"   ✅ {symbol}: margin_type={margin_type_bool} ({margin_type_str}), leverage={leverage}")
             
             # Leverage kontrolü
             if not isinstance(leverage, int) or leverage < 1:
-                logger.warning(f"   ⚠️ {symbol}: Geçersiz leverage: {leverage}")
+                print(f"   ⚠️ {symbol}: Geçersiz leverage: {leverage}")
     
     # Test API ID'leri için özel kontrol
     test_api_ids = [41, 111, 17]  # order_final.py'deki test API ID'leri
     
-    logger.info("\n🔍 Test API ID'leri kontrolü:")
+    print("\n🔍 Test API ID'leri kontrolü:")
     for api_id in test_api_ids:
         if api_id in MARGIN_LEVERAGE_CONFIG:
             config = MARGIN_LEVERAGE_CONFIG[api_id]
-            logger.info(f"   API ID {api_id}: {len(config)} sembol")
+            print(f"   API ID {api_id}: {len(config)} sembol")
             
             # Boolean dönüşüm testleri
             for symbol, symbol_config in config.items():
@@ -102,13 +102,13 @@ def debug_margin_leverage_config():
                 # Boolean kontrolü ve dönüşüm
                 if isinstance(margin_type_bool, bool):
                     margin_type_str = "ISOLATED" if margin_type_bool else "CROSSED"
-                    logger.info(f"     {symbol}: {margin_type_bool} -> {margin_type_str}, leverage={leverage}")
+                    print(f"     {symbol}: {margin_type_bool} -> {margin_type_str}, leverage={leverage}")
                 else:
-                    logger.warning(f"     {symbol}: HATA - margin_type boolean değil!")
+                    print(f"     {symbol}: HATA - margin_type boolean değil!")
         else:
-            logger.warning(f"   ⚠️ API ID {api_id} config'de bulunamadı!")
+            print(f"   ⚠️ API ID {api_id} config'de bulunamadı!")
     
-    logger.info("✅ MARGIN_LEVERAGE_CONFIG debug tamamlandı")
+    print("✅ MARGIN_LEVERAGE_CONFIG debug tamamlandı")
     return True
 
 async def debug_margin_leverage_cache():
@@ -116,11 +116,11 @@ async def debug_margin_leverage_cache():
     Margin/Leverage cache sağlığını kontrol eder ve test eder
     Ana cache dict'ini kullanarak optimize edilmiş kontrol
     """
-    logger.info("🔍 Margin/Leverage cache sağlık kontrolü başlatılıyor...")
+    print("🔍 Margin/Leverage cache sağlık kontrolü başlatılıyor...")
     
     try:
         # Cache'i başlat
-        logger.info("🔄 Margin/Leverage cache başlatılıyor...")
+        print("🔄 Margin/Leverage cache başlatılıyor...")
         init_success = await initialize_margin_leverage_cache()
         
         if not init_success:
@@ -131,31 +131,31 @@ async def debug_margin_leverage_cache():
         margin_leverage_dict = get_margin_leverage_cache()
         
         if not margin_leverage_dict:
-            logger.warning("⚠️ Cache boş!")
+            print("⚠️ Cache boş!")
             return False
         
         # Cache özeti - optimized summary
         total_api_ids = len(margin_leverage_dict)
         total_symbols = sum(len(symbols) for symbols in margin_leverage_dict.values())
         
-        logger.info(f"📊 Cache özeti:")
-        logger.info(f"   Total API IDs: {total_api_ids}")
-        logger.info(f"   Total symbols: {total_symbols}")
+        print(f"📊 Cache özeti:")
+        print(f"   Total API IDs: {total_api_ids}")
+        print(f"   Total symbols: {total_symbols}")
         
         if total_api_ids == 0:
-            logger.warning("⚠️ Cache'de hiç API ID yok!")
+            print("⚠️ Cache'de hiç API ID yok!")
             return False
         
         # API ID'leri listele
-        logger.info("📋 API ID'leri ve sembol sayıları:")
+        print("📋 API ID'leri ve sembol sayıları:")
         for api_id, symbols_data in margin_leverage_dict.items():
             symbol_count = len(symbols_data)
-            logger.info(f"   API ID {api_id}: {symbol_count} sembol")
+            print(f"   API ID {api_id}: {symbol_count} sembol")
         
         # Test API ID'leri (111 ve 41 - test bot'ları)
         test_api_ids = [111, 41]
         for api_id in test_api_ids:
-            logger.info(f"🔍 API ID {api_id} test ediliyor...")
+            print(f"🔍 API ID {api_id} test ediliyor...")
             
             # Test sembolleri - cache'den direkt kontrol
             test_symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT"]
@@ -166,9 +166,9 @@ async def debug_margin_leverage_cache():
                     margin_boolean = symbol_info.get('margin_boolean', 'N/A')
                     margin_type = "ISOLATED" if margin_boolean else "CROSSED"
                     
-                    logger.info(f"   ✅ {symbol}: leverage={leverage}, margin_type={margin_type}")
+                    print(f"   ✅ {symbol}: leverage={leverage}, margin_type={margin_type}")
                 else:
-                    logger.info(f"   ❌ {symbol}: cache'de bulunamadı")
+                    print(f"   ❌ {symbol}: cache'de bulunamadı")
         
         # En çok kullanılan sembolleri göster - optimize edilmiş
         symbol_usage_count = defaultdict(int)
@@ -177,12 +177,12 @@ async def debug_margin_leverage_cache():
                 symbol_usage_count[symbol] += 1
         
         if symbol_usage_count:
-            logger.info("🔥 En çok kullanılan semboller:")
+            print("🔥 En çok kullanılan semboller:")
             sorted_symbols = sorted(symbol_usage_count.items(), key=lambda x: x[1], reverse=True)
             for symbol, count in sorted_symbols[:5]:
-                logger.info(f"   {symbol}: {count} API ID'de kullanılıyor")
+                print(f"   {symbol}: {count} API ID'de kullanılıyor")
         
-        logger.info("✅ Margin/Leverage cache sağlık kontrolü tamamlandı")
+        print("✅ Margin/Leverage cache sağlık kontrolü tamamlandı")
         return True
         
     except Exception as e:
@@ -193,7 +193,7 @@ async def debug_price_cache_health():
     """
     Price cache sağlığını kontrol eder - price_cache_new.py'ye uygun
     """
-    logger.info("🔍 Price cache sağlık kontrolü başlatılıyor...")
+    print("🔍 Price cache sağlık kontrolü başlatılıyor...")
     
     max_wait_seconds = 15
     for attempt in range(max_wait_seconds):
@@ -215,10 +215,10 @@ async def debug_price_cache_health():
         # Cache sembol sayıları
         symbol_counts = get_cached_symbol_count()
         
-        logger.info(f"[{attempt+1:2d}s] Bağlantı - Spot: {spot_connected} (sağlıklı: {spot_healthy}), Futures: {futures_connected} (sağlıklı: {futures_healthy})")
-        logger.info(f"     Fiyatlar - BTC Spot: ${btc_spot_price}, Futures: ${btc_futures_price}")
-        logger.info(f"              ETH Spot: ${eth_spot_price}, Futures: ${eth_futures_price}")
-        logger.info(f"     Cache - Spot: {symbol_counts['spot']} sembol, Futures: {symbol_counts['futures']} sembol")
+        print(f"[{attempt+1:2d}s] Bağlantı - Spot: {spot_connected} (sağlıklı: {spot_healthy}), Futures: {futures_connected} (sağlıklı: {futures_healthy})")
+        print(f"     Fiyatlar - BTC Spot: ${btc_spot_price}, Futures: ${btc_futures_price}")
+        print(f"              ETH Spot: ${eth_spot_price}, Futures: ${eth_futures_price}")
+        print(f"     Cache - Spot: {symbol_counts['spot']} sembol, Futures: {symbol_counts['futures']} sembol")
         
         # Başarı koşulları
         has_spot_prices = btc_spot_price is not None and eth_spot_price is not None
@@ -226,13 +226,13 @@ async def debug_price_cache_health():
         cache_ready = is_cache_ready()
         
         if spot_connected and futures_connected and spot_healthy and futures_healthy and cache_ready:
-            logger.info("✅ Price cache tamamen hazır!")
+            print("✅ Price cache tamamen hazır!")
             return True
         elif futures_connected and futures_healthy and has_futures_prices:
-            logger.info("⚠️ Sadece futures fiyatları hazır, spot fiyatları eksik")
+            print("⚠️ Sadece futures fiyatları hazır, spot fiyatları eksik")
             
         if attempt == max_wait_seconds - 1:
-            logger.warning(f"❌ {max_wait_seconds} saniyede cache tam olarak hazırlanamadı")
+            print(f"❌ {max_wait_seconds} saniyede cache tam olarak hazırlanamadı")
             return False
     
     return False
@@ -333,20 +333,20 @@ async def test_comprehensive_orders():
     Comprehensive test scenario - boolean margin_type kontrolü ile
     """
     try:
-        logger.info("🚀 Comprehensive Order Test başlatılıyor...")
+        print("🚀 Comprehensive Order Test başlatılıyor...")
         
         # Price cache'i başlat
         await start_connection_pool()
         
         # Margin/Leverage cache'i başlat
-        logger.info("🔄 Margin/Leverage cache başlatılıyor...")
+        print("🔄 Margin/Leverage cache başlatılıyor...")
         margin_cache_ready = await debug_margin_leverage_cache()
         
         if not margin_cache_ready:
-            logger.warning("⚠️ Margin/Leverage cache hazır değil, test devam ediyor...")
+            print("⚠️ Margin/Leverage cache hazır değil, test devam ediyor...")
         
         # Static config debug
-        logger.info("🔍 Static MARGIN_LEVERAGE_CONFIG debug...")
+        print("🔍 Static MARGIN_LEVERAGE_CONFIG debug...")
         debug_margin_leverage_config()
         
         # Price cache kontrolü
@@ -414,7 +414,7 @@ async def test_comprehensive_orders():
             }
         else:
             # Sadece futures test et
-            logger.info("⚠️ Spot fiyatları alınamadığı için sadece futures testi yapılacak")
+            print("⚠️ Spot fiyatları alınamadığı için sadece futures testi yapılacak")
             test_order_data = {
                 "111": [
                     {
@@ -467,7 +467,7 @@ async def test_comprehensive_orders():
             }
         
         # Boolean margin_type kontrolü
-        logger.info("🔍 Boolean margin_type test:")
+        print("🔍 Boolean margin_type test:")
         for bot_id, orders in test_order_data.items():
             for order in orders:
                 trade_type = order.get('trade_type')
@@ -478,12 +478,12 @@ async def test_comprehensive_orders():
                     # Boolean kontrolü
                     if isinstance(order_margin_type, bool):
                         margin_type_str = "ISOLATED" if order_margin_type else "CROSSED"
-                        logger.info(f"  {bot_id} - {coin_id}: Boolean margin_type={order_margin_type} ({margin_type_str})")
+                        print(f"  {bot_id} - {coin_id}: Boolean margin_type={order_margin_type} ({margin_type_str})")
                     else:
-                        logger.warning(f"  {bot_id} - {coin_id}: margin_type boolean değil! Tip: {type(order_margin_type)}")
+                        print(f"  {bot_id} - {coin_id}: margin_type boolean değil! Tip: {type(order_margin_type)}")
         
         # Data validasyonu
-        logger.info("\n🔍 Order data doğrulaması yapılıyor...")
+        print("\n🔍 Order data doğrulaması yapılıyor...")
         is_valid, validation_errors = validate_order_structure(test_order_data)
         
         if not is_valid:
@@ -498,9 +498,9 @@ async def test_comprehensive_orders():
                                  for order in orders 
                                  if order.get('trade_type') in ['futures', 'test_futures'])
         
-        logger.info(f"📊 Test Data Özeti:")
+        print(f"📊 Test Data Özeti:")
         for bot_id, orders in test_order_data.items():
-            logger.info(f"  Bot {bot_id}: {len(orders)} emir")
+            print(f"  Bot {bot_id}: {len(orders)} emir")
             
             # Sembol ve margin_type dağılımını göster
             for order in orders:
@@ -512,20 +512,20 @@ async def test_comprehensive_orders():
                     if margin_type is not None:
                         if isinstance(margin_type, bool):
                             margin_type_str = "ISOLATED" if margin_type else "CROSSED"
-                            logger.info(f"    {symbol} ({trade_type}): margin_type={margin_type} ({margin_type_str})")
+                            print(f"    {symbol} ({trade_type}): margin_type={margin_type} ({margin_type_str})")
                         else:
-                            logger.info(f"    {symbol} ({trade_type}): margin_type={margin_type}")
+                            print(f"    {symbol} ({trade_type}): margin_type={margin_type}")
                     else:
-                        logger.info(f"    {symbol} ({trade_type}): margin_type=Config'den alınacak")
+                        print(f"    {symbol} ({trade_type}): margin_type=Config'den alınacak")
                 else:
-                    logger.info(f"    {symbol} ({trade_type}): Spot emir")
+                    print(f"    {symbol} ({trade_type}): Spot emir")
         
-        logger.info(f"  📋 Toplam beklenen: {total_orders_expected} emir")
-        logger.info(f"  🔧 Futures emirler: {futures_orders_count} emir (margin/leverage kontrolü)")
-        logger.info("✅ Order data doğrulaması başarılı")
+        print(f"  📋 Toplam beklenen: {total_orders_expected} emir")
+        print(f"  🔧 Futures emirler: {futures_orders_count} emir (margin/leverage kontrolü)")
+        print("✅ Order data doğrulaması başarılı")
         
         # Order preparation
-        logger.info("📋 Test emirleri hazırlanıyor (boolean margin_type kontrolü ile)...")
+        print("📋 Test emirleri hazırlanıyor (boolean margin_type kontrolü ile)...")
         prepared_orders = await prepare_order_data(test_order_data)
         
         if not prepared_orders:
@@ -533,32 +533,32 @@ async def test_comprehensive_orders():
             return None
         
         # Preparation sonuçları
-        logger.info("✅ Order Preparation Results:")
+        print("✅ Order Preparation Results:")
         for trade_type, orders in prepared_orders.items():
             if orders:
-                logger.info(f"  {trade_type}: {len(orders)} emir hazırlandı")
+                print(f"  {trade_type}: {len(orders)} emir hazırlandı")
         
         # Order sending
-        logger.info("📤 Emirler API'ye gönderiliyor...")
+        print("📤 Emirler API'ye gönderiliyor...")
         send_results = await send_order(prepared_orders)
         
         # Detaylı sonuç analizi
-        logger.info("📊 DETAYLI ORDER SEND RESULTS:")
-        logger.info("=" * 80)
+        print("📊 DETAYLI ORDER SEND RESULTS:")
+        print("=" * 80)
         
         for trade_type, results in send_results.items():
             if results:
-                logger.info(f"\n🔍 {trade_type.upper()} SONUÇLARI ({len(results)} emir):")
+                print(f"\n🔍 {trade_type.upper()} SONUÇLARI ({len(results)} emir):")
                 
                 for i, result in enumerate(results):
-                    logger.info(f"\n📋 Emir #{i+1}:")
+                    print(f"\n📋 Emir #{i+1}:")
                     
                     if "error" in result:
                         error_output = format_response_output(result, "ERROR")
                         logger.error(error_output)
                     else:
                         success_output = format_response_output(result, "SUCCESS")
-                        logger.info(success_output)
+                        print(success_output)
         
         # Test özeti
         total_prepared = sum(len(orders) for orders in prepared_orders.values())
@@ -567,18 +567,18 @@ async def test_comprehensive_orders():
                           for result in results if "error" not in result)
         error_count = total_sent - success_count
         
-        logger.info("\n" + "=" * 80)
-        logger.info("📈 KAPSAMLI TEST ÖZET (Boolean Margin Type Kontrolü):")
-        logger.info("=" * 80)
-        logger.info(f"  📊 Beklenen emir sayısı: {total_orders_expected}")
-        logger.info(f"  📋 Hazırlanan emir sayısı: {total_prepared}")
-        logger.info(f"  📤 Gönderilen emir sayısı: {total_sent}")
-        logger.info(f"  ✅ Başarılı emirler: {success_count}")
-        logger.info(f"  ❌ Hatalı emirler: {error_count}")
-        logger.info(f"  🔧 Futures emirler (margin/leverage): {futures_orders_count}")
+        print("\n" + "=" * 80)
+        print("📈 KAPSAMLI TEST ÖZET (Boolean Margin Type Kontrolü):")
+        print("=" * 80)
+        print(f"  📊 Beklenen emir sayısı: {total_orders_expected}")
+        print(f"  📋 Hazırlanan emir sayısı: {total_prepared}")
+        print(f"  📤 Gönderilen emir sayısı: {total_sent}")
+        print(f"  ✅ Başarılı emirler: {success_count}")
+        print(f"  ❌ Hatalı emirler: {error_count}")
+        print(f"  🔧 Futures emirler (margin/leverage): {futures_orders_count}")
         success_rate = (success_count/total_sent*100) if total_sent > 0 else 0
-        logger.info(f"  📈 Başarı oranı: {success_rate:.1f}%")
-        logger.info(f"  🎯 Boolean margin_type kontrolü: ✅ Aktif")
+        print(f"  📈 Başarı oranı: {success_rate:.1f}%")
+        print(f"  🎯 Boolean margin_type kontrolü: ✅ Aktif")
         
         return {
             "prepared_orders": prepared_orders,
@@ -600,14 +600,14 @@ async def test_comprehensive_orders():
         logger.error(f"❌ Traceback: {traceback.format_exc()}")
         return None
     finally:
-        logger.info("🏁 Test tamamlandı")
+        print("🏁 Test tamamlandı")
 
 async def test_edge_cases():
     """
     Edge case testing - boolean margin_type kontrolü ile
     """
     try:
-        logger.info("🧪 Edge Case Test başlatılıyor...")
+        print("🧪 Edge Case Test başlatılıyor...")
         
         edge_cases = {
             "999": [  # Geçersiz bot ID
@@ -682,15 +682,15 @@ async def test_edge_cases():
             ]
         }
         
-        logger.info("🔍 Edge case emirleri test ediliyor...")
+        print("🔍 Edge case emirleri test ediliyor...")
         
         # Edge case için validation
         is_valid, validation_errors = validate_order_structure(edge_cases)
         
         if validation_errors:
-            logger.info("⚠️ Beklenen validation hataları:")
+            print("⚠️ Beklenen validation hataları:")
             for error in validation_errors:
-                logger.info(f"  {error}")
+                print(f"  {error}")
         
         # Prepare orders
         prepared_orders = await prepare_order_data(edge_cases)
@@ -699,29 +699,29 @@ async def test_edge_cases():
             logger.error("❌ Edge case preparation tamamen başarısız")
             prepared_orders = {}
         
-        logger.info("🔍 Edge Case Preparation Results:")
+        print("🔍 Edge Case Preparation Results:")
         total_edge_prepared = sum(len(orders) for orders in prepared_orders.values() if orders)
         
         for trade_type, orders in prepared_orders.items():
             order_count = len(orders) if orders else 0
-            logger.info(f"  {trade_type}: {order_count} emir (beklenen: düşük sayı)")
+            print(f"  {trade_type}: {order_count} emir (beklenen: düşük sayı)")
         
         # Send orders if any prepared
         if prepared_orders and any(orders for orders in prepared_orders.values()):
-            logger.info("📤 Edge case emirleri gönderiliyor...")
+            print("📤 Edge case emirleri gönderiliyor...")
             edge_send_results = await send_order(prepared_orders)
             
             total_edge_sent = sum(len(results) for results in edge_send_results.values() if results)
             total_edge_success = sum(1 for results in edge_send_results.values() 
                                    for result in results if "error" not in result)
             
-            logger.info(f"\n📈 Edge Case Özet:")
-            logger.info(f"  📤 Gönderilen: {total_edge_sent}")
-            logger.info(f"  ✅ Başarılı: {total_edge_success}")
-            logger.info(f"  ❌ Hatalı: {total_edge_sent - total_edge_success}")
-            logger.info(f"  🔧 Boolean margin_type validation: ✅ Aktif")
+            print(f"\n📈 Edge Case Özet:")
+            print(f"  📤 Gönderilen: {total_edge_sent}")
+            print(f"  ✅ Başarılı: {total_edge_success}")
+            print(f"  ❌ Hatalı: {total_edge_sent - total_edge_success}")
+            print(f"  🔧 Boolean margin_type validation: ✅ Aktif")
         else:
-            logger.info("📤 Edge case emirleri gönderilemedi - hazırlanan emir yok")
+            print("📤 Edge case emirleri gönderilemedi - hazırlanan emir yok")
         
         return {
             "prepared_orders": prepared_orders,

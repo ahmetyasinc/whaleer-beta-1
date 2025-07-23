@@ -2,7 +2,7 @@ from typing import Dict, Optional, Any, List
 import logging
 import asyncio
 from copy import deepcopy
-from trade_engine.taha_part.db.db_config import (
+from backend.trade_engine.taha_part.db.db_config import (
     get_all_api_margin_leverage_infos,
     get_user_margin_leverage_info,
     update_symbol_margin_leverage,
@@ -26,7 +26,7 @@ async def initialize_margin_leverage_cache() -> bool:
     global margin_leverage_cache
     
     try:
-        logger.info("🔄 Margin/leverage cache başlatılıyor...")
+        print("🔄 Margin/leverage cache başlatılıyor...")
         
         # Veritabanından tüm bilgileri al
         all_infos = await get_all_api_margin_leverage_infos()
@@ -39,9 +39,9 @@ async def initialize_margin_leverage_cache() -> bool:
             total_api_ids = len(margin_leverage_cache)
             total_symbols = sum(len(symbols) for symbols in margin_leverage_cache.values())
             
-            logger.info(f"✅ Margin/leverage cache başarıyla oluşturuldu:")
-            logger.info(f"  📊 {total_api_ids} API ID")
-            logger.info(f"  📊 {total_symbols} toplam sembol")
+            print(f"✅ Margin/leverage cache başarıyla oluşturuldu:")
+            print(f"  📊 {total_api_ids} API ID")
+            print(f"  📊 {total_symbols} toplam sembol")
             
             # Her API ID'nin özetini logla
             for api_id, symbols_data in margin_leverage_cache.items():
@@ -49,7 +49,7 @@ async def initialize_margin_leverage_cache() -> bool:
                 
             return True
         else:
-            logger.warning("⚠️ Veritabanında margin/leverage bilgisi bulunamadı")
+            print("⚠️ Veritabanında margin/leverage bilgisi bulunamadı")
             margin_leverage_cache = {}
             return True  # Boş cache de geçerli
             
@@ -66,7 +66,7 @@ async def reload_margin_leverage_cache() -> bool:
     Returns:
         bool: Yeniden yükleme başarılı mı
     """
-    logger.info("🔄 Margin/leverage cache yeniden yükleniyor...")
+    print("🔄 Margin/leverage cache yeniden yükleniyor...")
     return await initialize_margin_leverage_cache()
 
 
@@ -104,7 +104,7 @@ def get_api_margin_leverage_info(api_id: int) -> Optional[Dict[str, Dict[str, An
             logger.debug(f"✅ API ID {api_id} cache'den alındı: {len(result)} sembol")
             return result
         else:
-            logger.warning(f"⚠️ API ID {api_id} cache'de bulunamadı")
+            print(f"⚠️ API ID {api_id} cache'de bulunamadı")
             return None
             
     except Exception as e:
@@ -132,10 +132,10 @@ def get_symbol_margin_leverage_info(api_id: int, symbol: str) -> Optional[Dict[s
                 logger.debug(f"✅ {symbol} bilgisi cache'den alındı (API ID {api_id})")
                 return result
             else:
-                logger.warning(f"⚠️ {symbol} API ID {api_id} cache'de bulunamadı")
+                print(f"⚠️ {symbol} API ID {api_id} cache'de bulunamadı")
                 return None
         else:
-            logger.warning(f"⚠️ API ID {api_id} cache'de bulunamadı")
+            print(f"⚠️ API ID {api_id} cache'de bulunamadı")
             return None
             
     except Exception as e:
@@ -162,7 +162,7 @@ def add_symbol_to_cache(api_id: int, symbol: str, leverage: int, margin_boolean:
         # API ID yoksa oluştur
         if api_id not in margin_leverage_cache:
             margin_leverage_cache[api_id] = {}
-            logger.info(f"📝 Yeni API ID {api_id} cache'e eklendi")
+            print(f"📝 Yeni API ID {api_id} cache'e eklendi")
         
         # Sembol bilgisini ekle/güncelle
         old_info = margin_leverage_cache[api_id].get(symbol)
@@ -173,9 +173,9 @@ def add_symbol_to_cache(api_id: int, symbol: str, leverage: int, margin_boolean:
         }
         
         if old_info:
-            logger.info(f"🔄 {symbol} güncellendi (API ID {api_id}): {old_info} -> leverage={leverage}, margin_boolean={margin_boolean}")
+            print(f"🔄 {symbol} güncellendi (API ID {api_id}): {old_info} -> leverage={leverage}, margin_boolean={margin_boolean}")
         else:
-            logger.info(f"➕ {symbol} eklendi (API ID {api_id}): leverage={leverage}, margin_boolean={margin_boolean}")
+            print(f"➕ {symbol} eklendi (API ID {api_id}): leverage={leverage}, margin_boolean={margin_boolean}")
         
         return True
         
@@ -201,19 +201,19 @@ def remove_symbol_from_cache(api_id: int, symbol: str) -> bool:
         if api_id in margin_leverage_cache:
             if symbol in margin_leverage_cache[api_id]:
                 removed_info = margin_leverage_cache[api_id].pop(symbol)
-                logger.info(f"🗑️ {symbol} cache'den silindi (API ID {api_id}): {removed_info}")
+                print(f"🗑️ {symbol} cache'den silindi (API ID {api_id}): {removed_info}")
                 
                 # API ID'nin sembol listesi boşsa API ID'yi de sil
                 if not margin_leverage_cache[api_id]:
                     del margin_leverage_cache[api_id]
-                    logger.info(f"🗑️ API ID {api_id} cache'den silindi (boş)")
+                    print(f"🗑️ API ID {api_id} cache'den silindi (boş)")
                 
                 return True
             else:
-                logger.warning(f"⚠️ {symbol} API ID {api_id} cache'de bulunamadı")
+                print(f"⚠️ {symbol} API ID {api_id} cache'de bulunamadı")
                 return False
         else:
-            logger.warning(f"⚠️ API ID {api_id} cache'de bulunamadı")
+            print(f"⚠️ API ID {api_id} cache'de bulunamadı")
             return False
             
     except Exception as e:
@@ -238,7 +238,7 @@ def remove_api_from_cache(api_id: int) -> bool:
             removed_data = margin_leverage_cache.pop(api_id)
             symbols_count = len(removed_data)
             
-            logger.info(f"🗑️ API ID {api_id} cache'den silindi ({symbols_count} sembol)")
+            print(f"🗑️ API ID {api_id} cache'den silindi ({symbols_count} sembol)")
             
             # Silinen sembolleri logla
             for symbol in removed_data.keys():
@@ -246,7 +246,7 @@ def remove_api_from_cache(api_id: int) -> bool:
             
             return True
         else:
-            logger.warning(f"⚠️ API ID {api_id} cache'de bulunamadı")
+            print(f"⚠️ API ID {api_id} cache'de bulunamadı")
             return False
             
     except Exception as e:
@@ -276,7 +276,7 @@ async def sync_symbol_with_database(api_id: int, symbol: str, leverage: int, mar
             cache_success = add_symbol_to_cache(api_id, symbol, leverage, margin_boolean)
             
             if cache_success:
-                logger.info(f"✅ {symbol} başarıyla senkronize edildi (API ID {api_id})")
+                print(f"✅ {symbol} başarıyla senkronize edildi (API ID {api_id})")
                 return True
             else:
                 logger.error(f"❌ {symbol} veritabanında güncellendi ama cache'de hata (API ID {api_id})")
@@ -301,7 +301,7 @@ async def sync_api_with_database(api_id: int) -> bool:
         bool: Senkronizasyon başarılı mı
     """
     try:
-        logger.info(f"🔄 API ID {api_id} veritabanından senkronize ediliyor...")
+        print(f"🔄 API ID {api_id} veritabanından senkronize ediliyor...")
         
         # Veritabanından güncel bilgileri al
         db_data = await get_user_margin_leverage_info(api_id)
@@ -315,15 +315,15 @@ async def sync_api_with_database(api_id: int) -> bool:
             # Yeni bilgileri cache'e ekle
             margin_leverage_cache[api_id] = deepcopy(db_data)
             
-            logger.info(f"✅ API ID {api_id} başarıyla senkronize edildi ({len(db_data)} sembol)")
+            print(f"✅ API ID {api_id} başarıyla senkronize edildi ({len(db_data)} sembol)")
             return True
         else:
-            logger.warning(f"⚠️ API ID {api_id} veritabanında bulunamadı")
+            print(f"⚠️ API ID {api_id} veritabanında bulunamadı")
             
             # Cache'den de sil
             if api_id in margin_leverage_cache:
                 del margin_leverage_cache[api_id]
-                logger.info(f"🗑️ API ID {api_id} cache'den silindi")
+                print(f"🗑️ API ID {api_id} cache'den silindi")
             
             return True
             
@@ -401,7 +401,7 @@ def clear_cache() -> bool:
         old_count = len(margin_leverage_cache)
         margin_leverage_cache = {}
         
-        logger.info(f"🗑️ Cache temizlendi ({old_count} API ID silindi)")
+        print(f"🗑️ Cache temizlendi ({old_count} API ID silindi)")
         return True
         
     except Exception as e:

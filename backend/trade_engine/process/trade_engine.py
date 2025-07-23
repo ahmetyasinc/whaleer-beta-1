@@ -1,7 +1,7 @@
-from data.bot_load import load_active_bots
-from data.strategy_load import load_strategy
-from data.indicator_load import load_indicators
-from data.data_load import fetch_all_candles
+from backend.trade_engine.data.bot_load import load_active_bots
+from backend.trade_engine.data.strategy_load import load_strategy
+from backend.trade_engine.data.indicator_load import load_indicators
+from backend.trade_engine.data.data_load import fetch_all_candles
 
 async def run_trade_engine(interval):
     bots = load_active_bots(interval)

@@ -19,7 +19,7 @@ async def init_db_pool():
             min_size=5,
             max_size=100
         )
-        logger.info("✅ Bağlantı havuzu başarıyla başlatıldı")
+        print("✅ Bağlantı havuzu başarıyla başlatıldı")
     except Exception as e:
         logger.error(f"❌ Bağlantı havuzu başlatma hatası: {e}")
 
@@ -37,7 +37,7 @@ async def close_db_pool():
     try:
         if pool:
             await pool.close()
-            logger.info("✅ Bağlantı havuzu kapatıldı")
+            print("✅ Bağlantı havuzu kapatıldı")
     except Exception as e:
         logger.error(f"❌ Bağlantı havuzu kapatma hatası: {e}")
 
@@ -62,7 +62,7 @@ async def execute_query(query, params=None):
                 await connection.execute(query, *params)
             else:
                 await connection.execute(query)
-            logger.info("✅ Sorgu başarıyla çalıştırıldı")
+            print("✅ Sorgu başarıyla çalıştırıldı")
     except Exception as e:
         logger.error(f"❌ Sorgu çalıştırma hatası: {e}")
 

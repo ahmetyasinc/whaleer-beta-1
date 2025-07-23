@@ -1,8 +1,11 @@
-from data.bot_features import load_bot_holding, load_bot_positions, load_bot_value, get_bot_percentage
+from backend.trade_engine.data.bot_features import load_bot_holding, load_bot_positions, load_bot_value, get_bot_percentage
 
 def control_the_results(bot_id, results):
 
     minValue = 10.0 # Minimum işlem limiti usd dolar
+
+    spot = "test_spot"
+    futures = "test_futures"
 
     def get_state(pos, per):
         if per == 0:
@@ -94,6 +97,7 @@ def control_the_results(bot_id, results):
                 if percentage_hold != 0:
                     new_result = sanitize_result(result)
                     new_result['side'] = "sell"
+                    new_result['trade_type'] = spot
                     value = percentage_hold/100
                     new_result['value'] = current_value * value
                     fulness -= value
@@ -105,6 +109,7 @@ def control_the_results(bot_id, results):
                 if curr_spot < prev_spot and percentage_hold != 0 and curr_spot < percentage_hold:
                     new_result = sanitize_result(result)
                     new_result['side'] = "sell"
+                    new_result['trade_type'] = spot
                     value = (percentage_hold/100) - (curr_spot/100)
                     new_result['value'] = current_value * value
                     fulness -= value
@@ -114,6 +119,7 @@ def control_the_results(bot_id, results):
                 if percentage_hold != 0:
                     new_result = sanitize_result(result)
                     new_result['side'] = "sell"
+                    new_result['trade_type'] = spot
                     value = percentage_hold/100
                     new_result['value'] = current_value * value
                     fulness -= value
@@ -123,6 +129,7 @@ def control_the_results(bot_id, results):
                 if percentage_hold != 0:
                     new_result = sanitize_result(result)
                     new_result['side'] = "sell"
+                    new_result['trade_type'] = spot
                     value = percentage_hold/100
                     new_result['value'] = current_value * value
                     fulness -= value
@@ -133,9 +140,11 @@ def control_the_results(bot_id, results):
                     new_result = sanitize_result(result)
                     if open_position_map[symbol]['position_side']== "short":
                         new_result['side'] = "buy"
+                        new_result['trade_type'] = futures
                         new_result['positionside'] = "short"
                     elif open_position_map[symbol]['position_side']== "long":
                         new_result['side'] = "sell"
+                        new_result['trade_type'] = futures
                         new_result['positionside'] = "long"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
                     value = percentage_pos/100
                     new_result['value'] = current_value * value
@@ -147,11 +156,12 @@ def control_the_results(bot_id, results):
                     new_result = sanitize_result(result)
                     if open_position_map[symbol]['position_side']== "short":
                         new_result['side'] = "buy"
+                        new_result['trade_type'] = futures
                         new_result['positionside'] = "short"
                     elif open_position_map[symbol]['position_side']== "long":
                         new_result['side'] = "sell"
+                        new_result['trade_type'] = futures
                         new_result['positionside'] = "long"
-                    new_result['reduceOnly'] = True
                     value = percentage_pos/100
                     new_result['value'] = current_value * value
                     fulness -= value
@@ -163,8 +173,8 @@ def control_the_results(bot_id, results):
                 if curr_position < prev_position and percentage_pos != 0 and curr_position < percentage_pos and open_position_map[symbol]['position_side']== "long":
                     new_result = sanitize_result(result)
                     new_result['side'] = "sell"
+                    new_result['trade_type'] = futures
                     new_result['positionside'] = "long"
-                    new_result['reduceOnly'] = True
                     value = (percentage_pos-curr_position)/100
                     new_result['value'] = current_value * value
                     fulness -= value
@@ -175,11 +185,12 @@ def control_the_results(bot_id, results):
                     new_result = sanitize_result(result)
                     if open_position_map[symbol]['position_side']== "short":
                         new_result['side'] = "buy"
+                        new_result['trade_type'] = futures
                         new_result['positionside'] = "short"
                     elif open_position_map[symbol]['position_side']== "long":
                         new_result['side'] = "sell"
+                        new_result['trade_type'] = futures
                         new_result['positionside'] = "long"
-                    new_result['reduceOnly'] = True
                     value = percentage_pos/100
                     new_result['value'] = current_value * value
                     fulness -= value
@@ -190,11 +201,12 @@ def control_the_results(bot_id, results):
                     new_result = sanitize_result(result)
                     if open_position_map[symbol]['position_side']== "short":
                         new_result['side'] = "buy"
+                        new_result['trade_type'] = futures
                         new_result['positionside'] = "short"
                     elif open_position_map[symbol]['position_side']== "long":
                         new_result['side'] = "sell"
+                        new_result['trade_type'] = futures
                         new_result['positionside'] = "long"
-                    new_result['reduceOnly'] = True
                     value = percentage_pos/100
                     new_result['value'] = current_value * value
                     fulness -= value
@@ -205,11 +217,12 @@ def control_the_results(bot_id, results):
                     new_result = sanitize_result(result)
                     if open_position_map[symbol]['position_side']== "short":
                         new_result['side'] = "buy"
+                        new_result['trade_type'] = futures
                         new_result['positionside'] = "short"
                     elif open_position_map[symbol]['position_side']== "long":
                         new_result['side'] = "sell"
+                        new_result['trade_type'] = futures
                         new_result['positionside'] = "long"
-                    new_result['reduceOnly'] = True
                     value = percentage_pos/100
                     new_result['value'] = current_value * value
                     fulness -= value
@@ -219,8 +232,8 @@ def control_the_results(bot_id, results):
                 if percentage_pos != 0:
                     new_result = sanitize_result(result)
                     new_result['side'] = "buy"
+                    new_result['trade_type'] = futures
                     new_result['positionside'] = "short"
-                    new_result['reduceOnly'] = True
                     value = percentage_pos/100
                     new_result['value'] = current_value * value
                     fulness -= value
@@ -229,8 +242,8 @@ def control_the_results(bot_id, results):
             case ("short", "short"):
                 if curr_per < prev_per and percentage_pos != 0 and curr_per < percentage_pos:
                     new_result['side'] = "buy"
+                    new_result['trade_type'] = futures
                     new_result['positionside'] = "short"
-                    new_result['reduceOnly'] = True
                     value = (percentage_pos-curr_position)/100
                     new_result = sanitize_result(result)
                     new_result['value'] = current_value * value
@@ -278,20 +291,23 @@ def control_the_results(bot_id, results):
                 #print(f"curr_pos: {curr_pos}, curr_per: {curr_per}, value: {value}, minValue: {minValue}, current_value: {current_value}, fulness: {fulness}")
                 if (value*current_value) < minValue:
                     continue
-                if (value < (1-fulness)):
+                if (value <= (1-fulness)):
                     new_result = sanitize_result(result)
                     new_result['side'] = "buy"
+                    new_result['trade_type'] = spot
                     new_result['value'] = current_value * value
                     fulness += value
                     filtered_results.append(new_result)
                 continue
             case ("none", "long"):
                 value = curr_per/100
+                print(f"prev_pos: {prev_pos}, prev_per: {prev_per}, curr_pos: {curr_pos}, curr_per: {curr_per}, value: {value}, minValue: {minValue}, current_value: {current_value}, fulness: {fulness}")
                 if (value*current_value) < minValue:
                     continue
-                if value < (1-fulness):
+                if value <= (1-fulness):
                     new_result = sanitize_result(result)
                     new_result['side'] = "buy"
+                    new_result['trade_type'] = futures
                     new_result['positionside'] = "long"
                     new_result['leverage'] = curr_pos
                     new_result['value'] = current_value * value
@@ -303,9 +319,10 @@ def control_the_results(bot_id, results):
                 #print(f"prev_pos: {prev_pos}, prev_per: {prev_per}, curr_pos: {curr_pos}, curr_per: {curr_per}, value: {value}, minValue: {minValue}, current_value: {current_value}, fulness: {fulness}")
                 if (value*current_value) < minValue:
                     continue
-                if value < (1-fulness):
+                if value <= (1-fulness):
                     new_result = sanitize_result(result)
                     new_result['side'] = "sell"
+                    new_result['trade_type'] = futures
                     new_result['positionside'] = "short"
                     new_result['leverage'] = curr_pos
                     new_result['value'] = current_value * value
@@ -323,6 +340,7 @@ def control_the_results(bot_id, results):
                 if curr_spot > prev_spot and percentage_hold != 0 and curr_spot > percentage_hold and value < (1-fulness):
                     new_result = sanitize_result(result)
                     new_result['side'] = "buy"
+                    new_result['trade_type'] = spot
                     new_result['value'] = current_value * value
                     fulness += value
                     filtered_results.append(new_result)
@@ -331,9 +349,10 @@ def control_the_results(bot_id, results):
                 value = curr_per/100
                 if (value*current_value) < minValue:
                     continue
-                if value < (1-fulness):
+                if value <= (1-fulness):
                     new_result = sanitize_result(result)
                     new_result['side'] = "buy"
+                    new_result['trade_type'] = futures
                     new_result['positionside'] = "long"
                     new_result['leverage'] = curr_pos
                     new_result['value'] = current_value * value
@@ -344,9 +363,10 @@ def control_the_results(bot_id, results):
                 value = curr_per/100
                 if (value*current_value) < minValue:
                     continue
-                if value < (1-fulness):
+                if value <= (1-fulness):
                     new_result = sanitize_result(result)
                     new_result['side'] = "sell"
+                    new_result['trade_type'] = futures
                     new_result['positionside'] = "short"
                     new_result['leverage'] = curr_pos
                     new_result['value'] = current_value * value
@@ -359,9 +379,10 @@ def control_the_results(bot_id, results):
                 value = curr_pos * (curr_per/100)
                 if (value*current_value) < minValue:
                     continue
-                if value < (1-fulness):
+                if value <= (1-fulness):
                     new_result = sanitize_result(result)
                     new_result['side'] = "buy"
+                    new_result['trade_type'] = spot
                     new_result['value'] = current_value * value
                     fulness += value
                     filtered_results.append(new_result)
@@ -376,6 +397,7 @@ def control_the_results(bot_id, results):
                     if curr_position > prev_position and value < (1-fulness):
                         new_result = sanitize_result(result)
                         new_result['side'] = "sell"
+                        new_result['trade_type'] = futures
                         new_result['positionside'] = "long"
                         new_result['reduceOnly'] = True
                         new_result['value'] = current_value * value
@@ -386,9 +408,10 @@ def control_the_results(bot_id, results):
                 value = curr_per/100
                 if (value*current_value) < minValue:
                     continue
-                if value < (1-fulness):
+                if value <= (1-fulness):
                     new_result = sanitize_result(result)
                     new_result['side'] = "sell"
+                    new_result['trade_type'] = futures
                     new_result['positionside'] = "short"
                     new_result['leverage'] = curr_pos
                     new_result['value'] = current_value * value
@@ -401,9 +424,10 @@ def control_the_results(bot_id, results):
                 value = curr_pos * (curr_per/100)
                 if (value*current_value) < minValue:
                     continue
-                if value < (1-fulness):
+                if value <= (1-fulness):
                     new_result = sanitize_result(result)
                     new_result['side'] = "buy"
+                    new_result['trade_type'] = spot
                     new_result['value'] = current_value * value
                     fulness += value
                     filtered_results.append(new_result)
@@ -412,9 +436,10 @@ def control_the_results(bot_id, results):
                 value = curr_per/100
                 if (value*current_value) < minValue:
                     continue
-                if value < (1-fulness):
+                if value <= (1-fulness):
                     new_result = sanitize_result(result)
                     new_result['side'] = "buy"
+                    new_result['trade_type'] = futures
                     new_result['positionside'] = "long"
                     new_result['leverage'] = curr_pos
                     new_result['value'] = current_value * value
@@ -426,9 +451,10 @@ def control_the_results(bot_id, results):
                     value = (curr_per-percentage_pos)/100
                     if (value*current_value) < minValue:
                         continue
-                    if value < (1-fulness):
+                    if value <= (1-fulness):
                         new_result = sanitize_result(result)
                         new_result['side'] = "sell"
+                        new_result['trade_type'] = futures
                         new_result['positionside'] = "short"
                         new_result['value'] = current_value * value
                         fulness += value
@@ -437,9 +463,10 @@ def control_the_results(bot_id, results):
                     value = (curr_per)/100
                     if (value*current_value) < minValue:
                         continue
-                    if value < (1-fulness):
+                    if value <= (1-fulness):
                         new_result = sanitize_result(result)
                         new_result['side'] = "sell"
+                        new_result['trade_type'] = futures
                         new_result['positionside'] = "short"
                         new_result['value'] = current_value * value
                         fulness += value

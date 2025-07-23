@@ -60,7 +60,7 @@ async def update_ed_secret_converted(api_id: int, pem_str: str):
             pem_str,
             api_id
         )
-        logger.info("ed_private ve ed_private_pem sütunları başarıyla güncellendi")
+        print("ed_private ve ed_private_pem sütunları başarıyla güncellendi")
 
         # Bağlantıyı kapat
         await conn.close()

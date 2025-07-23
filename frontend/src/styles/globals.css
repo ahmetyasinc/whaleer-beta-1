@@ -77,8 +77,34 @@ html, body {
   overflow-y: auto;  /* Dikey scroll gerektiğinde aktif eder */
 }
 
+  @keyframes fadeout {
+    0% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .animate-fadeout {
+    animation: fadeout 3s ease-in-out forwards;
+  }
+
 
 }
+
+  @keyframes fadeout {
+    0% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .animate-fadeout {
+    animation: fadeout 6s ease-in-out forwards;
+  }
 
 .react-resizable-handle::before {
   content: "";

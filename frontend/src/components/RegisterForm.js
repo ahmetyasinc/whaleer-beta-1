@@ -6,6 +6,10 @@ import { useState } from "react";
 import Link from "next/link";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
+import { FaArrowLeftLong } from "react-icons/fa6";
+import { FiEye, FiEyeOff } from "react-icons/fi";
+
+
 
 export default function RegisterForm() {
     const router = useRouter();
@@ -18,6 +22,8 @@ export default function RegisterForm() {
         password: "",
         confirmPassword: "",
     });
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -58,21 +64,7 @@ export default function RegisterForm() {
           <div
             className="bg-[rgb(38,135,192)] rounded-[5px] h-8 w-1/4 flex items-center justify-center absolute left-1 top-[4px] group-hover:w-[151px] z-10 duration-500"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 1024 1024"
-              height="25px"
-              width="25px"
-            >
-              <path
-                d="M224 480h640a32 32 0 1 1 0 64H224a32 32 0 0 1 0-64z"
-                fill="#000000"
-              ></path>
-              <path
-                d="m237.248 512 265.408 265.344a32 32 0 0 1-45.312 45.312l-288-288a32 32 0 0 1 0-45.312l288-288a32 32 0 1 1 45.312 45.312L237.248 512z"
-                fill="#000000"
-              ></path>
-            </svg>
+            <FaArrowLeftLong />
           </div>
           <p className="translate-x-6 translate-y-1">Anasayfa</p>
         </button>
@@ -80,7 +72,7 @@ export default function RegisterForm() {
             <div className="bg-white/0 backdrop-blur-lg border border-gray-400 rounded-lg shadow-lg overflow-hidden w-full max-w-md">
                 <div className="p-8">
                     <h2 className="text-center text-3xl font-extrabold text-white">Kayıt Ol</h2>
-                    <p className="mt-4 text-center text-gray-400">whaleer'a kayıt olun</p>
+                    <p className="mt-4 text-center text-gray-400">Whaleer'a kayıt olun</p>
 
                     <form onSubmit={handleSubmit} className="mt-8 space-y-6">
                         <div className="grid grid-cols-2 gap-4">
@@ -89,7 +81,7 @@ export default function RegisterForm() {
                                     type="text"
                                     name="first_name"
                                     placeholder="İsim"
-                                    className="appearance-none block w-full px-3 py-3 border border-gray-700 bg-gray-600 text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    className="appearance-none block w-full px-3 py-3 border border-gray-950 bg-white text-black rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                     required
                                     value={formData.first_name}
                                     onChange={handleChange}
@@ -100,7 +92,7 @@ export default function RegisterForm() {
                                     type="text"
                                     name="last_name"
                                     placeholder="Soyisim"
-                                    className="appearance-none block w-full px-3 py-3 border border-gray-700 bg-gray-600 text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    className="appearance-none block w-full px-3 py-3 border border-gray-950 bg-white text-black rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                     required
                                     value={formData.last_name}
                                     onChange={handleChange}
@@ -111,7 +103,7 @@ export default function RegisterForm() {
                             type="text"
                             name="username"
                             placeholder="Kullanıcı Adı"
-                            className="appearance-none block w-full px-3 py-3 border border-gray-700 bg-gray-600 text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            className="appearance-none block w-full px-3 py-3 border border-gray-950 bg-white text-black rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             required
                             value={formData.username}
                             onChange={handleChange}
@@ -120,29 +112,47 @@ export default function RegisterForm() {
                             type="email"
                             name="email"
                             placeholder="E-Posta"
-                            className="appearance-none block w-full px-3 py-3 border border-gray-700 bg-gray-600 text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            className="appearance-none block w-full px-3 py-3 border border-gray-950 bg-white text-black rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             required
                             value={formData.email}
                             onChange={handleChange}
                         />
-                        <input
-                            type="password"
-                            name="password"
-                            placeholder="Şifre"
-                            className="appearance-none block w-full px-3 py-3 border border-gray-700 bg-gray-600 text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            required
-                            value={formData.password}
-                            onChange={handleChange}
-                        />
-                        <input
-                            type="password"
-                            name="confirmPassword"
-                            placeholder="Şifreyi Onayla"
-                            className="appearance-none block w-full px-3 py-3 border border-gray-700 bg-gray-600 text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            required
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                        />
+                         <div className="mt-4 relative">
+                           <input
+                             type={showPassword ? "text" : "password"}
+                             name="password"
+                             placeholder="Şifre"
+                             className="appearance-none block w-full px-3 py-3 border border-gray-950 bg-white text-black rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm pr-10"
+                             required
+                             value={formData.password}
+                             onChange={handleChange}
+                           />
+                           <div
+                             onClick={() => setShowPassword((prev) => !prev)}
+                             className="absolute inset-y-0 right-3 flex items-center text-gray-500 cursor-pointer"
+                           >
+                             {showPassword ? <FiEyeOff /> : <FiEye />}
+                           </div>
+                         </div>
+
+                         {/* Şifreyi Onayla */}
+                         <div className="mt-4 relative">
+                           <input
+                             type={showConfirm ? "text" : "password"}
+                             name="confirmPassword"
+                             placeholder="Şifreyi Onayla"
+                             className="appearance-none block w-full px-3 py-3 border border-gray-950 bg-white text-black rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm pr-10"
+                             required
+                             value={formData.confirmPassword}
+                             onChange={handleChange}
+                           />
+                           <div
+                             onClick={() => setShowConfirm((prev) => !prev)}
+                             className="absolute inset-y-0 right-3 flex items-center text-gray-500 cursor-pointer"
+                           >
+                             {showConfirm ? <FiEyeOff /> : <FiEye />}
+                           </div>
+                         </div>
                         <button
                             type="submit"
                             className="group relative w-full flex justify-center py-3 px-4 border-transparent text-sm font-medium rounded-md text-gray-900 bg-[hsl(221,60%,52%)] hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"

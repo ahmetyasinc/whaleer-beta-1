@@ -2,7 +2,6 @@ import asyncio
 import sys
 import time
 import psycopg
-
 from backend.trade_engine.taha_part.utils.price_cache_new import (
     start_connection_pool,
     wait_for_cache_ready

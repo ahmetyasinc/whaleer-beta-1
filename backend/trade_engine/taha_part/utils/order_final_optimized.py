@@ -340,13 +340,17 @@ async def _prepare_single_order(bot_id: str, order: dict, api_credentials: dict,
             order=order
         )
         
+        # ✅ DB kayıt için api_id'yi order verilerine ekle
+        order_with_api_id = order.copy()
+        order_with_api_id["api_id"] = api_id
+        
         return {
             "api_key": api_key,
             "private_key": private_key,
             "trade_type": trade_type,
             "params": params,
             "bot_id": bot_id,  # ✅ DB kayıt için bot_id eklendi
-            "original_order": order  # ✅ Orijinal order datası
+            "original_order": order_with_api_id  # ✅ api_id dahil orijinal order datası
         }
         
     except Exception as e:
@@ -513,7 +517,8 @@ def _build_order_params(coin_id: str, side: str, order_type: str, quantity: str,
         if key not in excluded_keys:
             if key == "positionside":
                 if trade_type in ["futures", "test_futures"]:
-                    params["positionSide"] = str(value).upper()
+                    # ✅ Binance'e her zaman "BOTH" gönder - kullanıcı niyeti DB'de saklanır
+                    params["positionSide"] = "BOTH"
             elif key == "reduce_only":
                 if trade_type in ["futures", "test_futures"]:
                     params["reduceOnly"] = str(value).lower()
@@ -678,7 +683,7 @@ async def main():
                             "side": "buy",
                             "order_type": "MARKET",
                             "value": 500.0,
-                            "positionside": "BOTH",
+                            "positionside": "long",  # ✅ DB'ye "long" kaydedilir, Binance'e "BOTH"
                             "leverage": 15,
                             "margin_type": True  # Boolean - ISOLATED
                         },
@@ -689,7 +694,7 @@ async def main():
                             "order_type": "LIMIT",
                             "value": 300.0,
                             "price": 2985.123,
-                            "positionside": "BOTH",
+                            "positionside": "short",  # ✅ DB'ye "short" kaydedilir, Binance'e "BOTH"
                             "timeInForce": "IOC",
                             "leverage": 20,
                             "margin_type": False  # Boolean - CROSSED
@@ -702,7 +707,7 @@ async def main():
                             "side": "buy",
                             "order_type": "MARKET",
                             "value": 200.0,
-                            "positionside": "BOTH",
+                            "positionside": "both",  # ✅ DB'ye "both" kaydedilir, Binance'e "BOTH"
                             "leverage": 10,
                             "margin_type": True  # Boolean - ISOLATED
                         },
@@ -713,7 +718,7 @@ async def main():
                             "order_type": "LIMIT",
                             "value": 150.0,
                             "price": 0.8,
-                            "positionside": "BOTH",
+                            "positionside": "long",  # ✅ DB'ye "long" kaydedilir, Binance'e "BOTH"
                             "timeInForce": "GTC",
                             "leverage": 25,
                             "margin_type": False  # Boolean - CROSSED
@@ -1091,10 +1096,15 @@ async def save_trade_to_db(bot_id: int, user_id: int, trade_result: dict, order_
         leverage = 1  # Default leverage
         
         if normalized_trade_type == "futures":
-            # Futures için position_side ve leverage bilgilerini al
-            position_side = order_params.get("positionSide")
-            if position_side:
-                position_side = str(position_side).upper()
+            # ✅ Kullanıcıdan gelen orijinal positionside değerini DB'ye kaydet
+            # Binance'e "BOTH" gönderilmiş olsa da, kullanıcı niyetini koruyoruz
+            user_position_side = order_params.get("positionside")  # Orijinal kullanıcı değeri
+            if user_position_side:
+                position_side = str(user_position_side).lower()  # "long", "short" vs
+                logger.info(f"📝 Kullanıcı positionside DB'ye kaydediliyor: {position_side}")
+            else:
+                # Fallback - eğer yoksa "both" olarak kaydet
+                position_side = "both"
             
             # MARGIN_LEVERAGE_CONFIG'den leverage al
             api_id = order_params.get("api_id")
@@ -1172,7 +1182,7 @@ async def last_trial():
                 "side": "buy",
                 "order_type": "MARKET",
                 "value": 500.0,
-                "positionside": "BOTH"
+                "positionside": "long"  # ✅ Kullanıcı "long" gönderdi, DB'ye "long" kaydedilir, Binance'e "BOTH"
             },
             {
                 "trade_type": "test_futures",
@@ -1181,7 +1191,7 @@ async def last_trial():
                 "order_type": "LIMIT",
                 "value": 300.0,
                 "price": 2985.123,
-                "positionside": "BOTH",
+                "positionside": "short",  # ✅ Kullanıcı "short" gönderdi, DB'ye "short" kaydedilir, Binance'e "BOTH"
                 "timeInForce": "IOC"
             }
         ],
@@ -1192,7 +1202,7 @@ async def last_trial():
                 "side": "buy",
                 "order_type": "MARKET",
                 "value": 200.0,
-                "positionside": "BOTH"
+                "positionside": "both"  # ✅ Kullanıcı "both" gönderdi, DB'ye "both" kaydedilir, Binance'e "BOTH"
             },
             {
                 "trade_type": "test_futures",
@@ -1201,7 +1211,7 @@ async def last_trial():
                 "order_type": "LIMIT",
                 "value": 150.0,
                 "price": 0.5,
-                "positionside": "BOTH",
+                "positionside": "long",  # ✅ Kullanıcı "long" gönderdi, DB'ye "long" kaydedilir, Binance'e "BOTH"
                 "timeInForce": "GTC"
             }
         ]

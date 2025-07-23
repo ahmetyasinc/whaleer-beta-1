@@ -11,8 +11,7 @@ const RunBotToggle = ({ type = "checkbox", checked, onChange, className = "" }) 
           checked={!!checked}
           onChange={onChange}
          />
-        <svg className="svg" width="24px" height="24px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <ellipse className="svg-dot" cx={5} cy={5} rx={2} ry={1} fill="#fff" transform="rotate(-45,6,6)" />
+        <svg className="svg" width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <circle className="svg-ring" cx={12} cy={12} r={6} fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeDasharray="0 5 27.7 5" strokeDashoffset="0.01" transform="rotate(-90,12,12)" />
           <line className="svg-line" x1={12} y1={6} x2={12} y2={15} stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeDasharray="9 9" strokeDashoffset={3} />
           <line className="svg-line" x1={12} y1={6} x2={12} y2={12} stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeDasharray="6 6" strokeDashoffset={6} />
@@ -26,8 +25,8 @@ const RunBotToggle = ({ type = "checkbox", checked, onChange, className = "" }) 
 const StyledWrapper = styled.div`
   .switch {
     position: relative;
-    width: 4em;
-    height: 4em;
+    width: 5em;
+    height: 5em;
   }
 
   .checkbox,
@@ -44,22 +43,25 @@ const StyledWrapper = styled.div`
     height: 100%;
   }
 
-  .checkbox {
-    background-color: hsl(3, 90%, 40%);
-    border-radius: 50%;
-    box-shadow:
-      0 0 0 0.1em hsl(3, 90%, 25%) inset,
-      0 0 0 0.2em hsl(3, 90%, 65%) inset,
-      -0.3em 0.5em 0 hsl(3, 90%, 50%) inset,
-      0 0.15em 0 hsla(0, 0%, 0%, 0.2);
-    filter: brightness(1);
-    transition:
-      background-color 0.15s linear,
-      box-shadow 0.15s linear,
-      filter 0.15s linear,
-      transform 0.15s linear;
-    appearance: none;
-  }
+.checkbox {
+  background-color: hsl(3, 90%, 40%);
+  border-radius: 50%;
+  border: 2px solid hsl(227,82%,2%); /* 🔴 BORDER EKLENDİ */
+  box-shadow:
+    0 0 0 0.1em hsl(3, 90%, 25%) inset,
+    0 0 0 0.2em hsl(3, 90%, 65%) inset,
+    -0.3em 0.5em 0 hsl(3, 90%, 40%) inset,
+    0 0.15em 0 hsla(0, 0%, 0%, 0.2),
+    0 0 0 4px hsl(227,82%,2%); /* 🔵 RING BENZERİ EKLENDİ */
+  filter: brightness(1);
+  transition:
+    background-color 0.15s linear,
+    box-shadow 0.15s linear,
+    filter 0.15s linear,
+    transform 0.15s linear;
+  appearance: none;
+}
+
 
   .checkbox:active {
     box-shadow:
@@ -79,14 +81,14 @@ const StyledWrapper = styled.div`
     box-shadow:
       0 0 0 0.1em hsl(123, 90%, 15%) inset,
       0 0 0 0.2em hsl(123, 90%, 55%) inset,
-      -0.3em 0.5em 0 hsl(123, 90%, 40%) inset,
+      -0.3em 0.5em 0 hsl(123, 90%, 30%) inset,
       0 0.15em 0 hsla(0, 0%, 0%, 0.2);
   }
 
   .checkbox:checked:active {
     box-shadow:
       0 0 0 0.1em hsl(123, 90%, 15%) inset,
-      0 0 0 0.2em hsl(123, 90%, 55%) inset,
+      0 0 0 0.2em hsl(123, 90%, 15%) inset,
       -0.3em 0.5em 0 hsl(123, 90%, 40%) inset,
       0 0.05em 0 hsla(0, 0%, 0%, 0.2);
   }

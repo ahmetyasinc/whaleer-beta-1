@@ -139,8 +139,6 @@ const LeftMenu = () => {
         ) : (
           <img src="/img/logo5_2.png" alt="Menu" width={26} height={26} />
         )}
-
-
       </button>
 
       {/* Çıkış Onay Modalı */}

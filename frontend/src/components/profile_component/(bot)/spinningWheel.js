@@ -15,7 +15,7 @@ const SpinningWheel = ({ isActive }) => {
 const StyledWrapper = styled.div`
   .bg {
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 50px;
     background-color: var(--base-color);
     --base-color: hsl(227,82%,2%);
    /*use your base color*/
@@ -70,3 +70,6 @@ const StyledWrapper = styled.div`
   }`;
 
 export default SpinningWheel;
+
+
+

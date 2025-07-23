@@ -1,0 +1,20 @@
+{
+    "100": [
+        {
+            "coin_id": "BTCUSDT",
+            "status": "success",
+            "order_type": "market",
+            "side": "buy",
+            "trade_type": "test_futures",
+            "positionside": "long",
+            "leverage": 3.0,
+            "value": 240.0
+        }
+    ],
+    "96": [
+        {
+            "status": "error",
+            "error": "unsupported operand type(s) for -: 'float' and 'decimal.Decimal'\nTraceback (most recent call last):\n  File \"C:\\Users\\ahmet\\OneDrive\\Masa\u00fcst\u00fc\\Balina Megasolo\\aws\\beta-1\\whaleer\\backend\\trade_engine\\process\\run_bot.py\", line 97, in run_bot\n    results = control_the_results(bot['id'], results)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\ahmet\\OneDrive\\Masa\u00fcst\u00fc\\Balina Megasolo\\aws\\beta-1\\whaleer\\backend\\trade_engine\\control\\control_the_results.py\", line 337, in control_the_results\n    value = (curr_spot-percentage_hold)/100\n             ~~~~~~~~~^~~~~~~~~~~~~~~~\nTypeError: unsupported operand type(s) for -: 'float' and 'decimal.Decimal'\n"
+        }
+    ]
+}

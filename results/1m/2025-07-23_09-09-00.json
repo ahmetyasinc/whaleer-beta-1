@@ -1,0 +1,34 @@
+{
+    "41": [
+        {
+            "status": "error",
+            "error": "exec() arg 1 must be a string, bytes or code object\nTraceback (most recent call last):\n  File \"C:\\Users\\tahae\\Desktop\\Proje_all\\whaleer-beta-1\\backend\\trade_engine\\process\\run_bot.py\", line 78, in run_bot\n    exec(strategy_code, allowed_globals)\nTypeError: exec() arg 1 must be a string, bytes or code object\n"
+        }
+    ],
+    "84": [
+        {
+            "coin_id": "BTCUSDT",
+            "status": "success",
+            "order_type": "market",
+            "side": "buy",
+            "trade_type": "test_futures",
+            "positionside": "short",
+            "value": 11825.000000000002
+        },
+        {
+            "coin_id": "ETHUSDT",
+            "status": "success",
+            "order_type": "market",
+            "side": "sell",
+            "trade_type": "test_futures",
+            "positionside": "long",
+            "value": 552.8955
+        }
+    ],
+    "111": [
+        {
+            "status": "error",
+            "error": "exec() arg 1 must be a string, bytes or code object\nTraceback (most recent call last):\n  File \"C:\\Users\\tahae\\Desktop\\Proje_all\\whaleer-beta-1\\backend\\trade_engine\\process\\run_bot.py\", line 78, in run_bot\n    exec(strategy_code, allowed_globals)\nTypeError: exec() arg 1 must be a string, bytes or code object\n"
+        }
+    ]
+}

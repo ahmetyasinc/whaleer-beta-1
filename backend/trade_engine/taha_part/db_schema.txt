@@ -2,16 +2,23 @@
 - id (integer)
 - exchange (character varying)
 - api_name (character varying)
+- api_key (text)
+- api_secret (text)
 - created_at (timestamp without time zone)
 - user_id (integer)
 - balance (numeric)
 - ed_public (text)
-- ed_private (text)
 - ed_public_pem (text)
-- ed_private_pem (text)
-- api_key (text)
-- api_secret (text)
 - is_test_api (boolean)
+- ed_private_pem (text)
+- ed_private (text)
+
+## backtest_archive
+- id (integer)
+- user_id (integer)
+- commission (numeric)
+- created_at (timestamp without time zone)
+- data (jsonb)
 
 ## binance_coins
 - id (integer)
@@ -43,6 +50,9 @@
 - bot_id (integer)
 - symbol (character varying)
 - amount (numeric)
+- average_cost (numeric)
+- percentage (numeric)
+- profit_loss (numeric)
 
 ## bot_positions
 - id (integer)
@@ -56,7 +66,6 @@
 - position_side (character varying)
 - leverage (numeric)
 - percentage (numeric)
-- is_isolated (boolean)
 
 ## bot_snapshots
 - id (integer)
@@ -64,27 +73,30 @@
 - timestamp (timestamp without time zone)
 - balance_usdt (numeric)
 - total_profit (numeric)
-- unrealized_profit (numeric)
-- realized_profit (numeric)
-- open_orders (integer)
+- open_positions_count (integer)
 - open_positions (jsonb)
-- equity (numeric)
 - pnl_ratio (numeric)
-- created_at (timestamp without time zone)
+- held_assets (jsonb)
+- held_assets_count (integer)
+- fullness (numeric)
+- active (boolean)
 
 ## bot_trades
 - id (integer)
 - user_id (integer)
 - bot_id (integer)
-- timestamp (timestamp without time zone)
+- created_at (timestamp without time zone)
 - symbol (character varying)
 - side (character varying)
-- price (numeric)
-- quantity (numeric)
+- amount (numeric)
 - fee (numeric)
-- profit_loss (numeric)
 - order_id (character varying)
 - status (character varying)
+- trade_type (character varying)
+- position_side (character varying)
+- price (numeric)
+- amount_state (numeric)
+- leverage (numeric)
 
 ## bots
 - id (integer)
@@ -102,6 +114,14 @@
 - current_usd_value (numeric)
 - name (character varying)
 - balance (numeric)
+- fullness (numeric)
+- for_rent (boolean)
+- for_sale (boolean)
+- sold_count (integer)
+- rented_count (integer)
+- sell_price (numeric)
+- rent_price (numeric)
+- running_time (integer)
 
 ## indicators
 - id (integer)
@@ -117,42 +137,6 @@
 - user_id (integer)
 - indicator_id (integer)
 - created_at (timestamp without time zone)
-
-## order_executions
-- id (integer)
-- order_id (integer)
-- trade_id (character varying)
-- executed_qty (numeric)
-- executed_price (numeric)
-- commission (numeric)
-- commission_asset (character varying)
-- executed_at (timestamp without time zone)
-
-## orders
-- id (integer)
-- user_id (integer)
-- exchange_name (character varying)
-- exchange_order_id (character varying)
-- client_order_id (character varying)
-- symbol (character varying)
-- side (character varying)
-- order_type (character varying)
-- quantity (numeric)
-- price (numeric)
-- status (character varying)
-- executed_qty (numeric)
-- executed_value (numeric)
-- created_at (timestamp without time zone)
-- updated_at (timestamp without time zone)
-- signature (character varying)
-
-## simple_balances
-- id (integer)
-- asset (character varying)
-- free_amount (numeric)
-- locked_amount (numeric)
-- total_amount (numeric)
-- updated_at (timestamp without time zone)
 
 ## strategies
 - id (integer)
@@ -178,16 +162,7 @@
 - min_qty (numeric)
 - tick_size (numeric)
 - updated_at (timestamp without time zone)
-
-## system_logs
-- id (integer)
-- user_id (integer)
-- log_type (character varying)
-- action (character varying)
-- details (text)
-- ip_address (character varying)
-- signature (character varying)
-- created_at (timestamp without time zone)
+- is_isolated (boolean)
 
 ## user_api_balances
 - id (integer)
@@ -196,8 +171,12 @@
 - amount (numeric)
 - updated_at (timestamp without time zone)
 - api_id (integer)
-- free_amount (numeric)
-- locked_amount (numeric)
+
+## user_futures_json_settings
+- id (integer)
+- api_id (integer)
+- margin_leverage_infos (jsonb)
+- updated_at (timestamp without time zone)
 
 ## users
 - id (bigint)
@@ -215,12 +194,9 @@
 - is_verified (boolean)
 - created_at (timestamp without time zone)
 - updated_at (timestamp without time zone)
-
-## websocket_health
-- ws_name (text)
-- status (text)
-- last_ping (timestamp without time zone)
-- ping_age_seconds (numeric)
-- reconnect_attempts (integer)
-- listen_key_count (integer)
-- updated_at (timestamp with time zone)
+- instagram (character varying)
+- linkedin (character varying)
+- github (character varying)
+- total_followers (integer)
+- total_sold (integer)
+- total_rented (integer)

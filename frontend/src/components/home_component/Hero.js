@@ -33,7 +33,7 @@ export default function Hero({ userCount, traderCount, strategyCount, botCount }
 
 
                 <div className="hero-buttons text-left">
-                  <Link href="/deneme" className="btn btn-primary me-0 me-sm-2 mx-1">Şimdi Başla</Link>
+                  <Link href="/deneme" className="text-white btn btn-primary me-0 me-sm-2 mx-1">Şimdi Başla</Link>
                   <a href="https://www.youtube.com/watch?v=VZcFJ_jtJpk&t=649s" className="btn btn-link mt-2 mt-sm-0 glightbox">
                     <i className="bi bi-play-circle me-1"></i>
                     Tanıtım Videosu

@@ -194,19 +194,25 @@ const RightCompilerBar = ({
             theme="vs-dark"
             height="100%"
             options={{
-              readOnly: false,
+              readOnly: true, // kullanıcı değişiklik yapamaz
               fontSize: 13,
               minimap: { enabled: false },
-              scrollBeyondLastLine: false,
+              scrollBeyondLastLine: true,
               automaticLayout: true,
-              wordWrap: 'on',
+              wordWrap: 'off', // satır kaydırma kapalı (yani yatay taşarsa scroll çıkar)
               lineNumbers: 'on',
               glyphMargin: false,
               folding: false,
               lineDecorationsWidth: 0,
               lineNumbersMinChars: 3,
+              horizontal: 'scroll', // bazı durumlarda etkili olması için eklenebilir
+              scrollbar: {
+                horizontal: 'auto',
+                horizontalScrollbarSize: 12
+              }
             }}
           />
+
         </div>
 
       </div>

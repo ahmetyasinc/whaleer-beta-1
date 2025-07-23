@@ -73,10 +73,10 @@ export default function Header({ pageClass }) {
                     ) : (
                         <>
                             {(pageClass === 0 || pageClass === 2) && (
-                                <Link className="btn-getstarted" href="/login">Giriş Yap</Link>
+                                <Link className="text-white btn-getstarted" href="/login">Giriş Yap</Link>
                             )}
                             {(pageClass === 0 || pageClass === 1) && (
-                                <Link className="btn-getstarted" href="/register">Kayıt Ol</Link>
+                                <Link className="text-white btn-getstarted" href="/register">Kayıt Ol</Link>
                             )}
                         </>
                     )}

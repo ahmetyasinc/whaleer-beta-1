@@ -96,7 +96,6 @@ async def run_user_indicator(user_code: str, data: list[dict]):
             "input": EmptyClass(),
         }
 
-
         # Kullanıcı kodunu çalıştır
         exec(user_code, allowed_globals)
 

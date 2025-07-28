@@ -2,7 +2,7 @@ import axios from 'axios';
 
 axios.defaults.withCredentials = true;
 
-export const fetch_bot_data = async () => {
+export const fetch_bot_data = async (limit, filters = {}) => {
   try {
     const payload = {
       bot_type: null,
@@ -16,11 +16,13 @@ export const fetch_bot_data = async () => {
       min_created_minutes_ago: null,
       min_trade_frequency: null,
       min_profit_margin: null,
+      profit_margin_unit: null,
       min_uptime_minutes: null,
       demand: null,
-      limit: 5
+      limit: limit || 5,
+      ...filters, // gelen filtreleri override et
     };
-
+    console.log('fetch_bot_data payload:', payload);
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/showcase/newdata`,
       payload
@@ -32,3 +34,4 @@ export const fetch_bot_data = async () => {
     throw error;
   }
 };
+

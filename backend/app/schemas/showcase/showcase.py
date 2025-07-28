@@ -20,6 +20,7 @@ class ShowcaseFilter(BaseModel):
     min_created_minutes_ago: Optional[int] = None
     min_trade_frequency: Optional[int] = None
     min_profit_margin: Optional[float] = None
+    profit_margin_unit: Optional[str] = None
     min_uptime_minutes: Optional[int] = None
     demand: Optional[int] = None
     limit: Optional[int] = 5
@@ -103,6 +104,6 @@ class ChartDataPoint(BaseModel):
 class ShowcaseBotResponse(BaseModel):
     user: UserSummary
     bot: BotSummary
-    chart_data: list[ChartDataPoint]
+    chartData: list[ChartDataPoint]
     tradingData: List[dict] = []
 

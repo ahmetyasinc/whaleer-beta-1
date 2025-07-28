@@ -3,60 +3,51 @@
 
 import React, { useState } from 'react';
 import { FiFilter, FiX } from 'react-icons/fi';
+import useBotDataStore from '@/store/showcase/botDataStore';
+
 
 const BotFilterSidebar = () => {
-  const [filters, setFilters] = useState({
-    priceMin: '',
-    priceMax: '',
-    profitFactor: 0,
-    riskFactor: 0,
-    creationTime: '',
-    creationUnit: 'gün',
-    usageTime: '',
-    popularity: [],
-    transactionFrequency: '',
-    transactionFrequencyUnit: 'gün',
-    profitMargin: '',
-    profitMarginUnit: 'gün'
-  });
 
   const [isFilterApplied, setIsFilterApplied] = useState(false);
-
-  const popularityOptions = [
-    { id: 'very_low', label: 'Çok Az' },
-    { id: 'low', label: 'Az' },
-    { id: 'medium', label: 'Orta' },
-    { id: 'high', label: 'Çok' },
-    { id: 'very_high', label: 'Çok Fazla' }
-  ];
-
   const handleInputChange = (field, value) => {
     setFilters(prev => ({
       ...prev,
       [field]: value
     }));
   };
+  
+  const [filters, setFilters] = useState({
+    priceMin: '',
+    priceMax: '',
+    rentMax: '',
+    rentMin: '',
+    profitFactor: 0,
+    riskFactor: 0,
+    demand: 0,
+    creationTime: '',
+    creationUnit: 'gün', //minutes'e çevirip göndereceksin
+    usageTime: '', // saat seçili dakikaya çevireceksin
+    transactionFrequency: '',
+    profitMargin: '',
+    isActive: false,
+    profitMarginUnit: 'gün',
+    botType: '' // spot | futures | ''
+  });
 
-  const handlePopularityChange = (optionId) => {
-    setFilters(prev => ({
-      ...prev,
-      popularity: prev.popularity.includes(optionId)
-        ? prev.popularity.filter(id => id !== optionId)
-        : [...prev.popularity, optionId]
-    }));
-  };
 
   const isAnyFilterActive = () => {
     return (
       filters.priceMin !== '' ||
       filters.priceMax !== '' ||
+      filters.rentMax !== '' ||
+      filters.rentMin !== '' ||
       filters.profitFactor > 0 ||
       filters.riskFactor > 0 ||
+      filters.demand > 0 ||
       filters.creationTime !== '' ||
       filters.usageTime !== '' ||
-      filters.popularity.length > 0 ||
-      filters.transactionFrequency !== '' ||
-      filters.profitMargin !== ''
+      filters.profitMargin !== '' ||
+      filters.isActive !== true 
     );
   };
 
@@ -64,24 +55,26 @@ const BotFilterSidebar = () => {
     setFilters({
       priceMin: '',
       priceMax: '',
+      rentMax: '',
+      rentMin: '',
       profitFactor: 0,
       riskFactor: 0,
+      demand: 0,
       creationTime: '',
       creationUnit: 'gün',
       usageTime: '',
-      popularity: [],
       transactionFrequency: '',
-      transactionFrequencyUnit: 'gün',
       profitMargin: '',
-      profitMarginUnit: 'gün'
+      profitMarginUnit: 'gün',
+      isActive: false,
+      botType: ''
     });
     setIsFilterApplied(false);
   };
 
   const applyFilters = () => {
-    console.log('Filters applied:', filters);
+    useBotDataStore.getState().applyFilters(filters);
     setIsFilterApplied(true);
-    // Burada filtreleme işlemini yapabilirsiniz
   };
 
   return (
@@ -93,9 +86,23 @@ const BotFilterSidebar = () => {
       </div>
 
       <div className="overflow-y-auto flex-1 space-y-3 px-3 pb-4">
-        {/* Fiyat Aralığı */}
+
         <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
-          <label className="block text-sm font-medium text-gray-100 mb-2">Fiyat Aralığı ($)</label>
+          <label className="block text-sm font-medium text-gray-100 mb-2">Bot Türü</label>
+          <select
+            value={filters.botType}
+            onChange={(e) => handleInputChange('botType', e.target.value)}
+            className="w-full px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-sm focus:border-blue-400 focus:outline-none"
+          >
+            <option value="">Tümü</option>
+            <option value="spot">Spot</option>
+            <option value="futures">Futures</option>
+          </select>
+        </div>
+
+        {/* Fiyat Aralığı Satış*/}
+        <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
+          <label className="block text-sm font-medium text-gray-100 mb-2">Fiyat Aralığı ($) (Satış)</label>
           <div className="flex gap-2">
             <input 
               type="number" 
@@ -114,43 +121,78 @@ const BotFilterSidebar = () => {
           </div>
         </div>
 
+        {/* Fiyat Aralığı Kiralama*/}
+        <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
+          <label className="block text-sm font-medium text-gray-100 mb-2">Fiyat Aralığı ($) (Kiralama)</label>
+          <div className="flex gap-2">
+            <input 
+              type="number" 
+              placeholder="En az" 
+              value={filters.rentMin}
+              onChange={(e) => handleInputChange('rentMin', e.target.value)}
+              className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
+            />
+            <input 
+              type="number" 
+              placeholder="En çok" 
+              value={filters.rentMax}
+              onChange={(e) => handleInputChange('rentMax', e.target.value)}
+              className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
+            />
+          </div>
+        </div>
+
+        {/* Sadece Aktif Botlar */}
+        <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md mt-3">
+          <label className="inline-flex items-center space-x-2 text-sm text-gray-100">
+            <input
+              type="checkbox"
+              checked={filters.isActive}
+              onChange={(e) => handleInputChange("isActive", e.target.checked)}
+              className="form-checkbox h-4 w-4 text-blue-600 bg-gray-800 border-gray-600 rounded"
+            />
+            <span>Sadece Aktif Botlar</span>
+          </label>
+        </div>
+
+
         {/* Kar Faktörü */}
         <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
           <label className="block text-sm font-medium text-gray-100 mb-2">
-            Kar Faktörü (en az): {filters.profitFactor.toFixed(1)}
+            Kar Faktörü (en az): {filters.profitFactor.toFixed(0)}
           </label>
           <input 
             type="range" 
             min="0" 
-            max="2" 
-            step="0.1"
+            max="10" 
+            step="1"
             value={filters.profitFactor}
             onChange={(e) => handleInputChange('profitFactor', parseFloat(e.target.value))}
             className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
           />
           <div className="flex justify-between text-xs text-gray-400 mt-1">
-            <span>0.0</span>
-            <span>2.0</span>
+            <span>0</span>
+            <span>10</span>
           </div>
         </div>
 
         {/* Risk Faktörü */}
         <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
           <label className="block text-sm font-medium text-gray-100 mb-2">
-            Risk Faktörü (en çok): {filters.riskFactor.toFixed(1)}
+            Risk Faktörü (en çok): {filters.riskFactor.toFixed(0)}
           </label>
           <input 
             type="range" 
             min="0" 
-            max="2" 
-            step="0.1"
+            max="10" 
+            step="1"
             value={filters.riskFactor}
             onChange={(e) => handleInputChange('riskFactor', parseFloat(e.target.value))}
             className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
           />
           <div className="flex justify-between text-xs text-gray-400 mt-1">
-            <span>0.0</span>
-            <span>2.0</span>
+            <span>0</span>
+            <span>10</span>
           </div>
         </div>
 
@@ -177,29 +219,6 @@ const BotFilterSidebar = () => {
           </div>
         </div>
 
-        {/* İşlem sıklığı */}
-        <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
-          <label className="block text-sm font-medium text-gray-100 mb-2">İşlem Sıklığı (en az)</label>
-          <div className="flex gap-2">
-            <input 
-              type="number" 
-              placeholder="Sayı" 
-              value={filters.transactionFrequency}
-              onChange={(e) => handleInputChange('transactionFrequency', e.target.value)}
-              className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
-            />
-            <select 
-              value={filters.transactionFrequencyUnit}
-              onChange={(e) => handleInputChange('transactionFrequencyUnit', e.target.value)}
-              className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-xs focus:border-blue-400 focus:outline-none"
-            >
-              <option value="gün">Günde</option>
-              <option value="hafta">Haftada</option>
-              <option value="ay">Ayda</option>
-            </select>
-          </div>
-        </div>
-
         {/* Kar Marjı */}
         <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
           <label className="block text-sm font-medium text-gray-100 mb-2">Kar Marjı (en az)</label>
@@ -216,11 +235,25 @@ const BotFilterSidebar = () => {
               onChange={(e) => handleInputChange('profitMarginUnit', e.target.value)}
               className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-xs focus:border-blue-400 focus:outline-none"
             >
-              <option value="gün">Günde</option>
-              <option value="hafta">Haftada</option>
-              <option value="ay">Ayda</option>
+              <option value="day">Günde</option>
+              <option value="week">Haftada</option>
+              <option value="month">Ayda</option>
               <option value="all">Tüm Zamanlar</option>
             </select>
+          </div>
+        </div>
+
+        {/* İşlem sıklığı */}
+        <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
+          <label className="block text-sm font-medium text-gray-100 mb-2">Ortalama İşlem Sıklığı (en az)</label>
+          <div className="flex gap-2">
+            <input 
+              type="number" 
+              placeholder="Sayı" 
+              value={filters.transactionFrequency}
+              onChange={(e) => handleInputChange('transactionFrequency', e.target.value)}
+              className="w-full px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
+            />
           </div>
         </div>
 
@@ -238,19 +271,21 @@ const BotFilterSidebar = () => {
 
         {/* Rağbet */}
         <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
-          <label className="block text-sm font-medium text-gray-100 mb-2">Rağbet Durumu</label>
-          <div className="space-y-2">
-            {popularityOptions.map(option => (
-              <label key={option.id} className="flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={filters.popularity.includes(option.id)}
-                  onChange={() => handlePopularityChange(option.id)}
-                  className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
-                />
-                <span className="text-xs text-gray-300">{option.label}</span>
-              </label>
-            ))}
+          <label className="block text-sm font-medium text-gray-100 mb-2">
+            Rağbet durumu: {filters.demand}
+          </label>
+          <input 
+            type="range" 
+            min="0" 
+            max="5" 
+            step="1"
+            value={filters.demand}
+            onChange={(e) => handleInputChange('demand', parseFloat(e.target.value))}
+            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+          />
+          <div className="flex justify-between text-xs text-gray-400 mt-1">
+            <span>0</span>
+            <span>5</span>
           </div>
         </div>
 

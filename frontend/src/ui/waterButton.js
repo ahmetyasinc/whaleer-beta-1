@@ -2,15 +2,18 @@
 
 import React from 'react';
 import styled from 'styled-components';
+import { useTranslation } from 'react-i18next';
 
 const Button = ({ onClick, icon, spinning }) => {
+  const { t } = useTranslation('notFound');
+
   return (
     <StyledWrapper>
       <button className="button" onClick={onClick}>
         <span className="liquid" />
         <span className="btn-content text-black">
           {icon}
-          <span className="btn-txt text-black text-sm">Anasayfaya Yelken Aç</span>
+          <span className="btn-txt text-black text-sm">{t('goHome')}</span>
         </span>
       </button>
     </StyledWrapper>

@@ -4,7 +4,8 @@ export async function generateStaticParams() {
   return [{ locale: 'en' }, { locale: 'tr' }];
 }
 
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+  const params = await props.params;
   const { locale } = params;
 
   const metaByLocale = {
@@ -21,7 +22,8 @@ export async function generateMetadata({ params }) {
   return metaByLocale[locale] || metaByLocale.en;
 }
 
-export default async function CatchAll({ params }) {
+export default async function CatchAll(props) {
+  const params = await props.params;
   const locale = await params.locale;
   return <NotFound locale={locale} />;
 }

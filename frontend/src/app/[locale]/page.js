@@ -5,7 +5,8 @@ import About from "@/components/home_component/About";
 import Header from "@/components/home_component/Header";
 import HomeClientComponent from "@/components/HomeClientComponent";
 
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+  const params = await props.params;
   const locale = params.locale;
   const i18n = await getI18n(locale); // SSR çevirici
   return {
@@ -14,10 +15,12 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default function Home() {
+export default async function Home({ params }) {
+    const locale = await params.locale;
+
   return (
     <main>
-      <Header pageClass={0} />
+      <Header pageClass={0} locale={locale} />
       <HomeClientComponent />
       <About />
       <FeaturesTabs />

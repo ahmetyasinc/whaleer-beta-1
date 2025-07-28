@@ -1,19 +1,24 @@
 "use client";
 import { useAuth } from "@/context/AuthContext";
 import { usePathname } from "next/navigation";
-import { useRouter } from "next/navigation";
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { useLogout } from "@/utils/HookLogout"; // Yeni logout fonksiyonunu içe aktardık
+import { useLogout } from "@/utils/HookLogout";
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n"; // i18n örneğini direkt kullanabilmen için import et
+
 
 export default function Header({ pageClass }) {
-    const router = useRouter();
+    const { t } = useTranslation("header");
+    console.log("🧭 Aktif dil:", i18n.language);
+    console.log("🧭 Çeviri:", t("features"));
     const pathname = usePathname();
     const auth = useAuth();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
     const handleLogout = useLogout(); // useLogout hook'unu çağır
+    
 
     if (!auth) {
         return null;
@@ -46,19 +51,19 @@ export default function Header({ pageClass }) {
                 <nav id="navmenu" className="navmenu">
                     <ul>
                         <li>
-                            <Link href="/" className={pathname === "/" ? "active" : ""}>Anasayfa</Link>
+                            <Link href="/" className={pathname === "/" ? "active" : ""}>{t("home")}</Link>
                         </li>
                         <li>
-                            <Link href="/features" className={pathname === "/features" ? "active" : ""}>Özellikler</Link>
+                            <Link href="/features" className={pathname === "/features" ? "active" : ""}>{t("features")}</Link>
                         </li>
                         <li>
-                            <Link href="/premium" className={pathname === "/premium" ? "active" : ""}>Premium Üyelik</Link>
+                            <Link href="/premium" className={pathname === "/premium" ? "active" : ""}>{t("premium")}</Link>
                         </li>
                         <li>
-                            <Link href="/about" className={pathname === "/about" ? "active" : ""}>Hakkında</Link>
+                            <Link href="/about" className={pathname === "/about" ? "active" : ""}>{t("about")}</Link>
                         </li>
                         <li>
-                            <Link href="/document" className={pathname === "/document" ? "active" : ""}>Dökümantasyon</Link>
+                            <Link href="/document" className={pathname === "/document" ? "active" : ""}>{t("document")}</Link>
                         </li>
                     </ul>
                     <i className="mobile-nav-toggle d-xl-none bi bi-list"></i>
@@ -67,16 +72,16 @@ export default function Header({ pageClass }) {
                 <div className="hidden md:flex space-x-6">
                     {isAuthenticated ? (
                         <>
-                            <Link className="btn-getstarted" href="/profile">Profilim</Link>
-                            <button className="btn-getstarted" onClick={handleLogout}>Çıkış yap</button>
+                            <Link className="btn-getstarted" href="/profile">{t("myProfile")}</Link>
+                            <button className="btn-getstarted" onClick={handleLogout}>{t("logout")}</button>
                         </>
                     ) : (
                         <>
                             {(pageClass === 0 || pageClass === 2) && (
-                                <Link className="text-white btn-getstarted" href="/login">Giriş Yap</Link>
+                                <Link className="text-white btn-getstarted" href="/login">{t("login")}</Link>
                             )}
                             {(pageClass === 0 || pageClass === 1) && (
-                                <Link className="text-white btn-getstarted" href="/register">Kayıt Ol</Link>
+                                <Link className="text-white btn-getstarted" href="/register">{t("register")}</Link>
                             )}
                         </>
                     )}

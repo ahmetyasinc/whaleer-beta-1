@@ -9,9 +9,9 @@ import sys, json, logging, os
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 from psycopg2.extras import RealDictCursor
-from backend.trade_engine.taha_part.utils.dict_preparing import get_symbols_filters_dict, get_single_symbol_filters
 
 logger = logging.getLogger(__name__)
+
 
 async def get_api_credentials_by_bot_id(bot_id: int, trade_type: str = "spot") -> Dict:
     """

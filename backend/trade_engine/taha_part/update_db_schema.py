@@ -15,14 +15,16 @@ def fetch_db_schema():
 
     query = """
     SELECT 
+        table_schema,
         table_name, 
         column_name, 
         data_type 
     FROM 
         information_schema.columns 
     WHERE 
-        table_schema = 'public'
+        table_schema NOT IN ('information_schema', 'pg_catalog')
     ORDER BY 
+        table_schema,
         table_name, 
         ordinal_position;
     """
@@ -30,14 +32,16 @@ def fetch_db_schema():
     cursor.execute(query)
     schema_info = cursor.fetchall()
 
-    with open("db_schema.txt", "w", encoding="utf-8") as file:
+    with open("db_schema_new.txt", "w", encoding="utf-8") as file:
         current_table = None
-        for table_name, column_name, data_type in schema_info:
-            if table_name != current_table:
+        current_schema = None
+        for schema, table_name, column_name, data_type in schema_info:
+            table_id = f"{schema}.{table_name}"
+            if table_id != current_table:
                 if current_table is not None:
                     file.write("\n")
-                file.write(f"## {table_name}\n")
-                current_table = table_name
+                file.write(f"## {table_id}\n")
+                current_table = table_id
             file.write(f"- {column_name} ({data_type})\n")
 
     cursor.close()
@@ -45,4 +49,4 @@ def fetch_db_schema():
 
 if __name__ == "__main__":
     fetch_db_schema()
-    print("Veritabanı şeması başarıyla db_schema.txt dosyasına kaydedildi.")
+    print("✅ Veritabanı şeması başarıyla db_schema.txt dosyasına kaydedildi.")

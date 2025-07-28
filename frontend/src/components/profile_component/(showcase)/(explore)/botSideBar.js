@@ -1,18 +1,23 @@
-// components/BotSidebar.js
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FiEye, FiTrash2 } from 'react-icons/fi';
 import useBotDataStore from '@/store/showcase/botDataStore';
 
 export default function BotSidebar() {
+  const {
+    getFollowedBots,
+    unfollowBot,
+    followedBots,
+    inspectBot
+  } = useBotDataStore();
 
   const formatRunningTime = (hours) => {
     if (hours < 1) return 'Bugün başladı';
-    
+
     const days = Math.floor(hours / 24);
     const remainingHours = hours % 24;
-    
+
     if (days === 0) {
       return `${hours} saat`;
     } else if (remainingHours === 0) {
@@ -22,26 +27,20 @@ export default function BotSidebar() {
     }
   };
 
-  const {
-    currentBotData: botData,
-  } = useBotDataStore();
-
-  const { 
-    getFollowedBots, 
-    unfollowBot, 
-    inspectBot,
-    formatDuration 
-  } = useBotDataStore();
-  
-  const followedBots = getFollowedBots();
-
   const handleUnfollow = (botId) => {
     unfollowBot(botId);
   };
 
   const handleInspect = (botId) => {
     inspectBot(botId);
+    console.log('İncele:', botId);
   };
+
+  // ⬇️ İlk render'da takip edilen botları yükle
+  useEffect(() => {
+    getFollowedBots();
+    console.log('BotSidebar mounted, followed bots:', followedBots);
+  }, []);
 
   return (
     <aside className="fixed top-[60px] right-0 w-[320px] h-[calc(100vh-60px)] bg-black border-t border-gray-600 text-white shadow-2xl z-40 flex flex-col">
@@ -67,7 +66,7 @@ export default function BotSidebar() {
         ) : (
           followedBots.map((bot) => (
             <div
-              key={`${bot.id}_${bot.followDate}`}
+              key={`${bot.id}`}
               className="relative bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md"
             >
               <div className="absolute top-1 right-1 flex gap-1">

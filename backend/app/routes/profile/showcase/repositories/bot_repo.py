@@ -23,6 +23,12 @@ class BotRepository:
         name = result.scalar_one_or_none()
         return name or "Unknown"
 
+    async def get_bot_by_id(self, bot_id: int):
+        result = await self.db.execute(
+            select(Bots).where(Bots.id == bot_id)
+        )
+        return result.scalar_one_or_none()
+
     async def get_filtered_bots(self, filters) -> list[Bots]:
         stmt = select(Bots).where(
             or_(Bots.for_sale == True, Bots.for_rent == True)
@@ -75,12 +81,35 @@ class BotRepository:
             max_sold_count = max_sold_count or 0
             unit = max(max_sold_count / 5, 1)
             lower = unit * (filters.demand - 1)
-            upper = unit * filters.demand
-            stmt = stmt.where(Bots.sold_count > lower, Bots.sold_count <= upper)
+            #upper = unit * filters.demand
+            #print(f"Demand filter: {filters.demand}, max_sold_count: {max_sold_count}, lower: {lower}, upper: {upper}")
+            stmt = stmt.where(Bots.sold_count > lower)#, Bots.sold_count <= upper)
 
         # Execute filtered query
         result = await self.db.execute(stmt)
         bots = result.scalars().all()
+
+
+        if filters.min_profit_margin is not None:
+            filtered_bots = []
+
+            for bot in bots:
+                margin_summary = await self.get_margin_summary(bot.id)
+
+                # Unit'e göre doğru alanı seç
+                if filters.profit_margin_unit == "day":
+                    margin_value = margin_summary.day_margin
+                elif filters.profit_margin_unit == "week":
+                    margin_value = margin_summary.week_margin
+                elif filters.profit_margin_unit == "month":
+                    margin_value = margin_summary.month_margin
+                else:
+                    margin_value = margin_summary.total_margin  # "all" veya None için
+
+                if margin_value >= filters.min_profit_margin:
+                    filtered_bots.append(bot)
+
+            bots = filtered_bots
 
         # Trade Frequency filtresi (manuel hesap)
         if filters.min_trade_frequency is not None:
@@ -101,8 +130,8 @@ class BotRepository:
             print(frequency_ok)
             bots = list(filter(frequency_ok, bots))
 
-        return bots[:filters.limit or 5]
 
+        return bots[:filters.limit or 5]
 
     async def get_recent_trades(self, bot_id: int, limit: int = 10) -> list[Trade]:
         result = await self.db.execute(

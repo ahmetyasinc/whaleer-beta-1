@@ -12,8 +12,7 @@ from cryptography.hazmat.primitives import serialization
 from backend.trade_engine.taha_part.utils.price_cache_new import get_price, start_connection_pool, start_websocket_services
 from backend.trade_engine.taha_part.utils.dict_preparing import get_symbols_filters_dict, extract_symbol_trade_types
 from backend.trade_engine.taha_part.db.db_config import get_api_credentials_by_bot_id
-from backend.trade_engine.taha_part.utils.margin_leverage_controls import (
-get_symbol_margin_leverage_info,sync_symbol_with_database, get_all_api_margin_leverage_infos)
+
 # Logger ayarları
 logger = logging.getLogger(__name__)
 
@@ -86,17 +85,37 @@ async def hmac_sign(secret_key: str, payload: str) -> str:
         raise ValueError(f"HMAC imzalama hatası: {e}")
 
 async def ed25519_sign(private_key: str, payload: str) -> str:
-    """Ed25519 ile payload'u imzalar."""
+    """Ed25519 ile payload'u imzalar, hem \n string hem gerçek newline destekli."""
     try:
+        private_key = private_key.strip()
+
+        # Eğer \n string olarak geliyorsa gerçek newline'a çevir
+        if "\\n" in private_key:
+            private_key = private_key.replace("\\n", "\n")
+
+        # PEM formatı kontrolü
+        if not private_key.startswith("-----BEGIN PRIVATE KEY-----"):
+            raise ValueError("Geçersiz PEM formatı: BEGIN satırı bulunamadı")
+        if not private_key.endswith("-----END PRIVATE KEY-----"):
+            raise ValueError("Geçersiz PEM formatı: END satırı bulunamadı")
+
         private_key_obj = serialization.load_pem_private_key(
-            private_key.encode(), password=None
+            private_key.encode("utf-8"),
+            password=None,
         )
+
         if not isinstance(private_key_obj, Ed25519PrivateKey):
             raise ValueError("Geçersiz Ed25519 özel anahtarı")
-        signature = base64.b64encode(private_key_obj.sign(payload.encode())).decode()
+
+        signature = base64.b64encode(
+            private_key_obj.sign(payload.encode("utf-8"))
+        ).decode("utf-8")
+
         return signature
+
     except Exception as e:
         raise ValueError(f"Ed25519 imzalama hatası: {e}")
+
 
 async def send_order(prepared_orders: dict) -> dict:
     """
@@ -965,7 +984,7 @@ async def main():
     print("✅ Price cache hazır")
     asyncio.sleep(5)
     test_order_data = {
-                "111": [
+                "112": [
                     {
                         "trade_type": "test_spot",
                         "coin_id": "BTCUSDT",
@@ -980,8 +999,7 @@ async def main():
                         "order_type": "MARKET",
                         "value": 500.0,
                         "positionside": "BOTH",
-                        "leverage": 15,
-                        "margin_type": True  # Boolean - ISOLATED
+                        "leverage": 15
                     },
                     {
                         "trade_type": "test_futures",
@@ -992,11 +1010,11 @@ async def main():
                         "price": 2985.123,
                         "positionside": "BOTH",
                         "timeInForce": "IOC",
-                        "leverage": 20,
-                        "margin_type": False  # Boolean - CROSSED
+                        "leverage": 20
+                        
                     }
                 ],
-                "41": [
+                "111": [
                     {
                         "trade_type": "test_futures",
                         "coin_id": "BTCUSDT",  # Config'de True (ISOLATED)
@@ -1004,8 +1022,8 @@ async def main():
                         "order_type": "MARKET",
                         "value": 200.0,
                         "positionside": "BOTH",
-                        "leverage": 10,
-                        "margin_type": True  # Boolean - ISOLATED
+                        "leverage": 10
+                        
                     },
                     {
                         "trade_type": "test_futures",
@@ -1016,8 +1034,8 @@ async def main():
                         "price": 0.8,
                         "positionside": "BOTH",
                         "timeInForce": "GTC",
-                        "leverage": 25,
-                        "margin_type": False  # Boolean - CROSSED
+                        "leverage": 25
+                        
                     }
                 ]
             }

@@ -1,6 +1,7 @@
 from typing import Dict, Optional, Any, List
 import logging
 import asyncio
+from psycopg2.extras import RealDictCursor
 from copy import deepcopy
 from backend.trade_engine.taha_part.db.db_config import (
     get_all_api_margin_leverage_infos,
@@ -8,13 +9,20 @@ from backend.trade_engine.taha_part.db.db_config import (
     update_symbol_margin_leverage,
     get_symbol_margin_leverage,
     delete_symbol_margin_leverage,
-    get_active_apis_margin_leverage_infos
+    get_active_apis_margin_leverage_infos,
 )
+from backend.trade_engine.taha_part.utils.order_final import (
+    update_margin_type,
+    update_leverage)
+from backend.trade_engine.config import get_db_connection
 
 logger = logging.getLogger(__name__)
 
 # Ana margin/leverage dict'i - backend'de kullanılacak
 margin_leverage_cache: Dict[int, Dict[str, Dict[str, Any]]] = {}
+
+
+
 
 async def initialize_margin_leverage_cache() -> bool:
     """

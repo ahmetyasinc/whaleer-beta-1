@@ -3,7 +3,7 @@ import { match } from "@formatjs/intl-localematcher";
 import Negotiator from "negotiator";
 
 const locales = ["en", "tr"];
-const defaultLocale = "en";
+const defaultLocale = "tr";
 
 function detectLocale(request) {
   const langCookie = request.cookies.get("lang")?.value;

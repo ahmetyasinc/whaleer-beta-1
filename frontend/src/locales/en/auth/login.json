@@ -1,0 +1,15 @@
+{
+  "title": "Login",
+  "subtitle": "Log in to continue",
+  "username": "Username",
+  "password": "Password",
+  "rememberMe": "Remember Me",
+  "forgotPassword": "Forgot Password",
+  "submit": "Login",
+  "noAccount": "Don't have an account?",
+  "register": "Register",
+  "loginSuccess": "Login successful! Redirecting to your profile...",
+  "loginError": "Login failed",
+  "loginFail": "An error occurred. Please try again.",
+  "homepage": "Homepage"
+}

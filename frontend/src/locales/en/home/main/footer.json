@@ -1,0 +1,20 @@
+{
+  "addressLine1": "Istanbul/Maltepe",
+  "addressLine2": "Marmara Uni. RTE Campus M4 Building",
+  "phoneLabel": "Phone",
+  "emailLabel": "Email",
+  "usefulLinksTitle": "Useful Links",
+  "otherLinksTitle": "Other Links",
+  "links": [
+    "About",
+    "Contact",
+    "Blog",
+    "Forum",
+    "Help",
+    "Legal Notice",
+    "FAQ",
+    "Community Guidelines",
+    "Terms of Use",
+    "Privacy"
+  ]
+}

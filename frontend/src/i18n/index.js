@@ -19,6 +19,15 @@ import trHero from '@/locales/tr/home/main/hero.json';
 import enAbout from '@/locales/en/home/main/about.json';
 import trAbout from '@/locales/tr/home/main/about.json';
 
+import enFuature from '@/locales/en/home/main/featuresTabs.json';
+import trFuature from '@/locales/tr/home/main/featuresTabs.json';
+
+import enFooter from '@/locales/en/home/main/footer.json';
+import trFooter from '@/locales/tr/home/main/footer.json';
+
+import enLogin from '@/locales/en/auth/login.json';
+import trLogin from '@/locales/tr/auth/login.json';
+
 i18n
   .use(initReactI18next)
   .init({
@@ -29,6 +38,9 @@ i18n
           header: enHeader,
           hero: enHero,
           about: enAbout,
+          feature :enFuature,
+          footer : enFooter,
+          login: enLogin,
         },
         tr: {
           notFound: trNotFound,
@@ -36,10 +48,13 @@ i18n
           header: trHeader,
           hero: trHero,
           about: trAbout,
+          feature: trFuature,
+          footer: trFooter,
+          login: trLogin,
         },
     },
     fallbackLng: 'en',
-    ns: ['common', 'notFound', 'home', 'header', 'hero', 'about'],
+    ns: ['common', 'notFound', 'home', 'header', 'hero', 'about', 'feature','footer', 'login'],
     defaultNS: 'common',
     interpolation: {
       escapeValue: false,

@@ -1,30 +1,30 @@
 
 export const metadata = {
-  title: "Whaleer Rehberi",
-  description: "Whaleer ile kripto stratejileri oluştur, test et ve uygula.",
+  title: "Whaleer Guide",
+  description: "Create, test, and execute crypto strategies with Whaleer.",
 };
 
 
 export default function HomePage() {
   const features = [
     {
-      title: "1. Stratejini Oluştur",
-      description: "Python tabanlı editör ile kendi algoritmik stratejini kolayca oluştur. RSI, MACD gibi indikatörleri kullanarak kurallarını tanımla.",
+      title: "1. Create Your Strategy",
+      description: "Easily build your own algorithmic strategy using the Python-based editor. Define your rules with indicators like RSI, MACD.",
       icon: "📈",
     },
     {
-      title: "2. Backtest ile Test Et",
-      description: "Stratejini geçmiş veriler üzerinde test et. Anında sonuçları gör ve performansını analiz et.",
+      title: "2. Test with Backtest",
+      description: "Test your strategy on historical data. Instantly see the results and analyze its performance.",
       icon: "🧪",
     },
     {
-      title: "3. Botu Çalıştır",
-      description: "Stratejini gerçek zamanlı veriyle otomatik olarak çalıştır. Sistemin senin yerine işlem yapsın.",
+      title: "3. Run the Bot",
+      description: "Execute your strategy in real-time with live market data. Let the system trade on your behalf.",
       icon: "🤖",
     },
     {
-      title: "4. Arşivle ve Pazarla",
-      description: "Stratejilerini arşivle, geçmiş performanslarını karşılaştır. İster kirala ister sat.",
+      title: "4. Archive and Market",
+      description: "Archive your strategies, compare their past performance. Rent or sell them if you like.",
       icon: "📂",
     },
   ];
@@ -33,9 +33,9 @@ export default function HomePage() {
       <section id="hero" className="hero section">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white-800 mb-4">Whaleer ile Algoritmik Trade</h1>
+          <h1 className="text-4xl font-bold text-white-800 mb-4">Algorithmic Trading with Whaleer</h1>
           <p className="text-lg text-white-600">
-            Whaleer ile strateji oluştur, test et, çalıştır ve paylaş. Başlamak için aşağıdaki adımları takip et!
+            Create, test, run, and share strategies with Whaleer. Follow the steps below to get started!
           </p>
         </div>
 
@@ -56,10 +56,10 @@ export default function HomePage() {
 
         <div className="text-center mt-16">
           <a
-            href="/kayit"
+            href="/login"
             className="inline-block bg-blue-600 text-white px-6 py-3 rounded-xl text-lg font-medium hover:bg-blue-700 transition"
           >
-            Hemen Başla
+            Get Started Now
           </a>
         </div>
       </div>

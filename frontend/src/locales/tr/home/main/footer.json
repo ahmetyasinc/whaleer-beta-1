@@ -1,0 +1,20 @@
+{
+  "addressLine1": "İstanbul/Maltepe",
+  "addressLine2": "Marmara Üni. RTE Külliyesi M4 binası",
+  "phoneLabel": "Telefon",
+  "emailLabel": "Email",
+  "usefulLinksTitle": "Faydalı Linkler",
+  "otherLinksTitle": "Diğer Linkler",
+  "links": [
+    "Hakkında",
+    "İletişim",
+    "Blog",
+    "Forum",
+    "Yardım",
+    "Yasal Uyarı",
+    "Sık Sorulan Sorular",
+    "Topluluk İlkeleri",
+    "Kullanım Koşulları",
+    "Gizlilik"
+  ]
+}

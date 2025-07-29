@@ -17,9 +17,15 @@ import "@/i18n";
 
 // ✅ Language initializer
 
-export default async function RootLayout({ children, params }) {
-  const locale = await params?.locale || 'en';
-  console.log("Locale: ", locale)
+export default async function RootLayout(props) {
+  const params = await props.params;
+
+  const {
+    children
+  } = props;
+
+  const locale = (await params?.locale) || 'en';
+
   return (
     <html lang={locale}>
       <body>

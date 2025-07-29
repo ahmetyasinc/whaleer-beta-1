@@ -15,16 +15,18 @@ export async function generateMetadata(props) {
   };
 }
 
-export default async function Home({ params }) {
-    const locale = await params.locale;
+export default async function Home(props) {
+  const params = await props.params;
+  const locale = await params.locale;
+  
 
   return (
     <main>
-      <Header pageClass={0} locale={locale} />
-      <HomeClientComponent />
-      <About />
-      <FeaturesTabs />
-      <Footer />
+      <Header pageClass={0} locale={locale} key={`header-${locale}`} />
+      <HomeClientComponent locale={locale} key={`home-${locale}`} />
+      <About locale={locale} key={`about-${locale}`} />
+      <FeaturesTabs locale={locale} key={`features-${locale}`} />
+      <Footer locale={locale} key={`footer-${locale}`} />
     </main>
   );
 }

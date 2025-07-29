@@ -17,9 +17,11 @@ import "@/i18n";
 
 // ✅ Language initializer
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children, params }) {
+  const locale = await params?.locale || 'en';
+  console.log("Locale: ", locale)
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body>
         <NetworkStatus />
         <AuthProvider>

@@ -13,6 +13,12 @@ import trHome from '@/locales/tr/metadata/home.json';
 import enHeader from '@/locales/en/home/main/header.json';
 import trHeader from '@/locales/tr/home/main/header.json';
 
+import enHero from '@/locales/en/home/main/hero.json';
+import trHero from '@/locales/tr/home/main/hero.json';
+
+import enAbout from '@/locales/en/home/main/about.json';
+import trAbout from '@/locales/tr/home/main/about.json';
+
 i18n
   .use(initReactI18next)
   .init({
@@ -21,16 +27,19 @@ i18n
           notFound: enNotFound,
           home: enHome,
           header: enHeader,
+          hero: enHero,
+          about: enAbout,
         },
         tr: {
           notFound: trNotFound,
           home: trHome,
           header: trHeader,
+          hero: trHero,
+          about: trAbout,
         },
     },
-    lng: 'en',
     fallbackLng: 'en',
-    ns: ['common', 'notFound', 'home', 'header'],
+    ns: ['common', 'notFound', 'home', 'header', 'hero', 'about'],
     defaultNS: 'common',
     interpolation: {
       escapeValue: false,

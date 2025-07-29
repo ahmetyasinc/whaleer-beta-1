@@ -12,7 +12,7 @@ import i18n from "@/i18n";
 
 export default function LoginForm({ locale }) {
   const router = useRouter();
-  const { t } = useTranslation("auth/login");
+  const { t } = useTranslation("login");
   const { setIsAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
     username: "",

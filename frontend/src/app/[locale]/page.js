@@ -8,10 +8,10 @@ import HomeClientComponent from "@/components/HomeClientComponent";
 export async function generateMetadata(props) {
   const params = await props.params;
   const locale = params.locale;
-  const i18n = await getI18n(locale); // SSR çevirici
+  const i18n = await getI18n(locale);
   return {
-    title: i18n.t("home:title"),
-    description: i18n.t("home:description"),
+    title: i18n.t("metadata:home.title"),
+    description: i18n.t("metadata:home.description"),
   };
 }
 

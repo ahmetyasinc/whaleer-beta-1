@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import LoginForm from "@/components/LoginForm";
 import { ToastContainer } from "react-toastify";
 
-export default function LoginPage({ params }) {
+export default function LoginPage(props) {
+  const params = use(props.params);
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const locale = params?.locale || "en";

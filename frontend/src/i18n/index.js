@@ -7,8 +7,8 @@ import { initReactI18next } from 'react-i18next';
 import enNotFound from '@/locales/en/notFound.json';
 import trNotFound from '@/locales/tr/notFound.json';
 
-import enHome from '@/locales/en/metadata/home.json';
-import trHome from '@/locales/tr/metadata/home.json';
+import enMetadata from '@/locales/en/metadata/metadata.json';
+import trMetadata from '@/locales/tr/metadata/metadata.json';
 
 import enHeader from '@/locales/en/home/main/header.json';
 import trHeader from '@/locales/tr/home/main/header.json';
@@ -34,7 +34,7 @@ i18n
     resources: {
         en: {
           notFound: enNotFound,
-          home: enHome,
+          metadata: enMetadata,
           header: enHeader,
           hero: enHero,
           about: enAbout,
@@ -44,7 +44,7 @@ i18n
         },
         tr: {
           notFound: trNotFound,
-          home: trHome,
+          metadata: trMetadata,
           header: trHeader,
           hero: trHero,
           about: trAbout,
@@ -54,7 +54,7 @@ i18n
         },
     },
     fallbackLng: 'en',
-    ns: ['common', 'notFound', 'home', 'header', 'hero', 'about', 'feature','footer', 'login'],
+    ns: ['common', 'notFound', 'metadata', 'header', 'hero', 'about', 'feature','footer', 'login'],
     defaultNS: 'common',
     interpolation: {
       escapeValue: false,

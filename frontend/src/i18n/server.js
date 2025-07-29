@@ -1,7 +1,7 @@
 import i18next from 'i18next';
 
-import enHome from '@/locales/en/metadata/home.json';
-import trHome from '@/locales/tr/metadata/home.json';
+import enMetadata from '@/locales/en/metadata/metadata.json';
+import trMetadata from '@/locales/tr/metadata/metadata.json';
 
 import enHeader from '@/locales/en/home/main/header.json';
 import trHeader from '@/locales/tr/home/main/header.json';
@@ -14,13 +14,13 @@ import trAbout from '@/locales/tr/home/main/about.json';
 
 const resources = {
   en: {
-    home: enHome,
+    metadata: enMetadata,
     header: enHeader,
     hero: enHero,
     about: enAbout,
   },
   tr: {
-    home: trHome,
+    metadata: trMetadata,
     header: trHeader,
     hero: trHero,
     about: trAbout,

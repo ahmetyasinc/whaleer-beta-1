@@ -24,9 +24,9 @@ const StrategyButton = ({ onStrategySelect, selectedStrategy }) => {
   const selectedStrategyObj = strategies.find(s => s.id === selectedStrategy);
 
   const tabs = [
-    { name: "Teknikler", icon: <BiBarChartAlt2 className="text-[19px]" /> },
-    { name: "Stratejilerim", icon: <FaDice className="text-[19px]" /> },
-    { name: "Topluluk", icon: <MdOutlinePeopleAlt className="text-[18px]" /> },
+    { name: "Techniques", icon: <BiBarChartAlt2 className="text-[19px]" /> },
+    { name: "Personal", icon: <FaDice className="text-[19px]" /> },
+    { name: "Community", icon: <MdOutlinePeopleAlt className="text-[18px]" /> },
   ];
 
   const handleStrategySelect = (strategy) => {
@@ -41,11 +41,11 @@ const StrategyButton = ({ onStrategySelect, selectedStrategy }) => {
     };
     
     switch (activeTab) {
-      case "Teknikler":
+      case "Techniques":
         return <TechnicalStrategies {...props} />;
-      case "Stratejilerim":
+      case "Personal":
         return <MyStrategies {...props} />;
-      case "Topluluk":
+      case "Community":
         return <CommunityStrategy {...props} />;
       default:
         return <p className="text-white">İçerik bulunamadı.</p>;
@@ -58,7 +58,7 @@ const StrategyButton = ({ onStrategySelect, selectedStrategy }) => {
         className="w-full p-[6px] right-1 rounded bg-zinc-800 text-white border-1 border-zinc-500 text-sm"
         onClick={() => setIsModalOpen(true)}
       >
-        {selectedStrategyObj ? selectedStrategyObj.name : "Strateji Seçin"}
+        {selectedStrategyObj ? selectedStrategyObj.name : "Choose Strategy"}
       </button>
 
       {isModalOpen && (
@@ -66,7 +66,7 @@ const StrategyButton = ({ onStrategySelect, selectedStrategy }) => {
           <div className="bg-gray-900 text-white rounded-md w-[800px] h-[584px] shadow-lg flex flex-col relative">
 
             <div className="flex justify-between items-center px-6 py-4 border-b border-gray-700 h-16">
-              <h2 className="text-lg font-bold">Stratejiler</h2>
+              <h2 className="text-lg font-bold">Strategies</h2>
               <button
                 className="text-gray-400 hover:text-white text-3xl"
                 onClick={() => setIsModalOpen(false)}

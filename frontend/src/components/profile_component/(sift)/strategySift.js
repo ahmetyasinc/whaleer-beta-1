@@ -7,25 +7,17 @@ import StrategySiftModal from './strategySiftModal';
 import StrategyButton from "./chooseStrategy";  
 import axios from "axios";
 
-// Periyotlar ve mum offsetleri
-const periods = ['1dk','3dk','5dk', '15dk', '30dk', '1saat', '2saat', '4saat', '6saat', '1gun', '1hafta'];
-const candleOffsets = ['Son mum', '2. mum', '3. mum', '4. mum', '5. mum'];
+const periods = ['1min', '3min', '5min', '15min', '30min', '1h', '2h', '4h', '6h', '1d', '1w'];
+const candleOffsets = ['Last candle', '2nd candle', '3rd candle', '4th candle', '5th candle'];
 
-// Örnek coin verileri
 const dummyLongCoins = [];
-
 const dummyShortCoins = [];
 
 export default function StrategySift() {
-  // Zustand store'dan sadece strategies arrayini çekiyoruz
   const { strategies } = useStrategyStore();
   const { selectedCoins } = useSiftCoinStore();
-
-
-  // Sadece strategies arrayini kullanıyoruz
   const allStrategies = strategies;
-  
-  // State yönetimi
+
   const [selectedStrategy, setSelectedStrategy] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState(periods[0]);
   const [selectedOffset, setSelectedOffset] = useState(candleOffsets[0]);
@@ -34,7 +26,6 @@ export default function StrategySift() {
   const [isStrategyModalOpen, setIsStrategyModalOpen] = useState(false);
   const [isCoinModalOpen, setIsCoinModalOpen] = useState(false);
 
-  // Stratejiler yüklendiğinde ilk stratejiyi seçmek için - sadece bir kez çalışsın
   useEffect(() => {
     if (allStrategies.length > 0 && selectedStrategy === '') {
       setSelectedStrategy(allStrategies[0].id);
@@ -43,54 +34,37 @@ export default function StrategySift() {
       setSelectedStrategy(selectedStrategy);
     }
   }, [selectedStrategy]);
-  // selectedStrategy dependency'sini kaldırdık
 
   const extractTarget = (label) => {
-    if (label === "Son mum") return 1;
-
+    if (label === "Last candle") return 1;
     const match = label.match(/\d+/);
     return match ? parseInt(match[0]) : 1;
   };
 
-  const extraxtPeriod = (label) => {
-    if (label === "1dk") return "1m";
-    if (label === "3dk") return "3m";
-    if (label === "5dk") return "5m";
-    if (label === "15dk") return "15m";
-    if (label === "30dk") return "30m";
-    if (label === "1saat") return "1h";
-    if (label === "2saat") return "2h";
-    if (label === "4saat") return "4h";
-    if (label === "6saat") return "6h";
-    if (label === "1gun") return "1d";
-    if (label === "1hafta") return "1w";
-    else return "1m";
+  const extractPeriod = (label) => {
+    const map = {
+      '1min': '1m', '3min': '3m', '5min': '5m', '15min': '15m', '30min': '30m',
+      '1h': '1h', '2h': '2h', '4h': '4h', '6h': '6h', '1d': '1d', '1w': '1w'
+    };
+    return map[label] || '1m';
   };
 
   const scan = async () => {
     try {
       axios.defaults.withCredentials = true;
-
-      // 1. Payload'u hazırla
       const payload = {
         strategy_id: selectedStrategy,
         symbols: selectedCoins.map(c => c.symbol.replace("/", "")),
-        interval: extraxtPeriod(selectedPeriod), // veya selectedPeriod'dan dönüştür
+        interval: extractPeriod(selectedPeriod),
         candles: 200,
-        target: extractTarget(selectedOffset),// örneğin "5. mum" => 5 gibi parse edilmeli
+        target: extractTarget(selectedOffset),
       };
-    
-      console.log("Gönderilen veri:", payload);
+      console.log("Payload:", payload);
 
-      // 2. API isteği gönder
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/scan/`, // endpoint örnek
-        payload
-      );
-
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/scan/`, payload);
       const result = response.data;
-      console.log("Gelen veri:", result)
-      // 3. Long ve Short coinleri ayır
+      console.log("Response:", result);
+
       const longResults = [];
       const shortResults = [];
 
@@ -108,28 +82,20 @@ export default function StrategySift() {
         }
       });
 
-      // 4. Skora göre sırala
       const sortFn = (a, b) => b.score - a.score;
-
       setLongCoins(longResults.sort(sortFn));
       setShortCoins(shortResults.sort(sortFn));
 
     } catch (error) {
-      console.error("Tarama hatası:", error);
+      console.error("Scan error:", error);
     }
   };
 
-  const handleCoinAdd = () => {
-    console.log('Coin eklendi.');
-  };
-
-  // Strateji seçim handler'ı
   const handleStrategySelect = (strategyId) => {
     setSelectedStrategy(strategyId);
     setIsStrategyModalOpen(false);
   };
 
-  // Seçili strateji nesnesini bul
   const currentStrategy = allStrategies.find(s => s.id === selectedStrategy) || {};
 
   const CoinList = ({ coins, direction }) => {
@@ -137,7 +103,7 @@ export default function StrategySift() {
     return (
       <div className="mt-2">
         <h3 className={`text-xs font-bold mb-2 ${isLong ? 'text-green-500' : 'text-red-500'}`}>
-          {isLong ? 'LONG Sinyali' : 'SHORT Sinyali'}
+          {isLong ? 'LONG Signals' : 'SHORT Signals'}
         </h3>
         <div className="max-h-[220px] overflow-y-auto pr-1">
           {coins.map((coin, index) => (
@@ -149,12 +115,12 @@ export default function StrategySift() {
                 <div className={`w-2 h-2 rounded-full ${isLong ? 'bg-green-500' : 'bg-red-500'} mr-2`}></div>
                 <div className="font-medium text-sm">{coin.symbol}</div>
               </div>
-              <div className="text-sm">Katsayı: {coin.price}</div>
+              <div className="text-sm">Weight: {coin.price}</div>
             </div>
           ))}
           {coins.length === 0 && (
             <div className="text-center text-zinc-500 text-sm py-4">
-              Bu tarama sonucu herhangi bir coin bulunamadı
+              No coins found in this scan
             </div>
           )}
         </div>
@@ -164,82 +130,65 @@ export default function StrategySift() {
 
   return (
     <div className="h-full w-full bg-zinc-900 shadow-lg p-2 rounded text-white">
-      <h2 className="text-sm font-bold text-center mb-4">Strateji Tarama</h2>
+      <h2 className="text-sm font-bold text-center mb-4">Strategy Scanner</h2>
 
       <div className="grid grid-cols-2 gap-3 mb-4">
-
-        {/* Strateji seçme */}
         <div className="mb-2">
-          <label className="block text-xs mb-1">Strateji</label>
+          <label className="block text-xs mb-1">Strategy</label>
           <StrategyButton 
             onStrategySelect={handleStrategySelect}
             selectedStrategy={selectedStrategy}
           />
         </div>
 
-
-        {/* Periyot Dropdown */}
         <div>
-          <label className="block text-xs mb-1">Periyot</label>
+          <label className="block text-xs mb-1">Timeframe</label>
           <select
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value)}
             className="w-full p-[6px] rounded bg-zinc-800 text-white border-1 border-zinc-500 text-sm"
           >
             {periods.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
+              <option key={p} value={p}>{p}</option>
             ))}
           </select>
         </div>
 
-        {/* Mum Offset Dropdown */}
         <div>
-          <label className="block text-xs mb-1">Hedef Mum</label>
+          <label className="block text-xs mb-1">Target Candle</label>
           <select
             value={selectedOffset}
             onChange={(e) => setSelectedOffset(e.target.value)}
             className="w-full p-[6px] rounded bg-zinc-800 text-white border-1 border-zinc-500 text-sm"
           >
             {candleOffsets.map((offset) => (
-              <option key={offset} value={offset}>
-                {offset}
-              </option>
+              <option key={offset} value={offset}>{offset}</option>
             ))}
           </select>
         </div>
 
-        {/* Coin Ekle Butonu */}
         <div className="flex items-end">
           <button
             onClick={() => setIsCoinModalOpen(true)}
             className="w-full bg-zinc-800 border-1 border-gray-500 text-white pt-[7px] pb-[8px] rounded text-sm"
           >
-            Coin Ekle
+            Add Coin
           </button>
           <StrategySiftModal isOpen={isCoinModalOpen} onClose={() => setIsCoinModalOpen(false)} />
         </div>
-
       </div>
 
-      {/* TARAMA YAP Butonu */}
       <button
         onClick={() => scan()}
         className="mb-3 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded text-sm transition"
       >
-        Tarama Yap
+        Scan
       </button>
 
-
-      {/* Sonuç Bölümü - İki Bölmeli Yapı */}
       <div className="border-t border-zinc-700 pt-2 flex flex-col">
-        {/* Long Sinyali Veren Coinler */}
         <div className="flex-1 overflow-hidden">
           <CoinList coins={longCoins} direction="LONG" />
         </div>
-        
-        {/* Short Sinyali Veren Coinler */}
         <div className="flex-1 overflow-hidden mt-3 ">
           <CoinList coins={shortCoins} direction="SHORT" />
         </div>

@@ -45,7 +45,7 @@ const StrategyButton = () => {
         className="bg-gray-800 px-4 py-2 rounded hover:bg-gray-700 transition"
         onClick={() => setIsModalOpen(true)}
       >
-        {selectedStrategy ? selectedStrategy.name : "Strateji Seçin"}
+        {selectedStrategy ? selectedStrategy.name : "Choose Strategy"}
       </button>
 
       {isModalOpen && (

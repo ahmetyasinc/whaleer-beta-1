@@ -11,7 +11,13 @@ export async function generateMetadata(props) {
   };
 }
 
-export default function ProfileLayout({ children, params }) {
+export default async function ProfileLayout(props) {
+  const params = await props.params;
+
+  const {
+    children
+  } = props;
+
   const locale = params.locale;
 
   return <ClientLayoutWrapper locale={locale}>

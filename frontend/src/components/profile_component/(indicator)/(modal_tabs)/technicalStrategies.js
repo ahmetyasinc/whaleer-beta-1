@@ -6,10 +6,13 @@ import AddStrategyButton from "./add_strategy_button";
 import useStrategyStore from "@/store/indicator/strategyStore";
 import CodeModal from "./CodeModal";
 import axios from "axios";
+import i18n from "@/i18n";
+import { useTranslation } from "react-i18next";
 
 axios.defaults.withCredentials = true;
 
-const TechnicalStrategies = () => {
+const TechnicalStrategies = ({locale}) => {
+  const { t } = useTranslation("indicator");
   const {
     favorites,
     toggleFavorite,
@@ -18,6 +21,11 @@ const TechnicalStrategies = () => {
     setCommunityStrategies,
     tecnic
   } = useStrategyStore();
+  useEffect(() => {
+    if (locale && i18n.language !== locale) {
+      i18n.changeLanguage(locale);
+    }
+  }, [locale]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedIndicator, setSelectedIndicator] = useState(null);
@@ -73,7 +81,7 @@ const TechnicalStrategies = () => {
       <div className="bg-gray-800 flex items-center border-b border-gray-800 mb-2">
         <input
           type="text"
-          placeholder="Ara..."
+          placeholder={t("search")}
           className="w-full px-3 py-2 bg-gray-800 text-white focus:outline-none"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}

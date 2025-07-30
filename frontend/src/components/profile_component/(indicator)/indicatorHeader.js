@@ -11,21 +11,23 @@ import StrategyButton from "./(header_element)/strategyModalButton"; // Strateji
 import useMagnetStore from "@/store/indicator/magnetStore";
 import useRulerStore from "@/store/indicator/rulerStore"; // Cetvel store'u import et
 import usePanelStore from "@/store/indicator/panelStore"; // panelStore'u kullanacağız
+import i18n from "@/i18n";
+import { useEffect } from "react";
 
 
-
-const IndicatorHeader = () => {
+const IndicatorHeader = ({locale}) => {
   const [selectedOption, setSelectedOption] = useState("Periyot");
   const [activeButton, setActiveButton] = useState(false);
   const [selectedCrypto, setSelectedCrypto] = useState("");
   const { isMagnetMode, toggleMagnetMode } = useMagnetStore();
   const { isRulerMode, toggleRulerMode } = useRulerStore();
-  //const { isChatBoxVisible, toggleChatBoxVisibility } = usePanelStore();
 
- /* const isActiveB = () => {
-    setActiveButton(prev => !prev); // aktiflik durumunu değiştir
-    // Diğer chat box aç/kapat işlemlerin varsa buraya ekleyebilirsin
-  };*/
+  useEffect(() => {
+    if (locale && i18n.language !== locale) {
+      i18n.changeLanguage(locale);
+    }
+  }, [locale]);
+
 
   return (
     <div className="w-full bg-black shadow-md flex justify-between items-center py-3 fixed top-0 left-0 right-0 z-50 h-[61px] pl-16">
@@ -34,19 +36,19 @@ const IndicatorHeader = () => {
       <div className="flex gap-2 items-center w-full">
 
       {/* Kripto Seçim Butonu */}
-      <CryptoSelectButton selectedCrypto={selectedCrypto} setSelectedCrypto={setSelectedCrypto} />
+      <CryptoSelectButton locale={locale} selectedCrypto={selectedCrypto} setSelectedCrypto={setSelectedCrypto} />
       <div className="h-[30px] w-[1px] bg-gray-600 mx-2"></div>
 
       {/* Periyot Seçimi */}
-      <PeriodDropdown selectedOption={selectedOption} setSelectedOption={setSelectedOption} />
+      <PeriodDropdown locale={locale} selectedOption={selectedOption} setSelectedOption={setSelectedOption} />
       <div className="h-[30px] w-[1px] bg-gray-600 mx-2"></div>
 
       {/* Göstergeler Butonu */}
-      <IndicatorsModalButton />
+      <IndicatorsModalButton locale={locale} />
       <div className="h-[30px] w-[1px] bg-gray-600 mx-2"></div>
 
       {/* Stratejilerim Butonu */}
-      <StrategyButton />
+      <StrategyButton locale={locale}/>
       <div className="h-[30px] w-[1px] bg-gray-600 mx-2"></div>
 
       {/* Magnet Butonu */}

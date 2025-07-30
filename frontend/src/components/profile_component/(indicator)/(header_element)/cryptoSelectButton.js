@@ -4,16 +4,27 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { IoMdSearch } from "react-icons/io";
 import { BsPinAngle, BsPinAngleFill } from "react-icons/bs";
-import useCryptoStore from "@/store/indicator/cryptoPinStore"; // Zustand Store'u import et
+import useCryptoStore from "@/store/indicator/cryptoPinStore";
 
-axios.defaults.withCredentials = true; // Tüm axios isteklerinde cookie'yi göndermeyi etkinleştir
+import { useTranslation } from "react-i18next";
 
-const CryptoSelectButton = () => {
+import i18n from "@/i18n";
+
+axios.defaults.withCredentials = true;
+
+const CryptoSelectButton = ({locale}) => {
+  const { t } = useTranslation("indicator");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [cryptosList, setCryptosList] = useState([]);
 
   const { pinned, togglePinned, selectedCrypto, setSelectedCrypto, setPinned } = useCryptoStore(); // Zustand state'ini kullan
+  
+  useEffect(() => {
+    if (locale && i18n.language !== locale) {
+      i18n.changeLanguage(locale);
+    }
+  }, [locale]);
 
   // API'den coin listesini çek
   useEffect(() => {
@@ -127,12 +138,12 @@ const CryptoSelectButton = () => {
               &times;
             </button>
 
-            <h2 className="text-lg font-bold mb-4">Kripto Para Seç</h2>
+            <h2 className="text-lg font-bold mb-4">{t("titleCrypto")}</h2>
 
             {/* Arama Çubuğu */}
             <input
               type="text"
-              placeholder="Kripto ara..."
+              placeholder={t("searchCrypto")}
               className="w-full px-3 py-2 rounded bg-gray-800 text-white mb-3 focus:outline-none"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

@@ -6,14 +6,25 @@ import AddIndicatorButton from "./add_indicator_button";
 import useIndicatorStore from "@/store/indicator/indicatorStore"; // Zustand Store'u import et
 import CodeModal from "./CodeModal";
 import axios from "axios";
+import i18n from "@/i18n";
+import { useTranslation } from "react-i18next";
 
 axios.defaults.withCredentials = true; // Tüm axios isteklerinde cookie'yi göndermeyi etkinleştir
 
-const TechnicalIndicators = () => {
+const TechnicalIndicators = ({locale}) => {
+    const { t } = useTranslation("indicator");
+
     const { favorites, toggleFavorite, setTecnicIndicators, setPersonalIndicators, setCommunityIndicators, tecnic } = useIndicatorStore();
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedIndicator, setSelectedIndicator] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);    
+    
+    useEffect(() => {
+      if (locale && i18n.language !== locale) {
+        i18n.changeLanguage(locale);
+      }
+    }, [locale]);
+
 
     // API'den veri çekme fonksiyonu
     useEffect(() => {
@@ -74,7 +85,7 @@ const TechnicalIndicators = () => {
             <div className="bg-gray-800 flex items-center border-b border-gray-800 mb-2">
                 <input
                     type="text"
-                    placeholder="Ara..."
+                    placeholder= {t("search")}
                     className="w-full px-3 py-2 bg-gray-800 text-white focus:outline-none"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}

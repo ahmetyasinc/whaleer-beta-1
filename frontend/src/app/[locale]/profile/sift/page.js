@@ -1,7 +1,7 @@
 
 export const metadata = {
-  title: "Tarama",
-  description: "Tarama sayfası.",
+  title: "Strategy Scanner",
+  description: "Scanner page.",
 };
 
 import ClientPage from './client-page'; // Yeni oluşturacağın istemci bileşeni

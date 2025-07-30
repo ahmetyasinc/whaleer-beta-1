@@ -28,6 +28,12 @@ import trFooter from '@/locales/tr/home/main/footer.json';
 import enLogin from '@/locales/en/auth/login.json';
 import trLogin from '@/locales/tr/auth/login.json';
 
+import enLeftMenu from '@/locales/en/profile/leftMenu.json';
+import trLeftMenu from '@/locales/tr/profile/leftMenu.json';
+
+import enIndicator from '@/locales/en/profile/indicator.json';
+import trIndicator from '@/locales/tr/profile/indicator.json';
+
 i18n
   .use(initReactI18next)
   .init({
@@ -41,6 +47,8 @@ i18n
           feature :enFuature,
           footer : enFooter,
           login: enLogin,
+          leftmenu: enLeftMenu,
+          indicator: enIndicator,
         },
         tr: {
           notFound: trNotFound,
@@ -51,10 +59,12 @@ i18n
           feature: trFuature,
           footer: trFooter,
           login: trLogin,
+          leftmenu: trLeftMenu,
+          indicator: trIndicator,
         },
     },
     fallbackLng: 'en',
-    ns: ['common', 'notFound', 'metadata', 'header', 'hero', 'about', 'feature','footer', 'login'],
+    ns: ['common', 'notFound', 'metadata', 'header', 'hero', 'about', 'feature','footer', 'login', 'leftmenu'],
     defaultNS: 'common',
     interpolation: {
       escapeValue: false,

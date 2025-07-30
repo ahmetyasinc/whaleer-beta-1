@@ -1,0 +1,14 @@
+{
+  "profile": "Profil",
+  "ai": "WhaleerAI",
+  "strategies": "Stratejiler",
+  "scanner": "Strateji Tarama",
+  "backtest": "Backtest",
+  "bots": "Otomatik Botlarım",
+  "showcase": "Vitrin",
+  "apiconnect": "API Bağlantısı",
+  "logout": "Çıkış Yap",
+  "logoutConfirm": "Çıkış yapmak istediğinize emin misiniz?",
+  "no": "Hayır",
+  "loading": "Kullanıcı bilgisi yükleniyor..."
+}

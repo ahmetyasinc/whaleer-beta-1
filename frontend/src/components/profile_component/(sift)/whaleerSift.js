@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-const timeRanges = ['1dk','3dk','5dk', '15dk', '30dk', '1saat', '2saat', '4saat', '6saat', '1gun', '1hafta'];
+const timeRanges = ['1min', '3min', '5min', '15min', '30min', '1h', '2h', '4h', '6h', '1d', '1w'];
 
 const sampleCoins = [
   { symbol: 'BTC', name: 'Bitcoin', longSignals: 12, shortSignals: 3 },
@@ -22,27 +22,23 @@ const sampleCoins = [
   { symbol: 'ATOM', name: 'Cosmos', longSignals: 7, shortSignals: 3 },
 ];
 
-export default function whaleerSift() {
+export default function WhaleerRadar() {
   const [selectedTimeRange, setSelectedTimeRange] = useState(timeRanges[0]);
   const [coinSearch, setCoinSearch] = useState('');
 
-  // Arama çubuğu filtreleme
   const filteredCoins = sampleCoins.filter((coin) =>
     coin.symbol.toLowerCase().includes(coinSearch.toLowerCase()) ||
     coin.name.toLowerCase().includes(coinSearch.toLowerCase())
   );
 
-  // Long sinyallere göre sırala
   const topLongCoins = [...filteredCoins]
     .sort((a, b) => b.longSignals - a.longSignals)
     .slice(0, 5);
 
-  // Short sinyallere göre sırala
   const topShortCoins = [...filteredCoins]
     .sort((a, b) => b.shortSignals - a.shortSignals)
     .slice(0, 5);
 
-  // Coin kartı bileşeni
   const CoinCard = ({ coin }) => (
     <div className="flex justify-between items-center p-2 bg-zinc-800 rounded mb-2 border-1 border-zinc-700">
       <div className="flex items-center">
@@ -63,22 +59,22 @@ export default function whaleerSift() {
 
   return (
     <div className="h-full w-full bg-zinc-900 shadow-lg rounded p-2 text-white">
-      <h2 className="text-sm font-bold mb-3 text-center">Whaleer Radarı</h2>
+      <h2 className="text-sm font-bold mb-3 text-center">Whaleer Radar</h2>
 
-      {/* Arama ve Filtreler */}
+      {/* Search and Filters */}
       <div className="mb-2">
         <input
           type="text"
           value={coinSearch}
           onChange={(e) => setCoinSearch(e.target.value)}
-          placeholder="Kripto ara..."
+          placeholder="Search crypto..."
           className="w-full p-1 rounded bg-zinc-800 text-white border-1 border-zinc-500 text-xs placeholder:text-zinc-400"
         />
       </div>
 
       <div className="flex gap-2 mb-3">
         <div className="w-full">
-          <label className="block text-xs mb-1">Periyot</label>
+          <label className="block text-xs mb-1">Timeframe</label>
           <select
             value={selectedTimeRange}
             onChange={(e) => setSelectedTimeRange(e.target.value)}
@@ -93,11 +89,11 @@ export default function whaleerSift() {
         </div>
       </div>
 
-      {/* Long Sinyali En Çok Olan Coinler */}
+      {/* Coins with Most Long Signals */}
       <div className="mb-4">
         <h3 className="text-sm font-semibold mb-3 border-b border-zinc-700 pb-1 flex items-center">
           <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-          En Çok Long Sinyal
+          Most Long Signals
         </h3>
         <div className="max-h-[220px] overflow-y-auto">
           {topLongCoins.length > 0 ? (
@@ -105,16 +101,16 @@ export default function whaleerSift() {
               <CoinCard key={`long-${coin.symbol}`} coin={coin} />
             ))
           ) : (
-            <div className="text-zinc-500 text-xs text-center py-2">Coin bulunamadı</div>
+            <div className="text-zinc-500 text-xs text-center py-2">No coins found</div>
           )}
         </div>
       </div>
 
-      {/* Short Sinyali En Çok Olan Coinler */}
+      {/* Coins with Most Short Signals */}
       <div>
         <h3 className="text-sm font-semibold mb-3 border-b border-zinc-700 pb-1 flex items-center">
           <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
-          En Çok Short Sinyal
+          Most Short Signals
         </h3>
         <div className="max-h-[220px] overflow-y-auto">
           {topShortCoins.length > 0 ? (
@@ -122,7 +118,7 @@ export default function whaleerSift() {
               <CoinCard key={`short-${coin.symbol}`} coin={coin} />
             ))
           ) : (
-            <div className="text-zinc-500 text-xs text-center py-2">Coin bulunamadı</div>
+            <div className="text-zinc-500 text-xs text-center py-2">No coins found</div>
           )}
         </div>
       </div>

@@ -13,11 +13,13 @@ export async function generateMetadata(props) {
     description: i18n.t("metadata:strategies.description"),
   };
 }
-export default function Indicators() {
 
+export default async function Indicators(props) {
+    const params = await props.params;
+    const locale = params.locale;
     return (
         <div>
-            <IndicatorHeader />
+            <IndicatorHeader locale={locale} />
             <div className="mt-[56px]"><TabbedGridLayout className="flex justify-center items-center min-h-screen"/></div>
 
         </div>

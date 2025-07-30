@@ -17,6 +17,8 @@ export default function BotsPageClient() {
   const loadBots = useBotStore((state) => state.loadBots);
   const loadApiKeys = useApiStore((state) => state.loadApiKeys);
   const [confirmModalOpen,setConfirmModalOpen] = useState(false);
+  const { deactivateAllBots } = useBotStore();
+
 
   useEffect(() => {
     const loadData = async () => {
@@ -81,6 +83,7 @@ export default function BotsPageClient() {
           isOpen={confirmModalOpen}
           onClose={() => setConfirmModalOpen(false)}
           onConfirm={() => {
+            deactivateAllBots();
             setConfirmModalOpen(false);
             console.log("Botlar durduruldu, işlemler kapatıldı.");
           }}

@@ -95,10 +95,8 @@ const PersonalIndicators = () => {
                 <span className="text-[15px]">{indicator.name}</span>
 
                 <div className="group relative p-2 rounded-full">
-                  <RiErrorWarningFill className="text-red-600"/>
-                  <div
-                    className="bg-[#cc4242] p-1 rounded-sm group-hover:flex hidden absolute top-1/2 -translate-y-1/2 -right-2 translate-x-full"
-                  >
+                     <RiErrorWarningFill className="text-red-600"/>
+                  <div className="bg-[#cc4242] p-1 rounded-sm group-hover:flex hidden absolute top-1/2 -translate-y-1/2 -right-2 translate-x-full">
                     <span className="whitespace-nowrap text-sm">Derleme Hatası !</span>
                     <div
                       className="bg-inherit rotate-45 p-1 absolute top-1/2 -translate-y-1/2 left-0 -translate-x-1/2"
@@ -126,7 +124,7 @@ const PersonalIndicators = () => {
                 </button>
 
                 {showDeleteModal && (
-                  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                  <div className="fixed inset-0 flex items-center justify-center bg-black/10">
                     <div className="bg-gray-900 text-white rounded-md w-[400px] p-6 shadow-lg relative">
                       <h2 className="text-lg font-bold mb-4">Silme Onayı</h2>
                       <p>{selectedIndicator?.name} indikatörünü silmek istediğinize emin misiniz?</p>

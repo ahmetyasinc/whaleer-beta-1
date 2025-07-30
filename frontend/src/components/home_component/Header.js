@@ -67,8 +67,8 @@ export default function Header({ pageClass }) {
                 <div className="hidden md:flex space-x-6">
                     {isAuthenticated ? (
                         <>
-                            <Link className="btn-getstarted" href="/profile">Profilim</Link>
-                            <button className="btn-getstarted" onClick={handleLogout}>Çıkış yap</button>
+                            <Link className="btn-getstarted text-white" href="/profile">Profilim</Link>
+                            <button className="btn-getstarted text-white" onClick={handleLogout}>Çıkış yap</button>
                         </>
                     ) : (
                         <>

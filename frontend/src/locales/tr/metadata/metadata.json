@@ -1,0 +1,18 @@
+{
+  "home": {
+    "title": "Whaleer - Al-Sat Platformu",
+    "description": "Kendi al-sat stratejilerinizi Whaleer üzerinde tasarlayın, test edin ve paylaşın. Hem yeni başlayanlara hem de profesyonellere uygun."
+  },
+  "login": {
+    "title": "Whaleer Giriş",
+    "description": "Al-sat algoritmalarınızı oluşturmak ve yönetmek için hesabınıza giriş yapın."
+  },
+  "profile": {
+    "title": "Profilim",
+    "description": "Kullanıcı profili sayfası."
+  },
+  "strategies": {
+    "title": "Stratejiler",
+    "description": "Strateji geliştirme sayfası."
+  }
+}

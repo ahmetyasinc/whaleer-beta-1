@@ -3,6 +3,8 @@
 
 import React, { useState } from 'react';
 import { FiFilter, FiX } from 'react-icons/fi';
+import useBotDataStore from '@/store/showcase/botDataStore';
+
 
 const BotFilterSidebar = () => {
 
@@ -21,16 +23,17 @@ const BotFilterSidebar = () => {
     rentMin: '',
     profitFactor: 0,
     riskFactor: 0,
-    demand: 1,
+    demand: 0,
     creationTime: '',
-    creationUnit: 'gün',
-    usageTime: '',
+    creationUnit: 'gün', //minutes'e çevirip göndereceksin
+    usageTime: '', // saat seçili dakikaya çevireceksin
     transactionFrequency: '',
-    transactionFrequencyUnit: 'gün',
     profitMargin: '',
     isActive: false,
-    profitMarginUnit: 'gün'
+    profitMarginUnit: 'gün',
+    botType: '' // spot | futures | ''
   });
+
 
   const isAnyFilterActive = () => {
     return (
@@ -43,7 +46,6 @@ const BotFilterSidebar = () => {
       filters.demand > 0 ||
       filters.creationTime !== '' ||
       filters.usageTime !== '' ||
-      filters.transactionFrequency !== '' ||
       filters.profitMargin !== '' ||
       filters.isActive !== true 
     );
@@ -57,23 +59,22 @@ const BotFilterSidebar = () => {
       rentMin: '',
       profitFactor: 0,
       riskFactor: 0,
-      demand: 1,
+      demand: 0,
       creationTime: '',
       creationUnit: 'gün',
       usageTime: '',
       transactionFrequency: '',
-      transactionFrequencyUnit: 'gün',
       profitMargin: '',
       profitMarginUnit: 'gün',
-      isActive: false
+      isActive: false,
+      botType: ''
     });
     setIsFilterApplied(false);
   };
 
   const applyFilters = () => {
-    console.log('Filters applied:', filters);
+    useBotDataStore.getState().applyFilters(filters);
     setIsFilterApplied(true);
-    // Burada filtreleme işlemini yapabilirsiniz
   };
 
   return (
@@ -85,6 +86,20 @@ const BotFilterSidebar = () => {
       </div>
 
       <div className="overflow-y-auto flex-1 space-y-3 px-3 pb-4">
+
+        <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
+          <label className="block text-sm font-medium text-gray-100 mb-2">Bot Türü</label>
+          <select
+            value={filters.botType}
+            onChange={(e) => handleInputChange('botType', e.target.value)}
+            className="w-full px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-sm focus:border-blue-400 focus:outline-none"
+          >
+            <option value="">Tümü</option>
+            <option value="spot">Spot</option>
+            <option value="futures">Futures</option>
+          </select>
+        </div>
+
         {/* Fiyat Aralığı Satış*/}
         <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
           <label className="block text-sm font-medium text-gray-100 mb-2">Fiyat Aralığı ($) (Satış)</label>
@@ -144,40 +159,40 @@ const BotFilterSidebar = () => {
         {/* Kar Faktörü */}
         <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
           <label className="block text-sm font-medium text-gray-100 mb-2">
-            Kar Faktörü (en az): {filters.profitFactor.toFixed(1)}
+            Kar Faktörü (en az): {filters.profitFactor.toFixed(0)}
           </label>
           <input 
             type="range" 
             min="0" 
-            max="2" 
-            step="0.1"
+            max="10" 
+            step="1"
             value={filters.profitFactor}
             onChange={(e) => handleInputChange('profitFactor', parseFloat(e.target.value))}
             className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
           />
           <div className="flex justify-between text-xs text-gray-400 mt-1">
-            <span>0.0</span>
-            <span>2.0</span>
+            <span>0</span>
+            <span>10</span>
           </div>
         </div>
 
         {/* Risk Faktörü */}
         <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
           <label className="block text-sm font-medium text-gray-100 mb-2">
-            Risk Faktörü (en çok): {filters.riskFactor.toFixed(1)}
+            Risk Faktörü (en çok): {filters.riskFactor.toFixed(0)}
           </label>
           <input 
             type="range" 
             min="0" 
-            max="2" 
-            step="0.1"
+            max="10" 
+            step="1"
             value={filters.riskFactor}
             onChange={(e) => handleInputChange('riskFactor', parseFloat(e.target.value))}
             className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
           />
           <div className="flex justify-between text-xs text-gray-400 mt-1">
-            <span>0.0</span>
-            <span>2.0</span>
+            <span>0</span>
+            <span>10</span>
           </div>
         </div>
 
@@ -204,29 +219,6 @@ const BotFilterSidebar = () => {
           </div>
         </div>
 
-        {/* İşlem sıklığı */}
-        <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
-          <label className="block text-sm font-medium text-gray-100 mb-2">İşlem Sıklığı (en az)</label>
-          <div className="flex gap-2">
-            <input 
-              type="number" 
-              placeholder="Sayı" 
-              value={filters.transactionFrequency}
-              onChange={(e) => handleInputChange('transactionFrequency', e.target.value)}
-              className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
-            />
-            <select 
-              value={filters.transactionFrequencyUnit}
-              onChange={(e) => handleInputChange('transactionFrequencyUnit', e.target.value)}
-              className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-xs focus:border-blue-400 focus:outline-none"
-            >
-              <option value="gün">Günde</option>
-              <option value="hafta">Haftada</option>
-              <option value="ay">Ayda</option>
-            </select>
-          </div>
-        </div>
-
         {/* Kar Marjı */}
         <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
           <label className="block text-sm font-medium text-gray-100 mb-2">Kar Marjı (en az)</label>
@@ -243,11 +235,25 @@ const BotFilterSidebar = () => {
               onChange={(e) => handleInputChange('profitMarginUnit', e.target.value)}
               className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-xs focus:border-blue-400 focus:outline-none"
             >
-              <option value="gün">Günde</option>
-              <option value="hafta">Haftada</option>
-              <option value="ay">Ayda</option>
+              <option value="day">Günde</option>
+              <option value="week">Haftada</option>
+              <option value="month">Ayda</option>
               <option value="all">Tüm Zamanlar</option>
             </select>
+          </div>
+        </div>
+
+        {/* İşlem sıklığı */}
+        <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
+          <label className="block text-sm font-medium text-gray-100 mb-2">Ortalama İşlem Sıklığı (en az)</label>
+          <div className="flex gap-2">
+            <input 
+              type="number" 
+              placeholder="Sayı" 
+              value={filters.transactionFrequency}
+              onChange={(e) => handleInputChange('transactionFrequency', e.target.value)}
+              className="w-full px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
+            />
           </div>
         </div>
 
@@ -270,7 +276,7 @@ const BotFilterSidebar = () => {
           </label>
           <input 
             type="range" 
-            min="1" 
+            min="0" 
             max="5" 
             step="1"
             value={filters.demand}
@@ -278,7 +284,7 @@ const BotFilterSidebar = () => {
             className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
           />
           <div className="flex justify-between text-xs text-gray-400 mt-1">
-            <span>1</span>
+            <span>0</span>
             <span>5</span>
           </div>
         </div>

@@ -17,14 +17,22 @@ import { BsGrid1X2 } from "react-icons/bs";
 import { useLogout } from "@/utils/HookLogout";
 import { IoMdSettings } from "react-icons/io";
 import axios from "axios";
+import i18n from "@/i18n";
 
 //import LogoIcon from "/img/logo5.png";
 
 const menuItems = [
+<<<<<<< HEAD
   { href: "/profile", icon: <BiUser />, label: "Profil"},
   { href: "/profile/whaleerai", icon: <PiSpiralBold />, label: "WhaleerAI"},
   { href: "/profile/indicators", icon: <BiCandles />, label: "İndikatörler" },
   { href: "/profile/sift", icon: <BiSearchAlt />, label: "Strateji Tarama"},
+=======
+  { href: "/profile", icon: <BiUser />, label: "Profil", locked: false },
+  { href: "/profile/whaleerai", icon: <FaRegLightbulb />, label: "WhaleerAI", locked: false },
+  { href: "/profile/indicators", icon: <BiCandles />, label: "Strategies" },
+  { href: "/profile/sift", icon: <BiSearchAlt />, label: "Strateji Tarama", locked: false },
+>>>>>>> e05f4914f889d267c7f9b6fc965cce1cd627d982
   { href: "/profile/backtest", icon: <BiLineChart />, label: "Backtest" },
   { href: "/profile/bot", icon: <LuBot />, label: "Otomatik Botlarım"},
   { href: "/profile/showcase", icon: <BsGrid1X2 />, label: "Vitrin"},
@@ -32,12 +40,18 @@ const menuItems = [
   { href: "/profile/settings", icon: <IoMdSettings />, label: "Ayarlar" },
 ];
 
-const LeftMenu = () => {
+const LeftMenu = ({locale}) => {
   const [user, setUser] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const pathname = usePathname();
   const handleLogout = useLogout();
+
+  useEffect(() => {
+    if (locale && i18n.language !== locale) {
+      i18n.changeLanguage(locale);
+    }
+  }, [locale]);
 
   // Kullanıcı bilgisini çek
   useEffect(() => {

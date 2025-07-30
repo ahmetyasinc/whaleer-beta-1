@@ -8,71 +8,48 @@ import useBotDataStore from '@/store/showcase/botDataStore';
 import ShowcaseLoader from '@/ui/showcaseLoader';
 import BotChart from './botCardChart';
 import BotterGuide from './botterGuide';
-import { BiTransfer } from 'react-icons/bi';
 import Trades from './trades';
 
-
 const BotDiscoveryApp = () => {
-  const { chartData } = useBotDataStore();
-  const { getUserData } = useBotDataStore();
-
   const {
-    currentBotData: botData,
-    loadBotData,
-    currentBotId,
+    initializeBots,
+    getCurrentBot,
+    navigateBot,
+    isLoading
   } = useBotDataStore();
 
-  const {
-    getBotData,
-    goToNextBot,
-    goToPreviousBot
-  } = useBotDataStore();
+  const botData = getCurrentBot();
+  const isFollowed = useBotDataStore(state => state.isBotFollowed(botData?.bot?.bot_id));
+  const follow = useBotDataStore(state => state.followBot);
 
-  const [currentUser, setCurrentUser] = useState(null);
-  const [currentBot, setCurrentBot] = useState(null);
 
-  // Initial data load
   useEffect(() => {
-    const userData = getUserData();
-    const botData = getBotData();
+    initializeBots();
+  }, []);
 
-    if (!userData || !botData) {
-      loadBotData(currentBotId);
-    }
-
-    setCurrentUser(userData);
-    setCurrentBot(botData);
-  }, [getUserData, getBotData, loadBotData, currentBotId]);
-
-  const handleNavigation = (direction) => {
-    if (direction === 'up') {
-      goToPreviousBot();
-    } else {
-      goToNextBot();
-    }
-
-    const newUser = getUserData();
-    const newBot = getBotData();
-
-    setCurrentUser(newUser);
-    setCurrentBot(newBot);
+  const handleNavigation = (dir) => {
+    navigateBot(dir);
   };
 
-  const handleUserClick = (userData) => {
-    console.log('Kullanıcı profili tıklandı:', userData.username);
-  };
-
-  const handleBotClick = (botData) => {
-    console.log('Bot detayları:', botData.name);
-  };
-
-  if (!currentUser || !currentBot) {
+  if (isLoading) {
     return (
       <div className="flex-1 p-6 h-[calc(100vh-60px)] max-h-screen mt-[60px] relative overflow-auto pl-[340px] pr-[395px] flex items-center justify-center">
         <ShowcaseLoader />
       </div>
     );
   }
+  
+  if (!botData) {
+    return (
+      <div className="flex-1 p-6 h-[calc(100vh-60px)] max-h-screen mt-[60px] relative overflow-auto pl-[340px] pr-[395px] flex items-center justify-center">
+        <div className="text-center text-gray-400 text-sm bg-gray-800/50 p-6 rounded-xl border border-gray-600">
+          <p className="text-lg font-semibold text-white mb-2">Aradığınız kriterlerde bot bulunamadı.</p>
+          <p className="text-sm text-gray-400">Lütfen filtrelerinizi değiştirerek tekrar deneyin.</p>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="flex-1 p-6 h-[calc(100vh-60px)] max-h-screen mt-[60px] relative overflow-auto pl-[340px] pr-[382px]">
@@ -81,14 +58,20 @@ const BotDiscoveryApp = () => {
         {/* Kullanıcı Profil Kartı */}
         <div>
           <UserProfileCard 
-            userData={currentUser} 
-            onUserClick={handleUserClick}
+            userData={botData?.user}
+            isAnimating={true}
+            onUserClick={(user) => console.log('User clicked', user)}
           />
         </div>
 
         {/* Bot Kartı */}
         <div className="relative">
-          <BotCard />
+          <BotCard
+            botData={botData?.bot}
+            isFollowed={isFollowed}
+            onFollow={follow}
+            isAnimating={true}
+          />
         </div>
 
         {/* Yeni kart (tam genişlikte olacak) */}
@@ -96,17 +79,17 @@ const BotDiscoveryApp = () => {
           <div className="bg-gray-800 rounded-2xl shadow-2xl p-4 my-2 border-1 border-gray-700">
           <h3 className="text-sm font-semibold text-white mb-3">Anapara / Zaman</h3>
           <div className="overflow-hidden">
-            <BotChart data={chartData} />
+            <BotChart data={botData.chartData} />
           </div>
         </div>
         </div>
 
         <div className="col-span-2 ">
-          <Trades />
+          <Trades trades={botData.bot.trades} positions={botData.bot.positions} />
         </div>
 
         <div className="col-span-2 mt-[-41px]">
-            <BotterGuide username={botData.creator} />
+          <BotterGuide username={botData.bot.creator} />
         </div>
 
       </div>

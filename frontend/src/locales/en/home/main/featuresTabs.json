@@ -1,0 +1,26 @@
+[
+  {
+    "id": "features-tab-1",
+    "title": "Strategy Creation",
+    "heading": "Create Strategy",
+    "description": "Use any indicator you want, follow trends or price action, and build your strategy algorithm.",
+    "image": "/img/str_img.jpeg",
+    "bullets": [
+      "Create an algorithm that detects buy/sell zones and translate it into code.",
+      "Use optional indicator settings to find the most profitable parameters in backtests.",
+      "You can later edit or delete the strategies you've created."
+    ]
+  },
+  {
+    "id": "features-tab-2",
+    "title": "Trading Bots",
+    "heading": "Automated Trading Bots",
+    "description": "Connect your strategies to bots and automate trading without manual tracking.",
+    "image": "/img/bt-img.jpeg",
+    "bullets": [
+      "Build your own trading strategy.",
+      "Translate your strategy into code from the creation page.",
+      "Start the bot on strategies with successful backtest results to begin profiting."
+    ]
+  }
+]

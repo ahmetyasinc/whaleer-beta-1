@@ -1,0 +1,11 @@
+{
+  "home": "Home",
+  "features": "Features",
+  "premium": "Premium",
+  "about": "About",
+  "document": "Documentation",
+  "myProfile": "My Profile",
+  "logout": "Logout",
+  "login": "Login",
+  "register": "Register"
+}

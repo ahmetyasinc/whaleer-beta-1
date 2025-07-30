@@ -26,6 +26,7 @@ const BotChart = ({ data = [] }) => {
       timeScale: {
         borderColor: '#475569',
         timeVisible: true,
+        secondsVisible: false,
       },
       rightPriceScale: {
         borderColor: '#6b7280',
@@ -33,7 +34,13 @@ const BotChart = ({ data = [] }) => {
       },
     });
 
-    const baselinePrice = data[0].value;
+    // ✅ Sadece mevcut verileri kullan, eksik dakikaları DOLDURMA
+    const normalizedData = data.map(item => ({
+      time: Math.floor(new Date(item.timestamp).getTime() / 1000), // UNIX timestamp (seconds)
+      value: item.value
+    }));
+
+    const baselinePrice = normalizedData[0]?.value || 0;
 
     const series = chart.addBaselineSeries({
       baseValue: { type: 'price', price: baselinePrice },
@@ -46,7 +53,7 @@ const BotChart = ({ data = [] }) => {
       lineWidth: 2,
     });
 
-    series.setData(data);
+    series.setData(normalizedData);
 
     const resizeObserver = new ResizeObserver(() => {
       if (chartContainerRef.current) {

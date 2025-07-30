@@ -1,0 +1,15 @@
+{
+  "title": "Giriş Yap",
+  "subtitle": "Devam etmek için giriş yapın",
+  "username": "Kullanıcı Adı",
+  "password": "Şifre",
+  "rememberMe": "Beni Hatırla",
+  "forgotPassword": "Şifremi Unuttum",
+  "submit": "Giriş Yap",
+  "noAccount": "Henüz bir hesabın yok mu?",
+  "register": "Kayıt Ol",
+  "loginSuccess": "Giriş başarılı, profil sayfasına yönlendiriliyorsunuz!",
+  "loginError": "Giriş başarısız",
+  "loginFail": "Bir hata oluştu, lütfen tekrar deneyin.",
+  "homepage": "Anasayfa"
+}

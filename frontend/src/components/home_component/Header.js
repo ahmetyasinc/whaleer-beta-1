@@ -66,24 +66,25 @@ export default function Header({ pageClass, locale }) {
           <i className="mobile-nav-toggle d-xl-none bi bi-list"></i>
         </nav>
 
-        <div className="hidden md:flex space-x-6">
-          {isAuthenticated ? (
-            <>
-              <Link className="btn-getstarted" href="/profile">{t("myProfile")}</Link>
-              <button className="btn-getstarted" onClick={handleLogout}>{t("logout")}</button>
-            </>
-          ) : (
-            <>
-              {(pageClass === 0 || pageClass === 2) && (
-                <Link className="text-white btn-getstarted" href="/login">{t("login")}</Link>
-              )}
-              {(pageClass === 0 || pageClass === 1) && (
-                <Link className="text-white btn-getstarted" href="/register">{t("register")}</Link>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-    </header>
-  );
+                <div className="hidden md:flex space-x-6">
+                    {isAuthenticated ? (
+                        <>
+                            <Link className="btn-getstarted" href="/profile">Profilim</Link>
+                            <button className="btn-getstarted" onClick={handleLogout}>Çıkış yap</button>
+                        </>
+                    ) : (
+                        <>
+                            {(pageClass === 0 || pageClass === 2) && (
+                                <Link className="text-white btn-getstarted" href="/login">{t("login")}</Link>
+                            )}
+                            {(pageClass === 0 || pageClass === 1) && (
+                                <Link className="text-white btn-getstarted" href="/register">{t("register")}</Link>
+                            )}
+                        </>
+                    )}
+                </div>
+
+            </div>
+        </header>
+    );
 }

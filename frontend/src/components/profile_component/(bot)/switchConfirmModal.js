@@ -29,7 +29,6 @@ const CriticalConfirmModal = ({ isOpen, onClose, onConfirm }) => {
       <div className="fixed inset-0 z-[9999] bg-white animate-fadeout pointer-events-none" />
     )}
 
-
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gradient-to-br dark:from-zinc-900 dark:to-zinc-950 text-gray-900 dark:text-white rounded-2xl shadow-2xl dark:shadow-red-500/10 p-8 w-full max-w-md relative animate-fade-in border-1 dark:border-zinc-800/50 dark:ring-1 dark:ring-red-500/20">
         {/* Glow effect for dark mode */}
@@ -61,15 +60,14 @@ const CriticalConfirmModal = ({ isOpen, onClose, onConfirm }) => {
             <button
               disabled={countdown > 0}
               onClick={() => {
-                // 1. Ses çal
-                const audio = new Audio("/sounds/flash.mp3");
-                audio.play().catch((e) => {
-                  console.warn("Ses oynatılamadı:", e);
-                });
-                //onConfirm();                 asıl işlem burada yapılacak
-                // 2. Beyaz ekran efekti başlat
-                setShowWhiteFlash(true);
-                setTimeout(() => setShowWhiteFlash(false), 6000);
+                // // 1. Ses çal
+                // const audio = new Audio("/sounds/flash.mp3");
+
+                onConfirm(); // ✅ Asıl işlem
+
+                // // 2. Beyaz ekran efekti başlat
+                // setShowWhiteFlash(true);
+                // setTimeout(() => setShowWhiteFlash(false), 6000);
               }}
               className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 ${
                 countdown > 0
@@ -86,6 +84,7 @@ const CriticalConfirmModal = ({ isOpen, onClose, onConfirm }) => {
                 "Onaylıyorum"
               )}
             </button>
+
             <button
               onClick={onClose}
               className="w-full py-3 px-4 rounded-xl font-semibold bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 transition-all duration-200 hover:scale-[1.01]"

@@ -72,7 +72,7 @@ export default function StrategyIndicatorCard({item}) {
   };
 
   return (
-    <div className="w-1/3 h-full flex flex-col overflow-auto px-2">
+    <div className="w-full h-full flex flex-col overflow-auto px-2">
       <div className="bg-zinc-900 rounded-md shadow-md text-white w-full flex flex-col h-full">
         {/* Başlık */}
         <div className="sticky top-0 z-10 bg-zinc-900 px-6 pt-6 pb-3">

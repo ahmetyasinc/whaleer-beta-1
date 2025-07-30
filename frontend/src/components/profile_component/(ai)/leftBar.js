@@ -63,7 +63,7 @@ const LeftBar = () => {
   return (
     <div className="fixed left-0 top-0 w-60 bg-neutral-950 text-white flex flex-col h-screen border-r border-neutral-800 z-10">
       {/* Header */}
-      <div className="px-4 pt-[10px] pb-2 border-b border-neutral-800">
+      <div className="px-4 pt-[10px] pb-[12px] border-b border-neutral-800">
         <button
           onClick={handleNewChat}
           className="w-40 ml-[40px] bg-neutral-900 border-1 border-gray-700 hover:border-gray-500 text-sm text-neutral-200 font-medium py-2 px-3 rounded-md transition-colors duration-100 flex items-center justify-center gap-2 shadow-lg"

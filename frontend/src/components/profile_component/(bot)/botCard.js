@@ -11,6 +11,10 @@ import RunBotToggle from './runBotToggle';
 import SpinningWheel from './spinningWheel';
 import ExamineBot from "./examineBot";
 import { FaBan } from "react-icons/fa6";
+import DeleteBotConfirmModal from "./deleteBotConfirmModal"; // path doğru olsun
+import ShotDownBotModal from "./shotDownBotModal"; // path doğru olsun
+
+
 
 
 export const BotCard = ({ bot, column }) => {
@@ -19,6 +23,9 @@ export const BotCard = ({ bot, column }) => {
   const updateBot = useBotStore((state) => state.updateBot);
   const toggleBotActive = useBotStore((state) => state.toggleBotActive);
   const { fetchAndStoreBotAnalysis } = useBotExamineStore.getState();
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedBotId, setSelectedBotId] = useState(null);
+  const [isShotDownModalOpen, setShotDownModalOpen] = useState(false);
 
   const [editing, setEditing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -91,7 +98,8 @@ export const BotCard = ({ bot, column }) => {
 
                 <button
                   onClick={() => {
-                    removeBot(bot.id);
+                    setSelectedBotId(bot.id);
+                    setDeleteModalOpen(true);
                     setMenuOpen(false);
                   }}
                   className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-800"
@@ -112,6 +120,8 @@ export const BotCard = ({ bot, column }) => {
 
                 <button
                   onClick={() => {
+                    setSelectedBotId(bot.id);
+                    setShotDownModalOpen(true);
                     setMenuOpen(false);
                   }}
                   className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-gray-700"
@@ -167,6 +177,23 @@ export const BotCard = ({ bot, column }) => {
           />
         )}
       </div>
+
+      <DeleteBotConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={() => {
+          removeBot(selectedBotId);
+          setSelectedBotId(null);
+        }}
+      />
+      <ShotDownBotModal
+        isOpen={isShotDownModalOpen}
+        onClose={() => setShotDownModalOpen(false)}
+        onConfirm={() => {
+          removeBot(selectedBotId);
+          setSelectedBotId(null);
+        }}
+      />
     </>
     );
   } else {
@@ -258,7 +285,8 @@ export const BotCard = ({ bot, column }) => {
 
                 <button
                   onClick={() => {
-                    removeBot(bot.id);
+                    setSelectedBotId(bot.id);
+                    setDeleteModalOpen(true);
                     setMenuOpen(false);
                   }}
                   className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-800"
@@ -276,8 +304,10 @@ export const BotCard = ({ bot, column }) => {
                 >
                   <IoSearch size={16} /> İncele
                 </button>
-                                <button
+                <button
                   onClick={() => {
+                    setSelectedBotId(bot.id);
+                    setShotDownModalOpen(true);
                     setMenuOpen(false);
                   }}
                   className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-gray-700"
@@ -306,9 +336,24 @@ export const BotCard = ({ bot, column }) => {
           />
         )}
       </div>
+
+      <DeleteBotConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={() => {
+          removeBot(selectedBotId);
+          setSelectedBotId(null);
+        }}
+      />
+      <ShotDownBotModal
+        isOpen={isShotDownModalOpen}
+        onClose={() => setShotDownModalOpen(false)}
+        onConfirm={() => {
+          removeBot(selectedBotId);
+          setSelectedBotId(null);
+        }}
+      />
     </>
     );
   }
 };
-
-

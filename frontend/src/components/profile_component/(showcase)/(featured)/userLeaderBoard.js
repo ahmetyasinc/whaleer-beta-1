@@ -12,7 +12,7 @@ import {
 
 const UserLeaderBoard = () => {
   const [sortBy, setSortBy] = useState('monthlyProfit');
-  const [sortOrder, setSortOrder] = useState('desc'); // 'asc' veya 'desc'
+  const [sortOrder, setSortOrder] = useState('desc');
   const [setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -29,7 +29,6 @@ const UserLeaderBoard = () => {
     { id: 10, username: 'TrendSeeker', monthlyProfit: 14.1, successRate: 89, totalBots: 13, soldBots: 11, monthlyTransactions: 402 }
   ];
 
-
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -38,26 +37,25 @@ const UserLeaderBoard = () => {
         setUsers(data);
         setLoading(false);
       } catch (err) {
-        console.error('Kullanıcılar alınamadı:', err);
+        console.error('Failed to fetch users:', err);
         setLoading(false);
       }
     };
 
-    fetchUsers();
+    //fetchUsers();
   }, [sortBy, sortOrder]);
-  
-  
+
   const sortOptions = [
-    { value: 'monthlyProfit', label: 'Aylık Kâra Göre', icon: FiTrendingUp },
-    { value: 'successRate', label: 'Başarı Oranına Göre', icon: FiAward },
-    { value: 'totalBots', label: 'Toplam Bot Sayısına Göre', icon: FiCpu },
-    { value: 'soldBots', label: 'Satılan Bot Sayısına Göre', icon: FiShoppingCart },
-    { value: 'monthlyTransactions', label: 'Aylık İşlem Sayısına Göre', icon: FiActivity }
+    { value: 'monthlyProfit', label: 'By Monthly Profit', icon: FiTrendingUp },
+    { value: 'successRate', label: 'By Success Rate', icon: FiAward },
+    { value: 'totalBots', label: 'By Total Bots', icon: FiCpu },
+    { value: 'soldBots', label: 'By Sold Bots', icon: FiShoppingCart },
+    { value: 'monthlyTransactions', label: 'By Monthly Transactions', icon: FiActivity }
   ];
 
   const sortOrderOptions = [
-    { value: 'desc', label: 'Azalan' },
-    { value: 'asc', label: 'Artan' }
+    { value: 'desc', label: 'Descending' },
+    { value: 'asc', label: 'Ascending' }
   ];
 
   const sortedUsers = [...users].sort((a, b) => {
@@ -90,12 +88,12 @@ const UserLeaderBoard = () => {
     <div className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-lg shadow-2xl p-6 h-[calc(100vh-140px)] border-1 border-slate-700 overflow-hidden">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold text-white bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-          Kullanıcı Sıralaması
+          User Leaderboard
         </h2>
-  
-        {/* Dropdown'lar */}
+
+        {/* Dropdowns */}
         <div className="flex items-center space-x-3">
-          {/* Sıralama Kriteri Dropdown */}
+          {/* Sort Criteria Dropdown */}
           <div className="relative">
             <select
               value={sortBy}
@@ -111,7 +109,7 @@ const UserLeaderBoard = () => {
             <FiChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
           </div>
 
-          {/* Sıralama Yönü Dropdown */}
+          {/* Sort Order Dropdown */}
           <div className="relative">
             <select
               value={sortOrder}
@@ -128,13 +126,13 @@ const UserLeaderBoard = () => {
           </div>
         </div>
       </div>
-  
-      {/* Kullanıcı Kartları - Scrollable */}
+
+      {/* User Cards - Scrollable */}
       <div className="overflow-y-auto -mx-1 space-y-3 h-full pb-16 scrollbar-hide">
         {sortedUsers.map((user, index) => (
           <div key={user.id} className="bg-slate-800/50 border-1 border-slate-700 rounded-lg p-3 hover:bg-slate-800/70 hover:border-slate-600 transition-all duration-200 backdrop-blur-sm">
             <div className="flex items-center justify-between">
-              {/* Sol taraf */}
+              {/* Left side */}
               <div className="flex items-center space-x-4">
                 <div className={`flex items-center justify-center w-10 h-10 bg-gradient-to-br ${getRankColor(index)} rounded-full shadow-lg`}>
                   <span className="text-sm font-bold text-white">#{index + 1}</span>
@@ -143,38 +141,38 @@ const UserLeaderBoard = () => {
                   <h3 className="font-semibold text-white text-base">{user.username}</h3>
                 </div>
               </div>
-  
-              {/* Sağ taraf */}
+
+              {/* Right side */}
               <div className="flex items-center space-x-8 text-sm">
                 <div className="text-center">
                   <div className="font-bold text-green-400 text-base">
                     {formatValue(user.monthlyProfit, 'monthlyProfit')}
                   </div>
-                  <div className="text-xs text-slate-400">Aylık Kâr</div>
+                  <div className="text-xs text-slate-400">Monthly Profit</div>
                 </div>
                 <div className="text-center">
                   <div className="font-bold text-blue-400 text-base">
                     {formatValue(user.successRate, 'successRate')}
                   </div>
-                  <div className="text-xs text-slate-400">Başarı</div>
+                  <div className="text-xs text-slate-400">Success</div>
                 </div>
                 <div className="text-center">
                   <div className="font-bold text-purple-400 text-base">
                     {formatValue(user.totalBots)}
                   </div>
-                  <div className="text-xs text-slate-400">Bot</div>
+                  <div className="text-xs text-slate-400">Bots</div>
                 </div>
                 <div className="text-center">
                   <div className="font-bold text-orange-400 text-base">
                     {formatValue(user.soldBots)}
                   </div>
-                  <div className="text-xs text-slate-400">Satış</div>
+                  <div className="text-xs text-slate-400">Sales</div>
                 </div>
                 <div className="text-center">
                   <div className="font-bold text-cyan-400 text-base">
                     {formatValue(user.monthlyTransactions)}
                   </div>
-                  <div className="text-xs text-slate-400">Aylık İşlem</div>
+                  <div className="text-xs text-slate-400">Monthly Trades</div>
                 </div>
               </div>
             </div>
@@ -183,7 +181,6 @@ const UserLeaderBoard = () => {
       </div>
     </div>
   );
-  
 };
 
 export default UserLeaderBoard;

@@ -199,7 +199,7 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
               <input
                 type="number"
                 min="1"
-                placeholder="Örn: 100"
+                placeholder="Exp: 100"
                 className="w-full p-2 bg-gray-800 text-white rounded"
                 value={candleCount}
                 onChange={(e) => setCandleCount(Number(e.target.value))}
@@ -317,7 +317,7 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
               <input
                 type="text"
                 className="w-full p-2 pr-10 mb-2 bg-gray-900 text-white rounded-sm"
-                placeholder="Örn: BTCUSDT"
+                placeholder="Exp: BTCUSDT"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />

@@ -48,7 +48,7 @@ const StrategyButton = ({ onStrategySelect, selectedStrategy }) => {
       case "Community":
         return <CommunityStrategy {...props} />;
       default:
-        return <p className="text-white">İçerik bulunamadı.</p>;
+        return <p className="text-white">Not Found.</p>;
     }
   };
 

@@ -57,7 +57,7 @@ const StrategyButton = ({locale}) => {
       case 4:
         return <FavStrategies  favorites={favorites} addFavorite={addFavorite} />;
       default:
-        return <p className="text-white">İçerik bulunamadı.</p>;
+        return <p className="text-white">Not Found.</p>;
     }
   };
 

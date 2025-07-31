@@ -69,8 +69,8 @@ export default function Header({ pageClass, locale }) {
                 <div className="hidden md:flex space-x-6">
                     {isAuthenticated ? (
                         <>
-                            <Link className="btn-getstarted" href="/profile">Profilim</Link>
-                            <button className="btn-getstarted" onClick={handleLogout}>Çıkış yap</button>
+                            <Link className="btn-getstarted" href="/profile">My Profile</Link>
+                            <button className="btn-getstarted" onClick={handleLogout}>Log Out</button>
                         </>
                     ) : (
                         <>

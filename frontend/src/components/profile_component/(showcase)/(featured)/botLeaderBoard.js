@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from 'react';
 import {
@@ -62,27 +62,26 @@ const BotLeaderBoard = () => {
         const data = await response.json();
         setBots(data);
       } catch (error) {
-        console.error('Bot verisi alınamadı:', error);
+        console.error('Failed to fetch bot data:', error);
       } finally {
         setLoading(false);
       }
     };
-  
-    fetchBots();
+
+    //fetchBots();
   }, [sortBy, sortOrder]);
 
-
   const sortOptions = [
-    { value: 'profit', label: 'Kâra Göre', icon: FiTrendingUp },
-    { value: 'successRate', label: 'Başarı Oranına Göre', icon: FiAward },
-    { value: 'profitFactor', label: 'Kâr Faktörüne Göre', icon: FiZap },
-    { value: 'weeklyTrades', label: 'Haftalık İşlem Sayısına Göre', icon: FiActivity },
-    { value: 'price', label: 'Fiyata Göre', icon: FiDollarSign }
+    { value: 'profit', label: 'By Profit', icon: FiTrendingUp },
+    { value: 'successRate', label: 'By Success Rate', icon: FiAward },
+    { value: 'profitFactor', label: 'By Profit Factor', icon: FiZap },
+    { value: 'weeklyTrades', label: 'By Weekly Trades', icon: FiActivity },
+    { value: 'price', label: 'By Price', icon: FiDollarSign }
   ];
 
   const sortOrderOptions = [
-    { value: 'desc', label: 'Azalan', icon: FiArrowDown },
-    { value: 'asc', label: 'Artan', icon: FiArrowUp }
+    { value: 'desc', label: 'Descending', icon: FiArrowDown },
+    { value: 'asc', label: 'Ascending', icon: FiArrowUp }
   ];
 
   const sortedBots = [...bots].sort((a, b) => {
@@ -116,99 +115,97 @@ const BotLeaderBoard = () => {
     if (index === 2) return 'from-orange-400 to-red-400';
     return 'from-slate-500 to-slate-600';
   };
-  
 
   return (
-        <div className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-xl shadow-2xl p-6 h-[calc(100vh-140px)] border-1 border-slate-800 overflow-hidden">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Bot Sıralaması
-            </h2>
-            <div className="flex items-center space-x-3">
-              {/* Sort By Dropdown */}
-              <div className="relative">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="appearance-none bg-slate-800 border-1 border-slate-600 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-slate-200 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                >
-                  {sortOptions.map((option) => (
-                    <option key={option.value} value={option.value} className="bg-slate-800 text-slate-200">
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <FiChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+    <div className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-xl shadow-2xl p-6 h-[calc(100vh-140px)] border-1 border-slate-800 overflow-hidden">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-bold text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+          Bot Leaderboard
+        </h2>
+        <div className="flex items-center space-x-3">
+          {/* Sort By Dropdown */}
+          <div className="relative">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="appearance-none bg-slate-800 border-1 border-slate-600 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-slate-200 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+            >
+              {sortOptions.map((option) => (
+                <option key={option.value} value={option.value} className="bg-slate-800 text-slate-200">
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <FiChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+          </div>
+
+          {/* Sort Order Dropdown */}
+          <div className="relative">
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="appearance-none bg-slate-800 border-1 border-slate-600 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-slate-200 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+            >
+              {sortOrderOptions.map((option) => (
+                <option key={option.value} value={option.value} className="bg-slate-800 text-slate-200">
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <FiChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+          </div>
+        </div>
+      </div>
+
+      {/* Scrollable Bot List */}
+      <div className="overflow-y-auto -mx-1 space-y-3 h-full pb-16 scrollbar-hide">
+        {sortedBots.map((bot, index) => (
+          <div
+            key={bot.id}
+            className="bg-slate-800/50 border-1 border-slate-700 rounded-lg py-2 px-3 hover:bg-slate-800/70 hover:border-slate-600 transition-all duration-200 backdrop-blur-sm"
+          >
+            <div className="flex items-center justify-between">
+              {/* Left - Bot Info */}
+              <div className="flex items-center space-x-4">
+                <div className={`flex items-center justify-center w-10 h-10 bg-gradient-to-br ${getRankColor(index)} rounded-full shadow-lg`}>
+                  <span className="text-sm font-bold text-white">#{index + 1}</span>
+                </div>
+                <div className="pt-2">
+                  <h3 className="font-semibold text-white text-base">
+                    {bot.name.length > 13 ? `${bot.name.slice(0, 13)}...` : bot.name}
+                  </h3>
+                  <p className="text-[12px] text-slate-400">{bot.creator}</p>
+                </div>
               </div>
-              
-              {/* Sort Order Dropdown */}
-              <div className="relative">
-                <select
-                  value={sortOrder}
-                  onChange={(e) => setSortOrder(e.target.value)}
-                  className="appearance-none bg-slate-800 border-1 border-slate-600 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-slate-200 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                >
-                  {sortOrderOptions.map((option) => (
-                    <option key={option.value} value={option.value} className="bg-slate-800 text-slate-200">
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <FiChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+
+              {/* Right - Metrics */}
+              <div className="flex items-center space-x-8 text-sm">
+                <div className="text-center">
+                  <div className="font-bold text-green-400 text-base">{formatValue(bot.profit, 'profit')}</div>
+                  <div className="text-xs text-slate-400">Profit</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-blue-400 text-base">{formatValue(bot.successRate, 'successRate')}</div>
+                  <div className="text-xs text-slate-400">Success</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-purple-400 text-base">{formatValue(bot.profitFactor, 'profitFactor')}</div>
+                  <div className="text-xs text-slate-400">Profit Factor</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-cyan-400 text-base">{formatValue(bot.weeklyTrades, 'weeklyTrades')}</div>
+                  <div className="text-xs text-slate-400">Weekly Trades</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-yellow-400 text-base">{formatValue(bot.price, 'price')}</div>
+                  <div className="text-xs text-slate-400">Price</div>
+                </div>
               </div>
             </div>
           </div>
-            
-          {/* Scrollable Bot List */}
-          <div className="overflow-y-auto -mx-1 space-y-3 h-full pb-16 scrollbar-hide">
-              {sortedBots.map((bot, index) => (
-                <div
-                  key={bot.id}
-                  className="bg-slate-800/50 border-1 border-slate-700 rounded-lg py-2 px-3 hover:bg-slate-800/70 hover:border-slate-600 transition-all duration-200 backdrop-blur-sm"
-                >
-                  <div className="flex items-center justify-between">
-                    {/* Sol taraf - Bot bilgileri */}
-                    <div className="flex items-center space-x-4">
-                      <div className={`flex items-center justify-center w-10 h-10 bg-gradient-to-br ${getRankColor(index)} rounded-full shadow-lg`}>
-                        <span className="text-sm font-bold text-white">#{index + 1}</span>
-                      </div>
-                      <div className="pt-2">
-                      <h3 className="font-semibold text-white text-base">
-                        {bot.name.length > 13 ? `${bot.name.slice(0, 13)}...` : bot.name}
-                      </h3>
-                        <p className="text-[12px] text-slate-400">{bot.creator}</p>
-                      </div>
-                    </div>
-            
-                    {/* Sağ taraf - Metrikler */}
-                    <div className="flex items-center space-x-8 text-sm">
-                      <div className="text-center">
-                        <div className="font-bold text-green-400 text-base">{formatValue(bot.profit, 'profit')}</div>
-                        <div className="text-xs text-slate-400">Kâr</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="font-bold text-blue-400 text-base">{formatValue(bot.successRate, 'successRate')}</div>
-                        <div className="text-xs text-slate-400">Başarı</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="font-bold text-purple-400 text-base">{formatValue(bot.profitFactor, 'profitFactor')}</div>
-                        <div className="text-xs text-slate-400">Kâr Faktörü</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="font-bold text-cyan-400 text-base">{formatValue(bot.weeklyTrades, 'weeklyTrades')}</div>
-                        <div className="text-xs text-slate-400">Haftalık İşlem</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="font-bold text-yellow-400 text-base">{formatValue(bot.price, 'price')}</div>
-                        <div className="text-xs text-slate-400">Fiyat</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-          </div>
-
-        </div>
+        ))}
+      </div>
+    </div>
   );
 };
 

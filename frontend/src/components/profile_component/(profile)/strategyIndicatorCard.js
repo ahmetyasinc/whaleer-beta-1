@@ -17,8 +17,14 @@ export default function StrategyIndicatorCard() {
   const [showIndicatorModal, setShowIndicatorModal] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
 
-  const { strategies } = useStrategyStore();
-  const { indicators } = useIndicatorStore();
+  const { strategies, fetchStrategies } = useStrategyStore();
+  const { indicators, fetchIndicators } = useIndicatorStore();
+
+  // ✅ İlk açılışta backend’den strateji ve indikatör verilerini çek
+  useEffect(() => {
+    fetchIndicators();
+    fetchStrategies();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -123,7 +129,9 @@ export default function StrategyIndicatorCard() {
                 <div className="w-12 h-12 bg-blue-500/10 rounded-full flex items-center justify-center mb-3">
                   <div className="w-6 h-6 bg-blue-500/20 rounded-full"></div>
                 </div>
-                <p className="text-gray-500 text-xs">Henüz strateji eklenmemiş</p>
+                <p className="text-gray-500 text-xs">
+                  Henüz strateji eklenmemiş veya yükleniyor...
+                </p>
               </div>
             )}
           </div>
@@ -153,7 +161,9 @@ export default function StrategyIndicatorCard() {
                 <div className="w-12 h-12 bg-purple-500/10 rounded-full flex items-center justify-center mb-3">
                   <div className="w-6 h-6 bg-purple-500/20 rounded-full"></div>
                 </div>
-                <p className="text-gray-500 text-xs">Henüz indikatör eklenmemiş</p>
+                <p className="text-gray-500 text-xs">
+                  Henüz indikatör eklenmemiş veya yükleniyor...
+                </p>
               </div>
             )}
           </div>

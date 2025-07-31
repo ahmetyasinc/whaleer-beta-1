@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Whaleer Debug",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "C:\\Users\\tahae\\Desktop\\Proje_all\\whaleer-beta-1/backend/trade_engine/taha_part/utils/order_final_optimized.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "C:\\Users\\tahae\\Desktop\\Proje_all\\whaleer-beta-1",
+            "env": {
+                "PYTHONPATH": "C:\\Users\\tahae\\Desktop\\Proje_all\\whaleer-beta-1"
+            }
+        }
+    ]
+}

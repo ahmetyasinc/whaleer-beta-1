@@ -18,7 +18,7 @@ import requests
 import psycopg2
 from datetime import datetime, timezone
 
-def fetch_and_store_symbols(url, market_type):
+def fetch_and_store_symbols(url, trade_type):
     response = requests.get(url)
     data = response.json()
 
@@ -33,7 +33,6 @@ def fetch_and_store_symbols(url, market_type):
 
     for symbol_info in data["symbols"]:
         symbol = symbol_info["symbol"]
-
         filters = {f["filterType"]: f for f in symbol_info["filters"]}
         if "LOT_SIZE" not in filters or "PRICE_FILTER" not in filters:
             continue
@@ -44,32 +43,33 @@ def fetch_and_store_symbols(url, market_type):
         updated_at = datetime.now(timezone.utc)
 
         cursor.execute("""
-            INSERT INTO symbol_filters (binance_symbol, market_type, step_size, min_qty, tick_size, updated_at)
-            VALUES (%s, %s, %s, %s, %s, %s)
-            ON CONFLICT (binance_symbol, market_type)
+            INSERT INTO symbol_filters
+                (binance_symbol, trade_type, step_size, min_qty, tick_size, updated_at, is_isolated)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (binance_symbol, trade_type)
             DO UPDATE SET
                 step_size = EXCLUDED.step_size,
                 min_qty = EXCLUDED.min_qty,
                 tick_size = EXCLUDED.tick_size,
-                updated_at = EXCLUDED.updated_at;
-        """, (symbol, market_type, step_size, min_qty, tick_size, updated_at))
+                updated_at = EXCLUDED.updated_at,
+                is_isolated = EXCLUDED.is_isolated;
+        """, (symbol, trade_type, step_size, min_qty, tick_size, updated_at, True))
 
     connection.commit()
     cursor.close()
     connection.close()
-    print(f"{market_type.upper()} market verileri başarıyla güncellendi. Toplam: {len(data['symbols'])} çift.")
-
+    print(f"{trade_type.upper()} verileri başarıyla güncellendi. Toplam: {len(data['symbols'])} çift.")
 def run_all():
     # Spot market
     fetch_and_store_symbols(
         url="https://api.binance.com/api/v3/exchangeInfo",
-        market_type="spot"
+        trade_type="spot"
     )
 
     # Futures market (USDT-margined)
     fetch_and_store_symbols(
         url="https://fapi.binance.com/fapi/v1/exchangeInfo",
-        market_type="futures"
+        trade_type="futures"
     )
 
 # Çalıştır

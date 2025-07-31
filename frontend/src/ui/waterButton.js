@@ -26,8 +26,8 @@ const StyledWrapper = styled.div`
     border: 0px;
     outline: 0px;
     color: #fff;
-    width: 300px;
-    padding: 20px;
+    width: 290px;
+    padding: 10px;
     border-radius: 50px;
     position: relative;
     overflow: hidden;
@@ -74,7 +74,8 @@ const StyledWrapper = styled.div`
   }
 
   .liquid::after {
-    background: #ffff;
+    background: #d4d4d8
+;
     animation-delay: 2s;
   }
 

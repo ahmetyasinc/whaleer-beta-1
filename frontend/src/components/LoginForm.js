@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
+import ContinueWithGoogle from "@/ui/ContinueWithGoogle";
 
 export default function LoginForm({ locale }) {
   const router = useRouter();
@@ -154,14 +155,24 @@ export default function LoginForm({ locale }) {
             </div>
 
             <div>
-              <button
-                type="submit"
-                className="group relative w-full flex justify-center py-3 px-4 border-transparent text-sm font-medium rounded-md text-neutral-300 bg-[hsl(221,60%,52%)] hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                {t("submit")}
-              </button>
+            <button
+              type="submit"
+              className="group relative w-full flex justify-center py-3 px-4 mb-3 
+                         rounded-md text-sm font-medium text-neutral-100 
+                         bg-gradient-to-r from-indigo-600 to-emerald-600
+                         hover:from-teal-700 hover:to-cyan-500
+                         transition-all duration-200 ease-out 
+                         transform hover:scale-[1.01]
+                         shadow-md hover:shadow-lg hover:shadow-indigo-600/40
+                         focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <span className="relative z-10">{t("submit")}</span>
+              {/* ✨ Arka planda ışık efekti */}
+              <span className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-indigo-500/30 rounded-md blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+            </button>
             </div>
           </form>
+          <ContinueWithGoogle className="mt-4"/>
         </div>
         <div className="px-8 py-4 bg-white/10 backdrop-blur-lg text-center">
           <span className="text-gray-400">{t("noAccount")} </span>

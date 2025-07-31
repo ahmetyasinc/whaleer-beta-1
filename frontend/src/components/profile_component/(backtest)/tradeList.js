@@ -6,7 +6,7 @@ export default function TradesList({ trades }) {
   const { selectedCrypto } = useBacktestStore();
 
   const formatCurrency = (value) =>
-    new Intl.NumberFormat('tr-TR', {
+    new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 2,
@@ -14,26 +14,25 @@ export default function TradesList({ trades }) {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleString('tr-TR');
+    return date.toLocaleString('en-GB');
   };
 
   const formatPercentage = (value) => {
     const num = Number(value);
-    if (isNaN(num)) return '–';     // sayı değilse çizgi döndür
+    if (isNaN(num)) return '–';
     return `${num.toFixed(2)}%`;
   };
-
 
   const formatTypeLabel = (type) => {
     switch (type) {
       case 'LONG_OPEN':
-        return 'LONG AÇ';
+        return 'OPEN LONG';
       case 'LONG_CLOSE':
-        return 'LONG KAPAT';
+        return 'CLOSE LONG';
       case 'SHORT_OPEN':
-        return 'SHORT AÇ';
+        return 'OPEN SHORT';
       case 'SHORT_CLOSE':
-        return 'SHORT KAPAT';
+        return 'CLOSE SHORT';
       default:
         return type;
     }
@@ -47,10 +46,10 @@ export default function TradesList({ trades }) {
     <div className="bg-gray-900 rounded-lg p-4 border-1 border-gray-800">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-white text-lg font-semibold flex items-center gap-2">
-          İşlem Geçmişi
+          Trade History
         </h3>
         <div className="text-gray-400 text-sm">
-          Toplam {trades.length} işlem
+          Total {trades.length} trades
         </div>
       </div>
 
@@ -58,15 +57,15 @@ export default function TradesList({ trades }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-700">
-              <th className="text-left text-gray-400 font-medium py-2">Tarih</th>
-              <th className="text-left text-gray-400 font-medium py-2">İşlem</th>
-              <th className="text-left text-gray-400 font-medium py-2">Katsayı</th>
-              <th className="text-left text-gray-400 font-medium py-2">Yüzdelik</th>
-              <th className="text-right text-gray-400 font-medium py-2">Miktar</th>
-              <th className="text-right text-gray-400 font-medium py-2">Bakiye</th>
-              <th className="text-right text-gray-400 font-medium py-2">Komisyon</th>
-              <th className="text-right text-gray-400 font-medium py-2">K/Z (%)</th>
-              <th className="text-right text-gray-400 font-medium py-2">Fiyat (Close)</th>
+              <th className="text-left text-gray-400 font-medium py-2">Date</th>
+              <th className="text-left text-gray-400 font-medium py-2">Type</th>
+              <th className="text-left text-gray-400 font-medium py-2">Leverage</th>
+              <th className="text-left text-gray-400 font-medium py-2">Used %</th>
+              <th className="text-right text-gray-400 font-medium py-2">Amount</th>
+              <th className="text-right text-gray-400 font-medium py-2">Value</th>
+              <th className="text-right text-gray-400 font-medium py-2">Commission</th>
+              <th className="text-right text-gray-400 font-medium py-2">P/L (%)</th>
+              <th className="text-right text-gray-400 font-medium py-2">Price (Close)</th>
             </tr>
           </thead>
           <tbody>
@@ -93,11 +92,11 @@ export default function TradesList({ trades }) {
                   </td>
 
                   <td className="py-3 text-left text-gray-300 font-mono">
-                    {(trade.leverage)}
+                    {trade.leverage}
                   </td>
 
                   <td className="py-3 text-left text-gray-300 font-mono">
-                    {(trade.usedPercentage)}%
+                    {trade.usedPercentage}%
                   </td>
 
                   <td className="py-3 text-right text-gray-300 font-mono">

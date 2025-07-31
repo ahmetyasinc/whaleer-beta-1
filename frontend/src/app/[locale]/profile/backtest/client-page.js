@@ -18,10 +18,8 @@ export default function ClientPage() {
     const loadData = async () => {
       await getArchivedBacktests();
     };
-  
     loadData();
   }, []);
-  
 
   const { 
     backtestResults, 
@@ -38,10 +36,10 @@ export default function ClientPage() {
       
       <div className="flex w-full h-[calc(100vh-60px)] gap-x-4">
         
-        {/* Sol Kısım - Backtest Arşivi */}
+        {/* Left Side - Backtest Archive */}
         <div className="w-[40%] p-2 bg-[rgb(13,16,22,0.75)] rounded-r-xl">
           <h1 className="text-white text-lg font-semibold my-2 ml-3 pb-2 border-b border-black">
-            Backtest Arşivim
+            My Backtest Archive
           </h1>
           
           <div className="p-3 h-[calc(100%-60px)] overflow-y-auto">
@@ -49,9 +47,9 @@ export default function ClientPage() {
               <div className="flex items-center justify-center h-full">
                 <div className="text-center text-white">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                  <div className="text-lg">Arşiv yükleniyor...</div>
+                  <div className="text-lg">Loading archive...</div>
                   <div className="text-gray-400 text-sm mt-2">
-                    Backtest arşivleriniz getiriliyor.
+                    Your backtest archive is being retrieved.
                   </div>
                 </div>
               </div>
@@ -59,22 +57,22 @@ export default function ClientPage() {
               <div className="flex items-center justify-center h-full">
                 <div className="text-center text-red-400 bg-red-900/20 p-6 rounded-lg">
                   <div className="text-4xl mb-4">❌</div>
-                  <div className="text-lg font-semibold mb-2">Arşiv Yüklenirken Hata</div>
+                  <div className="text-lg font-semibold mb-2">Error Loading Archive</div>
                   <div className="text-sm">{archiveError}</div>
                   <button 
                     onClick={() => getArchivedBacktests()}
                     className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors"
                   >
-                    Tekrar Dene
+                    Try Again
                   </button>
                 </div>
               </div>
             ) : archivedBacktests.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center text-gray-400">
                 <FiArchive className="text-4xl mb-3" />
-                <div className="text-lg font-medium mb-2">Arşiv Boş</div>
+                <div className="text-lg font-medium mb-2">Archive is Empty</div>
                 <div className="text-sm">
-                  Backtest sonuçlarınızı arşivlemek için "Arşivle" butonunu kullanın.
+                  Use the "Archive" button to archive your backtest results.
                 </div>
               </div>
             ) : (
@@ -90,10 +88,10 @@ export default function ClientPage() {
           </div>
         </div>
 
-        {/* Sağ Kısım - Backtest Sonuçları */}
+        {/* Right Side - Backtest Results */}
         <div className="w-[59%] bg-[rgb(13,16,22,0.75)] p-2 rounded-xl">
           <h1 className="text-white text-lg font-semibold my-2 ml-3 pb-2 border-b border-black">
-            Backtest Sonuçları
+            Backtest Results
           </h1>
           
           <div className="p-4 h-[calc(100%-60px)] overflow-y-auto">
@@ -101,9 +99,9 @@ export default function ClientPage() {
               <div className="flex items-center justify-center h-full">
                 <div className="text-center text-white">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                  <div className="text-lg">Backtest çalışıyor...</div>
+                  <div className="text-lg">Backtest is running...</div>
                   <div className="text-gray-400 text-sm mt-2">
-                    Lütfen bekleyin, stratejiniz test ediliyor.
+                    Please wait, your strategy is being tested.
                   </div>
                 </div>
               </div>
@@ -113,7 +111,7 @@ export default function ClientPage() {
               <div className="flex items-center justify-center h-full">
                 <div className="text-center text-red-400 bg-red-900/20 p-6 rounded-lg">
                   <div className="text-4xl mb-4">❌</div>
-                  <div className="text-lg font-semibold mb-2">Hata Oluştu</div>
+                  <div className="text-lg font-semibold mb-2">An Error Occurred</div>
                   <div className="text-sm">{backtestError}</div>
                 </div>
               </div>
@@ -124,10 +122,10 @@ export default function ClientPage() {
                 <div className="text-center text-gray-400">
                   <div className="text-6xl mb-4 flex justify-center"><FiAlignLeft /></div>
                   <div className="text-xl font-semibold mb-2">
-                    Backtest Sonucu Bekleniyor
+                    Awaiting Backtest Result
                   </div>
                   <div className="text-sm">
-                    Backtest yapmak için yukarıdaki "Backtest Yap" butonunu kullanın.
+                    Use the "Run Backtest" button above to perform a backtest.
                   </div>
                 </div>
               </div>
@@ -135,16 +133,16 @@ export default function ClientPage() {
 
             {backtestResults && (
               <div className="space-y-6">
-                {/* Backtest Parametreleri Kartı */}
+                {/* Backtest Parameters Card */}
                 <BacktestInfoCard />
                 
-                {/* Chart Kartı */}
+                {/* Chart Card */}
                 <BacktestChart chartData={backtestResults.chartData} />
                 
-                {/* Performans Metrikleri Kartı */}
+                {/* Performance Metrics Card */}
                 <PerformanceMetrics performance={backtestResults.performance} />
                 
-                {/* İşlem Listesi Kartı */}
+                {/* Trades List Card */}
                 <TradesList trades={backtestResults.trades} />
               </div>
             )}

@@ -16,9 +16,8 @@ export default function BotsPageClient() {
   const bots = useBotStore((state) => state.bots);
   const loadBots = useBotStore((state) => state.loadBots);
   const loadApiKeys = useApiStore((state) => state.loadApiKeys);
-  const [confirmModalOpen,setConfirmModalOpen] = useState(false);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const { deactivateAllBots } = useBotStore();
-
 
   useEffect(() => {
     const loadData = async () => {
@@ -26,23 +25,21 @@ export default function BotsPageClient() {
       await load_strategies();
       await loadBots();
     };
-  
+
     loadData();
   }, []);
-
 
   return (
     <div className="h-screen flex flex-col">
       {/* Sticky Header */}
       <header className="h-[60px] bg-black flex justify-end items-center px-6 sticky top-0 z-50">
 
-        {/* Panik Butonu */}
+        {/* Panic Button */}
         <button
-          className="relative inline-flex items-center justify-center px-8 py-1 overflow-hidden tracking-tighter text-white bg-[#661b1b9c] rounded-md group" 
-          title="Tüm Botları Durdur ve İşlemleri kapat"
-          onClick={() => setConfirmModalOpen(true)} 
+          className="relative inline-flex items-center justify-center px-8 py-1 overflow-hidden tracking-tighter text-white bg-[#661b1b9c] rounded-md group"
+          title="Stop All Bots and Close Positions"
+          onClick={() => setConfirmModalOpen(true)}
         >
-
           <span
             className="absolute w-0 h-0 transition-all duration-500 ease-out bg-red-600 rounded-full group-hover:w-56 group-hover:h-56"
           ></span>
@@ -77,26 +74,25 @@ export default function BotsPageClient() {
           <span
             className="absolute inset-0 w-full h-full -mt-1 rounded-lg opacity-30 bg-gradient-to-b from-transparent via-transparent to-gray-200"
           ></span>
-          <span className="relative text-base font-semibold">Panik Butonu !</span>
+          <span className="relative text-base font-semibold">Panic Button!</span>
         </button>
+
         <SwitchConfirmModal
           isOpen={confirmModalOpen}
           onClose={() => setConfirmModalOpen(false)}
           onConfirm={() => {
             deactivateAllBots();
             setConfirmModalOpen(false);
-            console.log("Botlar durduruldu, işlemler kapatıldı.");
+            console.log("All bots deactivated, positions closed.");
           }}
         />
-
 
         {/* Button to open the modal */}
         <button
           onClick={() => setModalOpen(true)}
           className="group/button relative inline-flex items-center justify-center overflow-hidden rounded-md ml-10 bg-gray-800/90 backdrop-blur-lg px-6 py-1 text-sm font-semibold text-white transition-all duration-300 ease-in-out hover:shadow-md hover:shadow-gray-600/50"
         >
-          
-          <span className="text-[13px]">Yeni Bot Oluştur</span>
+          <span className="text-[13px]">Create New Bot</span>
           <HiPlusSmall className="text-2xl relative font-semibold" />
           <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-13deg)_translateX(-100%)] group-hover/button:duration-1000 group-hover/button:[transform:skew(-13deg)_translateX(100%)]">
             <div className="relative h-full w-10 bg-white/20"></div>

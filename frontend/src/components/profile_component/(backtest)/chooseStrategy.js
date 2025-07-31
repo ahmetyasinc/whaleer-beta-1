@@ -11,31 +11,33 @@ import useStrategyStore from "@/store/backtest/backtestStore";
 
 const StrategyButton = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("Teknikler");
+  const [activeTab, setActiveTab] = useState("Technicals");
 
   const { selectedStrategy, setSelectedStrategy } = useStrategyStore();
 
   const tabs = [
-    { name: "Teknikler", icon: <BiBarChartAlt2 className="text-[19px]" /> },
-    { name: "Stratejilerim", icon: <FaDice className="text-[19px]" /> },
-    { name: "Topluluk", icon: <MdOutlinePeopleAlt className="text-[18px]" /> },
+    { name: "Technicals", icon: <BiBarChartAlt2 className="text-[19px]" /> },
+    { name: "My Strategies", icon: <FaDice className="text-[19px]" /> },
+    { name: "Community", icon: <MdOutlinePeopleAlt className="text-[18px]" /> },
   ];
 
   const renderContent = () => {
-    const props = { onSelect: (strategy) => {
-      setSelectedStrategy(strategy);
-      setIsModalOpen(false); // seçince kapat
-    }};
-    
+    const props = {
+      onSelect: (strategy) => {
+        setSelectedStrategy(strategy);
+        setIsModalOpen(false); // close after selection
+      },
+    };
+
     switch (activeTab) {
-      case "Teknikler":
+      case "Technicals":
         return <TechnicalStrategies {...props} />;
-      case "Stratejilerim":
+      case "My Strategies":
         return <MyStrategies {...props} />;
-      case "Topluluk":
+      case "Community":
         return <CommunityStrategy {...props} />;
       default:
-        return <p className="text-white">İçerik bulunamadı.</p>;
+        return <p className="text-white">No content found.</p>;
     }
   };
 
@@ -51,9 +53,8 @@ const StrategyButton = () => {
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-gray-900 text-white rounded-md w-[800px] h-[584px] shadow-lg flex flex-col relative">
-
             <div className="flex justify-between items-center px-6 py-4 border-b border-gray-700 h-16">
-              <h2 className="text-lg font-bold">Stratejiler</h2>
+              <h2 className="text-lg font-bold">Strategies</h2>
               <button
                 className="text-gray-400 hover:text-white text-3xl"
                 onClick={() => setIsModalOpen(false)}

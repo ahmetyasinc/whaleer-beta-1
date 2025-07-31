@@ -9,7 +9,6 @@ function detectLocale(request) {
   const langCookie = request.cookies.get("lang")?.value;
   if (locales.includes(langCookie)) return langCookie;
 
-  // Browser fallback
   const headers = {};
   request.headers.forEach((value, key) => {
     headers[key] = value;
@@ -20,6 +19,7 @@ function detectLocale(request) {
 }
 
 export function middleware(request) {
+
   const { pathname } = request.nextUrl;
   const cookies = request.cookies;
   const accessToken = cookies.get("access_token")?.value;
@@ -33,15 +33,15 @@ export function middleware(request) {
     return NextResponse.redirect(new URL(`/${locale}${pathname}`, request.url));
   }
 
-  // locale bazlı auth yönlendirmeleri
   const locale = pathname.split("/")[1]; // "/en/login" → "en"
   const pathWithoutLocale = pathname.slice(locale.length + 1); // "/login"
 
   if (accessToken && (pathWithoutLocale === "login" || pathWithoutLocale === "register")) {
     return NextResponse.redirect(new URL(`/${locale}/profile`, request.url));
   }
-
-  if (!accessToken && pathWithoutLocale.startsWith("profile")) {
+  
+  const isProtectedRoute = pathWithoutLocale === "/profile" || pathWithoutLocale.startsWith("/profile/");
+  if (!accessToken && isProtectedRoute) {
     return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
   }
 
@@ -49,5 +49,5 @@ export function middleware(request) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|api|.*\\..*).*)"], // sadece sayfa HTML istekleri
+  matcher: ["/((?!_next|api|.*\\..*).*)"], 
 };

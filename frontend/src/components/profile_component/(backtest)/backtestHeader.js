@@ -34,9 +34,9 @@ export default function BacktestHeader() {
       <header className="w-full bg-black text-white px-6 py-3 h-[60px] flex justify-between items-center">
         <h1></h1>
         <div className="flex gap-4">
-          {/*
+          {/* 
           <button className="bg-gray-900 text-white px-4 h-[35px] rounded hover:bg-gray-800 transition">
-            Backtest Optimizasyonu
+            Backtest Optimization
           </button>
           */}
           <button
@@ -44,16 +44,15 @@ export default function BacktestHeader() {
             onClick={() => setIsOpen(true)}
           >
             <FaPlus className="w-3 h-3 mt-[2px]" />
-            Backtest Yap
+            Run Backtest
           </button>
-
         </div>
       </header>
 
       {isOpen && (
         <div className="absolute right-0 top-[60px] h-[calc(100vh-60px)] w-1/4 max-w-md bg-gray-900 text-white shadow-lg flex flex-col justify-between p-0 z-50 rounded-l-xl">
           <div className="p-6 overflow-y-auto flex-1">
-            <h2 className="text-xl font-bold mb-4">Backtest Oluştur</h2>
+            <h2 className="text-xl font-bold mb-4">Create Backtest</h2>
 
             <div className="flex flex-col gap-4">
               <ChooseStrategy />
@@ -64,34 +63,33 @@ export default function BacktestHeader() {
                 value={selectedPeriod}
                 onChange={(e) => setSelectedPeriod(e.target.value)}
               >
-                <option value="">Periyot Seç</option>
-                <option value="1m">1 dk</option>
-                <option value="3m">3 dk</option>
-                <option value="5m">5 dk</option>
-                <option value="15m">15 dk</option>
-                <option value="30m">30 dk</option>
-                <option value="1h">1 saat</option>
-                <option value="2h">2 saat</option>
-                <option value="4h">4 saat</option>
-                <option value="1d">1 gün</option>
-                <option value="1w">1 hafta</option>
+                <option value="">Select Period</option>
+                <option value="1m">1 min</option>
+                <option value="3m">3 min</option>
+                <option value="5m">5 min</option>
+                <option value="15m">15 min</option>
+                <option value="30m">30 min</option>
+                <option value="1h">1 hour</option>
+                <option value="2h">2 hours</option>
+                <option value="4h">4 hours</option>
+                <option value="1d">1 day</option>
+                <option value="1w">1 week</option>
               </select>
             </div>
           </div>
 
           <div className="p-4 border-t border-gray-800">
-          <button
-            disabled={!isReady || isBacktestLoading}
-            onClick={handleBacktest}
-            className={`w-full px-4 py-2 rounded transition flex items-center justify-center gap-2 ${
-              isReady && !isBacktestLoading
-                ? 'bg-blue-600 text-white hover:bg-blue-500 cursor-pointer'
-                : 'bg-gray-500 text-white cursor-not-allowed'
-            }`}
-          >
-            Backtest Yap
-          </button>
-
+            <button
+              disabled={!isReady || isBacktestLoading}
+              onClick={handleBacktest}
+              className={`w-full px-4 py-2 rounded transition flex items-center justify-center gap-2 ${
+                isReady && !isBacktestLoading
+                  ? 'bg-blue-600 text-white hover:bg-blue-500 cursor-pointer'
+                  : 'bg-gray-500 text-white cursor-not-allowed'
+              }`}
+            >
+              Run Backtest
+            </button>
           </div>
 
           <button

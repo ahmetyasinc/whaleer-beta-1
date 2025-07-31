@@ -46,7 +46,7 @@ const TechnicalStrategies = ({ onSelect }) => {
       <div className="bg-gray-800 flex items-center border-b border-gray-800 mb-2">
         <input
           type="text"
-          placeholder="Ara..."
+          placeholder="Search..."
           className="w-full px-3 py-2 bg-gray-800 text-white focus:outline-none"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}

@@ -111,7 +111,11 @@ return (
                 return (
                   <div
                     key={index}
-                    className="grid grid-cols-6 gap-2 items-center py-3 hover:bg-zinc-800 rounded-lg px-2 bg-gradient-to-r from-zinc-950 to-neutral-900 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10"
+                    className="grid grid-cols-6 gap-2 items-center py-3 rounded-lg px-2 bg-gradient-to-r from-slate-800/50 to-slate-900/50 hover:bg-zinc-900 hover:border-blue-500/70 transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/10"
+                    style={{
+                    animationDelay: `${index * 200}ms`,
+                    animation: "fadeInUp 1s ease-out forwards",
+                }}
                   >
                     {/* Coin Bilgisi - Mobilde daha kompakt */}
                     <div className="flex items-center space-x-2 min-w-0">
@@ -197,7 +201,11 @@ return (
         {transactions.map((transaction, index) => (
           <div
             key={index}
-            className="grid grid-cols-5 gap-3 items-center py-3 bg-gradient-to-r from-zinc-950 to-neutral-900 hover:bg-zinc-800  rounded-lg px-2 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10"
+            className="grid grid-cols-5 gap-3 items-center py-3 bg-gradient-to-r from-slate-800/50 to-slate-900/50 hover:bg-zinc-900 rounded-lg px-2 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10"
+            style={{
+            animationDelay: `${index * 200}ms`,
+            animation: "fadeInUp 1s ease-out forwards",
+          }}
           >
             {/* Kripto Para */}
             <div className="flex items-center space-x-2 min-w-0">
@@ -258,6 +266,18 @@ return (
 )}
       </div>
     </div>
+    <style jsx>{`
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateX(-40px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+`}</style>
   </div>
 );
 }

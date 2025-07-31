@@ -146,7 +146,7 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
           <input
             type="text"
             maxLength={15}
-            placeholder="Bot ismi girin"
+            placeholder="Enter bot name"
             className="w-60 mb-4 p-2 bg-gray-800 text-white rounded"
             value={botName}
             onChange={(e) => setBotName(e.target.value)}
@@ -171,12 +171,12 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
 
             </div>
             <div>
-              <label className="block mb-1 text-gray-300">Strateji</label>
+              <label className="block mb-1 text-gray-300">Strategy</label>
               <StrategyButton onSelect={(selected) => setStrategy(selected)}/>
 
             </div>
             <div>
-              <label className="block mb-1 text-gray-300">Periyot</label>
+              <label className="block mb-1 text-gray-300">Period</label>
               <select
                 className="w-full p-2 bg-gray-800 text-white rounded"
                 value={period}

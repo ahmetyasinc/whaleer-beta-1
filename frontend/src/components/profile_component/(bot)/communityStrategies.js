@@ -54,7 +54,7 @@ const CommunityStrategies = ({ onSelect }) => {
                   onClick={() => onSelect(strategy)} // SEÇİLDİĞİNDE FONKSİYON ÇAĞRILIR
                   className="bg-blue-600 px-2 rounded-md py-[1px] h-[26px] mr-3 hover:bg-blue-800 text-white text-xs"
                 >
-                  Seç
+                  Select
                 </button>
               </div>
             </div>

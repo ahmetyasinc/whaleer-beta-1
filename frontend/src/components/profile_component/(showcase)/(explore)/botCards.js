@@ -21,14 +21,14 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
   if (!botData) return null;
 
   const formatRunningTime = (hours) => {
-    if (hours < 1) return 'Bugün başladı';
+    if (hours < 1) return 'Started today';
     const days = Math.floor(hours / 24);
     const remainingHours = hours % 24;
     return days === 0
-      ? `${hours} saat`
+      ? `${hours} hours`
       : remainingHours === 0
-      ? `${days} gün`
-      : `${days} gün ${remainingHours} saat`;
+      ? `${days} days`
+      : `${days} days ${remainingHours} hours`;
   };
 
   const coins = typeof botData.coins === 'string'
@@ -55,14 +55,14 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
               <h2 className="text-lg sm:text-xl font-bold text-white">{botData.name}</h2>
               <div className="flex items-center gap-2 text-gray-300 text-xs">
                 <FaUser className="w-3 h-3 flex-shrink-0" />
-                <span>{botData.creator} tarafından</span>
+                <span>by {botData.creator}</span>
               </div>
             </div>
           </div>
 
           <div className="text-xs text-gray-400 space-y-1">
-            <p>{botData.soldCount} kez satın alındı</p>
-            <p>{botData.rentedCount} kez kiralandı</p>
+            <p>Purchased {botData.soldCount} times</p>
+            <p>Rented {botData.rentedCount} times</p>
           </div>
 
           <div className="flex items-center gap-2 mt-3">
@@ -85,31 +85,31 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
               {isFollowed ? (
                 <>
                   <FiCheck className="w-4 h-4" />
-                  Takip Ediliyor
+                  Following
                 </>
               ) : (
                 <>
                   <FiUserPlus className="w-4 h-4" />
-                  Takip Et
+                  Follow
                 </>
               )}
             </button>
           </div>
         </div>
 
-        {/* Sat / Kirala */}
+        {/* Buy / Rent */}
         <div className="flex w-full gap-2 mb-4">
           <PurchaseButton
             enabled={botData.for_sale}
             price={botData.sell_price}
-            label="Satın Al"
+            label="Buy"
             bg="bg-green-600"
             hover="hover:bg-green-500"
           />
           <PurchaseButton
             enabled={botData.for_rent}
             price={botData.rent_price}
-            label="Günlük Kirala"
+            label="Rent Daily"
             bg="bg-orange-600"
             hover="hover:bg-orange-500"
           />
@@ -117,28 +117,28 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
 
         {/* Stats */}
         <div className="flex flex-col space-y-2 mb-6">
-          <StatBox icon={<FiCalendar />} title="Oluşturulma tarihi" value={botData.startDate} />
-          <StatBox icon={<FiClock />} title="Çalışma Süresi" value={formatRunningTime(botData.runningTime)} />
-          <StatBox icon={<FiTrendingUp />} title="Başarı Oranı" value={`${botData.winRate}%`} />
-          <StatBox icon={<LuChartNoAxesCombined />} title="Toplam Marj" value={`${botData.totalMargin}%`} />
-          <StatBox icon={<GiCharging />} title="Kâr Faktörü" value={botData.profitFactor} />
-          <StatBox icon={<IoMdWarning />} title="Risk Faktörü" value={botData.riskFactor} />
-          <StatBox icon={<LiaChargingStationSolid />} title="Ortalama Doluluk" value={`${botData.avg_fullness}%`} />
-          <StatBox icon={<MdOutlineNumbers />} title="İşlem Sayısı (G/H/A)" value={`${botData.dayTrades} / ${botData.weekTrades} / ${botData.monthTrades}`} />
-          <StatBoxTrades icon={<FiBarChart />} title="K/Z Durumu (G/H/A)" value={`${botData.dayMargin}% / ${botData.weekMargin}% / ${botData.monthMargin}%`} />
+          <StatBox icon={<FiCalendar />} title="Created on" value={botData.startDate} />
+          <StatBox icon={<FiClock />} title="Uptime" value={formatRunningTime(botData.runningTime)} />
+          <StatBox icon={<FiTrendingUp />} title="Win Rate" value={`${botData.winRate}%`} />
+          <StatBox icon={<LuChartNoAxesCombined />} title="Total Margin" value={`${botData.totalMargin}%`} />
+          <StatBox icon={<GiCharging />} title="Profit Factor" value={botData.profitFactor} />
+          <StatBox icon={<IoMdWarning />} title="Risk Factor" value={botData.riskFactor} />
+          <StatBox icon={<LiaChargingStationSolid />} title="Avg. Fullness" value={`${botData.avg_fullness}%`} />
+          <StatBox icon={<MdOutlineNumbers />} title="Trades (D/W/M)" value={`${botData.dayTrades} / ${botData.weekTrades} / ${botData.monthTrades}`} />
+          <StatBoxTrades icon={<FiBarChart />} title="P/L (D/W/M)" value={`${botData.dayMargin}% / ${botData.weekMargin}% / ${botData.monthMargin}%`} />
         </div>
 
-        {/* Strateji */}
+        {/* Strategy */}
         <div className="mb-6">
-          <h3 className="text-sm font-semibold text-white mb-3">Kullanılan Strateji</h3>
+          <h3 className="text-sm font-semibold text-white mb-3">Strategy Used</h3>
           <span className="px-2 py-1 bg-gradient-to-r from-blue-900 to-green-800 text-blue-200 rounded-lg text-xs font-medium">
             {botData.strategy}
           </span>
         </div>
 
-        {/* Coinler */}
+        {/* Coins */}
         <div className="mb-4">
-          <h3 className="text-sm font-semibold text-white mb-3">Desteklenen Coinler</h3>
+          <h3 className="text-sm font-semibold text-white mb-3">Supported Coins</h3>
           <div className="flex flex-wrap gap-2">
             {coins.map((coin, index) => (
               <span key={index} className="px-2 py-1 bg-gradient-to-r from-orange-900 to-red-900 text-orange-300 rounded-lg text-xs font-medium">

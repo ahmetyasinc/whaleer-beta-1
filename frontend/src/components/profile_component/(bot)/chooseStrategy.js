@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { MdOutlinePeopleAlt } from "react-icons/md";
 import { FaDice } from "react-icons/fa6";
 import { BiBarChartAlt2 } from "react-icons/bi";
@@ -17,8 +18,10 @@ const StrategyButton = () => {
     setActiveTab,
     selectStrategyAndCloseModal
   } = useBotChooseStrategyStore();
-
-  setActiveTab("Technicals");
+  
+  useEffect(() => {
+    setActiveTab("Technicals");
+  }, []);
 
   const tabs = [
     { name: "Technicals", icon: <BiBarChartAlt2 className="text-[19px]" /> },

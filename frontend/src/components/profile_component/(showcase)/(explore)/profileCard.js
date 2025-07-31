@@ -13,14 +13,14 @@ const UserProfileCard = ({ userData, isAnimating = false, onUserClick }) => {
   if (!userData) return null;
 
   const formatRunningTime = (hours) => {
-    if (hours < 1) return 'Bugün başladı';
+    if (hours < 1) return 'Started today';
     const days = Math.floor(hours / 24);
     const remainingHours = hours % 24;
     return days === 0
-      ? `${hours} saat`
+      ? `${hours} hours`
       : remainingHours === 0
-      ? `${days} gün`
-      : `${days} gün ${remainingHours} saat`;
+      ? `${days} days`
+      : `${days} days ${remainingHours} hours`;
   };
 
   const activeBots = userData.bots?.filter(bot => bot.isActive).length || 0;
@@ -32,7 +32,7 @@ const UserProfileCard = ({ userData, isAnimating = false, onUserClick }) => {
       animate={{ y: isAnimating ? -20 : 0, opacity: isAnimating ? 0.8 : 1 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
     >
-      {/* Kullanıcı başlığı */}
+      {/* User header */}
       <div className="text-center mb-6">
         <div
           className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 cursor-pointer hover:scale-105 transition-transform"
@@ -42,24 +42,24 @@ const UserProfileCard = ({ userData, isAnimating = false, onUserClick }) => {
         </div>
         <h2 className="text-xl font-bold text-white mb-1">{userData.display_name}</h2>
         <div className="flex items-center justify-center gap-4 mt-3 text-xs text-gray-400">
-          <span>Katılım: {userData.join_date}</span>
+          <span>Joined: {userData.join_date}</span>
           <span>📍 {userData.location}</span>
         </div>
       </div>
 
-      {/* İstatistikler */}
+      {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6 text-center text-gray-300">
-        <StatBox title="Toplam Bot" value={userData.allbots} />
-        <StatBox title="Aktif Bot" value={activeBots} />
-        <StatBox title="Satılan / Kiralanan" value={`${userData.totalSold}/${userData.totalRented}`} />
-        <StatBox title="Başarı Oranı" value={`${userData.bots_winRate_LifeTime.toFixed(1)}%`} color={getRateColor(userData.bots_winRate_LifeTime)} />
-        <StatBox title="Ortalama Marj" value={`${userData.avg_bots_profit_lifetime}%`} color={userData.avg_bots_profit_lifetime >= 0 ? 'text-green-400' : 'text-red-400'} />
-        <StatBox title="Takipçi Sayısı" value={userData.totalFollowers} color="text-blue-500" />
+        <StatBox title="Total Bots" value={userData.allbots} />
+        <StatBox title="Active Bots" value={activeBots} />
+        <StatBox title="Sold / Rented" value={`${userData.totalSold}/${userData.totalRented}`} />
+        <StatBox title="Success Rate" value={`${userData.bots_winRate_LifeTime.toFixed(1)}%`} color={getRateColor(userData.bots_winRate_LifeTime)} />
+        <StatBox title="Avg. Margin" value={`${userData.avg_bots_profit_lifetime}%`} color={userData.avg_bots_profit_lifetime >= 0 ? 'text-green-400' : 'text-red-400'} />
+        <StatBox title="Followers" value={userData.totalFollowers} color="text-blue-500" />
       </div>
 
-      {/* İletişim Bilgileri */}
+      {/* Contact Info */}
       <div className="mb-6">
-        <h3 className="text-sm font-semibold text-white mb-3">İletişim</h3>
+        <h3 className="text-sm font-semibold text-white mb-3">Contact</h3>
         <div className="space-y-2 text-xs text-gray-300">
           <ContactRow icon={<FiMail />} value={userData.email} color="text-blue-400" />
           <ContactRow icon={<FiInstagram />} value={userData.instagram} color="text-green-400" />
@@ -69,9 +69,9 @@ const UserProfileCard = ({ userData, isAnimating = false, onUserClick }) => {
         </div>
       </div>
 
-      {/* Oluşturduğu Botlar */}
+      {/* Created Bots */}
       <div>
-        <h3 className="text-sm font-semibold text-white mb-3">Oluşturduğu Botlar</h3>
+        <h3 className="text-sm font-semibold text-white mb-3">Created Bots</h3>
         <div className="space-y-2 max-h-[450px] overflow-y-auto">
           {userData.bots?.map(bot => (
             <div key={bot.id} className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-lg p-3 hover:bg-gray-600 transition-colors">
@@ -79,7 +79,7 @@ const UserProfileCard = ({ userData, isAnimating = false, onUserClick }) => {
                 <div className="flex items-center gap-2">
                   <FaRobot className="w-4 h-4 text-blue-400" />
                   <span className="text-sm font-medium text-white">{bot.name}</span>
-                  <span className="w-2 h-2 rounded-full block" title={bot.isActive ? 'Aktif' : 'Pasif'}
+                  <span className="w-2 h-2 rounded-full block" title={bot.isActive ? 'Active' : 'Inactive'}
                     style={{ backgroundColor: bot.isActive ? '#4ade80' : '#f87171' }} />
                 </div>
                 <span className={`text-xs font-medium ${parseFloat(bot.profitRate || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -89,15 +89,15 @@ const UserProfileCard = ({ userData, isAnimating = false, onUserClick }) => {
 
               <div className="flex items-center justify-between text-xs text-gray-400">
                 <span className="flex flex-col items-start">
-                  <span>Çalışma Süresi:</span>
+                  <span>Uptime:</span>
                   <span className="text-gray-300">{formatRunningTime(bot.runningTime || 0)}</span>
                 </span>
                 <span className="flex flex-col items-start">
-                  <span>İşlem</span>
+                  <span>Trades</span>
                   <span className="text-gray-300">{bot.totalTrades || 0}</span>
                 </span>
                 <span className="flex flex-col items-start">
-                  <span>Başarı</span>
+                  <span>Win Rate</span>
                   <span className="text-gray-300">%{bot.winRate || 0}</span>
                 </span>
               </div>

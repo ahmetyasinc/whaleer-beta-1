@@ -8,12 +8,12 @@ const Trades = ({ trades = [], positions = [] }) => {
     <div className="mb-6 bg-gray-800 p-6 border-1 border-gray-700 rounded-xl">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-        {/* Geçmiş İşlemler */}
+        {/* Trade History */}
         <div>
           <div className="flex items-center gap-2 mb-3">
             <BiTransfer className="w-4 h-4 text-gray-300" />
-            <h3 className="text-sm font-semibold text-white">Geçmiş İşlemler</h3>
-            <span className="text-xs text-gray-400">({trades.length} işlem)</span>
+            <h3 className="text-sm font-semibold text-white">Trade History</h3>
+            <span className="text-xs text-gray-400">({trades.length} trades)</span>
           </div>
           <div className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-xl p-4">
             <div className="space-y-2">
@@ -35,12 +35,12 @@ const Trades = ({ trades = [], positions = [] }) => {
           </div>
         </div>
 
-        {/* Açık Pozisyonlar */}
+        {/* Open Positions */}
         <div>
           <div className="flex items-center gap-2 mb-3">
             <BiTransfer className="w-4 h-4 text-gray-300 rotate-90" />
-            <h3 className="text-sm font-semibold text-white">Açık Pozisyonlar</h3>
-            <span className="text-xs text-gray-400">({positions.length} pozisyon)</span>
+            <h3 className="text-sm font-semibold text-white">Open Positions</h3>
+            <span className="text-xs text-gray-400">({positions.length} positions)</span>
           </div>
           <div className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-xl p-4">
             <div className="space-y-2">

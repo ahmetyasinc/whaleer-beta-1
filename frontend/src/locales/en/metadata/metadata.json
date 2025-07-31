@@ -1,0 +1,18 @@
+{
+  "home": {
+    "title": "Whaleer - Trading Platform",
+    "description": "Design, test, and share your own trading strategies on Whaleer. Accessible for both beginners and pros."
+  },
+  "login": {
+    "title": "Login to Whaleer",
+    "description": "Access your dashboard to build and manage your trading algorithms."
+  },
+  "profile": {
+    "title": "My Profile",
+    "description": "User profile page."
+  },
+  "strategies": {
+    "title": "Strategies",
+    "description": "Strategy develop panels."
+  }
+}

@@ -2,7 +2,7 @@
 
 export default function PerformanceMetrics({ performance }) {
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('tr-TR', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 2
@@ -14,123 +14,121 @@ export default function PerformanceMetrics({ performance }) {
   };
 
   const formatPercentageRate = (value) => {
-    return `${value > 0 ? '' : ''}${value.toFixed(2)}%`;
+    return `${value.toFixed(2)}%`;
   };
 
   const metrics = [
     {
-      label: 'Getiri Oranı',
+      label: 'Return Rate',
       value: formatPercentage(performance.returnPercentage),
       color: performance.returnPercentage >= 0 ? 'text-green-400' : 'text-red-400',
     },
     {
-      label: 'Toplam Kar/Zarar',
+      label: 'Total Profit/Loss',
       value: formatCurrency(performance.totalPnL),
       color: performance.totalPnL >= 0 ? 'text-green-400' : 'text-red-400',
     },
     {
-      label: 'Al-Tut Getirisi',
+      label: 'Buy-and-Hold Return',
       value: formatPercentage(performance.buyHoldReturn),
       color: performance.sharpeRatio >= 1 ? 'text-green-400' : 'text-yellow-400',
     },
     {
-      label: 'Toplam İşlem',
+      label: 'Total Trades',
       value: performance.totalTrades,
       color: 'text-blue-400',
     },
     {
-      label: 'Karlı İşlem',
+      label: 'Winning Trades',
       value: performance.winningTrades,
       color: 'text-green-400',
     },
     {
-      label: 'Zararlı İşlem',
+      label: 'Losing Trades',
       value: performance.losingTrades,
       color: 'text-red-400',
     },
     {
-      label: 'Başlangıç Bakiye',
+      label: 'Initial Balance',
       value: formatCurrency(performance.initialBalance),
       color: 'text-gray-300',
     },
     {
-      label: 'Son Bakiye',
+      label: 'Final Balance',
       value: formatCurrency(performance.finalBalance),
       color: 'text-gray-300',
     },
     {
-      label: 'Başarı Oranı',
+      label: 'Win Rate',
       value: formatPercentageRate(performance.winRate),
       color: performance.winRate >= 50 ? 'text-green-400' : 'text-red-400',
     },
     {
-      label: 'Sharpe Oranı',
+      label: 'Sharpe Ratio',
       value: performance.sharpeRatio.toFixed(3),
       color: performance.sharpeRatio >= 1 ? 'text-green-400' : 'text-yellow-400',
     },
     {
-      label: 'Sortino Oranı',
+      label: 'Sortino Ratio',
       value: performance.sortinoRatio.toFixed(3),
       color: performance.sortinoRatio >= 1 ? 'text-green-400' : 'text-yellow-400',
     },
     {
-      label: 'Kâr faktörü',
+      label: 'Profit Factor',
       value: performance.profitFactor != null ? performance.profitFactor.toFixed(3) : 'N/A',
       color: performance.profitFactor != null && performance.profitFactor >= 1 ? 'text-green-400' : 'text-yellow-400',
     },
     {
-      label: 'Max Düşüş',
+      label: 'Max Drawdown',
       value: formatCurrency(performance.maxDrawdown),
       color: 'text-red-400',
     },
     {
-      label: 'En karlı İşlem',
+      label: 'Most Profitable Trade',
       value: formatPercentage(performance.mostProfitableTrade),
       color: 'text-green-400',
     },
     {
-      label: 'En zararlı İşlem',
+      label: 'Most Losing Trade',
       value: formatPercentage(performance.mostLosingTrade),
       color: 'text-red-400',
     },
     {
-      label: 'İşlemde kalınan mumların tüm mumlara oranı',
+      label: 'Trade Duration Ratio',
       value: performance.durationOftradeRatio,
       color: 'text-blue-500',
     },
     {
-      label: 'Komisyon maliyeti',
+      label: 'Commission Cost',
       value: formatCurrency(performance.commissionCost),
       color: 'text-orange-400',
     },
     {
-      label: 'İşlem hacmi',
+      label: 'Trade Volume',
       value: formatCurrency(performance.volume),
       color: 'text-blue-500',
     }
   ];
 
-return (
-  <div className="bg-gray-900 rounded-xl p-4 shadow-md border-1 border-gray-800">
-    <h3 className="text-white text-base font-semibold mb-4 flex items-center gap-2">
-      Performans Metrikleri
-    </h3>
+  return (
+    <div className="bg-gray-900 rounded-xl p-4 shadow-md border-1 border-gray-800">
+      <h3 className="text-white text-base font-semibold mb-4 flex items-center gap-2">
+        Performance Metrics
+      </h3>
 
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-      {metrics.map((metric, index) => (
-        <div
-          key={index}
-          className="bg-gray-800 rounded-lg px-3 py-2 shadow-sm hover:shadow-md transition-all duration-200"
-        >
-          <div className="text-gray-300 text-xs mb-1">{metric.label}</div>
-          <div className={`text-base font-semibold ${metric.color}`}>
-            {metric.value}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {metrics.map((metric, index) => (
+          <div
+            key={index}
+            className="bg-gray-800 rounded-lg px-3 py-2 shadow-sm hover:shadow-md transition-all duration-200"
+          >
+            <div className="text-gray-300 text-xs mb-1">{metric.label}</div>
+            <div className={`text-base font-semibold ${metric.color}`}>
+              {metric.value}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
-  </div>
-);
-
-
+  );
 }

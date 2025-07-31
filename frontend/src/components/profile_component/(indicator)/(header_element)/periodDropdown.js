@@ -3,28 +3,37 @@
 import { useRef, useEffect, useState } from "react";
 import { BiChevronDown } from "react-icons/bi";
 import useCryptoStore from "@/store/indicator/cryptoPinStore"; // Zustand store'u import et
+import i18n from "@/i18n";
+import { useTranslation } from "react-i18next";
 
-const options = [
-  { value: "1m", label: "1 Dk" },
-  { value: "3m", label: "3 Dk" },
-  { value: "5m", label: "5 Dk" },
-  { value: "15m", label: "15 Dk" },
-  { value: "30m", label: "30 Dk" },
-  { value: "1h", label: "1 Saat" },
-  { value: "2h", label: "2 Saat" },
-  { value: "4h", label: "4 Saat" },
-  { value: "1d", label: "1 Gün" },
-  { value: "1w", label: "1 Hafta" },
-];
 
-const PeriodDropdown = () => {
+const PeriodDropdown = ({locale}) => {
+  const { t } = useTranslation("indicator");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-
+  const options = [
+    { value: "1m", label: t("1m") },
+    { value: "3m", label: t("3m" )},
+    { value: "5m", label: t("5m" )},
+    { value: "15m", label:t("15m") },
+    { value: "30m", label:t("30m") },
+    { value: "1h", label: t("1h") },
+    { value: "2h", label: t("2h") },
+    { value: "4h", label: t("4h") },
+    { value: "1d", label: t("1d") },
+    { value: "1w", label: t("1w") },
+  ];
   const { selectedPeriod, setSelectedPeriod } = useCryptoStore(); // Zustand state'ini al
 
   // Seçilen backend değeri için Türkçe eşleşmeyi bul
   const selectedLabel = options.find((opt) => opt.value === selectedPeriod)?.label || "Seçiniz";
+
+  useEffect(() => {
+    if (locale && i18n.language !== locale) {
+      i18n.changeLanguage(locale);
+    }
+  }, [locale]);
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {

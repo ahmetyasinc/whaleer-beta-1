@@ -1,7 +1,8 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import { useBotStore } from '@/store/bot/botStore';
-import useApiStore from '@/store/api/apiStore'; // yolunu doğru ver
+import useApiStore from '@/store/api/apiStore';
 import useStrategyStore from '@/store/indicator/strategyStore';
 import { FiSearch } from 'react-icons/fi';
 import { toast } from 'react-toastify';
@@ -10,9 +11,9 @@ import useBotChooseStrategyStore from '@/store/bot/botChooseStrategyStore';
 
 export const BotModal = ({ onClose, mode = "create", bot = null }) => {
   const { selectedStrategy } = useBotChooseStrategyStore();
-  const [balance, setBalance] = useState(0); // Kullanıcının toplam bakiyesi
-  const [allocatedAmount, setAllocatedAmount] = useState(0); // Bu bota ayrılan miktar
-  const [percentage, setPercentage] = useState(0); // Slider'daki yüzde
+  const [balance, setBalance] = useState(0);
+  const [allocatedAmount, setAllocatedAmount] = useState(0);
+  const [percentage, setPercentage] = useState(0);
   const [botName, setBotName] = useState('');
   const [api, setApi] = useState('');
   const [strategy, setStrategy] = useState('');
@@ -21,26 +22,20 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
   const [days, setDays] = useState([]);
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
-  const [cryptoList, setCryptoList] = useState([]);
-  const [selectedCrypto, setSelectedCrypto] = useState('');  
+  const [cryptoList, setCryptoList] = useState([]);  
   const [searchQuery, setSearchQuery] = useState('');
-  const availableCoins = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "SUIUSDT", "MATICUSDT", "TRXUSDT", "LTCUSDT", "AVAXUSDT", "LINKUSDT", "DOTUSDT", "SHIBUSDT", "ADAUSDT", "XMRUSDT", "ETCUSDT", "FILUSDT", "ICPUSDT", "AAVEUSDT", "MANAUSDT", "SANDUSDT", "CHZUSDT"];
-  const apiList = useApiStore((state) => state.apiList);
-  const strategies = useStrategyStore((state) => state.all_strategies);
   const [candleCount, setCandleCount] = useState(0);
 
+  const apiList = useApiStore((state) => state.apiList);
+  const availableCoins = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "SUIUSDT", "MATICUSDT", "TRXUSDT", "LTCUSDT", "AVAXUSDT", "LINKUSDT", "DOTUSDT", "SHIBUSDT", "ADAUSDT", "XMRUSDT", "ETCUSDT", "FILUSDT", "ICPUSDT", "AAVEUSDT", "MANAUSDT", "SANDUSDT", "CHZUSDT"];
   const filteredCoins = availableCoins.filter(
     (coin) =>
       coin.toLowerCase().includes(searchQuery.toLowerCase()) &&
       !cryptoList.includes(coin)
   );
 
-  const dayList = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
-  
-  const removeCrypto = (symbol) => {
-    setCryptoList(cryptoList.filter((c) => c !== symbol));
-  };
-  
+  const dayList = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
   useEffect(() => {
     if (mode === 'edit' && bot) {
       setBotName(bot.name || '');
@@ -54,8 +49,7 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
       setCryptoList(bot.cryptos || []);
       setCandleCount(bot.candleCount || 0);
       setAllocatedAmount(bot.balance || 0);
-      setBalance(bot.total_balance || 0); // mevcut toplam bakiye
-    
+      setBalance(bot.total_balance || 0);
       if (bot.balance && bot.total_balance) {
         const calculatedPct = (bot.balance / bot.total_balance) * 100;
         setPercentage(Math.min(100, Math.round(calculatedPct)));
@@ -64,17 +58,9 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
   }, [mode, bot]);
 
   useEffect(() => {
-    if (mode !== 'edit' && api) {
-      const selectedApi = apiList.find((item) => item.name === api);
-      if (selectedApi && selectedApi.balance !== undefined) {
-        setBalance(selectedApi.balance);
-      }
-    }
-    if (mode === 'edit' && bot) {
-      const selectedApi = apiList.find((item) => item.name === api);
-      if (selectedApi && selectedApi.balance !== undefined) {
-        setBalance(selectedApi.balance);
-      }
+    const selectedApi = apiList.find((item) => item.name === api);
+    if (selectedApi && selectedApi.balance !== undefined) {
+      setBalance(selectedApi.balance);
     }
   }, [api, mode, apiList]);
 
@@ -86,36 +72,31 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
     }
   };
 
+  const removeCrypto = (symbol) => {
+    setCryptoList(cryptoList.filter((c) => c !== symbol));
+  };
+
   const addBot = useBotStore((state) => state.addBot);
   const updateBot = useBotStore((state) => state.updateBot);
-  
+
   const handleSave = () => {
     const errors = [];
 
-    if (!botName.trim()) errors.push("Bot ismi gerekli.");
-    if (!api) errors.push("API seçimi yapılmalı.");
-    //if (!strategy) errors.push("Strateji seçimi yapılmalı.");
-    if (!selectedStrategy || !selectedStrategy.name) errors.push("Strateji seçimi yapılmalı.");
+    if (!botName.trim()) errors.push("Bot name is required.");
+    if (!api) errors.push("API selection is required.");
+    if (!selectedStrategy || !selectedStrategy.name) errors.push("Strategy must be selected.");
+    if (!period) errors.push("Period must be selected.");
+    if (!candleCount || candleCount <= 0) errors.push("Invalid candle count.");
+    if (days.length === 0) errors.push("At least one day must be selected.");
+    if (!startTime || !endTime) errors.push("Working hours must be provided.");
+    if (!allocatedAmount || allocatedAmount <= 10) errors.push("Amount must be greater than $10.");
+    if (cryptoList.length === 0) errors.push("At least one crypto must be selected.");
 
-    if (!period) errors.push("Periyot seçilmeli.");
-    if (!candleCount || candleCount <= 0) errors.push("Mum sayısı geçerli değil.");
-    if (days.length === 0) errors.push("En az bir gün seçilmeli.");
-    if (!startTime || !endTime) errors.push("Çalışma saatleri girilmeli.");
-    if (!allocatedAmount || allocatedAmount <= 10) errors.push("Bakiye 10$ değerinden büyük ayarlanmalı.");
-    if (cryptoList.length === 0) errors.push("En az bir kripto seçilmeli.");
-
-    // 🕓 Saat farkı kontrolü (en az 1 saat)
-    if (startTime && endTime) {
-      const [startH, startM] = startTime.split(":").map(Number);
-      const [endH, endM] = endTime.split(":").map(Number);
-
-      const start = startH * 60 + startM;
-      const end = endH * 60 + endM;
-
-      if (end - start < 60) {
-        toast.error("Bitiş saati, başlangıç saatinden en az 1 saat sonra olmalı.", { autoClose: 2000 });
-        return;
-      }
+    const [startH, startM] = startTime.split(":").map(Number);
+    const [endH, endM] = endTime.split(":").map(Number);
+    if ((endH * 60 + endM) - (startH * 60 + startM) < 60) {
+      toast.error("End time must be at least 1 hour after start time.", { autoClose: 2000 });
+      return;
     }
 
     if (errors.length > 0) {
@@ -124,10 +105,9 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
     }
 
     if (allocatedAmount > balance) {
-      toast.error("Ayırmak istediğiniz miktar, toplam bakiyenizden büyük olamaz.", { autoClose: 2000 });
+      toast.error("Allocated amount cannot be greater than total balance.", { autoClose: 2000 });
       return;
     }
-    console.log("Bot verileri:", {strategy});
 
     const botData = {
       id: bot?.id,
@@ -147,30 +127,26 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
 
     if (mode === 'edit') {
       updateBot(botData);
-      toast.success("Bot güncellendi!", { autoClose: 2000 });
+      toast.success("Bot updated!", { autoClose: 2000 });
     } else {
       addBot(botData);
-      toast.success("Bot oluşturuldu!", { autoClose: 2000 });
+      toast.success("Bot created!", { autoClose: 2000 });
     }
 
     onClose();
   };
 
-
-  
   return (
     <div className="fixed inset-0 bg-black/50 bg-opacity-60 flex items-center justify-center z-50">
       <div className="bg-gray-900 p-6 rounded-xl w-full max-w-4xl shadow-2xl relative border-y border-x h-[85vh] overflow-y-auto border-gray-950 flex gap-6">
         {/* Sol - Form Alanı */}
         <div className="w-2/3 pr-4 ">
-          <h2 className="text-2xl font-bold text-white mb-6">
-            {mode === 'edit' ? 'Botu Düzenle' : 'Yeni Bot Oluştur'}
-          </h2>
-          <label className="block mb-2 text-gray-200 font-medium">Bot İsmi</label>
+          <h2 className="text-2xl font-bold text-white mb-6">{mode === 'edit' ? 'Edit Bot' : 'Create New Bot'}</h2>
+          <label className="block mb-2 text-gray-200 font-medium">Bot Name</label>
           <input
             type="text"
             maxLength={15}
-            placeholder="Bot ismi girin"
+            placeholder="Enter bot name"
             className="w-60 mb-4 p-2 bg-gray-800 text-white rounded"
             value={botName}
             onChange={(e) => setBotName(e.target.value)}
@@ -184,7 +160,7 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
                 value={api}
                 onChange={(e) => setApi(e.target.value)}
               >
-                <option value="" disabled hidden>Seç</option>
+                <option value="" disabled hidden>Select</option>
               
                 {apiList.map((item, i) => (
                   <option key={i} value={item.name}>
@@ -195,31 +171,31 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
 
             </div>
             <div>
-              <label className="block mb-1 text-gray-300">Strateji</label>
+              <label className="block mb-1 text-gray-300">Strategy</label>
               <StrategyButton onSelect={(selected) => setStrategy(selected)}/>
 
             </div>
             <div>
-              <label className="block mb-1 text-gray-300">Periyot</label>
+              <label className="block mb-1 text-gray-300">Period</label>
               <select
                 className="w-full p-2 bg-gray-800 text-white rounded"
                 value={period}
                 onChange={(e) => setPeriod(e.target.value)}
               >
-                <option value="" disabled hidden>Seç</option>
-                <option value="1m">1 dk</option>
-                <option value="5m">5 dk</option>
-                <option value="15m">15 dk</option>
-                <option value="30m">30 dk</option>
-                <option value="1h">1 saat</option>
-                <option value="2h">2 saat</option>
-                <option value="4h">4 saat</option>
-                <option value="1d">1 gün</option>
-                <option value="1w">1 hafta</option>
+                <option value="" disabled hidden>Select</option>
+                <option value="1m">1 min</option>
+                <option value="5m">5 min</option>
+                <option value="15m">15 min</option>
+                <option value="30m">30 min</option>
+                <option value="1h">1 hour</option>
+                <option value="2h">2 hours</option>
+                <option value="4h">4 hours</option>
+                <option value="1d">1 day</option>
+                <option value="1w">1 week</option>
               </select>
             </div>
             <div className="mb-6">
-              <label className="block mb-1 text-gray-300">Mum Sayısı</label>
+              <label className="block mb-1 text-gray-300">Candle Count</label>
               <input
                 type="number"
                 min="1"
@@ -232,7 +208,7 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
           </div>
   
           <div className="mb-6">
-            <label className="block mb-2 text-gray-200 font-medium">Çalışma Günleri</label>
+            <label className="block mb-2 text-gray-200 font-medium">Working Days</label>
             <div className="grid grid-cols-4 gap-2 text-gray-300">
               {dayList.map((day) => (
                 <label key={day} className="flex items-center gap-2">
@@ -248,7 +224,7 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
             </div>
           </div>
             <div className="mb-6">
-            <label className="block mb-2 text-gray-200 font-medium">Bot için Bakiye Ayır</label>
+            <label className="block mb-2 text-gray-200 font-medium">Allocate Balance for Bot</label>
 
             <div className="flex items-center gap-3 mb-2">
               <input
@@ -267,7 +243,7 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
             </div>
               
             <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">Toplam Bakiye: ${balance}</span>
+              <span className="text-gray-400 text-sm">Total Balance: ${balance}</span>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -287,7 +263,7 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
             </div>
           </div>
           <div className="mb-6">
-            <label className="block mb-2 text-gray-200 font-medium">Botun çalışma aralığı</label>
+            <label className="block mb-2 text-gray-200 font-medium">Bot Working Hours</label>
 
             <div className="flex justify-start gap-2 mb-2">
               <input
@@ -312,7 +288,7 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
               }}
               className="text-sm text-blue-400 hover:text-blue-300 underline"
             >
-              Tüm gün çalışsın
+              Run All Day
             </button>
           </div>
 
@@ -321,13 +297,13 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
               onClick={onClose}
               className="px-4 py-2 bg-gray-600 text-gray-200 rounded-lg hover:bg-gray-500"
             >
-              İptal
+              Cancel
             </button>
             <button
               onClick={handleSave}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Kaydet
+              Save
             </button>
           </div>
         </div>
@@ -336,7 +312,7 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
         <div className="w-1/3 flex flex-col bg-gray-950 p-3 rounded max-h-[500px]">
           {/* Arama kutusu + filtrelenmiş sonuçlar */}
           <div className="mb-4">
-            <label className="block mb-1 text-gray-300">Kripto Para Ekle</label>
+            <label className="block mb-1 text-gray-300">Add Cryptocurrency</label>
             <div className="relative w-full">
               <input
                 type="text"
@@ -366,12 +342,12 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
                         }}
                         className="text-green-400 text-sm px-2 py-1 hover:text-green-500 rounded"
                       >
-                        Ekle
+                        Add
                       </button>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-gray-400 px-3 py-2">Eşleşen kripto yok</p>
+                  <p className="text-sm text-gray-400 px-3 py-2">No matching crypto found</p>
                 )}
               </div>
             )}
@@ -387,7 +363,7 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
                   onClick={() => removeCrypto(crypto)}
                   className="text-red-500 hover:text-red-600 text-sm"
                 >
-                  Sil
+                  Remove
                 </button>
               </div>
             ))}

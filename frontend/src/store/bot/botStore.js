@@ -122,4 +122,22 @@ export const useBotStore = create((set) => ({
     }
   },
 
+  deactivateAllBots: async () => {
+  try {
+    const state = useBotStore.getState();
+    const activeBots = state.bots.filter(bot => bot.isActive);
+
+    for (const bot of activeBots) {
+      await toggleBotActiveApi(bot.id, true); // Aktif botu pasife çek
+    }
+
+    set((state) => ({
+      bots: state.bots.map(bot => ({ ...bot, isActive: false })),
+    }));
+  } catch (error) {
+    console.error("Tüm botları durdururken hata:", error);
+  }
+},
+
+
 }));

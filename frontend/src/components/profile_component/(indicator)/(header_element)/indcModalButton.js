@@ -1,6 +1,5 @@
 "use client";
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FiNavigation } from "react-icons/fi";
 import { AiOutlineStar } from "react-icons/ai"; // Favorilerim ikonu
 import { MdOutlinePeopleAlt } from "react-icons/md"; // Topluluk ikonu
@@ -10,13 +9,19 @@ import TechnicalIndicators from "../(modal_tabs)/technicalIndicator"; //bulsana 
 import PersonalIndicators from "../(modal_tabs)/personalIndicator";
 import CommunityIndicators from "../(modal_tabs)/communityIndicator";
 import FavoriteIndicators from "../(modal_tabs)/favIndicator";
+import i18n from "@/i18n";
+import { useTranslation } from "react-i18next";
 
-
-const IndicatorsButton = () => {
+const IndicatorsButton = ({locale}) => {
+  const { t } = useTranslation("indicator");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("Teknikler");
+  const [activeTab, setActiveTab] = useState(1);
   const [favorites, setFavorites] = useState([]);
-
+  useEffect(() => {
+    if (locale && i18n.language !== locale) {
+      i18n.changeLanguage(locale);
+    }
+  }, [locale]);
   //Favorite ekleme fonksiyonu (state)
   const addFavorite = (indicator) => {
     setFavorites((prevFavorites) => {
@@ -30,25 +35,25 @@ const IndicatorsButton = () => {
   };
 
   const tabs = [
-    { name: "Teknikler", icon: <BiBarChartAlt2 className="text-[18px]" /> },
-    { name: "Kişisel", icon: <BsPerson className="text-[18px]" /> },
-    { name: "Topluluk", icon: <MdOutlinePeopleAlt className="text-[18px]" /> },
-    { name: "Favorilerim", icon: <AiOutlineStar className="text-[18px]" /> },
+    { id: 1, name: t("Techniques"), icon: <BiBarChartAlt2 className="text-[18px]" /> },
+    { id: 2, name: t("Personal"), icon: <BsPerson className="text-[18px]" /> },
+    { id: 3, name: t("Community"), icon: <MdOutlinePeopleAlt className="text-[18px]" /> },
+    { id: 4, name: t("Favorites"), icon: <AiOutlineStar className="text-[18px]" /> },
   ];
 
   // İçeriği dinamik olarak getir
   const renderContent = () => {
     switch (activeTab) {
-      case "Teknikler":
-            return <TechnicalIndicators addFavorite={addFavorite} favorites={favorites} />;
-      case "Kişisel":
-        return <PersonalIndicators />;
-      case "Topluluk":
-        return <CommunityIndicators />;
-      case "Favorilerim":
+      case 1:
+            return <TechnicalIndicators locale={locale} addFavorite={addFavorite} favorites={favorites} />;
+      case 2:
+        return <PersonalIndicators/>;
+      case 3:
+        return <CommunityIndicators locale={locale}/>;
+      case 4:
         return <FavoriteIndicators favorites={favorites} addFavorite={addFavorite} />;
       default:
-        return <p className="text-white">Sayfa bulunamadı.</p>;
+        return <p className="text-white">t("NotFound")</p>;
     }
   };
 // from-[rgb(42,158,48)] to-[hsl(300,100%,54%)]
@@ -59,7 +64,7 @@ const IndicatorsButton = () => {
         className="flex items-center justify-center w-[130px] h-[40px] rounded-md transition-all duration-200 bg-gray-950 hover:bg-gray-900 text-white"
         onClick={() => setIsModalOpen(true)}
       >
-        <FiNavigation className="mr-2 text-[19px]" /> Göstergeler
+        <FiNavigation className="mr-2 text-[19px]" /> {t("indicators")}
       </button>
 
       {/* Modal */}
@@ -69,7 +74,7 @@ const IndicatorsButton = () => {
             
             {/* Modal Başlık Kısmı */}
             <div className="flex justify-between items-center px-6 py-4 border-b border-gray-700 h-16">
-              <h2 className="text-lg font-bold">Göstergeler</h2>
+              <h2 className="text-lg font-bold">{t("indicators")}</h2>
               <button
                 className="text-gray-400 hover:text-white text-3xl"
                 onClick={() => setIsModalOpen(false)}
@@ -85,9 +90,9 @@ const IndicatorsButton = () => {
                   <button
                     key={tab.name}
                     className={`flex items-center gap-2 py-2 px-4 text-left transition-all ${
-                      activeTab === tab.name ? "bg-gradient-to-r from-[hsl(180,81%,19%)] to-[hsl(215,22%,56%)] text-white px-4 rounded-3xl py-2 hover:bg-[rgba(15,19,73,0.76)]" : "hover:bg-gray-700"
+                      activeTab === tab.id ? "bg-gradient-to-r from-[hsl(180,81%,19%)] to-[hsl(215,22%,56%)] text-white px-4 rounded-3xl py-2 hover:bg-[rgba(15,19,73,0.76)]" : "hover:bg-gray-700"
                     }`}
-                    onClick={() => setActiveTab(tab.name)}
+                    onClick={() => setActiveTab(tab.id)}
                   >
                     {tab.icon} {tab.name}
                   </button>

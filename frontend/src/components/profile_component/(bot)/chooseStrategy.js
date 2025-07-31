@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { MdOutlinePeopleAlt } from "react-icons/md";
 import { FaDice } from "react-icons/fa6";
 import { BiBarChartAlt2 } from "react-icons/bi";
@@ -17,11 +18,15 @@ const StrategyButton = () => {
     setActiveTab,
     selectStrategyAndCloseModal
   } = useBotChooseStrategyStore();
+  
+  useEffect(() => {
+    setActiveTab("Technicals");
+  }, []);
 
   const tabs = [
-    { name: "Teknikler", icon: <BiBarChartAlt2 className="text-[19px]" /> },
-    { name: "Stratejilerim", icon: <FaDice className="text-[19px]" /> },
-    { name: "Topluluk", icon: <MdOutlinePeopleAlt className="text-[18px]" /> },
+    { name: "Technicals", icon: <BiBarChartAlt2 className="text-[19px]" /> },
+    { name: "My Strategies", icon: <FaDice className="text-[19px]" /> },
+    { name: "Community", icon: <MdOutlinePeopleAlt className="text-[18px]" /> },
   ];
 
   const renderContent = () => {
@@ -32,14 +37,14 @@ const StrategyButton = () => {
     };
     
     switch (activeTab) {
-      case "Teknikler":
+      case "Technicals":
         return <TechnicalStrategies {...props} />;
-      case "Stratejilerim":
+      case "My Strategies":
         return <MyStrategies {...props} />;
-      case "Topluluk":
+      case "Community":
         return <CommunityStrategy {...props} />;
       default:
-        return <p className="text-white">İçerik bulunamadı.</p>;
+        return <p className="text-white">No content found.</p>;
     }
   };
 
@@ -49,7 +54,7 @@ const StrategyButton = () => {
         className="bg-gray-800 w-[120px] px-4 py-[10px] rounded text-sm text-white truncate"
         onClick={() => setIsModalOpen(true)}
       >
-        {selectedStrategy ? selectedStrategy.name : "Strateji Seçin"}
+        {selectedStrategy ? selectedStrategy.name : "Select Strategy"}
       </button>
 
       {isModalOpen && (
@@ -57,7 +62,7 @@ const StrategyButton = () => {
           <div className="bg-gray-900 text-white rounded-md w-[800px] h-[584px] shadow-lg flex flex-col relative">
 
             <div className="flex justify-between items-center px-6 py-4 border-b border-gray-700 h-16">
-              <h2 className="text-lg font-bold">Stratejiler</h2>
+              <h2 className="text-lg font-bold">Strategies</h2>
               <button
                 className="text-gray-400 hover:text-white text-3xl"
                 onClick={() => setIsModalOpen(false)}

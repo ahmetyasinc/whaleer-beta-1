@@ -6,15 +6,21 @@ import AddIndicatorButton from "./add_indicator_button";
 import useIndicatorStore from "@/store/indicator/indicatorStore"; // Zustand Store'u import et
 import CodeModal from "./CodeModal";
 import axios from "axios";
-
+import i18n from "@/i18n";
+import { useTranslation } from "react-i18next";
 axios.defaults.withCredentials = true; // Tüm axios isteklerinde cookie'yi göndermeyi etkinleştir
 
-const CommunityIndicators = () => {
+const CommunityIndicators = ({locale}) => {
+    const { t } = useTranslation("indicator");
     const { favorites, toggleFavorite, community } = useIndicatorStore();
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedIndicator, setSelectedIndicator] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-
+    useEffect(() => {
+      if (locale && i18n.language !== locale) {
+        i18n.changeLanguage(locale);
+      }
+    }, [locale]);
     // Favori ekleme/kaldırma fonksiyonu
     const handleToggleFavorite = async (indicator) => {
         const isAlreadyFavorite = favorites.some((fav) => fav.id === indicator.id);
@@ -47,7 +53,7 @@ const CommunityIndicators = () => {
             <div className="bg-gray-800 flex items-center border-b border-gray-800 mb-2">
                 <input
                     type="text"
-                    placeholder="Ara..."
+                    placeholder= {t("search")}
                     className="w-full px-3 py-2 bg-gray-800 text-white focus:outline-none"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}

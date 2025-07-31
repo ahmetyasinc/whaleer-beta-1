@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 const allCoins = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'XRPUSDT', 'LTCUSDT', 'SOLUSDT', 'DOTUSDT', 'DOGEUSDT', 'SHIBUSDT', 'MATICUSDT', 'AVAXUSDT', 'LINKUSDT', 'TRXUSDT', 'ETCUSDT', 'XLMUSDT'];
-const periods = ['1dk','3dk','5dk', '15dk', '30dk', '1saat', '2saat', '4saat', '6saat', '1gun', '1hafta'];
+const periods = ['1min','3min','5min', '15min', '30min', '1h', '2h', '4h', '6h', '1d', '1w'];
 
 const indicators = [
   { name: 'RSI', value: 28 },
@@ -40,41 +40,9 @@ const indicators = [
   { name: 'OI', value: 50 },
 ];
 
-
 const getColor = (name, value) => {
-  if (value === null) return 'bg-gray-500'; // Null değerler için gri renk
-  
-  if (name === 'MACD') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'MFI') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'CMF') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'ATR') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'BB') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'Fisher') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'Stoch') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'ADX') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'UO') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'CMO') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'Acc/Dist') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'BBP') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'OBV') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'Aroon') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'CRSI') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'Coppock') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'ROC') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'DC') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'KC') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'EFI') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'PVT') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'PPO') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'TSI') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'PowerS') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'VD') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'McGinley') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'PSar') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'Supertrend') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'TRIX') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'VORTEX') return value > 50 ? 'bg-green-500' : 'bg-red-500';
-  if (name === 'OI') return value > 50 ? 'bg-green-500' : 'bg-red-500';
+  if (value === null) return 'bg-gray-500';
+
   if (name === 'RSI') {
     if (value < 15) return 'bg-green-700';
     if (value < 30) return 'bg-green-400';
@@ -82,7 +50,8 @@ const getColor = (name, value) => {
     if (value < 80) return 'bg-red-400';
     return 'bg-red-700';
   }
-  return 'bg-gray-300';
+
+  return value > 50 ? 'bg-green-500' : 'bg-red-500';
 };
 
 export default function IndicatorHeatMap() {
@@ -94,24 +63,23 @@ export default function IndicatorHeatMap() {
     coin.toLowerCase().includes(coinSearch.toLowerCase())
   );
 
-  // Eğer seçili coin veya periyot yoksa veya arama sonucunda coin bulunamadıysa gösterge değerini null yap
   const shouldShowNull = selectedCoin === '' || selectedPeriod === '' || filteredCoins.length === 0;
-  
+
   const getIndicatorValue = (indicator) => {
     return shouldShowNull ? null : indicator.value;
   };
 
   return (
     <div className="h-full w-full bg-zinc-900 shadow-lg rounded p-2 text-white">
-      <h2 className="text-sm font-bold mb-3 text-center">Teknik Tarama</h2>
+      <h2 className="text-sm font-bold mb-3 text-center">Technical Scanner</h2>
 
-      {/* Arama Çubuğu */}
+      {/* Search Box */}
       <div className="mb-2">
         <input
           type="text"
           value={coinSearch}
           onChange={(e) => setCoinSearch(e.target.value)}
-          placeholder="Kripto ara..."
+          placeholder="Search crypto..."
           className="w-full p-1 rounded bg-zinc-800 text-white border-1 border-zinc-500 text-xs placeholder:text-zinc-400"
         />
       </div>
@@ -124,7 +92,7 @@ export default function IndicatorHeatMap() {
             onChange={(e) => setSelectedCoin(e.target.value)}
             className="w-full p-1 rounded bg-zinc-800 text-white border-1 border-zinc-500 text-xs"
           >
-            <option value="">Seçiniz</option>
+            <option value="">Select</option>
             {filteredCoins.map((coin) => (
               <option key={coin} value={coin}>
                 {coin}
@@ -134,13 +102,13 @@ export default function IndicatorHeatMap() {
         </div>
 
         <div className="w-1/2">
-          <label className="block text-xs mb-1">Periyot</label>
+          <label className="block text-xs mb-1">Period</label>
           <select
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value)}
             className="w-full p-1 rounded bg-zinc-800 text-white border-1 border-zinc-500 text-xs"
           >
-            <option value="">Seçiniz</option>
+            <option value="">Select</option>
             {periods.map((p) => (
               <option key={p} value={p}>
                 {p}

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { IoIosSearch } from "react-icons/io";
-import BotDropdownModal from '@/components/profile_component/(showcase)/(explore)/botDropdownModal'; // Birazdan tanımlayacağız
+import BotDropdownModal from '@/components/profile_component/(showcase)/(explore)/botDropdownModal'; // Will define soon
 import useBotDropdownSearchStore from '@/store/showcase/botDropdownSearchStore';
 
 const Input = () => {
@@ -18,7 +18,7 @@ const Input = () => {
     <StyledWrapper>
       <div className="search-header">
         <input
-          placeholder="Bot veya üretici ara..."
+          placeholder="Search bot or creator..."
           className="search-header__input"
           type="text"
           onFocus={() => setShowDropdown(true)}

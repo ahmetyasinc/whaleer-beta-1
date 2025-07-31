@@ -22,7 +22,6 @@ const BotDiscoveryApp = () => {
   const isFollowed = useBotDataStore(state => state.isBotFollowed(botData?.bot?.bot_id));
   const follow = useBotDataStore(state => state.followBot);
 
-
   useEffect(() => {
     initializeBots();
   }, []);
@@ -38,24 +37,23 @@ const BotDiscoveryApp = () => {
       </div>
     );
   }
-  
+
   if (!botData) {
     return (
       <div className="flex-1 p-6 h-[calc(100vh-60px)] max-h-screen mt-[60px] relative overflow-auto pl-[340px] pr-[395px] flex items-center justify-center">
         <div className="text-center text-gray-400 text-sm bg-gray-800/50 p-6 rounded-xl border border-gray-600">
-          <p className="text-lg font-semibold text-white mb-2">Aradığınız kriterlerde bot bulunamadı.</p>
-          <p className="text-sm text-gray-400">Lütfen filtrelerinizi değiştirerek tekrar deneyin.</p>
+          <p className="text-lg font-semibold text-white mb-2">No bots found matching your criteria.</p>
+          <p className="text-sm text-gray-400">Please adjust your filters and try again.</p>
         </div>
       </div>
     );
   }
 
-
   return (
     <div className="flex-1 p-6 h-[calc(100vh-60px)] max-h-screen mt-[60px] relative overflow-auto pl-[340px] pr-[382px]">
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-2">
-        {/* Kullanıcı Profil Kartı */}
+        {/* User Profile Card */}
         <div>
           <UserProfileCard 
             userData={botData?.user}
@@ -64,7 +62,7 @@ const BotDiscoveryApp = () => {
           />
         </div>
 
-        {/* Bot Kartı */}
+        {/* Bot Card */}
         <div className="relative">
           <BotCard
             botData={botData?.bot}
@@ -74,14 +72,14 @@ const BotDiscoveryApp = () => {
           />
         </div>
 
-        {/* Yeni kart (tam genişlikte olacak) */}
+        {/* Full-width chart card */}
         <div className="col-span-2 mt-[-3px]">
           <div className="bg-gray-800 rounded-2xl shadow-2xl p-4 my-2 border-1 border-gray-700">
-          <h3 className="text-sm font-semibold text-white mb-3">Anapara / Zaman</h3>
-          <div className="overflow-hidden">
-            <BotChart data={botData.chartData} />
+            <h3 className="text-sm font-semibold text-white mb-3">Profit Chart (%)</h3>
+            <div className="overflow-hidden">
+              <BotChart data={botData.chartData} />
+            </div>
           </div>
-        </div>
         </div>
 
         <div className="col-span-2 ">
@@ -91,16 +89,14 @@ const BotDiscoveryApp = () => {
         <div className="col-span-2 mt-[-41px]">
           <BotterGuide username={botData.bot.creator} />
         </div>
-
       </div>
 
-
-      {/* Navigasyon Okları */}
+      {/* Navigation Arrows */}
       <div className="fixed right-[330px] top-1/2 transform -translate-y-1/2 flex flex-col gap-2 z-40">
         <button
           onClick={() => handleNavigation('up')}
           className="p-3 bg-gray-700 rounded-full shadow-lg hover:bg-gray-600 transition-all duration-200 hover:scale-110"
-          title="Önceki bot/kullanıcı"
+          title="Previous bot/user"
         >
           <FiChevronUp className="w-5 h-5 text-gray-300" />
         </button>
@@ -108,7 +104,7 @@ const BotDiscoveryApp = () => {
         <button
           onClick={() => handleNavigation('down')}
           className="p-3 bg-gray-700 rounded-full shadow-lg hover:bg-gray-600 transition-all duration-200 hover:scale-110"
-          title="Sonraki bot/kullanıcı"
+          title="Next bot/user"
         >
           <FiChevronDown className="w-5 h-5 text-gray-300" />
         </button>

@@ -43,11 +43,11 @@ export default function StrategyIndicatorCard() {
   }, []);
 
   const handleModalPublish = (data) => {
-    console.log("Yayınla verisi:", data);
+    console.log("Publish data:", data);
   };
 
   const handleInspect = (item) => {
-    console.log("İnceleniyor:", item);
+    console.log("Inspecting:", item);
     setMenuOpenId(null);
   };
 
@@ -85,7 +85,7 @@ export default function StrategyIndicatorCard() {
                 onClick={() => handleInspect(item)}
                 className="flex items-center gap-2 w-full px-3 py-2 text-xs text-yellow-400 hover:bg-gray-800/80 transition-colors"
               >
-                <IoSearch size={14} /> İncele
+                <IoSearch size={14} /> Inspect
               </button>
               <button
                 onClick={() =>
@@ -95,7 +95,7 @@ export default function StrategyIndicatorCard() {
                 }
                 className="flex items-center gap-2 w-full px-3 py-2 text-xs text-blue-400 hover:bg-gray-800/80 transition-colors border-t border-gray-700"
               >
-                <FiUpload size={14} /> Yayınla
+                <FiUpload size={14} /> Publish
               </button>
             </div>
           )}
@@ -106,12 +106,12 @@ export default function StrategyIndicatorCard() {
 
   return (
     <div className="w-full h-full flex gap-3 overflow-hidden">
-      {/* Stratejiler Kartı */}
+      {/* Strategies Card */}
       <div className="flex-1 bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl border-1 border-zinc-700 shadow-xl flex flex-col max-h-[calc(100vh-110px)]">
         <div className="px-4 py-3 border-b border-zinc-700 bg-gradient-to-r from-blue-900/20 to-blue-800/10">
           <div className="flex items-center gap-3">
             <div className="w-4 h-4 bg-blue-400 rounded-full"></div>
-            <h3 className="text-sm mt-[6px] font-semibold text-blue-200">Stratejilerim</h3>
+            <h3 className="text-sm mt-[6px] font-semibold text-blue-200">My Strategies</h3>
             <span className="bg-blue-500/20 text-blue-300 text-xs px-2 py-0.5 rounded-full font-medium">
               {strategies?.length || 0}
             </span>
@@ -129,21 +129,19 @@ export default function StrategyIndicatorCard() {
                 <div className="w-12 h-12 bg-blue-500/10 rounded-full flex items-center justify-center mb-3">
                   <div className="w-6 h-6 bg-blue-500/20 rounded-full"></div>
                 </div>
-                <p className="text-gray-500 text-xs">
-                  Henüz strateji eklenmemiş veya yükleniyor...
-                </p>
+                <p className="text-gray-500 text-xs">No strategies added yet</p>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* İndikatörler Kartı */}
+      {/* Indicators Card */}
       <div className="flex-1 bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl border-1 border-zinc-700 shadow-xl flex flex-col max-h-[calc(100vh-110px)]">
         <div className="px-4 py-3 border-b border-zinc-700 bg-gradient-to-r from-purple-900/20 to-purple-800/10">
           <div className="flex items-center gap-3">
             <div className="w-4 h-4 bg-purple-400 rounded-full"></div>
-            <h3 className="text-sm mt-[6px] font-semibold text-purple-200">İndikatörlerim</h3>
+            <h3 className="text-sm mt-[6px] font-semibold text-purple-200">My Indicators</h3>
             <span className="bg-purple-500/20 text-purple-300 text-xs px-2 py-0.5 rounded-full font-medium">
               {indicators?.length || 0}
             </span>
@@ -161,16 +159,14 @@ export default function StrategyIndicatorCard() {
                 <div className="w-12 h-12 bg-purple-500/10 rounded-full flex items-center justify-center mb-3">
                   <div className="w-6 h-6 bg-purple-500/20 rounded-full"></div>
                 </div>
-                <p className="text-gray-500 text-xs">
-                  Henüz indikatör eklenmemiş veya yükleniyor...
-                </p>
+                <p className="text-gray-500 text-xs">No indicators added yet</p>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Modallar */}
+      {/* Modals */}
       <PublishStrategyModal
         isOpen={showStrategyModal}
         onClose={() => setShowStrategyModal(false)}

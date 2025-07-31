@@ -14,7 +14,7 @@ const COLORS = [
 export default function PortfolioChart() {
   const { portfolio } = usePortfolioStore();
 
-  // Portföy cost değerlerini hesapla
+  // Calculate portfolio cost values
   const data = portfolio.map((item) => ({
     name: item.symbol.toUpperCase(),
     value: item.amount,
@@ -22,7 +22,7 @@ export default function PortfolioChart() {
 
   const total = data.reduce((sum, entry) => sum + entry.value, 0);
 
-  // Dilim içindeki verileri gösteren label
+  // Inner label showing percentage and value
   const renderInnerLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value }) => {
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
@@ -52,20 +52,19 @@ export default function PortfolioChart() {
     );
   };
 
-  // Dışarıdaki coin adlarını gösteren label (çubuklu)
+  // Outer label showing coin names with lines
   const renderOuterLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, name }) => {
     const RADIAN = Math.PI / 180;
-    const radius = outerRadius + 30; // Çubuk uzunluğu
+    const radius = outerRadius + 30; // Line length
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
     
-    // Çubuk başlangıç noktası
     const lineStartX = cx + (outerRadius + 5) * Math.cos(-midAngle * RADIAN);
     const lineStartY = cy + (outerRadius + 5) * Math.sin(-midAngle * RADIAN);
     
     return (
       <g>
-        {/* Çubuk çizgisi */}
+        {/* Connector line */}
         <line
           x1={lineStartX}
           y1={lineStartY}
@@ -74,7 +73,7 @@ export default function PortfolioChart() {
           stroke="white"
           strokeWidth="1"
         />
-        {/* Coin adı */}
+        {/* Coin name */}
         <text 
           x={x} 
           y={y} 
@@ -90,57 +89,56 @@ export default function PortfolioChart() {
     );
   };
 
-return (
-  <div className="bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl shadow-lg border-1 border-zinc-700 p-4 text-white w-full h-full flex flex-col">
-    {/* Header */}
-    <div className="pb-3 mb-4 border-b border-zinc-700">
-      <h3 className="text-lg font-semibold text-center">
-        Bot Portföyü Maliyet Dağılımı
-      </h3>
+  return (
+    <div className="bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl shadow-lg border-1 border-zinc-700 p-4 text-white w-full h-full flex flex-col">
+      {/* Header */}
+      <div className="pb-3 mb-4 border-b border-zinc-700">
+        <h3 className="text-lg font-semibold text-center">
+          Bot Portfolio Cost Distribution
+        </h3>
+      </div>
+
+      {/* Chart */}
+      <div className="flex-1 overflow-hidden border-1 border-zinc-700 rounded-lg p-4">
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              outerRadius={100}
+              innerRadius={20}
+              fill="#8884d8"
+              labelLine={false}
+              label={renderInnerLabel}
+              stroke="hsl(0,0%,14%)"
+              strokeWidth={0}
+            >
+              {data.map((_, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Pie>
+
+            {/* Second Pie for outer labels */}
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              outerRadius={100}
+              innerRadius={100}
+              fill="transparent"
+              labelLine={false}
+              label={renderOuterLabel}
+              stroke="white"
+              strokeWidth={0}
+            >
+              {data.map((_, index) => (
+                <Cell key={`outer-cell-${index}`} fill="transparent" />
+              ))}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
     </div>
-
-    {/* Chart */}
-    <div className="flex-1 overflow-hidden border-1 border-zinc-700 rounded-lg p-4">
-      <ResponsiveContainer width="100%" height={300}>
-        <PieChart>
-          <Pie
-            data={data}
-            dataKey="value"
-            nameKey="name"
-            outerRadius={100}
-            innerRadius={20}
-            fill="#8884d8"
-            labelLine={false}
-            label={renderInnerLabel}
-            stroke="hsl(0,0%,14%)"
-            strokeWidth={0}
-          >
-            {data.map((_, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-            ))}
-          </Pie>
-
-          {/* Dışarıdaki coin adları için ikinci Pie */}
-          <Pie
-            data={data}
-            dataKey="value"
-            nameKey="name"
-            outerRadius={100}
-            innerRadius={100}
-            fill="transparent"
-            labelLine={false}
-            label={renderOuterLabel}
-            stroke="white"
-            strokeWidth={0}
-          >
-            {data.map((_, index) => (
-              <Cell key={`outer-cell-${index}`} fill="transparent" />
-            ))}
-          </Pie>
-        </PieChart>
-      </ResponsiveContainer>
-    </div>
-  </div>
-);
-
+  );
 }

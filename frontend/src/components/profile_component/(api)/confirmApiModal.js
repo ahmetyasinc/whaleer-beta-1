@@ -47,7 +47,7 @@ export default function ConfirmApiModal({ isOpen, onClose, onConfirm, apiData })
                   className="w-full px-3 py-1 pr-8 rounded-sm bg-black text-white focus:outline-none appearance-none 
                              [&::-webkit-outer-spin-button]:appearance-none 
                              [&::-webkit-inner-spin-button]:appearance-none"
-                  placeholder="Örn: 1000.00"
+                  placeholder="Exp: 1000.00"
                 />
                 {/* Dolar ikonu */}
                 <span className="absolute inset-y-0 right-2 flex items-center text-gray-400 pointer-events-none text-lg">

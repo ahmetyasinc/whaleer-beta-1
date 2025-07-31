@@ -9,24 +9,23 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import { IoSearch } from "react-icons/io5";
 import { FaEye } from "react-icons/fa";
 
-
 export default function ModernBotList() {
   const { bots } = useProfileBotStore();
-  const [menuOpen, setMenuOpen] = useState(null); // hangi botun ID'si açık
+  const [menuOpen, setMenuOpen] = useState(null); // which bot ID is open
   const menuRef = useRef(null);
 
-  // Dışarı tıklayınca kapatma
-useEffect(() => {
-  const handleClickOutside = (event) => {
-    if (menuRef.current && !menuRef.current.contains(event.target)) {
-      setMenuOpen(null);
-    }
-  };
-  document.addEventListener("mousedown", handleClickOutside);
-  return () => {
-    document.removeEventListener("mousedown", handleClickOutside);
-  };
-}, []);
+  // Close menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="w-full h-full flex flex-col overflow-hidden p-6 bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl border-1 border-gray-700">
@@ -34,13 +33,12 @@ useEffect(() => {
       <div className="mb-8 border-b border-gray-700 pb-2">
         <div className="flex items-center gap-3 mb-2">
           <h1 className="text-xl font-bold bg-gradient-to-r from-white to-gray-100 bg-clip-text text-transparent">
-            Botlarım
+            My Bots
           </h1>
         </div>
       </div>
 
       {/* Bot List */}
-{/* Bot List */}
       <div className="flex-1 overflow-y-auto">
         {bots.length > 0 ? (
           <div className="space-y-2">
@@ -58,12 +56,8 @@ useEffect(() => {
                   <div className="flex items-center gap-4">
                     {/* Bot Icon & Status */}
                     <div className="relative">
-                      <div
-                        className="p-2.5 rounded-full bg-gray-600"
-                      >
-                        <RiRobotLine
-                          className="w-5 h-5 text-neutral-400"
-                        />
+                      <div className="p-2.5 rounded-full bg-gray-600">
+                        <RiRobotLine className="w-5 h-5 text-neutral-400" />
                       </div>
                       {/* Status Dot */}
                       <div className="absolute -top-1 -right-1">
@@ -90,7 +84,7 @@ useEffect(() => {
                           bot.isActive ? "text-emerald-400" : "text-red-400"
                         } font-medium`}
                       >
-                        {bot.isActive ? "Aktif" : "Devre Dışı"}
+                        {bot.isActive ? "Active" : "Inactive"}
                       </p>
                     </div>
                   </div>
@@ -101,7 +95,7 @@ useEffect(() => {
                     <div className="text-right">
                       <div className="flex items-center gap-1.5 mb-1">
                         <FaDollarSign className="w-3.5 h-3.5 text-blue-400" />
-                        <span className="text-xs text-gray-400">Yönetilen</span>
+                        <span className="text-xs text-gray-400">Managed</span>
                       </div>
                       <span className="text-sm font-bold text-blue-400">
                         ${bot.managedAmount.toLocaleString()}
@@ -112,7 +106,7 @@ useEffect(() => {
                     <div className="text-right">
                       <div className="flex items-center gap-1.5 mb-1">
                         <FaChartLine className="w-3.5 h-3.5 text-emerald-400" />
-                        <span className="text-xs text-gray-400">Marj</span>
+                        <span className="text-xs text-gray-400">Margin</span>
                       </div>
                       <span className="text-sm font-bold text-emerald-400">
                         {bot.winRate}%
@@ -132,22 +126,22 @@ useEffect(() => {
                         <div className="absolute top-0 right-10 w-36 bg-stone-900 rounded-lg shadow-lg z-10 border-1 border-stone-700">
                           <button
                             onClick={() => {
-                              // İncele işlevi buraya gelecek
+                              // View logic
                               setMenuOpen(null);
                             }}
                             className="flex items-center gap-2 w-full px-4 py-2 text-sm text-blue-400 hover:bg-stone-800 rounded-t-lg transition-colors duration-200"
                           >
-                            <IoSearch size={16} /> İncele
+                            <IoSearch size={16} /> View
                           </button>
 
                           <button
                             onClick={() => {
-                              // Önizle işlevi buraya gelecek
+                              // Preview logic
                               setMenuOpen(null);
                             }}
                             className="flex items-center gap-2 w-full px-4 py-2 text-sm text-purple-400 hover:bg-stone-800 rounded-b-lg transition-colors duration-200"
                           >
-                            <FaEye size={16} /> Önizle
+                            <FaEye size={16} /> Preview
                           </button>
                         </div>
                       )}
@@ -166,29 +160,27 @@ useEffect(() => {
               <FaRobot className="w-12 h-12 text-gray-500" />
             </div>
             <h3 className="text-xl font-semibold text-gray-300 mb-2">
-              Henüz Bot Yok
+              No Bots Yet
             </h3>
             <p className="text-gray-500 max-w-sm">
-              Trading botunuzu oluşturmak için otomatik botlarım sayfasından yeni bot ekle butonuna
-              tıklayın.
+              To create your trading bot, go to the automated bots page and click the "Add New Bot" button.
             </p>
           </div>
         )}
       </div>
 
-<style jsx>{`
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateX(-40px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-`}</style>
-
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateX(-40px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }

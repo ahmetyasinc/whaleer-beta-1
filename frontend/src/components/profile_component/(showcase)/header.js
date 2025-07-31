@@ -11,28 +11,28 @@ export default function Header() {
   const [modalOpen, setModalOpen] = useState(false);
 
   const navItems = [
-    { name: "Keşfet", href: "/profile/showcase" },
-    { name: "Öne Çıkanlar", href: "/profile/showcase/featured" }
+    { name: "Explore", href: "/profile/showcase" },
+    { name: "Featured", href: "/profile/showcase/featured" }
   ];
 
   return (
     <>
       <header className="fixed top-0 left-0 w-full bg-black text-white h-[60px] shadow-md z-50 px-6">
         <div className="relative h-full flex items-center justify-between">
-          {/* Sat/Kirala butonu */}
+          {/* Sell/Rent button */}
           <button
             className="absolute left-[45px] top-1/2 -translate-y-1/2 bg-black hover:border-stone-400 transition px-6 py-[6px] rounded-xl font-semibold shadow-lg text-white border-1 border-stone-600 z-50"
             onClick={() => setModalOpen(true)}
           >
-            Sat / Kirala
+            Sell / Rent
           </button>
-          {/* Boş div sol denge için */}
+          {/* Empty div for left spacing */}
           <div className="w-[160px]" />
-          {/* Ortalanmış SearchButton */}
+          {/* Centered SearchButton */}
           <div className="absolute left-1/2 -translate-x-1/2">
             <SearchButton />
           </div>
-          {/* Sağda Linkler */}
+          {/* Right-aligned links */}
           <nav className="flex gap-4">
             {navItems.map((item) => (
               <Link

@@ -83,7 +83,7 @@ const TechnicalStrategies = ({ onSelect }) => {
                   onClick={() => onSelect(strategy)} // 👈 Strateji seçimini tetikleyen yer
                   className="bg-blue-600 px-2 rounded-md py-[1px] h-[26px] mr-3 hover:bg-blue-800 text-white text-xs"
                 >
-                  Seç
+                  Select
                 </button>
               </div>
             </div>

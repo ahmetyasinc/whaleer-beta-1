@@ -1,5 +1,5 @@
 
-import sys, json, logging,os
+import sys, json, logging,os, traceback
 from typing import Dict, List, Optional, Any
 from psycopg2.extras import RealDictCursor
 from backend.trade_engine.config import DB_CONFIG, get_db_connection
@@ -9,9 +9,108 @@ import sys, json, logging, os
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 from psycopg2.extras import RealDictCursor
-
+from backend.trade_engine.taha_part.utils.price_cache_new import get_price
 logger = logging.getLogger(__name__)
 
+
+async def save_trade_to_db(bot_id: int, user_id: int, trade_result: dict, order_params: dict) -> bool:
+    """
+    Trade'i DB'ye kaydeder - bot_trades schema'sına uygun
+    """
+    try:
+        if "error" in trade_result:
+            logger.warning(f"⚠ Hatalı emir kaydedilmeyecek: {trade_result.get('error')}")
+            return False
+
+        symbol = trade_result.get("symbol", "")
+        side = trade_result.get("side", "").lower()
+        order_id = str(trade_result.get("orderId", ""))
+        status = trade_result.get("status", "FILLED")
+
+        executed_qty = float(trade_result.get("executedQty", 0) or trade_result.get("origQty", 0))
+
+        trade_type = order_params.get("trade_type", "spot")
+        normalized_trade_type = "spot" if trade_type in ["spot", "test_spot"] else "futures"
+
+        # Güncel fiyat
+        current_price = await get_price(symbol, normalized_trade_type)
+        if not current_price or current_price <= 0:
+            current_price = float(
+                trade_result.get("price")
+                or trade_result.get("avgPrice")
+                or order_params.get("price", 0.0)
+            )
+            logger.warning(f"⚠ {symbol} için price cache fallback: {current_price}")
+
+        # Commission
+        commission = sum(float(fill.get("commission", 0)) for fill in trade_result.get("fills", [])) \
+            if trade_result.get("fills") else float(trade_result.get("commission", 0) or 0.0)
+
+        db_trade_type = trade_type.replace("test_", "")
+        position_side = None
+        leverage = 1
+
+        if normalized_trade_type == "futures":
+            user_position_side = order_params.get("positionside", "both").lower()
+            position_side = user_position_side
+            logger.info(f"📝 Kullanıcı positionside DB'ye kaydediliyor: {position_side}")
+
+            # DB'den leverage çek
+            conn = get_db_connection()
+            with conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                    cursor.execute("""
+                        SELECT leverage FROM user_symbol_settings
+                        WHERE user_id=%s AND api_id=%s AND symbol=%s AND trade_type=%s
+                    """, (user_id, order_params.get("api_id"), symbol, db_trade_type))
+                    row = cursor.fetchone()
+                    if row:
+                        leverage = row["leverage"]
+
+        conn = get_db_connection()
+        if not conn:
+            logger.error("❌ Veritabanı bağlantısı alınamadı")
+            return False
+
+        with conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                insert_query = """
+                    INSERT INTO bot_trades (
+                        user_id, bot_id, created_at, symbol, side, amount,
+                        fee, order_id, status, trade_type, position_side,
+                        price, amount_state, leverage
+                    ) VALUES (
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                    )
+                """
+
+                params = (
+                    user_id,
+                    bot_id,
+                    datetime.now(),
+                    symbol,
+                    side,
+                    executed_qty,
+                    commission,
+                    order_id,
+                    status,
+                    db_trade_type,
+                    position_side,
+                    current_price,
+                    executed_qty,
+                    leverage
+                )
+
+                cursor.execute(insert_query, params)
+                conn.commit()
+
+        logger.info(f"✅ Trade kaydedildi: {symbol} | {side} | Qty: {executed_qty} | Price: {current_price} | Order ID: {order_id}")
+        return True
+
+    except Exception as e:
+        logger.error(f"❌ Trade kaydetme hatası: {str(e)}")
+        logger.debug(f"🔍 Detaylı hata: {traceback.format_exc()}")
+        return False
 
 async def get_api_credentials_by_bot_id(bot_id: int, trade_type: str = "spot") -> Dict:
     """
@@ -93,82 +192,43 @@ async def get_user_id_by_bot_id(bot_id: int) -> Optional[int]:
         return None
 
 async def save_trade_to_db(bot_id: int, user_id: int, trade_result: dict, order_params: dict) -> bool:
-    """
-    Emir sonucunu bot_trades tablosuna kaydeder.
-    """
     try:
-        # Hata durumunda kayıt yapma
-        if "error" in trade_result:
-            print(f"⚠️ Hatalı emir kaydedilmeyecek: {trade_result.get('error')}")
-            return False
-            
-        # Gerekli alanları extract et
-        symbol = order_params.get("symbol", "")
-        side = order_params.get("side", "").upper()
-        quantity = float(order_params.get("quantity", 0))
-        price = float(order_params.get("price", 0)) if order_params.get("price") else 0.0
-        
-        # Trade result'tan bilgileri al
-        order_id = str(trade_result.get("orderId", ""))
-        executed_qty = float(trade_result.get("executedQty", quantity))
-        
-        # Commission bilgisini kontrol et
-        commission = 0.0
-        if "fills" in trade_result and trade_result["fills"]:
-            total_commission = 0.0
-            for fill in trade_result["fills"]:
-                total_commission += float(fill.get("commission", 0))
-            commission = total_commission
-        else:
-            commission = float(trade_result.get("commission", 0))
-        
-        # Position side futures için
-        position_side = order_params.get("positionSide", "BOTH").upper()
-        
-        # Leverage bilgisi
-        leverage = 1
-        if "leverage" in order_params:
-            leverage = int(order_params.get("leverage", 1))
-            
-        # Trade type belirleme
-        trade_type = order_params.get("trade_type", "spot")
-        
-        # Status belirleme
-        status = trade_result.get("status", "FILLED")
-        
+        normalized_trade_type = "spot" if order_params["trade_type"] in ["spot", "test_spot"] else "futures"
+        user_position_side = order_params.get("positionside", "both")
+
         conn = get_db_connection()
-        if not conn:
-            logger.error("❌ Veritabanı bağlantısı alınamadı")
-            return False
-            
         with conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                 insert_query = """
                     INSERT INTO bot_trades (
-                        user_id, bot_id, symbol, side, amount, price, 
-                        fee, order_id, status, trade_type, position_side, 
-                        leverage, amount_state, created_at
+                        user_id, bot_id, created_at, symbol, side, amount,
+                        fee, order_id, status, trade_type, position_side,
+                        price, amount_state, leverage
                     ) VALUES (
                         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                     )
                 """
-                
-                cursor.execute(
-                    insert_query,
-                    (
-                        user_id, bot_id, symbol, side, executed_qty, price,
-                        commission, order_id, status, trade_type, position_side,
-                        leverage, executed_qty, datetime.now()
-                    )
+                params = (
+                    user_id,
+                    bot_id,
+                    datetime.now(),
+                    trade_result.get("symbol"),
+                    trade_result.get("side"),
+                    float(trade_result.get("executedQty", 0) or trade_result.get("origQty", 0)),
+                    float(trade_result.get("commission", 0) or 0.0),
+                    str(trade_result.get("orderId", "")),
+                    trade_result.get("status", "FILLED"),
+                    normalized_trade_type,
+                    user_position_side,  # ✅ DB'ye kullanıcı gönderdiği kaydediliyor
+                    float(trade_result.get("price", 0) or trade_result.get("avgPrice", 0)),
+                    float(trade_result.get("executedQty", 0) or trade_result.get("origQty", 0)),
+                    order_params.get("leverage", 1)
                 )
-                
+                cursor.execute(insert_query, params)
                 conn.commit()
-        
-        print(f"✅ Trade kaydedildi: {symbol} | {side} | {executed_qty} | Order ID: {order_id}")
         return True
-        
     except Exception as e:
-        logger.error(f"❌ Trade kaydetme hatası: {str(e)}")
+        logger.error(f"❌ DB kayıt hatası: {str(e)}")
         return False
 
 async def get_all_api_margin_leverage_infos() -> Dict[int, Dict[str, Any]]:

@@ -6,7 +6,8 @@ import logging
 import hmac
 import hashlib
 import base64
-from typing import Dict, Optional, Union  # Dict ve Union import'unu ekle
+from decimal import Decimal, ROUND_DOWN  # Precision için Decimal import ekle
+from typing import Dict, Optional, Union
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives import serialization
 from backend.trade_engine.taha_part.utils.price_cache_new import get_price, start_connection_pool, start_websocket_services
@@ -335,10 +336,8 @@ async def prepare_order_data(order_data: dict) -> dict:
                     else:
                         print(f"📝 API ID {api_id} için {coin_id} config'i bulunamadı - varsayılan ayarlar")
                 
-                # ... (geri kalan kod aynı)
-                
+                # Güncel fiyatı price cache'den al
                 try:
-                    # Güncel fiyatı price cache'den al
                     current_price = await get_price(coin_id, normalized_trade_type)
                     
                     if not current_price:
@@ -350,8 +349,6 @@ async def prepare_order_data(order_data: dict) -> dict:
                 except Exception as e:
                     logger.error(f"❌ {coin_id} için fiyat alınamadı: {str(e)}")
                     continue
-                
-                # ... (geri kalan kod aynı kalacak)
                 
                 # Quantity kontrolü ve hesaplama
                 try:
@@ -407,12 +404,15 @@ async def prepare_order_data(order_data: dict) -> dict:
                 if price_validation["activationPrice"]:
                     params["activationPrice"] = price_validation["activationPrice"]
                 
-                # Diğer parametreleri kopyala
+                # Diğer parametreleri kopyala - positionside için özel dönüşüm
                 for key, value in order.items():
                     if key not in ["coin_id", "side", "order_type", "value", "trade_type", 
-                                   "price", "stopPrice", "activationPrice", "leverage", "margin_type"]:  # leverage ve margin_type eklendi
+                                   "price", "stopPrice", "activationPrice", "leverage", "margin_type"]:
+                        # ✅ positionside -> positionSide dönüşümü
                         if key == "positionside":
-                            params["positionSide"] = str(value).upper()
+                            # Binance'e her zaman "BOTH" gönder, kullanıcı değerini DB için sakla
+                            params["positionSide"] = "BOTH"
+                            print(f"🔄 positionside dönüştürüldü: {value} -> BOTH (Binance API için)")
                         elif key == "reduce_only":
                             params["reduceOnly"] = str(value).lower()
                         elif key == "timeInForce":
@@ -420,12 +420,27 @@ async def prepare_order_data(order_data: dict) -> dict:
                         else:
                             params[key] = value
                 
-                # Hazırlanan emri ekle
+                # ✅ Orijinal positionside değerini DB için sakla
+                original_positionside = order.get("positionside", "both")
+                
+                # Hazırlanan emri ekle - DB için gerekli bilgileri de ekle
                 prepared_orders[trade_type].append({
                     "api_key": api_key,
                     "private_key": private_key,
                     "trade_type": trade_type,
-                    "params": params
+                    "params": params,
+                    # ✅ DB için orijinal değerleri sakla
+                    "original_order": {
+                        "bot_id": int(bot_id),
+                        "coin_id": coin_id,
+                        "side": side,
+                        "order_type": order_type,
+                        "value": value,
+                        "positionside": original_positionside,  # Kullanıcının orijinal değeri
+                        "price": order.get("price"),
+                        "leverage": order.get("leverage"),
+                        "margin_type": order.get("margin_type")
+                    }
                 })
                 
                 print(f"🎯 {coin_id} emri hazırlandı: {trade_type} | {side} | {order_type} | {calculated_quantity}")
@@ -448,220 +463,306 @@ async def prepare_order_data(order_data: dict) -> dict:
 async def step_qty_control(filters: Dict, coin_id: str, trade_type: str, value: float, current_price: float) -> Dict[str, Union[str, float]]:
     """
     Dolar değerini quantity'ye çevirerek step_size ve min_qty kontrolü yapar.
-    Liste formatındaki filtreleri destekler: filters["BTCUSDT"] = [{"trade_type": "spot", ...}, {...}]
+    Mathematical shift yaklaşımı ile precision hatalarını önler.
     """
     try:
-        print(f"🔍 Quantity kontrolü başlatılıyor - {coin_id} {trade_type}")
-        
-        # Trade type'ı normalize et
+        logger.info(f"🔍 Mathematical shift quantity kontrolü - {coin_id} {trade_type}")
+
+        # Trade type normalize
         if trade_type in ["spot", "test_spot"]:
             normalized_trade_type = "spot"
         elif trade_type in ["futures", "test_futures"]:
             normalized_trade_type = "futures"
         else:
-            print(f"Geçersiz trade_type: {trade_type}")
             normalized_trade_type = trade_type
         
-        print(f"📊 Normalized trade_type: {trade_type} -> {normalized_trade_type}")
-        
-        # ✅ YENİ: Liste formatında filtre arama
+        logger.info(f"📊 Normalized trade_type: {trade_type} -> {normalized_trade_type}")
+
+        # Filtre bulma - mevcut mantık korundu
         coin_filter = None
-        
         if coin_id in filters:
             filter_data = filters[coin_id]
-            
-            # Liste formatı kontrolü
             if isinstance(filter_data, list):
-                # Liste içinde doğru trade_type'ı ara
-                for filter_item in filter_data:
-                    if isinstance(filter_item, dict) and filter_item.get("trade_type") == normalized_trade_type:
-                        coin_filter = filter_item
-                        print(f"✅ Liste formatında filtre bulundu: {coin_id} -> {normalized_trade_type}")
+                for f in filter_data:
+                    if f.get("trade_type") == normalized_trade_type:
+                        coin_filter = f
+                        logger.info(f"✅ Liste formatında filtre bulundu: {coin_id} -> {normalized_trade_type}")
                         break
-            
-            # Eski format desteği (backward compatibility)
-            elif isinstance(filter_data, dict):
-                if filter_data.get("trade_type") == normalized_trade_type:
-                    coin_filter = filter_data
-                    print(f"✅ Dict formatında filtre bulundu: {coin_id} -> {normalized_trade_type}")
-        
-        # Filtre bulunamadıysa varsayılan değerler
+            elif isinstance(filter_data, dict) and filter_data.get("trade_type") == normalized_trade_type:
+                coin_filter = filter_data
+
         if not coin_filter:
-            print(f"⚠️ {coin_id} için {normalized_trade_type} filtresi bulunamadı - varsayılan değerler kullanılacak")
-            
-            # Varsayılan filtre değerleri
-            default_filters = {
-                "spot": {"step_size": 0.00001, "min_qty": 0.00001, "tick_size": 0.01},
-                "futures": {"step_size": 0.001, "min_qty": 0.001, "tick_size": 0.01}
+            logger.warning(f"⚠️ {coin_id} için {normalized_trade_type} filtresi bulunamadı - varsayılan değerler")
+            coin_filter = {
+                "step_size": 0.001,
+                "min_qty": 0.001,
+                "tick_size": 0.01,
+                "trade_type": normalized_trade_type
             }
-            
-            coin_filter = default_filters.get(normalized_trade_type, {
-                "step_size": 0.00001,
-                "min_qty": 0.00001,
-                "tick_size": 0.01
-            })
-            coin_filter["trade_type"] = normalized_trade_type
-            
-            print(f"🔧 Varsayılan filtre kullanılıyor: {coin_filter}")
+
+        # ✅ String değerleri float'a çevir - type conversion güvenli hale getirildi
+        step_size = float(coin_filter.get("step_size", 0.001)) if coin_filter.get("step_size") is not None else 0.001
+        min_qty = float(coin_filter.get("min_qty", 0.001)) if coin_filter.get("min_qty") is not None else 0.001
         
-        # Filtre değerlerini al
-        step_size = float(coin_filter.get("step_size", 0.00001))
-        min_qty = float(coin_filter.get("min_qty", 0.00001))
-        filter_trade_type = coin_filter.get("trade_type")
-        
-        print(f"📊 Filtre değerleri - step_size: {step_size}, min_qty: {min_qty}, trade_type: {filter_trade_type}")
-        
-        # Temel validasyonlar
-        if not step_size or not min_qty:
-            logger.error("❌ Filtre bilgileri eksik")
+        # ✅ Input parametrelerini de float'a çevir
+        value_float = float(value) if value is not None else 0.0
+        current_price_float = float(current_price) if current_price is not None else 0.0
+
+        logger.info(f"📊 Filtre değerleri - step_size: {step_size}, min_qty: {min_qty}")
+        logger.info(f"📊 Input değerleri - value: {value_float}, price: {current_price_float}")
+
+        # Validation kontrolü
+        if current_price_float <= 0:
             return {
                 "quantity": "0",
                 "status": "error",
-                "message": "Filtre bilgileri eksik (step_size veya min_qty)"
+                "message": f"Geçersiz current_price: {current_price_float}"
             }
         
-        # Fiyat kontrolü
-        if not current_price or current_price <= 0:
-            logger.error("❌ Geçersiz fiyat bilgisi")
+        if value_float <= 0:
             return {
                 "quantity": "0",
                 "status": "error",
-                "message": "Geçersiz fiyat bilgisi"
+                "message": f"Geçersiz value: {value_float}"
             }
+
+        # ✅ Mathematical shift yaklaşımı ile quantity hesaplama
+        raw_quantity = value_float / current_price_float
         
-        # Hesaplama - adım adım
-        raw_quantity = value / current_price
-        quantity_steps = int(raw_quantity / step_size)
-        final_quantity = quantity_steps * step_size
+        logger.info(f"🔢 Mathematical shift quantity calculation:")
+        logger.info(f"   Value: ${value_float}")
+        logger.info(f"   Price: ${current_price_float}")
+        logger.info(f"   Raw quantity: {raw_quantity}")
         
-        print(f"🔢 Hesaplama - raw: {raw_quantity:.8f}, steps: {quantity_steps}, final: {final_quantity:.8f}")
+        # Step size'ın decimal places'ını hesapla
+        step_decimal_places = _get_tick_decimal_places_from_value(step_size)
         
+        if step_decimal_places == 0:
+            # Integer step_size (1.0 gibi)
+            quantity_steps = int(raw_quantity / step_size)
+            final_quantity = quantity_steps * step_size
+            formatted_quantity = str(int(final_quantity))
+            
+            logger.info(f"   Integer step: {quantity_steps} steps -> {formatted_quantity}")
+        else:
+            # ✅ Mathematical shift for decimal step_size
+            multiplier = 10 ** step_decimal_places
+            
+            logger.info(f"   Step decimal places: {step_decimal_places}")
+            logger.info(f"   Multiplier: {multiplier}")
+            
+            # Raw quantity'yi shift et
+            shifted_raw = raw_quantity * multiplier
+            shifted_step = step_size * multiplier
+            
+            # Steps hesapla
+            quantity_steps = int(shifted_raw / shifted_step)
+            
+            # Final quantity hesapla
+            shifted_final = quantity_steps * shifted_step
+            final_quantity = shifted_final / multiplier
+            
+            logger.info(f"   Shifted raw: {raw_quantity} * {multiplier} = {shifted_raw}")
+            logger.info(f"   Shifted step: {step_size} * {multiplier} = {shifted_step}")
+            logger.info(f"   Steps: int({shifted_raw} / {shifted_step}) = {quantity_steps}")
+            logger.info(f"   Final: {quantity_steps} * {shifted_step} / {multiplier} = {final_quantity}")
+            
+            # ✅ Exact decimal places ile formatla - Binance uyumlu
+            formatted_quantity = f"{final_quantity:.{step_decimal_places}f}"
+
+        logger.info(f"✅ Mathematical shift quantity result: {formatted_quantity}")
+
         # Minimum quantity kontrolü
         if final_quantity < min_qty:
-            print(f"⚠️ Minimum quantity altında: {final_quantity} < {min_qty}")
             return {
                 "quantity": "0",
                 "status": "error",
                 "message": f"Quantity ({final_quantity}) minimum değerden ({min_qty}) küçük"
             }
-        
-        # Formatı belirle
-        if step_size >= 1:
-            formatted_quantity = str(int(final_quantity))
-        else:
-            decimal_places = _get_decimal_places(step_size)
-            print(f"📝 Formatlama - decimal_places: {decimal_places}")
-            formatted_quantity = f"{final_quantity:.{decimal_places}f}"
-            
-            # Sondaki sıfırları kaldır
-            formatted_quantity = formatted_quantity.rstrip('0').rstrip('.')
-            if not formatted_quantity or formatted_quantity == '':
-                formatted_quantity = "0"
-        
-        print(f"✅ Başarılı - formatted_quantity: {formatted_quantity}")
-        
+
         return {
             "quantity": formatted_quantity,
             "status": "success",
             "message": f"Quantity başarıyla hesaplandı: {formatted_quantity}"
         }
-        
+
+    except TypeError as te:
+        logger.error(f"❌ Type conversion hatası: {str(te)}")
+        return {
+            "quantity": "0",
+            "status": "error",
+            "message": f"Type conversion hatası: {str(te)}"
+        }
     except Exception as e:
-        logger.error(f"❌ {coin_id} quantity kontrolü sırasında hata: {str(e)}")
+        logger.error(f"❌ Mathematical shift quantity kontrolü hatası: {str(e)}")
         return {
             "quantity": "0",
             "status": "error",
             "message": f"Hesaplama hatası: {str(e)}"
         }
+    
+def _get_decimal_places_safe(value: float) -> int:
+    """
+    Precision-safe decimal places hesaplama - geliştirilmiş versiyon.
+    Hem quantity hem de price için kullanılır.
+    """
+    try:
+        # Scientific notation kontrolü
+        value_str = str(value).lower()
+        if 'e' in value_str:
+            # 1e-05 -> 5 decimal places
+            parts = value_str.split('e')
+            if len(parts) == 2:
+                exponent = int(parts[1])
+                return abs(exponent) if exponent < 0 else 0
+        
+        # Normal decimal format - mathematical approach
+        if '.' in str(value):
+            # String'den decimal places'ı say
+            decimal_part = str(value).split('.')[1]
+            # Trailing zeros'ları kaldırarak gerçek decimal places'ı bul
+            decimal_part = decimal_part.rstrip('0')
+            return len(decimal_part)
+        
+        return 0
+        
+    except Exception as e:
+        logger.error(f"❌ Decimal places hesaplama hatası: {e}")
+        return 6  # Safe default
+
+def _get_tick_decimal_places_from_value(tick_value: float) -> int:
+    """
+    Tick/step value'dan decimal places hesaplar.
+    _get_decimal_places_safe'i wrapper olarak kullanır - DRY prensibi.
+    """
+    try:
+        return _get_decimal_places_safe(tick_value)
+    except Exception as e:
+        logger.error(f"❌ Tick decimal places hesaplama hatası: {e}")
+        return 2  # Price için güvenli varsayılan
+def _get_decimal_places_safe(value: float) -> int:
+    """
+    Precision-safe decimal places hesaplama - geliştirilmiş versiyon
+    """
+    try:
+        # Scientific notation kontrolü
+        value_str = str(value).lower()
+        if 'e' in value_str:
+            # 1e-05 -> 5 decimal places
+            parts = value_str.split('e')
+            if len(parts) == 2:
+                exponent = int(parts[1])
+                return abs(exponent) if exponent < 0 else 0
+        
+        # Normal decimal format - daha safe approach
+        if '.' in str(value):
+            # Decimal kullanarak precision safe calculation
+            decimal_value = Decimal(str(value))
+            # Normalize ederek gereksiz sıfırları kaldır
+            normalized = decimal_value.normalize()
+            
+            # Exponent'i al (negatif exponent = decimal places)
+            sign, digits, exponent = normalized.as_tuple()
+            if exponent < 0:
+                return abs(exponent)
+            else:
+                return 0
+        
+        return 0
+        
+    except Exception as e:
+        logger.error(f"❌ Decimal places hesaplama hatası: {e}")
+        return 6  # Safe default
 
 def _get_decimal_places(value: float) -> int:
     """
     Float değerinin ondalık basamak sayısını hesaplar.
     Scientific notation'ı da destekler.
+    Backward compatibility için mevcut fonksiyon korundu.
     """
     try:
-        # Scientific notation kontrolü (1e-05 gibi)
-        if 'e' in str(value).lower():
-            # 1e-05 -> 0.00001 formatına çevir
-            formatted_value = f"{value:.10f}"
-            # Sondaki sıfırları kaldır
-            formatted_value = formatted_value.rstrip('0').rstrip('.')
-            if '.' in formatted_value:
-                return len(formatted_value.split('.')[1])
-            return 0
-        else:
-            # Normal float format
-            value_str = str(value)
-            if '.' in value_str:
-                return len(value_str.split('.')[1])
-            return 0
+        return _get_decimal_places_safe(value)
     except Exception as e:
         logger.error(f"❌ Decimal places hesaplama hatası: {e}")
-        return 5  # Güvenli varsayılan değer
+        return 8  # Güvenli varsayılan değer (maksimum 8)
 
 def normalize_price_to_tick_size(price: float, tick_size: float) -> str:
     """
     Fiyatı en yakın tick_size değerine yuvarlar.
-    
-    Args:
-        price (float): Yuvarlanacak fiyat
-        tick_size (float): Tick size değeri (örn: 0.01, 0.001)
-        
-    Returns:
-        str: Formatlanmış fiyat string'i
+    Mathematical shift yaklaşımı ile precision hatalarını önler.
     """
     try:
-        if not price or not tick_size or tick_size <= 0:
-            print(f"⚠️ Geçersiz price veya tick_size: {price}, {tick_size}")
-            return str(price) if price else "0"
+        # ✅ Type conversion güvenli hale getirildi
+        price_float = float(price) if price is not None else 0.0
+        tick_size_float = float(tick_size) if tick_size is not None else 0.01
         
-        # En yakın tick_size'a yuvarlama
-        rounded_price = round(price / tick_size) * tick_size
+        if price_float <= 0 or tick_size_float <= 0:
+            logger.warning(f"⚠️ Geçersiz price veya tick_size: {price_float}, {tick_size_float}")
+            return str(price_float) if price_float > 0 else "0"
         
-        # Ondalık basamak sayısını belirle
-        decimal_places = _get_decimal_places(tick_size)
+        logger.debug(f"🔢 Mathematical shift price formatting:")
+        logger.debug(f"   Input price: {price_float}")
+        logger.debug(f"   Tick size: {tick_size_float}")
         
-        # Formatla
-        formatted_price = f"{rounded_price:.{decimal_places}f}"
+        # Tick size'ın decimal places'ını hesapla
+        tick_decimal_places = _get_tick_decimal_places_from_value(tick_size_float)
         
-        # Sondaki gereksiz sıfırları kaldır (opsiyonel)
-        if '.' in formatted_price:
-            formatted_price = formatted_price.rstrip('0').rstrip('.')
-            if not formatted_price:
-                formatted_price = "0"
+        if tick_decimal_places == 0:
+            # Integer tick_size için basit round
+            formatted_price = str(int(round(price_float)))
+            logger.debug(f"✅ Integer tick formatting: {price_float} -> {formatted_price}")
+            return formatted_price
         
-        print(f"📝 Price formatting: {price} -> {formatted_price} (tick_size: {tick_size})")
+        # Mathematical shift yaklaşımı
+        multiplier = 10 ** tick_decimal_places
+        
+        logger.debug(f"   Decimal places: {tick_decimal_places}")
+        logger.debug(f"   Multiplier: {multiplier}")
+        
+        # Shift, round, shift back
+        shifted_price = price_float * multiplier
+        rounded_shifted = round(shifted_price)
+        final_price = rounded_shifted / multiplier
+        
+        logger.debug(f"   Shifted: {price_float} * {multiplier} = {shifted_price}")
+        logger.debug(f"   Rounded: round({shifted_price}) = {rounded_shifted}")
+        logger.debug(f"   Final: {rounded_shifted} / {multiplier} = {final_price}")
+        
+        # Exact decimal places ile formatla
+        formatted_price = f"{final_price:.{tick_decimal_places}f}"
+        
+        logger.debug(f"✅ Mathematical shift result: {price_float} -> {formatted_price}")
         
         return formatted_price
         
+    except TypeError as te:
+        logger.error(f"❌ Price formatting type error: {te}")
+        return str(price) if price else "0"
     except Exception as e:
-        logger.error(f"❌ Price formatting hatası: {e}")
+        logger.error(f"❌ Mathematical shift price formatting hatası: {e}")
         return str(price) if price else "0"
 
 async def validate_and_format_prices(filters: Dict, coin_id: str, order: Dict) -> Dict[str, Optional[str]]:
     """
     Order'daki price değerlerini tick_size'a göre kontrol eder ve formatlar.
-    Liste formatındaki filtreleri destekler.
+    Precision hatası önlenmesi için geliştirilmiş versiyon.
     """
     try:
-        # Trade type'ı order'dan al
         trade_type = order.get("trade_type")
         if not trade_type:
             logger.error("❌ Order'da trade_type eksik")
             return {"price": None, "stopPrice": None, "activationPrice": None}
         
-        # Trade type'ı normalize et
         normalized_trade_type = "spot" if trade_type in ["spot", "test_spot"] else "futures"
         
         print(f"🔍 Price validation başlatılıyor - {coin_id} {trade_type}")
         
-        # ✅ YENİ: Liste formatında filtre arama (step_qty_control ile aynı mantık)
+        # Filtre arama - step_qty_control ile aynı mantık
         coin_filter = None
         
         if coin_id in filters:
             filter_data = filters[coin_id]
             
-            # Liste formatı kontrolü
             if isinstance(filter_data, list):
                 for filter_item in filter_data:
                     if isinstance(filter_item, dict) and filter_item.get("trade_type") == normalized_trade_type:
@@ -669,41 +770,37 @@ async def validate_and_format_prices(filters: Dict, coin_id: str, order: Dict) -
                         print(f"✅ Liste formatında filtre bulundu: {coin_id} -> {normalized_trade_type}")
                         break
             
-            # Eski format desteği
             elif isinstance(filter_data, dict):
                 if filter_data.get("trade_type") == normalized_trade_type:
                     coin_filter = filter_data
                     print(f"✅ Dict formatında filtre bulundu: {coin_id} -> {normalized_trade_type}")
         
-        # Filter bulunamadıysa varsayılan değerler
+        # Tick size'ı al
         if not coin_filter:
             print(f"⚠️ {coin_id} için {normalized_trade_type} filtresi bulunamadı - varsayılan tick_size kullanılacak")
-            tick_size = 0.01  # Varsayılan tick_size
+            tick_size = 0.01
         else:
             tick_size = float(coin_filter.get("tick_size", 0.01))
         
         print(f"📊 Tick size: {tick_size}")
         
-        # Price parametrelerini kontrol et ve formatla
         result = {
             "price": None,
             "stopPrice": None, 
             "activationPrice": None
         }
         
-        # Price kontrolü (LIMIT emirleri için)
+        # Price kontrolü ve formatting - precision safe
         if "price" in order and order["price"] is not None:
             price_value = float(order["price"])
             result["price"] = normalize_price_to_tick_size(price_value, tick_size)
             print(f"✅ Price formatlandı: {order['price']} -> {result['price']}")
         
-        # StopPrice kontrolü
         if "stopPrice" in order and order["stopPrice"] is not None:
             stop_price_value = float(order["stopPrice"])
             result["stopPrice"] = normalize_price_to_tick_size(stop_price_value, tick_size)
             print(f"✅ StopPrice formatlandı: {order['stopPrice']} -> {result['stopPrice']}")
         
-        # ActivationPrice kontrolü
         if "activationPrice" in order and order["activationPrice"] is not None:
             activation_price_value = float(order["activationPrice"])
             result["activationPrice"] = normalize_price_to_tick_size(activation_price_value, tick_size)

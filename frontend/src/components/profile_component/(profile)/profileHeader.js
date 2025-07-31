@@ -12,9 +12,9 @@ export default function ProfileHeader() {
   const [loading, setLoading] = useState(true);
 
   const navItems = [
-    { name: "Portföyüm", href: "/tr/profile" },
-    { name: "Botlarım", href: "/tr/profile/mybots" },
-    { name: "İndikatör ve Stratejilerim", href: "/tr/profile/myindicators" },
+    { name: "My Portfolio", href: "/tr/profile" },
+    { name: "My Bots", href: "/tr/profile/mybots" },
+    { name: "My Indicators and Strategies", href: "/tr/profile/myindicators" },
   ];
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function ProfileHeader() {
         );
         setUser(res.data);
       } catch (err) {
-        console.error("Kullanıcı alınamadı", err);
+        console.error("Failed to fetch user", err);
       } finally {
         setLoading(false);
       }
@@ -37,10 +37,10 @@ export default function ProfileHeader() {
   return (
     <div className="relative w-full flex flex-col">
       <div className="w-full h-[60px] bg-black flex items-center justify-between px-6 shadow-lg">
-        {/* Sol Profil */}
+        {/* Left Profile */}
         <div className="flex items-center gap-3 border-l border-gray-700 pl-4 ml-10">
           {loading ? (
-            <span className="text-gray-400 text-sm">Yükleniyor...</span>
+            <span className="text-gray-400 text-sm">Loading...</span>
           ) : user ? (
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center text-white font-bold">
@@ -57,12 +57,12 @@ export default function ProfileHeader() {
             </div>
           ) : (
             <span className="text-red-400 text-sm">
-              Kullanıcı bilgisi alınamadı
+              Failed to load user info
             </span>
           )}
         </div>
 
-        {/* Sağ Menü */}
+        {/* Right Menu */}
         <div className="flex items-center gap-4">
           <nav className="flex gap-4">
             {navItems.map((item) => (
@@ -87,7 +87,7 @@ export default function ProfileHeader() {
                 ? "text-white shadow-lg hover:text-gray-500 shadow-cyan-500/30"
                 : "text-gray-100 hover:text-gray-500 transition duration-100"
             }`}
-            title="Ayarlar"
+            title="Settings"
           >
             <IoMdSettings size={24} />
           </Link>

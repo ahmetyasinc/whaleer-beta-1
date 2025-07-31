@@ -98,7 +98,7 @@ return (
     {/* Header */}
     <div className="pb-3 mb-4 border-b border-zinc-700">
       <h3 className="text-lg font-semibold text-center">
-        Botların Yönetim Dağılımı
+        Bot Management Distribution
       </h3>
     </div>
 

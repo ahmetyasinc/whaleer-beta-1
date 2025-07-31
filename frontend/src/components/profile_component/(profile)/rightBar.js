@@ -2,11 +2,11 @@
 
 export default function RightBar() {
   const stats = [
-    { title: "İndikatör Sayısı", value: 12 },
-    { title: "Strateji Sayısı", value: 8 },
-    { title: "Bot Sayısı", value: 4 },
-    { title: "Aktif Bot", value: 3 },
-    { title: "Bot Performansı", value: "%12.4" },
+    { title: "Number of Indicators", value: 12 },
+    { title: "Number of Strategies", value: 8 },
+    { title: "Number of Bots", value: 4 },
+    { title: "Active Bots", value: 3 },
+    { title: "Bot Performance", value: "%12.4" },
   ];
 
   return (
@@ -17,8 +17,8 @@ export default function RightBar() {
             key={index}
             className="bg-gradient-to-r pt-4 from-gray-950 to-zinc-900 rounded-lg h-16 shadow-md hover:shadow-lg border-1 border-neutral-700 transition-all duration-300 flex flex-col justify-center px-4"
             style={{
-            animationDelay: `${index * 200}ms`,
-            animation: "fadeInUpRightBar 1s ease-out forwards",
+              animationDelay: `${index * 200}ms`,
+              animation: "fadeInUpRightBar 1s ease-out forwards",
             }}
           >
             <h4 className="text-xs font-medium text-zinc-400 mb-1">{stat.title}</h4>
@@ -26,19 +26,18 @@ export default function RightBar() {
           </div>
         ))}
       </div>
-          <style jsx>{`
-            @keyframes fadeInUpRightBar {
-              from {
-                opacity: 0;
-                transform: translateX(40px);
-              }
-              to {
-                opacity: 1;
-                transform: translateX(0);
-              }
-            }
-          `}</style>
+      <style jsx>{`
+        @keyframes fadeInUpRightBar {
+          from {
+            opacity: 0;
+            transform: translateX(40px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
     </div>
   );
-  
 }

@@ -40,10 +40,10 @@ export function middleware(request) {
     return NextResponse.redirect(new URL(`/${locale}/profile`, request.url));
   }
   
- // const isProtectedRoute = pathWithoutLocale === "/profile" || pathWithoutLocale.startsWith("/profile/");
- // if (!accessToken && isProtectedRoute) {
- //   return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
- // }
+  const isProtectedRoute = pathWithoutLocale === "/profile" || pathWithoutLocale.startsWith("/profile/");
+  if (!accessToken && isProtectedRoute) {
+    return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+  }
 
   return NextResponse.next();
 }

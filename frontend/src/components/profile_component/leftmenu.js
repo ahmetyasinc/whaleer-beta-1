@@ -78,7 +78,7 @@ const LeftMenu = ({ locale }) => {
         <img src="/img/user.jpg" alt="user_img" className="profile-img" />
         {isOpen && (
           <div className="sidebar-header-left flex flex-col items-start text-left pl-5 pt-[10px]">
-            <p className="username-left text-base font-bold">{user.name}</p>
+            <p className="username-left text-base font-bold">{user.username}</p>
             <p className="text-xs font-bold text-gray-400">#{user.username}</p>
           </div>
         )}

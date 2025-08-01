@@ -33,14 +33,10 @@ def get_db_connection():
 
 ASYNC_DATABASE_URL = f"postgresql+asyncpg://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['dbname']}"
 
-# SQLAlchemy Asenkron Engine
-# FastAPI gibi asenkron framework'lerde ORM kullanmak için.
+
 async_engine = create_async_engine(ASYNC_DATABASE_URL, echo=False)
 
 
-# --- Ham Sorgular için Asenkron Bağlantı Havuzu (Connection Pool) ---
-# Bu, en yüksek performansı sağlar ve bizim kullandığımız yöntemdir.
-# Havuz, global bir değişken olarak tanımlanır ve sadece bir kez oluşturulur.
 ASYNC_POOL = None
 
 async def get_async_pool():

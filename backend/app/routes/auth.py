@@ -42,10 +42,10 @@ logger = logging.getLogger(__name__)
 async def login(response: Response, data: LoginRequest, db: AsyncSession = Depends(get_db)):
     username = data.username
     password = data.password
-    # Veritabanında kullanıcıyı sorgula
-
+    
     result = await db.execute(select(User).where(User.username == username))
     user = result.scalars().first()
+
     if not user:
         raise HTTPException(status_code=401, detail="Geçersiz kullanıcı adı veya şifre!")
 
@@ -55,6 +55,7 @@ async def login(response: Response, data: LoginRequest, db: AsyncSession = Depen
 
     access_token = create_access_token({"sub": str(user.id)})
     refresh_token = create_refresh_token({"sub": str(user.id)})
+
     response.set_cookie(
         key="access_token",
         value=access_token,

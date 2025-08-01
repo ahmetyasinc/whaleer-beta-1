@@ -24,7 +24,6 @@ export default function ApiConnectionClient() {
   const [editIndex, setEditIndex] = useState(null);
   const [deleteIndex, setDeleteIndex] = useState(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  
 
   const handleAddNewApi = () => {
     setEditMode(false);
@@ -54,105 +53,104 @@ export default function ApiConnectionClient() {
     }
   };
 
-const handleConfirmSave = async (userInputBalance) => {
-  try {
-    const { key, secretkey } = tempApiData;
-    const realBalance = await getTotalUSDBalance(key, secretkey);
-    if ((realBalance != null)){
-      console.log("Gerçek bakiye:", realBalance);
-      const difference = Math.abs(realBalance - parseFloat(userInputBalance));
-      if (difference > 3) {
-        toast.error("Girdiğiniz bakiye ile Binance hesabınızdaki bakiye uyuşmuyor!", {
-          position: "top-center",
-          autoClose: 3000,
+  const handleConfirmSave = async (userInputBalance) => {
+    try {
+      const { key, secretkey } = tempApiData;
+      const realBalance = await getTotalUSDBalance(key, secretkey);
+      if ((realBalance != null)) {
+        console.log("Real balance:", realBalance);
+        const difference = Math.abs(realBalance - parseFloat(userInputBalance));
+        if (difference > 3) {
+          toast.error("The balance you entered does not match your Binance account!", {
+            position: "top-center",
+            autoClose: 3000,
+          });
+          return;
+        }
+
+        const createdAt = new Date().toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
         });
-        return;
+
+        await addApi({
+          ...tempApiData,
+          createdAt,
+          lastUsed: 'Never',
+        });
+
+        setIsConfirmModalOpen(false);
+        handleCloseModal();
+        setTempApiData(null);
       }
 
-      const createdAt = new Date().toLocaleDateString('tr-TR', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || "Binance balance could not be verified. Please check your API credentials.", {
+        position: "top-center",
+        autoClose: 3500,
       });
-
-      await addApi({
-        ...tempApiData,
-        createdAt,
-        lastUsed: 'Never',
-      });
-
-      setIsConfirmModalOpen(false);
-      handleCloseModal();
-      setTempApiData(null);
     }
-    
-  } catch (error) {
-    console.error(error);
-    toast.error(error.message || "Binance bakiyesi doğrulanamadı. Lütfen API bilgilerinizi kontrol edin.", {
-      position: "top-center",
-      autoClose: 3500,
-    });
-  }
-};
+  };
 
   // Handle delete confirmation
   const handleDeleteClick = (index) => {
     setDeleteIndex(index);
     setIsDeleteConfirmOpen(true);
   };
-  
+
   const handleDeleteConfirm = () => {
     deleteApi(deleteIndex);
     setIsDeleteConfirmOpen(false);
     setDeleteIndex(null);
   };
-  
+
   const handleDeleteCancel = () => {
     setIsDeleteConfirmOpen(false);
     setDeleteIndex(null);
   };
-  
 
   return (
     <>
       <div className="bg-[rgba(17,21,39,0.86)] rounded-b-md shadow p-4 min-h-[calc(85vh-4rem)]">
-      <div className="flex items-center justify-between mt-12 mb-4 pb-4 border-b border-gray-500">
-        <h2 className="text-xl text-white font-semibold">API Anahtarlarım</h2>
-         
-        <button
-          onClick={handleAddNewApi}
-          className="group/button relative inline-flex items-center justify-center overflow-hidden rounded-md bg-gray-800/90 backdrop-blur-lg px-6 py-1 text-sm font-semibold text-white transition-all duration-300 ease-in-out hover:shadow-md hover:shadow-gray-600/50"
+        <div className="flex items-center justify-between mt-12 mb-4 pb-4 border-b border-gray-500">
+          <h2 className="text-xl text-white font-semibold">My API Keys</h2>
+
+          <button
+            onClick={handleAddNewApi}
+            className="group/button relative inline-flex items-center justify-center overflow-hidden rounded-md bg-gray-800/90 backdrop-blur-lg px-6 py-1 text-sm font-semibold text-white transition-all duration-300 ease-in-out hover:shadow-md hover:shadow-gray-600/50"
           >
-            <span className="text-sm">Yeni API Ekle</span>
+            <span className="text-sm">Add New API</span>
             <HiPlusSmall className="text-2xl relative font-semibold" />
             <div
               className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-13deg)_translateX(-100%)] group-hover/button:duration-1000 group-hover/button:[transform:skew(-13deg)_translateX(100%)]"
             >
               <div className="relative h-full w-10 bg-white/20"></div>
             </div>
-        </button>
-       </div>
-     
+          </button>
+        </div>
+
         <p className="text-gray-500 text-sm font-medium mb-6 pb-4 border-b border-gray-500">
-               • Bu sayfada kayıtlı tüm API anahtarlarını görüntüleyebilir ve yönetebilirsiniz.<br />
-               • API anahtarlarınızı halka açık hiçbir platform ve tarayıcıda paylaşmayın.<br />
-               • Doğrulama yapabilmeniz ve kripto hesabınızda bot çalıştırabilmeniz için API anahtarınızın okuma ve işlem izinlerini açın.<br />
-               • Botunuzun doğru çalışması için API anahtarının aktif ve geçerli olduğundan emin olun.<br />
-               • Borsa API limitlerinizi kontrol edin, çok fazla istek hesabınızı kısıtlayabilir.
-            </p>
+          • On this page, you can view and manage all your saved API keys.<br />
+          • Never share your API keys on any public platform or browser.<br />
+          • Make sure to enable read and trade permissions on your API key to verify and run bots on your crypto account.<br />
+          • Ensure your API key is active and valid for your bot to function correctly.<br />
+          • Check your exchange API limits — too many requests may result in restrictions.
+        </p>
+
         {apiList.length === 0 ? (
-          <p className="text-gray-400">Henüz bir API anahtarı eklenmedi.</p>
+          <p className="text-gray-400">No API keys have been added yet.</p>
         ) : (
-            
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm text-left text-white">
               <thead>
                 <tr className="text-gray-300 border-b border-gray-700">
-                  <th className="py-2 px-4 font-semibold">İsim</th>
-                  <th className="py-2 px-4 font-semibold">Borsa</th>
-                  <th className="py-2 px-4 font-semibold">Eklendi</th>
-                  <th className="py-2 px-4 font-semibold">Son Kullanım</th>
-                  <th className="py-2 px-4 font-semibold text-center">İşlemler</th>
+                  <th className="py-2 px-4 font-semibold">Name</th>
+                  <th className="py-2 px-4 font-semibold">Exchange</th>
+                  <th className="py-2 px-4 font-semibold">Added</th>
+                  <th className="py-2 px-4 font-semibold">Last Used</th>
+                  <th className="py-2 px-4 font-semibold text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -163,19 +161,18 @@ const handleConfirmSave = async (userInputBalance) => {
                     <td className="py-2 px-4">{api.createdAt}</td>
                     <td className="py-2 px-4">{api.lastUsed}</td>
                     <td className="py-2 px-4 text-center space-x-3">
-                      <button 
-                        onClick={() => handleEditApi(idx)} 
+                      <button
+                        onClick={() => handleEditApi(idx)}
                         className="text-blue-400 hover:text-blue-200"
                       >
                         <FiEdit />
                       </button>
-                      <button 
-                        onClick={() => handleDeleteClick(idx)} 
+                      <button
+                        onClick={() => handleDeleteClick(idx)}
                         className="text-red-400 hover:text-red-300"
                       >
                         <FaRegTrashAlt />
                       </button>
-
                     </td>
                   </tr>
                 ))}
@@ -185,7 +182,7 @@ const handleConfirmSave = async (userInputBalance) => {
         )}
       </div>
 
-      <AddApiModal 
+      <AddApiModal
         isOpen={isAddModalOpen}
         onClose={handleCloseModal}
         onSave={handleAddModalSave}
@@ -205,7 +202,6 @@ const handleConfirmSave = async (userInputBalance) => {
         onCancel={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
       />
-
     </>
   );
 }

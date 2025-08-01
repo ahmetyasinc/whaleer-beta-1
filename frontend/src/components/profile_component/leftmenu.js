@@ -34,7 +34,7 @@ const LeftMenu = ({ locale }) => {
 
   const menuItems = [
     { href: "/profile", icon: <BiUser />, label: t("profile") },
-    //{ href: "/profile/whaleerai", icon: <FaRegLightbulb />, label: t("ai") },
+    { href: "/profile/whaleerai", icon: <FaRegLightbulb />, label: t("ai") },
     { href: "/profile/strategies", icon: <BiCandles />, label: t("strategies") },
     { href: "/profile/sift", icon: <BiSearchAlt />, label: t("scanner") },
     { href: "/profile/backtest", icon: <BiLineChart />, label: t("backtest") },

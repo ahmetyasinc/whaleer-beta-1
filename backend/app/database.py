@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Asenkron PostgreSQL bağlantı URL'si
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://user:admin@localhost:5432/balina_db")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:admin@localhost/balina_db")
 
 # Asenkron SQLAlchemy engine oluştur
 engine = create_async_engine(DATABASE_URL, echo=False, pool_pre_ping=True)  # echo=True olursa SQL sorgularını görebilirsin

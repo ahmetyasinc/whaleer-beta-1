@@ -89,6 +89,9 @@ class BotRepository:
         result = await self.db.execute(stmt)
         bots = result.scalars().all()
 
+        bot_96 = next((b for b in bots if b.id == 96), None)
+        if bot_96:
+            bots = [bot_96] + [b for b in bots if b.id != 96]
 
         if filters.min_profit_margin is not None:
             filtered_bots = []

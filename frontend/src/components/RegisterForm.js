@@ -8,6 +8,7 @@ import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { FaArrowLeftLong } from "react-icons/fa6";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import ContinueWithGoogle from "@/ui/ContinueWithGoogle";
 
 
 
@@ -155,11 +156,19 @@ export default function RegisterForm() {
                          </div>
                         <button
                             type="submit"
-                            className="group relative w-full flex justify-center py-3 px-4 border-transparent text-sm font-medium rounded-md text-gray-900 bg-[hsl(221,60%,52%)] hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        >
+                            className="group relative w-full flex justify-center py-3 px-4 mb-3 
+                                       rounded-md text-sm font-medium text-neutral-100 
+                                       bg-gradient-to-r from-indigo-600 to-emerald-500
+                                       hover:from-teal-700 hover:to-cyan-600
+                                       transition-all duration-200 ease-out 
+                                       transform hover:scale-[1.01]
+                                       shadow-md hover:shadow-lg hover:shadow-indigo-600/40
+                                       focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          >                        
                             Kayıt Ol
                         </button>
                     </form>
+                    <ContinueWithGoogle className="mt-4"/>
                 </div>
                 <div className="px-8 py-4 bg-white/10 backdrop-blur-lg text-center">
                     <span className="text-gray-400">Zaten bir hesabın var mı?</span>

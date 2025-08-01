@@ -17,8 +17,14 @@ export default function StrategyIndicatorCard() {
   const [showIndicatorModal, setShowIndicatorModal] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
 
-  const { strategies } = useStrategyStore();
-  const { indicators } = useIndicatorStore();
+  const { strategies, fetchStrategies } = useStrategyStore();
+  const { indicators, fetchIndicators } = useIndicatorStore();
+
+  // ✅ İlk açılışta backend’den strateji ve indikatör verilerini çek
+  useEffect(() => {
+    fetchIndicators();
+    fetchStrategies();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {

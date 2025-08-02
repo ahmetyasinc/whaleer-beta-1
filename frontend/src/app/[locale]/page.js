@@ -5,9 +5,9 @@ import About from "@/components/home_component/About";
 import Header from "@/components/home_component/Header";
 import HomeClientComponent from "@/components/HomeClientComponent";
 
-export async function generateMetadata(props) {
-  const params = await props.params;
-  const locale = params.locale;
+export async function generateMetadata({ params }) {
+  const resolvedParams = typeof params?.then === "function" ? await params : params;
+  const locale = resolvedParams.locale;
   const i18n = await getI18n(locale);
   return {
     title: i18n.t("metadata:home.title"),
@@ -15,10 +15,9 @@ export async function generateMetadata(props) {
   };
 }
 
-export default async function Home(props) {
-  const params = await props.params;
-  const locale = await params.locale;
-  
+export default async function Home({ params }) {
+  const resolvedParams = typeof params?.then === "function" ? await params : params;
+  const locale = resolvedParams.locale;
 
   return (
     <main>
@@ -30,3 +29,4 @@ export default async function Home(props) {
     </main>
   );
 }
+

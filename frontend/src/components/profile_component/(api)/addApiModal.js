@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -77,8 +77,8 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
 
   const handleSubmit = () => {
     const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = 'Lütfen bir API ismi girin';
-    if (!formData.key.trim()) newErrors.key = 'API anahtarı boş bırakılamaz';
+    if (!formData.name.trim()) newErrors.name = 'Please enter an API name';
+    if (!formData.key.trim()) newErrors.key = 'API key cannot be empty';
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -107,13 +107,13 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
             className="bg-[rgb(0,3,15)] rounded p-6 w-full max-w-md shadow-lg text-white"
           >
             <h2 className="text-lg font-bold mb-4">
-              {editMode ? 'API Düzenle' : 'Yeni API Ekle'}
+              {editMode ? 'Edit API' : 'Add New API'}
             </h2>
 
             <div className="space-y-4">
-              {/* Borsa seçimi */}
+              {/* Exchange selection */}
               <div>
-                <label className="block font-medium">Borsa</label>
+                <label className="block font-medium">Exchange</label>
                 <div className="relative">
                   <select
                     name="exchange"
@@ -137,23 +137,23 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
                 </div>
               </div>
 
-              {/* API İsmi */}
+              {/* API name */}
               <div>
-                <label className="block font-medium">API İsmi <span className="text-red-500">*</span></label>
+                <label className="block font-medium">API Name <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="API adını girin"
+                  placeholder="Enter API name"
                   className={`w-full mt-1 rounded-sm px-3 py-2 bg-gray-900 text-white ${errors.name ? 'border border-red-500' : ''}`}
                 />
                 {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
               </div>
 
-              {/* API Key */}
+              {/* API key */}
               <div>
-                <label className="block font-medium">API Anahtarı <span className="text-red-500">*</span></label>
+                <label className="block font-medium">API Key <span className="text-red-500">*</span></label>
                 <div className="relative w-full">
                   <input
                     type="text"
@@ -165,7 +165,7 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
                     onPaste={(e) => handlePaste(e, 'key')}
                     disabled={editMode}
                     className={`w-full mt-1 rounded-sm px-3 py-2 bg-gray-900 text-white ${errors.key ? 'border border-red-500' : ''} ${editMode ? 'opacity-60 cursor-not-allowed' : ''}`}
-                    placeholder="API anahtarınızı yapıştırın"
+                    placeholder="Paste your API key"
                   />
                   <span className="absolute inset-y-0 right-2 flex items-center text-gray-600 pointer-events-none text-base">
                     <FaKey />
@@ -174,8 +174,9 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
                 {errors.key && <p className="text-red-500 text-sm mt-1">{errors.key}</p>}
               </div>
 
+              {/* Secret key */}
               <div>
-                <label className="block font-medium">İkincil API Anahtarı</label>
+                <label className="block font-medium">Secret API Key</label>
                 <div className="relative w-full">
                   <input
                     type="text"
@@ -187,7 +188,7 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
                     onPaste={(e) => handlePaste(e, 'secretkey')}
                     disabled={editMode}
                     className={`w-full mt-1 rounded-sm px-3 py-2 bg-gray-900 text-white ${editMode ? 'opacity-60 cursor-not-allowed' : ''}`}
-                    placeholder="İkincil API anahtarınızı yapıştırın"
+                    placeholder="Paste your secondary API key"
                   />
                   <span className="absolute inset-y-0 right-2 flex items-center text-gray-600 pointer-events-none text-base">
                     <FaKey />
@@ -195,19 +196,19 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
                 </div>
               </div>
 
-              {/* Butonlar */}
+              {/* Buttons */}
               <div className="flex justify-end space-x-2 mt-4">
                 <button
                   onClick={onClose}
                   className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
                 >
-                  İptal
+                  Cancel
                 </button>
                 <button
                   onClick={handleSubmit}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
                 >
-                  {editMode ? 'Güncelle' : 'Kaydet'}
+                  {editMode ? 'Update' : 'Save'}
                 </button>
               </div>
             </div>

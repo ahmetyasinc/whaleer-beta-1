@@ -41,6 +41,7 @@ class User(Base):
     # Zaman damgaları
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    last_login = Column(DateTime, nullable=True)
 
     # İstatistik
     total_followers = Column(Integer, default=0)

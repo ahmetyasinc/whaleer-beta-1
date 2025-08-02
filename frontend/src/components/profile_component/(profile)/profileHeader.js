@@ -12,9 +12,9 @@ export default function ProfileHeader() {
   const [loading, setLoading] = useState(true);
 
   const navItems = [
-    { name: "My Portfolio", href: "/tr/profile" },
-    { name: "My Bots", href: "/tr/profile/mybots" },
-    { name: "My Indicators and Strategies", href: "/tr/profile/myindicators" },
+    { name: "My Portfolio", href: "/en/profile" },
+    { name: "My Bots", href: "/en/profile/mybots" },
+    { name: "My Indicators and Strategies", href: "/en/profile/myindicators" },
   ];
 
   useEffect(() => {

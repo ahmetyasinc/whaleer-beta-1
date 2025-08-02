@@ -7,6 +7,8 @@ from app.models import User
 from app.database import get_db
 from app.core.auth import create_access_token, create_refresh_token  # JWT fonksiyonlarını içe aktar
 import logging
+from datetime import datetime
+
 
 from dotenv import load_dotenv
 import os
@@ -53,6 +55,9 @@ async def login(response: Response, data: LoginRequest, db: AsyncSession = Depen
     if user.password != password:
         raise HTTPException(status_code=401, detail="Geçersiz kullanıcı adı veya şifre!")
 
+    user.last_login = datetime.utcnow()
+    await db.commit()
+    
     access_token = create_access_token({"sub": str(user.id)})
     refresh_token = create_refresh_token({"sub": str(user.id)})
 

@@ -1,37 +1,38 @@
 export const metadata = {
-  title: "Premium Üyelik",
-  description: "whaleer ile kripto stratejileri oluştur, test et ve uygula.",
+  title: "Premium Membership",
+  description: "Create, test, and apply crypto strategies with Whaleer.",
 };
 
 export default function HomePage() {
   const plans = [
     {
-      title: "Midye Planı",
-      price: "Ücretsiz",
+      title: "Clam Plan",
+      price: "Free",
       features: [
-        "1 strateji oluştur",
-        "Sınırlı backtest",
-        "Temel destek",
+        "Create 1 bot",
+        "Real-time bot execution",
+        "Unlimited strategies",
       ],
     },
     {
-      title: "Ahtapot Planı",
-      price: "$149/ay",
+      title: "Octopus Plan",
+      price: "$5/month",
       features: [
-        "Sınırsız strateji",
-        "Gelişmiş backtest",
-        "Gerçek zamanlı bot çalıştırma",
-        "Öncelikli destek",
+        "Unlimited strategies",
+        "Advanced scanner",
+        "Advanced backtest",
+        "Real-time bot execution",
+        "Priority support",
       ],
     },
     {
-      title: "Balina Planı",
-      price: "$299/ay",
+      title: "Whale Plan",
+      price: "$10/month",
       features: [
-        "API erişimi",
-        "Ekip hesabı",
-        "Özel altyapı",
-        "7/24 destek",
+        "API access",
+        "Team account",
+        "Dedicated infrastructure",
+        "24/7 support",
       ],
     },
   ];
@@ -42,9 +43,9 @@ export default function HomePage() {
       className="hero section bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white py-20"
     >
       <div className="container mx-auto px-4 min-h-screen">
-        <h1 className="text-5xl font-extrabold mb-4">Premium Üyelik</h1>
+        <h1 className="text-5xl font-extrabold mb-4">Premium Membership</h1>
         <p className="text-lg text-gray-300 mb-12 max-w-2xl mx-auto">
-          Whaleer ile stratejini geliştir, test et ve uygulamaya al. Hemen planını seç, avantajlardan faydalan!
+          Improve, test, and deploy your strategy with Whaleer. Choose your plan now and enjoy the benefits!
         </p>
 
         <div className="grid gap-10 md:grid-cols-3">
@@ -64,7 +65,7 @@ export default function HomePage() {
                 ))}
               </ul>
               <button className="mt-auto w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-xl transition">
-                Üye Ol
+                Sign Up
               </button>
             </div>
           ))}

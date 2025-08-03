@@ -61,11 +61,18 @@ app.include_router(admin)
 # CORS Middleware ekle
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://13.60.185.143:3000"],  # Güvenlik için sadece frontend URL'sini koy
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://13.60.185.143:3000",
+        "https://whaleer.com",           # ✅ bunu ekle
+        "https://www.whaleer.com"        # (opsiyonel) www varsa
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 
 @app.get("/ping")

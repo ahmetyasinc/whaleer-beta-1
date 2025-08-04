@@ -337,6 +337,14 @@ def _normalize_position_side(order: dict, trade_type: str) -> tuple:
 
 async def _prepare_single_order(bot_id: int, order: dict, api_credentials: dict, filters: dict):
     try:
+        # ✅ Önce status kontrolü
+        status = str(order.get("status", "success")).lower()
+        if status == "error":
+            logger.warning(f"⚠ Bot {bot_id} için {order.get('coin_id')} emri atlandı (status=error)")
+            return None
+        if "status" in order:
+            del order["status"]  # ✅ API'ye gitmesin
+
         trade_type = order.get("trade_type")
         coin_id = order["coin_id"]
         side = order["side"].upper()

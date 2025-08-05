@@ -84,8 +84,8 @@ export default function ProfileHeader() {
             href="/settings"
             className={`flex items-center justify-center w-10 h-10 rounded-full transition-all ${
               pathname === "/settings"
-                ? "text-white shadow-lg hover:text-gray-500 shadow-cyan-500/30"
-                : "text-gray-100 hover:text-gray-500 transition duration-100"
+                ? "text-gray-100 shadow-lg hover:text-gray-400 shadow-cyan-500/30"
+                : "text-gray-100 hover:text-gray-400 transition duration-100"
             }`}
             title="Settings"
           >

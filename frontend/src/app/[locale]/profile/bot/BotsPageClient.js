@@ -18,6 +18,7 @@ export default function BotsPageClient() {
   const loadApiKeys = useApiStore((state) => state.loadApiKeys);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const { deactivateAllBots } = useBotStore();
+  
 
   useEffect(() => {
     const loadData = async () => {

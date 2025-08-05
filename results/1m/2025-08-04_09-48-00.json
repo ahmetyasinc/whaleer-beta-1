@@ -1,0 +1,12 @@
+{
+    "96": [
+        {
+            "coin_id": "BTCUSDT",
+            "status": "success",
+            "order_type": "market",
+            "side": "buy",
+            "trade_type": "test_spot",
+            "value": 249.685
+        }
+    ]
+}

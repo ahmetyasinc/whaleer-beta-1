@@ -196,6 +196,69 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
                 </div>
               </div>
 
+              <div>
+                <label className="block font-medium">ED Key</label>
+                <div className="relative w-full">
+                  <input
+                    type="text"
+                    name="secretkey"
+                    ref={secretKeyInputRef}
+                    value={formData.secretkey}
+                    onChange={(e) => handleKeyChange(e, 'secretkey')}
+                    onKeyDown={(e) => handleKeyInput(e, 'secretkey')}
+                    onPaste={(e) => handlePaste(e, 'secretkey')}
+                    disabled={editMode}
+                    className={`w-full mt-1 rounded-sm px-3 py-2 bg-gray-900 text-white ${editMode ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    placeholder="Paste your secondary API key"
+                  />
+                  <span className="absolute inset-y-0 right-2 flex items-center text-gray-600 pointer-events-none text-base">
+                    <FaKey />
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-medium">ED Public PEM</label>
+                <div className="relative w-full">
+                  <input
+                    type="text"
+                    name="secretkey"
+                    ref={secretKeyInputRef}
+                    value={formData.secretkey}
+                    onChange={(e) => handleKeyChange(e, 'secretkey')}
+                    onKeyDown={(e) => handleKeyInput(e, 'secretkey')}
+                    onPaste={(e) => handlePaste(e, 'secretkey')}
+                    disabled={editMode}
+                    className={`w-full mt-1 rounded-sm px-3 py-2 bg-gray-900 text-white ${editMode ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    placeholder="Paste your secondary API key"
+                  />
+                  <span className="absolute inset-y-0 right-2 flex items-center text-gray-600 pointer-events-none text-base">
+                    <FaKey />
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-medium">ED Private PEM</label>
+                <div className="relative w-full">
+                  <input
+                    type="text"
+                    name="secretkey"
+                    ref={secretKeyInputRef}
+                    value={formData.secretkey}
+                    onChange={(e) => handleKeyChange(e, 'secretkey')}
+                    onKeyDown={(e) => handleKeyInput(e, 'secretkey')}
+                    onPaste={(e) => handlePaste(e, 'secretkey')}
+                    disabled={editMode}
+                    className={`w-full mt-1 rounded-sm px-3 py-2 bg-gray-900 text-white ${editMode ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    placeholder="Paste your secondary API key"
+                  />
+                  <span className="absolute inset-y-0 right-2 flex items-center text-gray-600 pointer-events-none text-base">
+                    <FaKey />
+                  </span>
+                </div>
+              </div>
+
               {/* Buttons */}
               <div className="flex justify-end space-x-2 mt-4">
                 <button

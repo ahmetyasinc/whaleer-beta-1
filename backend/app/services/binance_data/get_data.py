@@ -55,7 +55,7 @@ def get_binance_data(symbol: str, interval: str, total_limit: int = 5000, retry_
                 break  # Daha fazla veri yok
 
             end_time = candles[0]["open_time"] - 1  # Geri çek, çakışmayı önle
-            time.sleep(0.3)  # Daha az bekleme süresi, güvenli limitte
+            time.sleep(1)  # Daha az bekleme süresi, güvenli limitte
 
         return collected_candles[:total_limit]
 

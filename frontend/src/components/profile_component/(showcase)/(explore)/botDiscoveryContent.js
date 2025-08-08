@@ -41,8 +41,8 @@ const BotDiscoveryApp = () => {
   if (!botData) {
     return (
       <div className="flex-1 p-6 h-[calc(100vh-60px)] max-h-screen mt-[60px] relative overflow-auto pl-[340px] pr-[395px] flex items-center justify-center">
-        <div className="text-center text-gray-400 text-sm bg-gray-800/50 p-6 rounded-xl border border-gray-600">
-          <p className="text-lg font-semibold text-white mb-2">No bots found matching your criteria.</p>
+        <div className="text-center text-gray-400 text-sm bg-gray-800/50 p-6 rounded-xl border-1 border-gray-600">
+          <p className="text-lg font-semibold text-gray-200 mb-2">No bots found matching your criteria.</p>
           <p className="text-sm text-gray-400">Please adjust your filters and try again.</p>
         </div>
       </div>

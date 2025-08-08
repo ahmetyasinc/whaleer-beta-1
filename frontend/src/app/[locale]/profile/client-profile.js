@@ -5,7 +5,7 @@ import { FaLock } from 'react-icons/fa';
 import ProfileHeader from "@/components/profile_component/(profile)/profileHeader";
 import RightBar from "@/components/profile_component/(profile)/rightBar";
 import Portfolio from "@/components/profile_component/(profile)/portfolio";
-import PortfolioChart from "@/components/profile_component/(profile)/portfolioPieChart";
+import PortfolioChart from "@/components/profile_component/(profile)/portfolioCharts";
 
 const isBeta = false;
 

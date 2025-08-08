@@ -162,8 +162,7 @@ export default function RegisterForm() {
                                        hover:from-teal-700 hover:to-cyan-600
                                        transition-all duration-200 ease-out 
                                        transform hover:scale-[1.01]
-                                       shadow-md hover:shadow-lg hover:shadow-indigo-600/40
-                                       focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                       shadow-md hover:shadow-lg hover:shadow-indigo-600/40"
                           >                        
                             Kayıt Ol
                         </button>

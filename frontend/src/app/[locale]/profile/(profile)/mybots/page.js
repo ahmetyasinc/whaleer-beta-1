@@ -1,12 +1,25 @@
 "use client";
 
+import { useEffect } from 'react';
 import ProfileHeader from "@/components/profile_component/(profile)/profileHeader";
 import RightBar from "@/components/profile_component/(profile)/rightBar";
 import BotCard from "@/components/profile_component/(profile)/profileBotCard";
 import BotPieChart from "@/components/profile_component/(profile)/botPieChart";
+import { useBotStore } from '@/store/bot/botStore';
 
 
 export default function MyBotsPage() {
+    const bots = useBotStore((state) => state.bots);
+    const loadBots = useBotStore((state) => state.loadBots);
+
+  useEffect(() => {
+    const loadData = async () => {
+      await loadBots();
+    };
+
+    loadData();
+  }, []);
+
 return (
   <div className="w-full h-screen flex flex-col bg-zinc-950/60 text-white">
     {/* Header */}

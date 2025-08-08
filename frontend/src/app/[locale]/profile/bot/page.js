@@ -2,7 +2,7 @@
 import BotsPageClient from './BotsPageClient';
 
 export const metadata = {
-  title: 'my Bots',
+  title: 'My Bots',
   description: 'Kullanıcıya ait bot listesinin yönetildiği sayfa.',
 };
 

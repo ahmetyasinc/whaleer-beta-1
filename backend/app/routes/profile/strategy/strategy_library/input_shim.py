@@ -18,7 +18,7 @@ class InputShim:
         else:
             resolved_value = default
 
-        self._log(requested_type, name, title, default, resolved_value)
+        #self._log(requested_type, name, title, default, resolved_value)
         return resolved_value
 
     def int(self, default=0, name=None, title=None, **kwargs):

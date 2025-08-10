@@ -17,6 +17,9 @@ load_dotenv()
 SECRET_KEY = "38842270259879952027900728229105"  # Gerçek projelerde .env dosyasına koymalısın!
 ALGORITHM = "HS256"
 
+ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 1 saat
+REFRESH_TOKEN_EXPIRE_DAYS = 30   # 30 gün
+
 router = APIRouter()
 
 class LoginRequest(BaseModel):
@@ -65,7 +68,7 @@ async def login(response: Response, data: LoginRequest, db: AsyncSession = Depen
         key="access_token",
         value=access_token,
         secure=False,
-        max_age=1800,
+        max_age=60 * ACCESS_TOKEN_EXPIRE_MINUTES,
         samesite="Lax",
         #domain=os.getenv("COOKIE_DOMAIN"),
         path="/"
@@ -75,7 +78,7 @@ async def login(response: Response, data: LoginRequest, db: AsyncSession = Depen
         key="refresh_token",
         value=refresh_token,
         secure=False,
-        max_age=1800,
+        max_age= 86400 * REFRESH_TOKEN_EXPIRE_DAYS,
         samesite="Lax",
         #domain=os.getenv("COOKIE_DOMAIN"),
         path="/"

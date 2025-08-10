@@ -22,7 +22,7 @@ export function middleware(request) {
 
   const { pathname } = request.nextUrl;
   const cookies = request.cookies;
-  const accessToken = cookies.get("access_token")?.value;
+  const refreshToken = cookies.get("refresh_token")?.value;
 
   const pathnameIsMissingLocale = locales.every(
     (locale) => !pathname.startsWith(`/${locale}`)
@@ -36,12 +36,12 @@ export function middleware(request) {
   const locale = pathname.split("/")[1]; // "/en/login" → "en"
   const pathWithoutLocale = pathname.slice(locale.length + 1); // "/login"
 
-  if (accessToken && (pathWithoutLocale === "login" || pathWithoutLocale === "register")) {
+  if (refreshToken && (pathWithoutLocale === "login" || pathWithoutLocale === "register")) {
     return NextResponse.redirect(new URL(`/${locale}/profile`, request.url));
   }
   
   const isProtectedRoute = pathWithoutLocale === "/profile" || pathWithoutLocale.startsWith("/profile/");
-  if (!accessToken && isProtectedRoute) {
+  if (!refreshToken && isProtectedRoute) {
     return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
   }
 

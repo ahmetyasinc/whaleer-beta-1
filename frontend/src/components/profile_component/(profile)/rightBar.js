@@ -1,18 +1,28 @@
 "use client";
 import { useState } from "react";
 import { FaChartBar, FaHistory, FaRecycle, FaBolt } from "react-icons/fa";
+import useIndicatorStore from "@/store/indicator/indicatorStore";
+import useStrategyStore from "@/store/indicator/strategyStore";
+import useBotExamineStore from "@/store/bot/botExamineStore";
 
 export default function RightBar() {
-  // Örnek performans ve trade verileri
+    
+  const { strategies  } = useStrategyStore();
+  const { indicators } = useIndicatorStore();
+  const { getBot } = useBotExamineStore();
+
+  const indicatorsCount = Array.isArray(indicators) ? indicators.length : 0;
+  const strategiesCount = Array.isArray(strategies) ? strategies.length : 0;
+
   const performance = {
-    daily: { value: 2.5, trades: 14 },   // % değer ve işlem sayısı
+    daily: { value: 2.5, trades: 14 },  
     weekly: { value: -1.2, trades: 68 },
     monthly: { value: 8.4, trades: 240 },
   };
 
   const stats = [
-    { title: "Number of Indicators", value: 12 },
-    { title: "Number of Strategies", value: 8 },
+    { title: "Number of Indicators", value: indicatorsCount },
+    { title: "Number of Strategies", value: strategiesCount },
     { title: "Number of Bots", value: 4 },
     { title: "Active Bots", value: 3 },
   ];

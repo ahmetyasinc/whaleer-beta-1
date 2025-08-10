@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePortfolioStore } from "@/store/profile/portfolioStore";
 import { AiOutlineClockCircle } from "react-icons/ai";
 
 export default function Portfolio() {
   const [activeTab, setActiveTab] = useState("portfolio"); // 'portfolio' or 'transactions'
-  const { portfolio, transactions } = usePortfolioStore();
+  const { portfolio, transactions, loadInitialData } = usePortfolioStore();
+
+  useEffect(() => {
+    loadInitialData();
+  }, []);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("tr-TR", {
@@ -32,12 +36,20 @@ export default function Portfolio() {
     }).format(new Date(date));
   };
 
-  const getTransactionLabel = (direction) => {
-    if (direction === "açma") {
-      return <span className="text-green-400 font-semibold">Open</span>;
-    }
-    return <span className="text-red-400 font-semibold">Close</span>;
+  const getTransactionLabel = (direction, type) => {
+    const dir = String(direction || '').toLowerCase(); // buy | sell
+    const t = String(type || '').toLowerCase();        // long | short | spot
+
+    const isOpen =
+      (t === 'long'  && dir === 'buy')  ||
+      (t === 'short' && dir === 'sell') ||
+      (!['long','short'].includes(t) && dir === 'buy'); // spot/unknown fallback
+
+    return isOpen
+      ? <span className="text-green-400 font-semibold">Open</span>
+      : <span className="text-red-400 font-semibold">Close</span>;
   };
+
 
   const getTransactionTypeColor = (type) => {
     switch (type) {
@@ -93,9 +105,8 @@ export default function Portfolio() {
               {portfolio.length > 0 ? (
                 <>
                   {/* Portfolio Header - updated to 5 columns */}
-                  <div className="grid grid-cols-6 gap-2 text-xs sm:text-sm font-semibold text-gray-400 py-2 sticky top-0 bg-[rgb(0,0,0,0)] z-10 px-2">
+                  <div className="grid grid-cols-5 gap-2 text-xs sm:text-sm font-semibold text-gray-400 py-2 sticky top-0 bg-[rgb(0,0,0,0)] z-10 px-2">
                     <div className="text-left">Cryptocurrency</div>
-                    <div className="text-right">Price</div>
                     <div className="text-right">Cost</div>
                     <div className="text-right">Amount</div>
                     <div className="text-right">Profit/Loss</div>
@@ -109,7 +120,7 @@ export default function Portfolio() {
                     return (
                       <div
                         key={index}
-                        className="grid grid-cols-6 gap-2 items-center py-3 rounded-lg px-2 bg-gradient-to-r from-slate-800/50 to-slate-900/50 hover:bg-zinc-900 hover:border-blue-500/70 transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/10"
+                        className="grid grid-cols-5 gap-2 items-center py-3 rounded-lg px-2 bg-gradient-to-r from-slate-800/50 to-slate-900/50 hover:bg-zinc-900 hover:border-blue-500/70 transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/10"
                         style={{
                           animationDelay: `${index * 200}ms`,
                           animation: "fadeInUp 1s ease-out forwards",
@@ -130,12 +141,6 @@ export default function Portfolio() {
                           </div>
                         </div>
 
-                        {/* Price */}
-                        <div className="text-right">
-                          <div className="font-semibold text-white text-sm sm:text-base">
-                            {item.currentPrice.toFixed(2)}
-                          </div>
-                        </div>
 
                         {/* Cost */}
                         <div className="text-right">
@@ -147,7 +152,7 @@ export default function Portfolio() {
                         {/* Amount */}
                         <div className="text-right">
                           <div className="font-semibold text-white text-sm sm:text-base">
-                            {formatCurrency(item.amount.toFixed(2))}
+                            {(item.amount.toFixed(8))}
                           </div>
                         </div>
 
@@ -192,11 +197,12 @@ export default function Portfolio() {
               {transactions.length > 0 ? (
                 <>
                   {/* Transactions Header - 5 columns */}
-                  <div className="grid grid-cols-5 gap-3 text-xs sm:text-sm font-semibold text-gray-400 py-2 sticky top-0 bg-[rgb(0,0,0,0)] z-10 px-2">
+                  <div className="grid grid-cols-6 gap-3 text-xs sm:text-sm font-semibold text-gray-400 py-2 sticky top-0 bg-[rgb(0,0,0,0)] z-10 px-2">
                     <div>Cryptocurrency</div>
                     <div className="text-center">Type</div>
                     <div className="text-center">Direction</div>
                     <div className="text-center">Date/Time</div>
+                    <div className="text-center">Price</div>
                     <div className="text-right">Amount</div>
                   </div>
 
@@ -204,7 +210,7 @@ export default function Portfolio() {
                   {transactions.map((transaction, index) => (
                     <div
                       key={index}
-                      className="grid grid-cols-5 gap-3 items-center py-3 bg-gradient-to-r from-slate-800/50 to-slate-900/50 hover:bg-zinc-900 rounded-lg px-2 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10"
+                      className="grid grid-cols-6 gap-3 items-center py-3 bg-gradient-to-r from-slate-800/50 to-slate-900/50 hover:bg-zinc-900 rounded-lg px-2 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10"
                       style={{
                         animationDelay: `${index * 200}ms`,
                         animation: "fadeInUp 1s ease-out forwards",
@@ -234,7 +240,7 @@ export default function Portfolio() {
                       {/* Direction */}
                       <div className="text-center">
                         <span className="text-sm sm:text-base font-medium text-white">
-                          {getTransactionLabel(transaction.direction)}
+                          {getTransactionLabel(transaction.direction, transaction.type.toUpperCase())}
                         </span>
                       </div>
 
@@ -250,10 +256,17 @@ export default function Portfolio() {
                         </div>
                       </div>
 
+                      {/* Price */}
+                      <div className="text-center">
+                        <span className="font-semibold text-white text-sm sm:text-base">
+                          {formatCurrency(transaction.price.toFixed(4))}
+                        </span>
+                      </div>
+
                       {/* Amount */}
                       <div className="text-right">
                         <span className="font-semibold text-white text-sm sm:text-base">
-                          {formatCurrency(transaction.amount)}
+                          {(transaction.amount.toFixed(8))}
                         </span>
                       </div>
                     </div>

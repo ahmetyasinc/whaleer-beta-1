@@ -18,8 +18,8 @@ from app.routes.profile.bots.bots import protected_router as bots_router
 from app.routes.profile.scan.scan import protected_router as scan_router
 from app.routes.profile.whaleer_ai.whaleer_ai import protected_router as whaleer_ai_router
 from app.routes.profile.showcase.showcase import protected_router as showcase
+from app.routes.profile.profile.profile import protected_router as profile
 from app.routes.admin.admin import protected_router as admin
-
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -54,6 +54,8 @@ app.include_router(scan_router)
 app.include_router(whaleer_ai_router)
 # SHOWCASE ROUTES
 app.include_router(showcase)
+# PROFİLE ROUTES
+app.include_router(profile)
 # ADMİN ROUTES
 app.include_router(admin)
 

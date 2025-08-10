@@ -1,26 +1,13 @@
-from ast import Await
-import math
-from typing import List
 import numpy as np
 import pandas as pd
-import ta
-import time
-import asyncio
-from decimal import Decimal
 
 from app.routes.profile.strategy.input.input import extract_user_inputs
-from app.routes.profile.strategy.strategy_library.empty import empty
-from app.routes.profile.strategy.strategy_library.emptyclass import EmptyClass
 from app.routes.profile.strategy.strategy_library.input_shim import InputShim
 from app.routes.profile.strategy.strategy_library.mark_strategy import mark_strategy
 from app.routes.profile.strategy.strategy_library.plot_strategy import plot_strategy
 from app.routes.profile.strategy.strategy_library.print_strategy import custom_print
 
-def safe_import(name, globals=None, locals=None, fromlist=(), level=0):
-    allowed = ["numpy", "pandas", "math", "time"]
-    if any(name == mod or name.startswith(mod + ".") for mod in allowed):
-        return __import__(name, globals, locals, fromlist, level)
-    raise ImportError(f"Modül yükleme izni yok: {name}")
+from app.services.allowed_globals.allowed_globals_indicator import allowed_globals_indicator
 
 async def run_user_strategy(strategy_name: str, user_code: str, data: list[dict], indicator_codes: list[str]):
     """
@@ -47,68 +34,7 @@ async def run_user_strategy(strategy_name: str, user_code: str, data: list[dict]
 
         user_globals = {}
 
-        # ✅ Sonra allowed_globals sözlüğünü tanımla
-        allowed_globals = {
-            "__builtins__": {
-                "__import__": safe_import,
-                "await": Await,
-                # ✅ Temel Python Fonksiyonları
-                "range": range,
-                "len": len,
-                "min": min,
-                "max": max,
-                "sum": sum,
-                "abs": abs,
-                "round": round,
-                "sorted": sorted,
-                "zip": zip,
-                "enumerate": enumerate,
-                "map": map,
-                "filter": filter,
-                "all": all,
-                "any": any,
-                
-                # ✅ Veri Tipleri
-                "list": list,
-                "dict": dict,
-                "tuple": tuple,
-                "set": set,
-                "float": float,
-                "str": str,
-                "Decimal": Decimal,
-
-                # ✅ Matematiksel Fonksiyonlar
-                "pow": pow,
-                "divmod": divmod,
-
-                # ✅ `math` Modülü (Trigonometri, Logaritma, Üstel Fonksiyonlar)
-                "math": {
-                    "ceil": math.ceil, "floor": math.floor, "fabs": math.fabs, "factorial": math.factorial,
-                    "exp": math.exp, "log": math.log, "log10": math.log10, "sqrt": math.sqrt,
-                    "sin": math.sin, "cos": math.cos, "tan": math.tan, "atan": math.atan,
-                    "pi": math.pi, "e": math.e
-                },
-
-                # ✅ Kullanıcının Print Çıktılarını Kaydetmesi İçin
-                "print": lambda *args, **kwargs: empty(*args, **kwargs)
-            },
-
-            # ✅ NumPy ve Pandas için İzinler
-            "np": np,
-            "pd": pd,
-            "asyncio": asyncio,
-            "math": math,
-            "df": df,
-
-            # ✅ Zaman ölçümü için `time`
-            "time": time,
-            "ta": ta,
-
-            # ✅ Grafik oluşturma fonksiyonu (plot)
-            "mark": lambda *args, **kwargs: empty(*args, **kwargs),
-            "plot": lambda *args, **kwargs: empty(*args, **kwargs),
-            "input": EmptyClass(),
-        }
+        allowed_globals = allowed_globals_indicator(df, print_outputs, indicator_results=None, updated=False, for_strategy=True)
 
         for indicator_code in indicator_codes:
             exec(indicator_code, allowed_globals)
@@ -176,68 +102,7 @@ async def run_updated_user_strategy(strategy_name: str, user_code: str, data: li
         input_shim = InputShim(inputs)
 
         # ✅ Sonra allowed_globals sözlüğünü tanımla
-        allowed_globals = {
-            "__builtins__": {
-                "__import__": safe_import,
-                "await": Await,
-                # ✅ Temel Python Fonksiyonları
-                "range": range,
-                "len": len,
-                "min": min,
-                "max": max,
-                "sum": sum,
-                "abs": abs,
-                "round": round,
-                "sorted": sorted,
-                "zip": zip,
-                "enumerate": enumerate,
-                "map": map,
-                "filter": filter,
-                "all": all,
-                "any": any,
-                
-                # ✅ Veri Tipleri
-                "list": list,
-                "dict": dict,
-                "tuple": tuple,
-                "set": set,
-                "float": float,
-                "str": str,
-                "Decimal": Decimal,
-
-                # ✅ Matematiksel Fonksiyonlar
-                "pow": pow,
-                "divmod": divmod,
-
-                # ✅ `math` Modülü (Trigonometri, Logaritma, Üstel Fonksiyonlar)
-                "math": {
-                    "ceil": math.ceil, "floor": math.floor, "fabs": math.fabs, "factorial": math.factorial,
-                    "exp": math.exp, "log": math.log, "log10": math.log10, "sqrt": math.sqrt,
-                    "sin": math.sin, "cos": math.cos, "tan": math.tan, "atan": math.atan,
-                    "pi": math.pi, "e": math.e
-                },
-
-                # ✅ Kullanıcının Print Çıktılarını Kaydetmesi İçin
-                "print": lambda *args, **kwargs: empty(*args, **kwargs)
-                #"print": lambda *args, **kwargs: custom_print(print_outputs, *args, **kwargs)
-            },
-
-            # ✅ NumPy ve Pandas için İzinler
-            "np": np,
-            "pd": pd,
-            "asyncio": asyncio,
-            "math": math,
-            "df": df,
-
-            # ✅ Zaman ölçümü için `time`
-            "time": time,
-            "ta": ta,
-
-            # ✅ Grafik oluşturma fonksiyonu (plot)
-            "mark": lambda *args, **kwargs: empty(*args, **kwargs),
-            "plot": lambda *args, **kwargs: empty(*args, **kwargs),
-            "input": EmptyClass(),
-        }
+        allowed_globals = allowed_globals_indicator(df, print_outputs, indicator_results=None, updated=False, for_strategy=True)
 
         for indicator_code in indicator_codes:
             exec(indicator_code, allowed_globals)

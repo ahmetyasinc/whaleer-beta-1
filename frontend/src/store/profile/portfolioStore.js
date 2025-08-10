@@ -1,160 +1,75 @@
+// stores/usePortfolioStore.js
 import { create } from 'zustand';
+import { fetchPortfolioAndTransactions } from '@/services/profile/portfolioService';
 
 export const usePortfolioStore = create((set, get) => ({
-  
-  // Portfolio verisi
-  portfolio: [
-    {
-      symbol: 'btc',
-      name: 'Bitcoin',
-      amount: 19.44,
-      cost: 1250.00,
-      currentPrice: 45000,
-      profitLoss: 5790.30,
-    },
-    {
-      symbol: 'eth',
-      name: 'Ethereum',
-      amount: 2.875,
-      cost: 8500.00,
-      currentPrice: 3200,
-      profitLoss: 700.00,
-    },
-    {
-      symbol: 'ada',
-      name: 'Cardano',
-      amount: 15,
-      cost: 750.00,
-      currentPrice: 0.65,
-      profitLoss: 225.00,
-    },
-    {
-      symbol: 'sol',
-      name: 'Solana',
-      amount: 45.2,
-      cost: 4520.00,
-      currentPrice: 120,
-      profitLoss: 904.00,
-    },
-  ],
+  // initial empty state
+  portfolio: [],
+  transactions: [],
 
-  // İşlem geçmişi verisi
-  transactions: [
-    {
-      symbol: 'btc',
-      type: 'long',
-      direction: 'açma',
-      date: '2024-01-15T10:30:00Z',
-      price: 42000,
-      amount: 2100.00,
-    },
-    {
-      symbol: 'eth',
-      type: 'spot',
-      direction: 'açma',
-      date: '2024-01-14T14:20:00Z',
-      price: 2800,
-      amount: 8400.00,
-    },
-    {
-      symbol: 'sol',
-      type: 'short',
-      direction: 'kapama',
-      date: '2024-01-13T09:15:00Z',
-      price: 95,
-      amount: 950.00,
-    },
-    {
-      symbol: 'ada',
-      type: 'spot',
-      direction: 'açma',
-      date: '2024-01-12T16:45:00Z',
-      price: 0.50,
-      amount: 750.00,
-    },
-    {
-      symbol: 'btc',
-      type: 'long',
-      direction: 'kapama',
-      date: '2024-01-11T11:30:00Z',
-      price: 41500,
-      amount: 1660.00,
-    },
-    {
-      symbol: 'eth',
-      type: 'short',
-      direction: 'açma',
-      date: '2024-01-10T13:25:00Z',
-      price: 2750,
-      amount: 5500.00,
-    },
-  ],
+  /**
+   * Load initial data from backend and populate the store
+   * No parameters needed; uses session cookies
+   */
+  loadInitialData: async () => {
+    // raw API data
+    const { portfolio: rawPortfolio, transactions: rawTransactions } = await fetchPortfolioAndTransactions();
 
-  // Portfolio'ya yeni pozisyon ekleme
+    // map to frontend shape, ensure numeric fields defined
+    const portfolio = rawPortfolio.map(item => {
+      const amount = Number(item.amount) || 0;
+      const avgCost = Number(item.average_cost) || 0;
+      return {
+        symbol: item.symbol,
+        name: item.symbol,
+        amount,
+        cost: avgCost,
+        profitLoss: Number(item.profit_loss) || 0,
+      };
+    });
+
+    const transactions = rawTransactions.map(tx => ({
+      symbol: tx.symbol,
+      type: tx.trade_type || tx.type,
+      direction: tx.side || tx.direction,
+      date: tx.created_at || tx.date,
+      price: Number(tx.price) || 0,
+      amount: Number(tx.amount) || 0,
+    }));
+
+    set({ portfolio, transactions });
+  },
+
+  // Portfolio actions (add/update/remove)
   addToPortfolio: (newPosition) => {
-    set((state) => {
-      const existingIndex = state.portfolio.findIndex(
-        (item) => item.symbol === newPosition.symbol
-      );
-
-      if (existingIndex >= 0) {
-        // Mevcut pozisyonu güncelle
-        const updatedPortfolio = [...state.portfolio];
-        updatedPortfolio[existingIndex] = {
-          ...updatedPortfolio[existingIndex],
-          amount: updatedPortfolio[existingIndex].amount + newPosition.amount,
-          cost: updatedPortfolio[existingIndex].cost + newPosition.cost,
+    set(state => {
+      const idx = state.portfolio.findIndex(p => p.symbol === newPosition.symbol);
+      if (idx >= 0) {
+        const updated = [...state.portfolio];
+        updated[idx] = {
+          ...updated[idx],
+          amount: updated[idx].amount + newPosition.amount,
+          cost: updated[idx].cost + newPosition.cost,
         };
-        return { portfolio: updatedPortfolio };
-      } else {
-        // Yeni pozisyon ekle
-        return { portfolio: [...state.portfolio, newPosition] };
+        return { portfolio: updated };
       }
+      return { portfolio: [...state.portfolio, newPosition] };
     });
   },
+  removeFromPortfolio: (symbol) =>
+    set(state => ({ portfolio: state.portfolio.filter(p => p.symbol !== symbol) })),
+  updatePortfolioItem: (symbol, updates) =>
+    set(state => ({ portfolio: state.portfolio.map(p => p.symbol === symbol ? { ...p, ...updates } : p) })),
+  clearPortfolio: () => set({ portfolio: [] }),
 
-  // Portfolio'dan pozisyon kaldırma
-  removeFromPortfolio: (symbol) => {
-    set((state) => ({
-      portfolio: state.portfolio.filter((item) => item.symbol !== symbol),
-    }));
-  },
+  // Transaction actions
+  addTransaction: (newTransaction) =>
+    set(state => ({ transactions: [newTransaction, ...state.transactions] })),
+  clearTransactions: () => set({ transactions: [] }),
 
-  // Yeni işlem ekleme
-  addTransaction: (newTransaction) => {
-    set((state) => ({
-      transactions: [newTransaction, ...state.transactions],
-    }));
-  },
-
-  // Portfolio pozisyonunu güncelleme
-  updatePortfolioItem: (symbol, updates) => {
-    set((state) => ({
-      portfolio: state.portfolio.map((item) =>
-        item.symbol === symbol ? { ...item, ...updates } : item
-      ),
-    }));
-  },
-
-  // Tüm portfolio'yu temizleme
-  clearPortfolio: () => {
-    set({ portfolio: [] });
-  },
-
-  // Tüm işlem geçmişini temizleme
-  clearTransactions: () => {
-    set({ transactions: [] });
-  },
-
-  // Portfolio toplam değerini hesaplama
-  getPortfolioTotal: () => {
-    const { portfolio } = get();
-    return portfolio.reduce((total, item) => total + item.cost + item.profitLoss, 0);
-  },
-
-  // Toplam kar/zarar hesaplama
-  getTotalProfitLoss: () => {
-    const { portfolio } = get();
-    return portfolio.reduce((total, item) => total + item.profitLoss, 0);
-  },
+  // Getters
+  getPortfolioTotal: () =>
+    get().portfolio.reduce((sum, p) => sum + p.cost + p.profitLoss, 0),
+  getTotalProfitLoss: () =>
+    get().portfolio.reduce((sum, p) => sum + p.profitLoss, 0),
 }));

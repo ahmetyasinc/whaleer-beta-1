@@ -1,17 +1,6 @@
-import math
-import numpy as np
-import pandas as pd
-import time
-import ta
-import asyncio
-from decimal import Decimal
-
+#BURADA HATA ÇIKABİLİR
+from backend.app.services.allowed_globals.allowed_globals_indicator import allowed_globals_indicator 
 from backend.trade_engine.control.control_the_results import control_the_results
-
-
-from backend.trade_engine.process.library.empty import empty
-from backend.trade_engine.process.library.emptyclass import EmptyClass
-
 
 def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
 
@@ -45,32 +34,7 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
                 })
                 continue
 
-            allowed_globals = {
-                "__builtins__": {
-                    "range": range, "len": len, "min": min, "max": max, "sum": sum, "abs": abs, "round": round,
-                    "sorted": sorted, "zip": zip, "enumerate": enumerate, "map": map, "filter": filter,
-                    "all": all, "any": any, "list": list, "dict": dict, "tuple": tuple, "set": set, "float": float,
-                    "Decimal": Decimal, "pow": pow, "divmod": divmod,
-                    "math": {
-                        "ceil": math.ceil, "floor": math.floor, "fabs": math.fabs, "factorial": math.factorial,
-                        "exp": math.exp, "log": math.log, "log10": math.log10, "sqrt": math.sqrt,
-                        "sin": math.sin, "cos": math.cos, "tan": math.tan, "atan": math.atan,
-                        "pi": math.pi, "e": math.e
-                    },
-                    "print": lambda *args, **kwargs: empty(*args, **kwargs),
-                },
-                "np": np,
-                "pd": pd,
-                "asyncio": asyncio,
-                "math": math,
-                "df": df_dict[coin_id],
-                "time": time,
-                "ta": ta,
-
-                "mark": lambda *args, **kwargs: empty(*args, **kwargs),
-                "plot": lambda *args, **kwargs: empty(*args, **kwargs),
-                "input": EmptyClass(),
-            }
+            allowed_globals = allowed_globals_indicator(df, print_outputs=None, indicator_results=None, updated=False, for_strategy=False, for_backtest=True)
 
             for indicator in indicator_list:
                 exec(indicator['code'], allowed_globals)

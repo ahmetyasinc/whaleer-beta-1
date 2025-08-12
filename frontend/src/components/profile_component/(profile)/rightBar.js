@@ -27,24 +27,28 @@ export default function RightBar() {
     { title: "Active Bots", value: 3 },
   ];
 
-  return (
-    <div className="w-[260px] h-[calc(100vh-60px)] pt-4 px-3 bg-black text-white overflow-y-auto shrink-0">
-      {/* Top Action Buttons */}
-      <div className="grid grid-cols-1 gap-[10px] mb-4">
-          <button className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-pink-600 hover:bg-gradient-to-r hover:from-amber-500 hover:to-rose-600 duration-200 text-white px-3 py-2 rounded-lg text-xs font-medium hover:shadow-lg transition">
+return (
+  <div className="w-[260px] h-[calc(100vh-60px)] bg-black text-white shrink-0 flex flex-col">
+    {/* Top Action Buttons */}
+    <div className="p-3 border-b border-neutral-800">
+      <div className="grid grid-cols-1 gap-[10px]">
+        <button className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-pink-700 hover:from-pink-700 hover:to-orange-500 duration-200 text-white px-3 py-2 rounded-lg text-xs font-medium hover:shadow-lg transition">
           <FaBolt className="text-[16px]" /> Hızlı İşlemler
         </button>
-        <button className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:bg-gradient-to-r hover:from-sky-600 hover:to-violet-600 duration-200 text-white px-3 py-2 rounded-lg text-xs font-medium hover:shadow-lg transition">
-          <FaChartBar className="text-[16px]"  /> Yayınladığım Göstergeler
+        <button className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-blue-800 hover:from-blue-700 hover:to-indigo-500 duration-200 text-white px-3 py-2 rounded-lg text-xs font-medium hover:shadow-lg transition">
+          <FaChartBar className="text-[16px]" /> Yayınladığım Göstergeler
         </button>
-        <button className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-700 hover:bg-gradient-to-r hover:from-emerald-500 hover:to-teal-700 duration-200 text-white px-3 py-2 rounded-lg text-xs font-medium hover:shadow-lg transition">
-          <FaRecycle className="text-[16px]"  /> Geri Dönüşüm Kutusu
+        <button className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-700 hover:from-emerald-700 hover:to-green-600 duration-200 text-white px-3 py-2 rounded-lg text-xs font-medium hover:shadow-lg transition">
+          <FaRecycle className="text-[16px]" /> Geri Dönüşüm Kutusu
         </button>
-          <button className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-blue-700 hover:bg-gradient-to-r hover:from-violet-500 hover:to-sky-700 duration-200 text-white px-3 py-2 rounded-lg text-xs font-medium hover:shadow-lg transition">
-          <FaHistory className="text-[16px]"  /> Alışveriş Geçmişim
+        <button className="flex items-center gap-2 bg-gradient-to-r from-fuchsia-600 to-rose-700 hover:from-rose-700 hover:to-fuchsia-600 duration-200 text-white px-3 py-2 rounded-lg text-xs font-medium hover:shadow-lg transition">
+          <FaHistory className="text-[16px]" /> Alışveriş Geçmişim
         </button>
       </div>
+    </div>
 
+    {/* Scrollable Content */}
+    <div className="flex-1 overflow-y-auto p-3">
       {/* Stats */}
       <div className="space-y-3 mb-5">
         {stats.map((stat, index) => (
@@ -62,7 +66,7 @@ export default function RightBar() {
         ))}
       </div>
 
-      {/* Bot Performance (Daily/Weekly/Monthly) */}
+      {/* Bot Performance */}
       <div className="space-y-3">
         {["daily", "weekly", "monthly"].map((period, index) => {
           const { value, trades } = performance[period];
@@ -83,25 +87,27 @@ export default function RightBar() {
                   {value >= 0 ? "+" : "-"}
                   {Math.abs(value).toFixed(2)}%
                 </p>
-                <span className="text-xs text-zinc-400">{trades} trades</span>
+                <span className="text-xs mb-3 text-zinc-400">{trades} trades</span>
               </div>
             </div>
           );
         })}
       </div>
-
-      <style jsx>{`
-        @keyframes fadeInUpRightBar {
-          from {
-            opacity: 0;
-            transform: translateX(40px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-      `}</style>
     </div>
-  );
+
+    <style jsx>{`
+      @keyframes fadeInUpRightBar {
+        from {
+          opacity: 0;
+          transform: translateX(40px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+    `}</style>
+  </div>
+);
+
 }

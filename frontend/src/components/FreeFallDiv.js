@@ -58,6 +58,22 @@ export default function FreeFallLogo() {
     runnerRef.current = runner;
     Runner.run(runner, engine);
 
+    // Çarpma anında ses çal
+    Events.on(engine, "collisionStart", (event) => {
+      event.pairs.forEach(({ bodyA, bodyB }) => {
+        const logo = bodyRef.current;
+        const walls = Object.values(wallsRef.current);
+        if (
+          (bodyA === logo && walls.includes(bodyB)) ||
+          (bodyB === logo && walls.includes(bodyA))
+        ) {
+          const audio = new Audio("/sounds/flash.mp3");
+          audio.volume = 0.6;
+          audio.play();
+        }
+      });
+    });
+
     // DOM senkronizasyonu
     const tick = () => {
       const b = bodyRef.current;
@@ -155,7 +171,7 @@ export default function FreeFallLogo() {
         src="/img/logo5.png"
         alt="Logo"
         draggable={false}
-        onDragStart={(e) => e.preventDefault()} // Tarayıcı sürükleme davranışını engelle
+        onDragStart={(e) => e.preventDefault()}
         onPointerDown={onPointerDownLogo}
         onPointerMove={onPointerMoveLogo}
         onPointerUp={onPointerUpLogo}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import FreeFallDiv from '@/components/FreeFallDiv';
 
 axios.defaults.withCredentials = true;
 
@@ -44,6 +45,7 @@ export default function Page() {
           ))}
         </tbody>
       </table>
+      <FreeFallDiv />
     </div>
   );
 }

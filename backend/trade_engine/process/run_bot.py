@@ -1,5 +1,5 @@
 #BURADA HATA ÇIKABİLİR
-from backend.app.services.allowed_globals.allowed_globals_indicator import allowed_globals_indicator 
+from backend.trade_engine.process.library.allowed_globals_indicator import allowed_globals_indicator 
 from backend.trade_engine.control.control_the_results import control_the_results
 
 def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
@@ -34,7 +34,7 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
                 })
                 continue
 
-            allowed_globals = allowed_globals_indicator(df, print_outputs=None, indicator_results=None, updated=False, for_strategy=False, for_backtest=True)
+            allowed_globals = allowed_globals_indicator(df_dict[coin_id])
 
             for indicator in indicator_list:
                 exec(indicator['code'], allowed_globals)
@@ -42,6 +42,8 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
             exec(strategy_code, allowed_globals)
 
             result_df = allowed_globals['df']
+            #print(f"Bot ID: {bot['id']} - Coin ID: {coin_id} için işlem sonuçları:")
+            #print(result_df[['vwma_fast', 'vwma_slow', 'position']].tail(30))
             last_positions = result_df['position'].iloc[-2:].tolist() if 'position' in result_df.columns and len(result_df) >= 2 else None
             last_percentage = result_df['percentage'].iloc[-2:].tolist() if 'percentage' in result_df.columns and len(result_df) >= 2 else None
 

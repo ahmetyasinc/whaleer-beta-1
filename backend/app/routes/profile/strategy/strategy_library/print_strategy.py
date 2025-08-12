@@ -19,4 +19,5 @@ def custom_print(print_outputs, *args, **kwargs):
             output_list.append(str(arg))  
 
     output = " ".join(output_list)  
+    print(output)
     print_outputs.append(output)

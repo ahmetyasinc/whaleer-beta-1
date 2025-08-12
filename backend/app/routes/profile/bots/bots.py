@@ -80,6 +80,7 @@ async def delete_bot(bot_id: int, db: AsyncSession = Depends(get_db), user_id: d
         raise HTTPException(status_code=404, detail="Bot not found or unauthorized")
 
     # 4 tablodaki verileri sil
+    await db.execute(delete(BotFollow).where(BotFollow.bot_id == bot_id))
     await db.execute(delete(BotSnapshots).where(BotSnapshots.bot_id == bot_id))
     await db.execute(delete(BotPositions).where(BotPositions.bot_id == bot_id))
     await db.execute(delete(BotHoldings).where(BotHoldings.bot_id == bot_id))

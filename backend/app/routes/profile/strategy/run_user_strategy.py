@@ -34,12 +34,14 @@ async def run_user_strategy(strategy_name: str, user_code: str, data: list[dict]
 
         user_globals = {}
 
-        allowed_globals = allowed_globals_indicator(df, print_outputs, indicator_results=None, updated=False, for_strategy=True)
+        allowed_globals = allowed_globals_indicator(df, print_outputs=None, indicator_results=None, updated=False, for_strategy=True)
 
         for indicator_code in indicator_codes:
             exec(indicator_code, allowed_globals)
 
         allowed_globals.update(user_globals)
+
+        allowed_globals["print"] = lambda *args, **kwargs: custom_print(print_outputs, *args, **kwargs)
         allowed_globals["mark"] = lambda *args, **kwargs: mark_strategy(strategy_name, strategy_results, *args, **kwargs)
         allowed_globals["plot"] = lambda *args, **kwargs: plot_strategy(strategy_name, strategy_graph,print_outputs, *args, **kwargs)
         allowed_globals["__builtins__"]["print"] = lambda *args, **kwargs: custom_print(print_outputs, *args, **kwargs)

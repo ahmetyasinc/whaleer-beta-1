@@ -1,4 +1,3 @@
-# app/api/profile_analysis.py
 from datetime import datetime, timedelta, timezone
 
 from typing import List, Dict, Any,Optional
@@ -27,13 +26,6 @@ async def get_profile_all_datas(
         user_id = int(user_id)
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid user id")
-
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalars().first()
-
-    if not user:
-        raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı.")
-    
 
 
 @protected_router.get("/api/profile_analysis")

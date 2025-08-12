@@ -79,7 +79,7 @@ export const createBot = async (botData) => {
     console.log("Sunucuya gönderilen veri:", payload);
 
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/create-bots/`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/create-bots`,
       payload
     );
 

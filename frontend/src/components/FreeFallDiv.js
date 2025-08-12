@@ -67,7 +67,7 @@ export default function FreeFallLogo() {
           (bodyA === logo && walls.includes(bodyB)) ||
           (bodyB === logo && walls.includes(bodyA))
         ) {
-          const audio = new Audio("/sounds/flash.mp3");
+          const audio = new Audio("/sounds/fart.mp3");
           audio.volume = 0.6;
           audio.play();
         }

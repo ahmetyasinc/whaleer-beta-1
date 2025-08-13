@@ -1,5 +1,5 @@
 #BURADA HATA ÇIKABİLİR
-from backend.trade_engine.process.library.allowed_globals_indicator import allowed_globals_indicator 
+from backend.trade_engine.process.library.allowed_globals import allowed_globals 
 from backend.trade_engine.control.control_the_results import control_the_results
 
 def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
@@ -34,7 +34,7 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
                 })
                 continue
 
-            allowed_globals = allowed_globals_indicator(df_dict[coin_id])
+            allowed_globals = allowed_globals(df_dict[coin_id])
 
             for indicator in indicator_list:
                 exec(indicator['code'], allowed_globals)

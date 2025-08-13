@@ -194,7 +194,7 @@ export default function ExamineBot({
                     </div>
 
                     <div className="text-xs text-zinc-300">
-                      Amount: {((pos.amount * pos.cost) + pos.profit).toFixed(3)} $
+                      Amount: {pos.amount .toFixed(6)} 
                     </div>
 
                     <div
@@ -236,7 +236,7 @@ export default function ExamineBot({
                       {h.symbol}
                     </div>
                     <div className="text-xs text-zinc-300">
-                      Amount: {((h.amount * h.cost) + h.profit).toFixed(3)} $
+                      Amount: {h.amount.toFixed(6)}
                     </div>
 
                     <div

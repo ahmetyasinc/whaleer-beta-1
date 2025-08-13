@@ -26,7 +26,7 @@ async def run_indicator(
     start_time = time.time()  # Fonksiyon başlangıcındaki zaman damgası
 
 
-    # **1️⃣ BinanceData tablosundan son 1000 veriyi çek**
+    # **1️⃣ BinanceData tablosundan son 5000 veriyi çek**
     query = (
         select(BinanceData)
         .where(

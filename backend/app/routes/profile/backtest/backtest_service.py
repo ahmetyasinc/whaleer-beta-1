@@ -6,7 +6,7 @@ from app.models.profile.binance_data import BinanceData
 from app.routes.profile.backtest.utils import calculate_performance
 import pandas as pd
 
-from app.services.allowed_globals.allowed_globals_indicator import allowed_globals_indicator
+from app.services.allowed_globals.allowed_globals import build_allowed_globals
 
 async def run_backtest_logic(strategy_id: int, period: str, crypto: dict, user_id: int, db):
     # Strategy'yi çek
@@ -68,7 +68,7 @@ async def run_backtest_logic(strategy_id: int, period: str, crypto: dict, user_i
     # JSON'a dönüştür
     candlestick_data = df_data_json[["time", "open", "high", "low", "close"]].to_dict(orient="records")
 
-    allowed_globals = allowed_globals_indicator(df, print_outputs=None, indicator_results=None, updated=False, for_strategy=False, for_backtest=True)
+    allowed_globals = build_allowed_globals(df, print_outputs=None, indicator_results=None, updated=False, make_empty=True)
 
     # Kodları çalıştır
     for indicator_code in indicator_codes:

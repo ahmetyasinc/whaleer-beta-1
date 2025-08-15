@@ -33,8 +33,8 @@ def safe_import(name, globals=None, locals=None, fromlist=(), level=0):
         return __import__(name, globals, locals, fromlist, level)
     raise ImportError(f"Modül yükleme izni yok: {name}")
 
-def allowed_globals(df):
-    allowed_globals = {
+def allowed_globals_(df):
+    allowed_globals_ = {
                 "__builtins__": {
                     "__import__": safe_import,
                     "await": Await,
@@ -98,4 +98,4 @@ def allowed_globals(df):
                 "input": EmptyClass(),
             }
     
-    return allowed_globals
+    return allowed_globals_

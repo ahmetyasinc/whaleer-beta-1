@@ -9,7 +9,7 @@ export default function TradesList({ trades }) {
     new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-      minimumFractionDigits: 2,
+      minimumFractionDigits: 1,
     }).format(value);
 
   const formatDate = (dateString) => {
@@ -60,10 +60,11 @@ export default function TradesList({ trades }) {
               <th className="text-left text-gray-400 font-medium py-2">Date</th>
               <th className="text-left text-gray-400 font-medium py-2">Type</th>
               <th className="text-left text-gray-400 font-medium py-2">Leverage</th>
-              <th className="text-left text-gray-400 font-medium py-2">Used %</th>
+              <th className="text-center text-gray-400 font-medium py-2">Used %</th>
               <th className="text-right text-gray-400 font-medium py-2">Amount</th>
               <th className="text-right text-gray-400 font-medium py-2">Value</th>
               <th className="text-right text-gray-400 font-medium py-2">Commission</th>
+              <th className="text-right text-gray-400 font-medium py-2">P/L ($)</th>
               <th className="text-right text-gray-400 font-medium py-2">P/L (%)</th>
               <th className="text-right text-gray-400 font-medium py-2">Price (Close)</th>
             </tr>
@@ -74,6 +75,7 @@ export default function TradesList({ trades }) {
               const investedAmount = trade.amount * trade.price;
               const commission = trade.commission || 0;
               const pnlPercentage = trade.pnlPercentage || null;
+              const pnlAmount = trade.pnlAmount || null;
 
               return (
                 <tr key={trade.id} className="border-b border-gray-700 hover:bg-gray-800">
@@ -82,7 +84,7 @@ export default function TradesList({ trades }) {
                   <td className="py-3">
                     <span
                       className={`px-2 py-1 rounded-xl text-xs font-medium ${
-                        trade.type.includes('LONG')
+                        trade.type.includes('OPEN')
                           ? 'bg-green-900 text-green-300'
                           : 'bg-red-900 text-red-300'
                       }`}
@@ -95,8 +97,8 @@ export default function TradesList({ trades }) {
                     {trade.leverage}
                   </td>
 
-                  <td className="py-3 text-left text-gray-300 font-mono">
-                    {trade.usedPercentage}%
+                  <td className="py-3 text-center text-gray-300 font-mono">
+                    {trade.usedPercentage}
                   </td>
 
                   <td className="py-3 text-right text-gray-300 font-mono">
@@ -110,6 +112,20 @@ export default function TradesList({ trades }) {
                   <td className="py-3 text-right text-orange-400">
                     {formatCurrency(commission)}
                   </td>
+                    <td className="py-3 text-right font-medium">
+                      {isClose ? (
+                        <span
+                          className={
+                            pnlPercentage >= 0 ? 'text-green-400' : 'text-red-400'
+                          }
+                        >
+                          {pnlPercentage >= 0 ? '+' : ''}
+                          {formatCurrency(pnlAmount)}
+                        </span>
+                      ) : (
+                        <span className="text-gray-500">–</span>
+                      )}
+                    </td>
 
                   <td className="py-3 text-right font-medium">
                     {isClose ? (
@@ -125,6 +141,7 @@ export default function TradesList({ trades }) {
                       <span className="text-gray-500">–</span>
                     )}
                   </td>
+
 
                   <td className="py-3 text-right text-gray-300">
                     {formatCurrency(trade.price)}

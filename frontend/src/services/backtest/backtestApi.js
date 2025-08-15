@@ -2,18 +2,18 @@ import axios from 'axios';
 
 axios.defaults.withCredentials = true;
 
-export const runBacktestApi = async ({ strategy, period, crypto }) => {
+export const runBacktestApi = async ({ strategy, period, crypto, initial_balance }) => {
   try {
-    strategy= strategy.id
-    console.log(crypto)
-    //crypto = crypto.binance_symbol
+    strategy = strategy.id;
+
+    const payload = { strategy, period, crypto };
+    if (typeof initial_balance === 'number' && Number.isFinite(initial_balance)) {
+      payload.initial_balance = initial_balance; // only send if provided/valid
+    }
+
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/api/run-backtest/`,
-      {
-        strategy,
-        period,
-        crypto,
-      }
+      payload
     );
     return response.data;
   } catch (error) {
@@ -23,7 +23,6 @@ export const runBacktestApi = async ({ strategy, period, crypto }) => {
 };
 
 export const saveArchivedBacktest = async (backtestData) => {
-  console.log("Arşivleme verisi:", backtestData);
   try {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/api/archive-backtest/`,
@@ -37,14 +36,13 @@ export const saveArchivedBacktest = async (backtestData) => {
     console.error("Arşivleme API hatası:", error);
     throw error;
   }
-}
+};
 
 export const fetchArchivedBacktests = async () => {
   try {
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/api/archived-backtests/`
     );
-    console.log("Arşivlenmiş backtestler:", response.data);
     return response.data;
   } catch (error) {
     console.error("Arşivlenmiş backtestleri getirme hatası:", error);

@@ -1,32 +1,12 @@
 import pandas as pd
 
-class EmptyClass:
-    def int(self, default=0, **kwargs):
-        return default
-
-    def float(self, default=0.0, **kwargs):
-        return default
-
-    def bool(self, default=False, **kwargs):
-        return default
-
-    def string(self, default="", **kwargs):
-        return default
-    
-    def color(self, default="", **kwargs):
-        return default
-
-def safe_import(name, globals=None, locals=None, fromlist=(), level=0):
-    allowed_modules = {"math", "time", "ta", "numpy", "pandas"}
-    if name in allowed_modules:
-        return __import__(name, globals, locals, fromlist, level)
-    raise ImportError(f"Module '{name}' is not allowed")
-
-
-def empty(*args, **kwargs):
-    pass
-
-def calculate_performance(df: pd.DataFrame, commission=0.0, risk_free_rate=0.02, debug=True) -> dict:
+def calculate_performance(
+    df: pd.DataFrame,
+    commission: float = 0.0,
+    risk_free_rate: float = 0.02,
+    debug: bool = False,
+    initial_balance: float = 10000.0
+) -> dict:
     def log(*args, **kwargs):
         if debug:
             print(*args, **kwargs)
@@ -40,47 +20,104 @@ def calculate_performance(df: pd.DataFrame, commission=0.0, risk_free_rate=0.02,
         except Exception:
             return str(x)
 
-    print("**POSITION (HEAD 100)**")
-    print(df["position"].head(100))
+    def pnl_pct_from(entry_price: float, exit_price: float, side: float) -> float:
+        """
+        Price-based P&L % from entry to exit.
+        side > 0 => long, side < 0 => short.
+        """
+        try:
+            if entry_price == 0:
+                return 0.0
+            raw = (exit_price - entry_price) / entry_price
+            return (raw * 100.0) if side > 0 else (-raw * 100.0)
+        except Exception:
+            return 0.0
 
-    required_cols = ['position', 'close', 'percentage', 'timestamp']
-    for col in required_cols:
-        if col not in df.columns:
-            raise ValueError(f"'{col}' kolonu zorunludur.")
+    def pnl_amount_from(entry_price: float, exit_price: float, side: float, qty: float) -> float:
+        """
+        Currency P&L on the closed quantity (qty in asset units).
+        Long:  (exit - entry) * qty
+        Short: (entry - exit) * qty
+        """
+        if qty <= 0 or entry_price == 0:
+            return 0.0
+        diff = (exit_price - entry_price)
+        return diff * qty if side > 0 else (-diff * qty)
 
-    # Are TP/SL columns present?
+    def pct_str(p01: float) -> str:
+        """Format a 0..1 ratio as '%XX' (integer)."""
+        try:
+            if p01 is None or pd.isna(p01):
+                return "%0"
+            p01 = max(0.0, min(1.0, float(p01)))
+            return f"%{int(round(p01 * 100))}"
+        except Exception:
+            return "%0"
+
+    def pct_change_str(old_p01: float, new_p01: float) -> str:
+        return f"{pct_str(old_p01)} -> {pct_str(new_p01)}"
+
+    log("First rows snapshot:\n", df[['timestamp','close','position','percentage']].head(100))
+
+    # Validate / clean numeric columns
+    for col in ['position', 'close', 'percentage']:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+
+    # Align rows where exactly one of (position, percentage) is zero: force both to zero
+    mismatch_mask = (
+        ((df['position'] == 0) & (df['percentage'] != 0)) |
+        ((df['position'] != 0) & (df['percentage'] == 0))
+    )
+    if debug:
+        n_fix = int(mismatch_mask.sum())
+        if n_fix:
+            log(f"Aligned {n_fix} rows where only one of (position, percentage) was zero -> set both to 0.")
+    df.loc[mismatch_mask, ['position', 'percentage']] = 0
+
+    # Final NaN check after cleaning
+    if df[['position', 'close', 'percentage']].isna().any().any():
+        raise ValueError("position/close/percentage contain non-numeric values.")
+
+    # Optional TP/SL
     has_tp_col = 'take_profit' in df.columns
     has_sl_col = 'stop_loss' in df.columns
 
+    # Prep
     df = df.copy()
     df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
     df = df.sort_values(by='timestamp').reset_index(drop=True)
     df[['position', 'close', 'percentage']] = df[['position', 'close', 'percentage']].astype(float)
-
     df['position_prev'] = df['position'].shift(fill_value=0)
     df['price_prev'] = df['close'].shift(fill_value=0)
 
-    initial_balance = df['close'].iloc[0]
-    balance = initial_balance
-    balance_prev = initial_balance
+    # State
+    balance = float(initial_balance)
+    balance_prev = float(initial_balance)
     balances = []
     trades = []
     returns = []
     total_volume = 0.0
+    commission_paid_total = 0.0  # <— NEW: track real commission paid
 
     tpOrSlHit = False
     active_position = 0.0
     entry_price = 0.0
     leverage = 0.0
-    used_percentage = 0.0
+    used_percentage = 0.0  # 0..1
     stop_price = None
     take_price = None
     trade_entry_time = None
-    total_trade_duration = 0
+    total_trade_duration = 0.0
+    position_size = 0.0  # asset units
 
-    #log("=== START BACKTEST ===")
-    #log(f"Rows: {len(df)}, Initial balance: {initial_balance}, Commission: {commission}, Rf: {risk_free_rate}")
-    #log("First rows snapshot:\n", df[['timestamp','close','position','percentage','position_prev','price_prev']].head(5))
+    log("=== START BACKTEST ===")
+    log(f"Rows: {len(df)}, Initial balance: {initial_balance}, Commission: {commission}")
+    log("First rows snapshot:\n", df[['timestamp','close','position','percentage']].head(100))
+
+    first_close = float(df['close'].iloc[0])
+    last_close = float(df['close'].iloc[-1])
+
+    last_idx = len(df) - 1
 
     for i in range(len(df)):
         row = df.iloc[i]
@@ -88,10 +125,10 @@ def calculate_performance(df: pd.DataFrame, commission=0.0, risk_free_rate=0.02,
         price_prev = float(row['price_prev'])
         pos = float(row['position'])
         pos_prev = float(row['position_prev'])
-        pct = float(row['percentage']) / 100.0
+        pct = float(row['percentage']) / 100.0  # 0..1
         ts = row['timestamp']
 
-        # Read TP/SL only if columns exist; None means "not set / ignore"
+        # Read TP/SL if present
         tp = None
         sl = None
         if has_tp_col:
@@ -101,30 +138,23 @@ def calculate_performance(df: pd.DataFrame, commission=0.0, risk_free_rate=0.02,
             val = row['stop_loss']
             sl = None if pd.isna(val) or float(val) == 0.0 else float(val)
 
-        #if pd.isna(ts):
-            #log(f"[{i}] WARNING: NaT timestamp row; skipping calc safety-check context -> {row.to_dict()}")
-
-        #log(f"[{i}] {ts} | price={price:.6f} prev={price_prev:.6f} pos={pos} prev_pos={pos_prev} "f"active={active_position} bal={balance:.6f} tpOrSlHit={tpOrSlHit}")
-
-        # Reset tp/sl latch on new signal after a hit
+        # Reset latch after a new signal arrives
         if tpOrSlHit and pos != pos_prev:
-            #log(f"[{i}] tpOrSlHit reset path: new signal pos {pos} vs prev {pos_prev}")
             tpOrSlHit = False
 
-        # If a position is active, manage it
+        # === Manage active position ===
         if active_position != 0:
+            # price change for current bar
             if price_prev == 0:
-                #log(f"[{i}] WARNING: price_prev==0 while active position. Avoiding div-by-zero in price_change.")
                 price_change = 0.0
             else:
                 price_change = (price - price_prev) / price_prev
-
             if active_position < 0:
                 price_change *= -1
 
             floating_gain = leverage * price_change * used_percentage
 
-            # Evaluate TP/SL ONLY if set (not None)
+            # TP/SL checks
             hit_tp = False
             hit_sl = False
             if take_price is not None:
@@ -132,158 +162,300 @@ def calculate_performance(df: pd.DataFrame, commission=0.0, risk_free_rate=0.02,
             if stop_price is not None:
                 hit_sl = (price <= stop_price) if active_position > 0 else (price >= stop_price)
 
-            #log(f"[{i}] ACTIVE pos={active_position} lev={leverage} entry={fmt(entry_price)} "f"used%={used_percentage*100:.2f} tp={fmt(take_price)} sl={fmt(stop_price)} "f"price_change={price_change:.6f} floating_gain={floating_gain:.8f} hitTP={hit_tp} hitSL={hit_sl}")
-
-            # Exit on TP/SL
+            # --- Exit by TP/SL ---
             if hit_tp or hit_sl:
-                gain_price = take_price if hit_tp else stop_price
-                diff = (gain_price - entry_price) / entry_price if active_position > 0 else (entry_price - gain_price) / entry_price
-                pnl = gain_price - price if active_position > 0 else price - gain_price
-                pnl_pct = diff * 100
+                exit_price = take_price if hit_tp else stop_price
+                # Keep your MTM-style balance logic as-is:
+                diff = (exit_price - entry_price) / entry_price if active_position > 0 else (entry_price - exit_price) / entry_price
+                pnl = exit_price - price if active_position > 0 else price - exit_price  # (legacy)
+                pnl_pct = pnl_pct_from(entry_price, exit_price, active_position)
+
+                # Realized P&L (currency) on full size:
+                qty = position_size
+                pnl_amount = pnl_amount_from(entry_price, exit_price, active_position, qty)
+
                 trade_type = "LONG_CLOSE" if active_position > 0 else "SHORT_CLOSE"
-                #log(f"[{i}] EXIT BY TP/SL -> {trade_type} at {fmt(gain_price)} | pnl%={pnl_pct:.4f} pnl$={pnl:.6f}")
 
                 if trade_entry_time:
                     trade_duration = (ts - trade_entry_time).total_seconds() / 3600
                     total_trade_duration += trade_duration
-                    #log(f"[{i}] Trade duration hours: {trade_duration:.4f}")
 
-                trade_amount = 0.0 if entry_price == 0 else used_percentage * balance / entry_price
-                trade_volume = trade_amount * price
+                trade_amount = qty
+                trade_volume = abs(trade_amount * exit_price)
                 total_volume += trade_volume
-                #log(f"[{i}] Volume add on exit: {trade_volume:.6f} (total: {total_volume:.6f})")
+                commission_fee = trade_volume * commission
+                commission_paid_total += commission_fee
+
+                change_str = pct_change_str(used_percentage, 0.0)
 
                 trades.append({
                     "id": len(trades) + 1,
                     "date": ts,
                     "type": trade_type,
                     "leverage": leverage,
-                    "usedPercentage": used_percentage * 100,
+                    "usedPercentage": change_str,
                     "amount": trade_amount,
-                    "price": price,
-                    "commission": balance * commission,
-                    "pnlPercentage": round(pnl_pct, 2)
+                    "price": exit_price,
+                    "commission": round(commission_fee, 6),
+                    "pnlPercentage": round(pnl_pct, 2),
+                    "pnlAmount": round(pnl_amount, 2),
                 })
-                balance += pnl
-                #log(f"[{i}] Balance after pnl: {balance:.6f}")
-                balance -= balance * commission
-                #log(f"[{i}] Balance after commission: {balance:.6f}")
+
+                balance += pnl         # (legacy calc kept)
+                balance -= commission_fee
+
+                # reset all
                 active_position = 0.0
                 entry_price = leverage = used_percentage = 0.0
                 stop_price = take_price = None
                 trade_entry_time = None
+                position_size = 0.0
                 tpOrSlHit = True
 
-            # Exit to flat by signal
+            # --- Exit to flat by signal (pos == 0) ---
             elif pos == 0:
-                gain_pct = (price - entry_price) / entry_price if active_position > 0 else (entry_price - price) / entry_price
-                pnl = floating_gain * balance
-                pnl_pct = gain_pct * leverage * used_percentage * 100
+                pnl = floating_gain * balance  # (legacy)
+                pnl_pct = pnl_pct_from(entry_price, price, active_position)
+
+                # Realized P&L in currency on full size:
+                qty = position_size
+                pnl_amount = pnl_amount_from(entry_price, price, active_position, qty)
+
                 close_type = "LONG_CLOSE" if active_position > 0 else "SHORT_CLOSE"
-                #log(f"[{i}] EXIT BY SIGNAL to flat -> {close_type} | gain%={gain_pct*100:.4f} pnl%={pnl_pct:.4f} pnl$={pnl:.6f}")
 
                 if trade_entry_time:
                     trade_duration = (ts - trade_entry_time).total_seconds() / 3600
                     total_trade_duration += trade_duration
-                    #log(f"[{i}] Trade duration hours: {trade_duration:.4f}")
 
-                trade_amount = 0.0 if entry_price == 0 else used_percentage * balance / entry_price
-                trade_volume = trade_amount * price
+                trade_amount = qty
+                trade_volume = abs(trade_amount * price)
                 total_volume += trade_volume
-                #log(f"[{i}] Volume add on flat exit: {trade_volume:.6f} (total: {total_volume:.6f})")
+                commission_fee = trade_volume * commission
+                commission_paid_total += commission_fee
+
+                change_str = pct_change_str(used_percentage, 0.0)
 
                 trades.append({
                     "id": len(trades) + 1,
                     "date": ts,
                     "type": close_type,
                     "leverage": leverage,
-                    "usedPercentage": used_percentage * 100,
+                    "usedPercentage": change_str,
                     "amount": trade_amount,
                     "price": price,
-                    "commission": balance * commission,
-                    "pnlPercentage": round(pnl_pct, 2)
+                    "commission": round(commission_fee, 6),
+                    "pnlPercentage": round(pnl_pct, 2),
+                    "pnlAmount": round(pnl_amount, 2),
                 })
-                balance += pnl
-                #log(f"[{i}] Balance after pnl: {balance:.6f}")
-                balance -= balance * commission
-                #log(f"[{i}] Balance after commission: {balance:.6f}")
+                balance += pnl         # (legacy)
+                balance -= commission_fee
 
                 active_position = 0.0
                 entry_price = leverage = used_percentage = 0.0
                 stop_price = take_price = None
                 trade_entry_time = None
+                position_size = 0.0
 
-            # Hold: apply floating P&L
+            # --- Force close at end-of-data (treat as if pos==0) ---
+            elif i == last_idx:
+                pnl = floating_gain * balance                      # same "legacy" MTM style as signal exit
+                pnl_pct = pnl_pct_from(entry_price, price, active_position)
+
+                qty = position_size
+                pnl_amount = pnl_amount_from(entry_price, price, active_position, qty)
+
+                close_type = "LONG_END_CLOSE" if active_position > 0 else "SHORT_END_CLOSE"
+        
+                if trade_entry_time:
+                    trade_duration = (ts - trade_entry_time).total_seconds() / 3600
+                    total_trade_duration += trade_duration
+        
+                trade_amount = qty
+                trade_volume = abs(trade_amount * price)
+                total_volume += trade_volume
+                #commission_fee = trade_volume * commission
+                #commission_paid_total += commission_fee
+        
+                change_str = pct_change_str(used_percentage, 0.0)
+        
+                trades.append({
+                    "id": len(trades) + 1,
+                    "date": ts,
+                    "type": close_type,                   # <- clearly labeled as end-of-data close
+                    "leverage": leverage,
+                    "usedPercentage": change_str,
+                    "amount": trade_amount,
+                    "price": price,
+                    "commission": 0.0, #round(commission_fee, 6),
+                    "pnlPercentage": round(pnl_pct, 2),
+                    "pnlAmount": round(pnl_amount, 2),
+                })
+        
+                balance += pnl
+                #balance -= commission_fee
+        
+                # reset state
+                active_position = 0.0
+                entry_price = leverage = used_percentage = 0.0
+                stop_price = take_price = None
+                trade_entry_time = None
+                position_size = 0.0
+    
+
+            # --- Hold: MTM, then rebalance by percentage change on same side ---
             else:
-                balance_before = balance
+                # 1) Mark-to-market using *current* used_percentage
                 balance *= (1 + floating_gain)
-                #log(f"[{i}] HOLDING -> balance {balance_before:.6f} -> {balance:.6f} (floating_gain={floating_gain:.8f})")
 
-        # Open / flip #logic (only if not immediately after TP/SL)
-        if i > 0 and pos != 0 and pos != active_position and not tpOrSlHit:
+                # 2) Rebalance size when percentage changes but side is same
+                desired_pct = pct  # 0..1
+                same_side = (pos != 0) and (active_position * pos > 0)
+
+                if same_side and abs(desired_pct - used_percentage) > 1e-12:
+                    if desired_pct > used_percentage:
+                        # SCALE IN (partial open)
+                        add_pct = desired_pct - used_percentage
+                        add_amount = (add_pct * balance) / price if price != 0 else 0.0
+
+                        # VWAP entry price after adding size
+                        if position_size + add_amount > 0:
+                            entry_price = (
+                                (entry_price * position_size) + (price * add_amount)
+                            ) / (position_size + add_amount)
+
+                        change_str = pct_change_str(used_percentage, desired_pct)
+
+                        position_size += add_amount
+                        used_percentage = desired_pct
+
+                        trade_type = "LONG_PARTIAL_OPEN" if active_position > 0 else "SHORT_PARTIAL_OPEN"
+                        trade_volume = abs(add_amount * price)
+                        total_volume += trade_volume
+                        commission_fee = trade_volume * commission
+                        commission_paid_total += commission_fee
+
+                        trades.append({
+                            "id": len(trades) + 1,
+                            "date": ts,
+                            "type": trade_type,
+                            "leverage": leverage,
+                            "usedPercentage": change_str,
+                            "amount": add_amount,
+                            "price": price,
+                            "commission": round(commission_fee, 6)
+                        })
+                        balance -= commission_fee
+
+                    else:
+                        # SCALE OUT (partial close)
+                        reduce_pct = used_percentage - desired_pct  # > 0
+                        close_frac = reduce_pct / used_percentage if used_percentage > 0 else 1.0
+                        close_amount = position_size * close_frac
+
+                        change_str = pct_change_str(used_percentage, desired_pct)
+
+                        trade_type = "LONG_PARTIAL_CLOSE" if active_position > 0 else "SHORT_PARTIAL_CLOSE"
+                        trade_volume = abs(close_amount * price)
+                        total_volume += trade_volume
+                        commission_fee = trade_volume * commission
+                        commission_paid_total += commission_fee
+
+                        realized_pct = pnl_pct_from(entry_price, price, active_position)
+                        pnl_amount = pnl_amount_from(entry_price, price, active_position, close_amount)
+
+                        trades.append({
+                            "id": len(trades) + 1,
+                            "date": ts,
+                            "type": trade_type,
+                            "leverage": leverage,
+                            "usedPercentage": change_str,
+                            "amount": close_amount,
+                            "price": price,
+                            "commission": round(commission_fee, 6),
+                            "pnlPercentage": round(realized_pct, 2),
+                            "pnlAmount": round(pnl_amount, 2),
+                        })
+                        balance -= commission_fee
+
+                        position_size -= close_amount
+                        used_percentage = desired_pct
+
+                        if desired_pct <= 0:
+                            active_position = 0.0
+                            leverage = 0.0
+                            entry_price = 0.0
+                            take_price = None
+                            stop_price = None
+                            trade_entry_time = None
+                            position_size = 0.0
+
+        # === Open / flip logic (only if not immediately after TP/SL) ===
+        if i > 0 and i < last_idx and pos != 0 and pos != active_position and not tpOrSlHit:
             if active_position != 0:
-                gain_pct = (price - entry_price) / entry_price if active_position > 0 else (entry_price - price) / entry_price
-                pnl_pct = gain_pct * leverage * used_percentage * 100
+                # Close old side (flip close). MTM already applied above.
+                pnl_pct = pnl_pct_from(entry_price, price, active_position)
+                pnl_amount = pnl_amount_from(entry_price, price, active_position, position_size)
                 close_type = "LONG_CLOSE" if active_position > 0 else "SHORT_CLOSE"
-                #log(f"[{i}] FLIP CLOSE -> {close_type} | gain%={gain_pct*100:.4f} pnl%={pnl_pct:.4f}")
 
                 if trade_entry_time:
                     trade_duration = (ts - trade_entry_time).total_seconds() / 3600
                     total_trade_duration += trade_duration
-                    #log(f"[{i}] Trade duration hours: {trade_duration:.4f}")
 
-                trade_amount = 0.0 if entry_price == 0 else used_percentage * balance / entry_price
-                trade_volume = trade_amount * price
+                trade_amount = position_size
+                trade_volume = abs(trade_amount * price)
                 total_volume += trade_volume
-                #log(f"[{i}] Volume add on flip close: {trade_volume:.6f} (total: {total_volume:.6f})")
+                commission_fee = trade_volume * commission
+                commission_paid_total += commission_fee
+
+                change_str = pct_change_str(used_percentage, 0.0)
 
                 trades.append({
                     "id": len(trades) + 1,
                     "date": ts,
                     "type": close_type,
                     "leverage": leverage,
-                    "usedPercentage": used_percentage * 100,
+                    "usedPercentage": change_str,
                     "amount": trade_amount,
                     "price": price,
-                    "commission": balance * commission,
-                    "pnlPercentage": round(pnl_pct, 2)
+                    "commission": round(commission_fee, 6),
+                    "pnlPercentage": round(pnl_pct, 2),
+                    "pnlAmount": round(pnl_amount, 2),
                 })
-                balance -= balance * commission
-                #log(f"[{i}] Balance after commission (flip close): {balance:.6f}")
+                balance -= commission_fee
 
-            # Open new position
+            # Open new side
+            old_pct_for_open = 0.0  # from flat
             active_position = pos
             leverage = abs(pos)
             entry_price = price
             used_percentage = pct
-            # Set TP/SL for the new trade only if provided
             take_price = tp
             stop_price = sl
             trade_entry_time = ts
             open_type = "LONG_OPEN" if pos > 0 else "SHORT_OPEN"
-            #log(f"[{i}] OPEN -> {open_type} at {price:.6f} lev={leverage} used%={used_percentage*100:.2f} "f"tp={fmt(take_price)} sl={fmt(stop_price)}")
 
-            trade_amount = used_percentage * balance / price if price != 0 else 0.0
-            #if price == 0:
-                #log(f"[{i}] WARNING: price==0 at open; trade_amount forced to 0")
-            trade_volume = trade_amount * price
+            trade_amount = used_percentage * balance / price if price != 0 else 0.0  # asset units
+            trade_volume = abs(trade_amount * price)
             total_volume += trade_volume
-            #log(f"[{i}] Volume add on open: {trade_volume:.6f} (total: {total_volume:.6f})")
+            position_size = trade_amount
+            commission_fee = trade_volume * commission
+            commission_paid_total += commission_fee
+
+            change_str = pct_change_str(old_pct_for_open, used_percentage)
 
             trades.append({
                 "id": len(trades) + 1,
                 "date": ts,
                 "type": open_type,
                 "leverage": leverage,
-                "usedPercentage": used_percentage * 100,
+                "usedPercentage": change_str,
                 "amount": trade_amount,
                 "price": price,
-                "commission": balance * commission
+                "commission": round(commission_fee, 6)
             })
-            balance -= balance * commission
-            #log(f"[{i}] Balance after commission (open): {balance:.6f}")
+            balance -= commission_fee
 
-        # Returns tracking
+        # === Returns tracking ===
         if balance == balance_prev or (balance_prev == 0):
             ret_val = 0.0 if balance_prev != 0 else 0.0
         else:
@@ -293,7 +465,7 @@ def calculate_performance(df: pd.DataFrame, commission=0.0, risk_free_rate=0.02,
         balances.append((int(ts.timestamp()) if pd.notna(ts) else 0, balance))
         balance_prev = balance
 
-    # Metrics
+    # === Metrics ===
     pnl_list = [t.get('pnlPercentage', 0) for t in trades if 'pnlPercentage' in t]
     wins = [p for p in pnl_list if p > 0]
     losses = [p for p in pnl_list if p < 0]
@@ -305,21 +477,21 @@ def calculate_performance(df: pd.DataFrame, commission=0.0, risk_free_rate=0.02,
         round(len(wins) / (len(wins) + len(losses)) * 100, 2) if wins or losses else 0
     )
 
-    # Max Drawdown
-    max_drawdown = 0
+    # Max Drawdown (keep original sign convention)
+    max_drawdown = 0.0
     peak = balances[0][1]
     for _, b in balances:
         if b > peak:
             peak = b
-        dd = (peak - b) / peak if peak != 0 else 0
+        dd = (peak - b) / peak if peak != 0 else 0.0
         if dd > max_drawdown:
             max_drawdown = dd
 
-    # Sharpe Ratio
+    # Sharpe Ratio (simple daily rf; your original basis)
     if len(returns) > 1:
-        return_values = [r[1]/100 for r in returns]
+        return_values = [r[1] / 100 for r in returns]
         mean_return = sum(return_values) / len(return_values)
-        daily_risk_free = (1 + risk_free_rate) ** (1/365) - 1
+        daily_risk_free = (1 + risk_free_rate) ** (1 / 365) - 1
         if len(return_values) > 1:
             variance = sum((r - mean_return) ** 2 for r in return_values) / (len(return_values) - 1)
             std_dev = variance ** 0.5
@@ -329,11 +501,11 @@ def calculate_performance(df: pd.DataFrame, commission=0.0, risk_free_rate=0.02,
     else:
         sharpe_ratio = 0
 
-    # Sortino Ratio
+    # Sortino Ratio (same basis)
     if len(returns) > 1:
-        return_values = [r[1]/100 for r in returns]
+        return_values = [r[1] / 100 for r in returns]
         mean_return = sum(return_values) / len(return_values)
-        daily_risk_free = (1 + risk_free_rate) ** (1/365) - 1
+        daily_risk_free = (1 + risk_free_rate) ** (1 / 365) - 1
         negative_returns = [r for r in return_values if r < 0]
         if len(negative_returns) > 1:
             downside_variance = sum((r - 0) ** 2 for r in negative_returns) / len(negative_returns)
@@ -348,6 +520,9 @@ def calculate_performance(df: pd.DataFrame, commission=0.0, risk_free_rate=0.02,
     total_period_hours = (df['timestamp'].iloc[-1] - df['timestamp'].iloc[0]).total_seconds() / 3600
     duration_ratio = total_trade_duration / total_period_hours if total_period_hours > 0 else 0
 
+    # Buy&Hold asset return independent of initial balance
+    buy_hold_return = ((last_close / first_close) - 1.0) * 100.0 if first_close > 0 else 0.0
+
     return {
         "chartData": [{"time": t, "value": round(b, 2)} for t, b in balances],
         "performance": {
@@ -361,13 +536,13 @@ def calculate_performance(df: pd.DataFrame, commission=0.0, risk_free_rate=0.02,
             "finalBalance": round(balance, 2),
             "maxDrawdown": round(-max_drawdown * 100, 2),
             "sharpeRatio": round(sharpe_ratio, 3),
-            "profitFactor": round(sum(wins) / abs(sum(losses)), 2) if losses else None,
-            "buyHoldReturn": round((df['close'].iloc[-1] - initial_balance) / initial_balance * 100, 2),
+            "profitFactor": round(sum(wins) / abs(sum(losses)), 2) if losses else None,  # still % based
+            "buyHoldReturn": round(buy_hold_return, 2),
             "sortinoRatio": round(sortino_ratio, 3),
             "mostProfitableTrade": round(most_win, 2),
             "mostLosingTrade": round(most_loss, 2),
             "durationOftradeRatio": round(duration_ratio, 4),
-            "commissionCost": round(initial_balance * commission * len(trades), 2),
+            "commissionCost": round(commission_paid_total, 2),  # <— NEW, real total
             "volume": round(total_volume, 2)
         },
         "trades": trades[::-1],

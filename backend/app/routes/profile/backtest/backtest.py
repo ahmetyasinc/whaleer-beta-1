@@ -16,6 +16,7 @@ class BacktestRequest(BaseModel):
     strategy: int
     period: str
     crypto: dict
+    initial_balance: float = None  # <— CHANGED: now optional, default to None
 
 # 🧩 1. Arşiv Kaydetme
 class SaveBacktestRequest(BaseModel):
@@ -33,7 +34,8 @@ async def run_backtest(
         period=payload.period,
         crypto=payload.crypto,
         user_id=int(user_id),
-        db=db
+        db=db,
+        initial_balance=payload.initial_balance  # Pass the optional initial balance
     )
 
 @protected_router.post("/api/archive-backtest/")

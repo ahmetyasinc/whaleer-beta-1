@@ -6,6 +6,7 @@ import pandas as pd
 import time
 import asyncio
 import ta
+from datetime import timedelta
 
 from app.routes.profile.indicator.indicator_library.empty import empty
 from app.routes.profile.indicator.indicator_library.emptyclass import EmptyClass
@@ -27,6 +28,8 @@ def build_allowed_globals(df, print_outputs, indicator_results, updated,
     ns = {
         "__builtins__": {
             "__import__": safe_import,
+            "abs": abs, "all": all, "any": any, "bin": bin, "bool": bool,
+            "timedelta": timedelta, "complex": complex, "dict": dict,
             "await": Await,
             "range": range, "len": len, "min": min, "max": max, "sum": sum, "abs": abs,
             "round": round, "sorted": sorted, "zip": zip, "enumerate": enumerate,
@@ -54,7 +57,7 @@ def build_allowed_globals(df, print_outputs, indicator_results, updated,
         ns["input"] = input_shim
 
     if make_empty:
-        ns["print"] = lambda *args, **kwargs: empty(*args, **kwargs)
+        ns["__builtins__"]["print"] = lambda *args, **kwargs: empty(*args, **kwargs)
         ns["plot_indicator"]  = lambda *args, **kwargs: empty(*args, **kwargs)
         ns["plot"]  = lambda *args, **kwargs: empty(*args, **kwargs)
 

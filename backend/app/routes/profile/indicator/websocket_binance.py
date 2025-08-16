@@ -239,6 +239,7 @@ async def fix_binance_data(data: DownloadData, db: AsyncSession = Depends(get_db
 
                 await db.commit()
                 logs.append(f"[INSERT] Inserted {inserted_count} rows for {coin_id} / {interval}")
+                print(f"[INSERT] Inserted {inserted_count} rows for {coin_id} / {interval}")
                 inserted_total += inserted_count
 
                 # current_ts'i next_ts'e ayarla (ilk dolu veri)
@@ -248,7 +249,6 @@ async def fix_binance_data(data: DownloadData, db: AsyncSession = Depends(get_db
             logs.append(f"[DONE] Total inserted for {coin_id} / {interval}: {inserted_total}")
 
     return {"status": "completed", "log": logs}
-
 
 
 # ✅ FastAPI başlatıldığında WebSocket'i ve veritabanı bağlantısını başlat

@@ -38,38 +38,38 @@ async def binance_websocket(db_pool):
         "ethusdt@kline_1d",   # 1 gün
         "ethusdt@kline_1w",   # 1 hafta
 #
-        #"bnbusdt@kline_1m",   # 1 dakika
-        #"bnbusdt@kline_3m",   # 3 dakika
-        #"bnbusdt@kline_5m",   # 5 dakika
-        #"bnbusdt@kline_15m",  # 15 dakika
-        #"bnbusdt@kline_30m",  # 30 dakika
-        #"bnbusdt@kline_1h",   # 1 saat
-        #"bnbusdt@kline_2h",   # 2 saat
-        #"bnbusdt@kline_4h",   # 4 saat
-        #"bnbusdt@kline_1d",   # 1 gün
-        #"bnbusdt@kline_1w",   # 1 hafta
+        "bnbusdt@kline_1m",   # 1 dakika
+        "bnbusdt@kline_3m",   # 3 dakika
+        "bnbusdt@kline_5m",   # 5 dakika
+        "bnbusdt@kline_15m",  # 15 dakika
+        "bnbusdt@kline_30m",  # 30 dakika
+        "bnbusdt@kline_1h",   # 1 saat
+        "bnbusdt@kline_2h",   # 2 saat
+        "bnbusdt@kline_4h",   # 4 saat
+        "bnbusdt@kline_1d",   # 1 gün
+        "bnbusdt@kline_1w",   # 1 hafta
 #
-        #"solusdt@kline_1m",   # 1 dakika
-        #"solusdt@kline_3m",   # 3 dakika
-        #"solusdt@kline_5m",   # 5 dakika
-        #"solusdt@kline_15m",  # 15 dakika
-        #"solusdt@kline_30m",  # 30 dakika
-        #"solusdt@kline_1h",   # 1 saat
-        #"solusdt@kline_2h",   # 2 saat
-        #"solusdt@kline_4h",   # 4 saat
-        #"solusdt@kline_1d",   # 1 gün
-        #"solusdt@kline_1w",   # 1 hafta
+        "solusdt@kline_1m",   # 1 dakika
+        "solusdt@kline_3m",   # 3 dakika
+        "solusdt@kline_5m",   # 5 dakika
+        "solusdt@kline_15m",  # 15 dakika
+        "solusdt@kline_30m",  # 30 dakika
+        "solusdt@kline_1h",   # 1 saat
+        "solusdt@kline_2h",   # 2 saat
+        "solusdt@kline_4h",   # 4 saat
+        "solusdt@kline_1d",   # 1 gün
+        "solusdt@kline_1w",   # 1 hafta
 #
-        #"adausdt@kline_1m",   # 1 dakika
-        #"adausdt@kline_3m",   # 3 dakika
-        #"adausdt@kline_5m",   # 5 dakika
-        #"adausdt@kline_15m",  # 15 dakika
-        #"adausdt@kline_30m",  # 30 dakika
-        #"adausdt@kline_1h",   # 1 saat
-        #"adausdt@kline_2h",   # 2 saat
-        #"adausdt@kline_4h",   # 4 saat
-        #"adausdt@kline_1d",   # 1 gün
-        #"adausdt@kline_1w",   # 1 hafta
+        "adausdt@kline_1m",   # 1 dakika
+        "adausdt@kline_3m",   # 3 dakika
+        "adausdt@kline_5m",   # 5 dakika
+        "adausdt@kline_15m",  # 15 dakika
+        "adausdt@kline_30m",  # 30 dakika
+        "adausdt@kline_1h",   # 1 saat
+        "adausdt@kline_2h",   # 2 saat
+        "adausdt@kline_4h",   # 4 saat
+        "adausdt@kline_1d",   # 1 gün
+        "adausdt@kline_1w",   # 1 hafta
     ],
     "id": 1
 }

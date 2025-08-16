@@ -5,467 +5,539 @@ def calculate_performance(
     commission: float = 0.0,
     risk_free_rate: float = 0.02,
     debug: bool = False,
-    initial_balance: float = 10000.0
-) -> dict:
+    initial_balance: float = 10000.0,
+    fifo_scaleout: bool = True,   # scale-out dağıtım kuralı: True=FIFO, False=LIFO
+):
+    """
+    - Kısmi açılışları 'tranche' olarak ayrı ayrı takip eder.
+    - Her tranche kendi TP/SL seviyesine sahiptir; tetiklenirse sadece o tranche kapanır.
+    - TP/SL kapanışında gelecekte 'percentage' değerlerini, kapanan yüzde kadar düşürerek tekrar açılmayı engeller.
+      (Bu indirim, orijinal yüzdeler o eşiğin altına inene kadar sürer.)
+    """
+
     def log(*args, **kwargs):
         if debug:
             print(*args, **kwargs)
 
-    def fmt(x):
-        """Safe formatter for prices that may be None/NaN."""
-        try:
-            if x is None or pd.isna(x):
-                return "None"
-            return f"{float(x):.6f}"
-        except Exception:
-            return str(x)
-
     def pnl_pct_from(entry_price: float, exit_price: float, side: float) -> float:
-        """
-        Price-based P&L % from entry to exit.
-        side > 0 => long, side < 0 => short.
-        """
-        try:
-            if entry_price == 0:
-                return 0.0
-            raw = (exit_price - entry_price) / entry_price
-            return (raw * 100.0) if side > 0 else (-raw * 100.0)
-        except Exception:
+        if entry_price == 0:
             return 0.0
+        raw = (exit_price - entry_price) / entry_price
+        return (raw * 100.0) if side > 0 else (-raw * 100.0)
 
     def pnl_amount_from(entry_price: float, exit_price: float, side: float, qty: float) -> float:
-        """
-        Currency P&L on the closed quantity (qty in asset units).
-        Long:  (exit - entry) * qty
-        Short: (entry - exit) * qty
-        """
         if qty <= 0 or entry_price == 0:
             return 0.0
         diff = (exit_price - entry_price)
         return diff * qty if side > 0 else (-diff * qty)
 
-    def pct_str(p01: float) -> str:
-        """Format a 0..1 ratio as '%XX' (integer)."""
-        try:
-            if p01 is None or pd.isna(p01):
-                return "%0"
+    def pct_change_str(old_p01: float, new_p01: float) -> str:
+        def pct_str(p01: float) -> str:
             p01 = max(0.0, min(1.0, float(p01)))
             return f"%{int(round(p01 * 100))}"
-        except Exception:
-            return "%0"
-
-    def pct_change_str(old_p01: float, new_p01: float) -> str:
         return f"{pct_str(old_p01)} -> {pct_str(new_p01)}"
 
-    log("First rows snapshot:\n", df[['timestamp','close','position','percentage']].head(100))
-
-    # Validate / clean numeric columns
+    # --- validate
     for col in ['position', 'close', 'percentage']:
         df[col] = pd.to_numeric(df[col], errors='coerce')
-
-    # Align rows where exactly one of (position, percentage) is zero: force both to zero
     mismatch_mask = (
         ((df['position'] == 0) & (df['percentage'] != 0)) |
         ((df['position'] != 0) & (df['percentage'] == 0))
     )
-    if debug:
-        n_fix = int(mismatch_mask.sum())
-        if n_fix:
-            log(f"Aligned {n_fix} rows where only one of (position, percentage) was zero -> set both to 0.")
+    if mismatch_mask.any() and debug:
+        log(f"Aligned {int(mismatch_mask.sum())} rows where only one of (position, percentage) was zero -> set both to 0.")
     df.loc[mismatch_mask, ['position', 'percentage']] = 0
 
-    # Final NaN check after cleaning
     if df[['position', 'close', 'percentage']].isna().any().any():
         raise ValueError("position/close/percentage contain non-numeric values.")
 
-    # Optional TP/SL
     has_tp_col = 'take_profit' in df.columns
     has_sl_col = 'stop_loss' in df.columns
 
-    # Prep
+    # --- prep
     df = df.copy()
     df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
     df = df.sort_values(by='timestamp').reset_index(drop=True)
     df[['position', 'close', 'percentage']] = df[['position', 'close', 'percentage']].astype(float)
     df['position_prev'] = df['position'].shift(fill_value=0)
-    df['price_prev'] = df['close'].shift(fill_value=0)
+    df['price_prev']    = df['close'].shift(fill_value=0)
 
-    # State
+    # Orijinal yüzdeleri sakla (ileri manipülasyon için referans)
+    df['percentage_base'] = df['percentage']
+
+    # Bu fonksiyon, i satırından itibaren percentage değerlerinden reduction_pct puan düşer;
+    # orijinal yüzdeler reduction_pct altına ininceye kadar sürer.
+    def forward_reduce_percentage(start_idx: int, reduction_pct: float):
+        if reduction_pct <= 0:
+            return
+        j = start_idx
+        while j < len(df):
+            base = float(df.at[j, 'percentage_base'])
+            if base < reduction_pct:
+                break  # artık strateji doğal olarak bu indirimden daha düşük hedefliyor; dur.
+            df.at[j, 'percentage'] = max(0.0, float(df.at[j, 'percentage']) - reduction_pct)
+            j += 1
+
+    # --- state
+    time_in_trade_seconds = 0.0   # İşlemde geçen toplam süre (saniye)
+    prev_ts = None                # Bir önceki barın timestamp'i
+    used_pct_after_prev = 0.0     # Bir önceki bar sonunda toplam kullanılan yüzde (0..1)
     balance = float(initial_balance)
     balance_prev = float(initial_balance)
     balances = []
     trades = []
     returns = []
     total_volume = 0.0
-    commission_paid_total = 0.0  # <— NEW: track real commission paid
+    commission_paid_total = 0.0
 
-    tpOrSlHit = False
-    active_position = 0.0
-    entry_price = 0.0
-    leverage = 0.0
-    used_percentage = 0.0  # 0..1
-    stop_price = None
-    take_price = None
-    trade_entry_time = None
-    total_trade_duration = 0.0
-    position_size = 0.0  # asset units
+    # Aktif tranche listesi (aynı yönde birden fazla kısmi açılış)
+    # Her eleman: {
+    #   'pct': 0..1, 'qty': float, 'entry': float, 'side': +1/-1, 'lev': float,
+    #   'tp': float|None, 'sl': float|None, 'time': ts
+    # }
+    tranches = []
 
-    log("=== START BACKTEST ===")
-    log(f"Rows: {len(df)}, Initial balance: {initial_balance}, Commission: {commission}")
-    log("First rows snapshot:\n", df[['timestamp','close','position','percentage']].head(100))
+    # Yardımcı: toplam kullanılan yüzde ve toplam adet
+    def total_used_pct():
+        return sum(t['pct'] for t in tranches)
+
+    def total_position_qty():
+        return sum(t['qty'] for t in tranches)
+
+    def current_side():
+        # Tüm tranche’ler aynı yönde olmalı; yoksa 0
+        if not tranches:
+            return 0.0
+        s = tranches[0]['side']
+        return s if all(t['side'] == s for t in tranches) else 0.0
 
     first_close = float(df['close'].iloc[0])
-    last_close = float(df['close'].iloc[-1])
-
+    last_close  = float(df['close'].iloc[-1])
     last_idx = len(df) - 1
 
     for i in range(len(df)):
         row = df.iloc[i]
+        ts  = row['timestamp']
+        # --- (YENİ) İşlemde geçen süreyi biriktir ---
+        if prev_ts is not None:
+            dt_sec = (ts - prev_ts).total_seconds()
+            if used_pct_after_prev > 1e-12:   # önceki bar sonunda pozisyon vardıysa
+                time_in_trade_seconds += max(0.0, dt_sec)
+
+
         price = float(row['close'])
         price_prev = float(row['price_prev'])
-        pos = float(row['position'])
-        pos_prev = float(row['position_prev'])
-        pct = float(row['percentage']) / 100.0  # 0..1
-        ts = row['timestamp']
+        pos = float(row['position'])              # hedef kaldıraç işareti (yön)
+        pct_target = float(row['percentage'])/100 # hedef kullanım (manipüle edilmiş olabilir)
+        
 
-        # Read TP/SL if present
+        # Bu bar için girilen TP/SL (sadece yeni açılan tranche için kullanılacak)
         tp = None
         sl = None
         if has_tp_col:
-            val = row['take_profit']
-            tp = None if pd.isna(val) or float(val) == 0.0 else float(val)
+            val = row['take_profit']; tp = None if pd.isna(val) or float(val) == 0.0 else float(val)
         if has_sl_col:
-            val = row['stop_loss']
-            sl = None if pd.isna(val) or float(val) == 0.0 else float(val)
+            val = row['stop_loss'];   sl = None if pd.isna(val) or float(val) == 0.0 else float(val)
 
-        # Reset latch after a new signal arrives
-        if tpOrSlHit and pos != pos_prev:
-            tpOrSlHit = False
+        side_now = current_side()
 
-        # === Manage active position ===
-        if active_position != 0:
-            # price change for current bar
-            if price_prev == 0:
-                price_change = 0.0
-            else:
-                price_change = (price - price_prev) / price_prev
-            if active_position < 0:
-                price_change *= -1
+        # 1) MTM: tüm tranche’leri fiyat değişimine göre değerle
+        if tranches and price_prev != 0:
+            price_change = (price - price_prev) / price_prev
+            # Short için işaret ters
+            mtm_gain_p01 = 0.0
+            for t in tranches:
+                pc = price_change if t['side'] > 0 else -price_change
+                mtm_gain_p01 += t['lev'] * t['pct'] * pc
+            balance *= (1 + mtm_gain_p01)
 
-            floating_gain = leverage * price_change * used_percentage
-
-            # TP/SL checks
-            hit_tp = False
-            hit_sl = False
-            if take_price is not None:
-                hit_tp = (price >= take_price) if active_position > 0 else (price <= take_price)
-            if stop_price is not None:
-                hit_sl = (price <= stop_price) if active_position > 0 else (price >= stop_price)
-
-            # --- Exit by TP/SL ---
+        # 2) Tranche bazlı TP/SL kontrolleri → kapananları topla
+        closed_tranches = []
+        # BURADA EK: toplama başlamadan önce toplam kullanılan yüzdeyi al
+        rolling_used_pct_before = total_used_pct()  # 0..1
+        for idx_t, t in list(enumerate(tranches)):
+            hit_tp = (t['tp'] is not None) and ((price >= t['tp']) if t['side'] > 0 else (price <= t['tp']))
+            hit_sl = (t['sl'] is not None) and ((price <= t['sl']) if t['side'] > 0 else (price >= t['sl']))
             if hit_tp or hit_sl:
-                exit_price = take_price if hit_tp else stop_price
-                # Keep your MTM-style balance logic as-is:
-                diff = (exit_price - entry_price) / entry_price if active_position > 0 else (entry_price - exit_price) / entry_price
-                pnl = exit_price - price if active_position > 0 else price - exit_price  # (legacy)
-                pnl_pct = pnl_pct_from(entry_price, exit_price, active_position)
+                exit_price = t['tp'] if hit_tp else t['sl']
+                qty = t['qty']
+                pnl_pct = pnl_pct_from(t['entry'], exit_price, t['side'])
+                pnl_amount = pnl_amount_from(t['entry'], exit_price, t['side'], qty)
 
-                # Realized P&L (currency) on full size:
-                qty = position_size
-                pnl_amount = pnl_amount_from(entry_price, exit_price, active_position, qty)
+                trade_type = (
+                    "LONG_TP_CLOSE"  if (hit_tp and t['side'] > 0) else
+                    "SHORT_TP_CLOSE" if (hit_tp and t['side'] < 0) else
+                    "LONG_SL_CLOSE"  if (hit_sl and t['side'] > 0) else
+                    "SHORT_SL_CLOSE"
+                )
 
-                trade_type = "LONG_CLOSE" if active_position > 0 else "SHORT_CLOSE"
-
-                if trade_entry_time:
-                    trade_duration = (ts - trade_entry_time).total_seconds() / 3600
-                    total_trade_duration += trade_duration
-
-                trade_amount = qty
-                trade_volume = abs(trade_amount * exit_price)
+                trade_volume = abs(qty * exit_price)
                 total_volume += trade_volume
                 commission_fee = trade_volume * commission
                 commission_paid_total += commission_fee
 
-                change_str = pct_change_str(used_percentage, 0.0)
+                # --- YENİ: "usedPercentage" alanını TOPLAMDAN-TOPlAMA yaz
+                used_before = rolling_used_pct_before                   # 0..1
+                used_after  = max(0.0, used_before - t['pct'])          # 0..1
+                used_change_str = pct_change_str(used_before, used_after)
 
+                #log(f"Tranche kapandı: {trade_type} @ {exit_price}, qty={qty}, pnl_pct={pnl_pct:.2f}, used={used_change_str}")
+                log(f"Amount: {qty}")
                 trades.append({
                     "id": len(trades) + 1,
                     "date": ts,
                     "type": trade_type,
-                    "leverage": leverage,
-                    "usedPercentage": change_str,
-                    "amount": trade_amount,
+                    "leverage": t['lev'],
+                    "usedPercentage": used_change_str,   # <-- burada artık toplamdan-toplama
+                    "amount": qty,
                     "price": exit_price,
                     "commission": round(commission_fee, 6),
                     "pnlPercentage": round(pnl_pct, 2),
                     "pnlAmount": round(pnl_amount, 2),
                 })
-
-                balance += pnl         # (legacy calc kept)
                 balance -= commission_fee
 
-                # reset all
-                active_position = 0.0
-                entry_price = leverage = used_percentage = 0.0
-                stop_price = take_price = None
-                trade_entry_time = None
-                position_size = 0.0
-                tpOrSlHit = True
+                # Sıralı kapanışlarda bir sonraki kayıt için "önce" toplamı güncelle
+                rolling_used_pct_before = used_after
 
-            # --- Exit to flat by signal (pos == 0) ---
-            elif pos == 0:
-                pnl = floating_gain * balance  # (legacy)
-                pnl_pct = pnl_pct_from(entry_price, price, active_position)
+                closed_tranches.append((idx_t, t))
 
-                # Realized P&L in currency on full size:
-                qty = position_size
-                pnl_amount = pnl_amount_from(entry_price, price, active_position, qty)
+        # 2b) Kapanan tranche’leri kaldır ve ileriye dönük yüzdeyi düşür
+        if closed_tranches:
+            for idx_t, t in sorted(closed_tranches, key=lambda x: x[0], reverse=True):
+                del tranches[idx_t]
+            total_closed_pct = sum(t['pct'] for _, t in closed_tranches) * 100.0  # puan
+            forward_reduce_percentage(i, total_closed_pct)
+            # hedef yüzde yeniden okunsun (manipülasyon sonrası)
+            pct_target = float(df.at[i, 'percentage'])/100.0
 
-                close_type = "LONG_CLOSE" if active_position > 0 else "SHORT_CLOSE"
+        side_now = current_side()
+        used_pct_now = total_used_pct()
 
-                if trade_entry_time:
-                    trade_duration = (ts - trade_entry_time).total_seconds() / 3600
-                    total_trade_duration += trade_duration
+        # 3) Yön değişimi (flip)
+        if i < last_idx and pos != 0 and ((side_now == 0 and used_pct_now == 0) or (pos * side_now <= 0 and used_pct_now > 0)):
+            # Mevcut tüm tranche’leri cari fiyattan TEK KAYITLA kapat
+            if tranches:
+                total_pct = sum(t['pct'] for t in tranches)           # 0..1
+                total_qty = sum(t['qty'] for t in tranches)
+                side_all  = tranches[0]['side'] if tranches else 0.0
+                lev_all   = tranches[0]['lev']  if tranches else 0.0
 
-                trade_amount = qty
-                trade_volume = abs(trade_amount * price)
+                # VWAP giriş
+                vwap_entry = (sum(t['qty'] * t['entry'] for t in tranches) / total_qty) if total_qty > 0 else 0.0
+
+                # Toplam parasal PnL (tranche bazında toparla)
+                total_pnl_amount = sum(
+                    pnl_amount_from(t['entry'], price, t['side'], t['qty']) for t in tranches
+                )
+                pnl_pct = pnl_pct_from(vwap_entry, price, side_all)
+
+                # Hacim / komisyon (tek işlem)
+                trade_volume  = abs(total_qty * price)
                 total_volume += trade_volume
                 commission_fee = trade_volume * commission
                 commission_paid_total += commission_fee
 
-                change_str = pct_change_str(used_percentage, 0.0)
+                # usedPercentage: TOPLAM -> 0
+                used_change_str = pct_change_str(total_pct, 0.0)
 
                 trades.append({
                     "id": len(trades) + 1,
                     "date": ts,
-                    "type": close_type,
-                    "leverage": leverage,
-                    "usedPercentage": change_str,
-                    "amount": trade_amount,
+                    "type": "LONG_CLOSE" if side_all > 0 else "SHORT_CLOSE",
+                    "leverage": lev_all,                # ilk tranche’in kaldıraç değeri
+                    "usedPercentage": used_change_str,  # %Toplam -> %0
+                    "amount": total_qty,
                     "price": price,
                     "commission": round(commission_fee, 6),
                     "pnlPercentage": round(pnl_pct, 2),
-                    "pnlAmount": round(pnl_amount, 2),
+                    "pnlAmount": round(total_pnl_amount, 2),
                 })
-                balance += pnl         # (legacy)
+
                 balance -= commission_fee
+                tranches.clear()
+                used_pct_now = 0.0
+                side_now = 0.0
 
-                active_position = 0.0
-                entry_price = leverage = used_percentage = 0.0
-                stop_price = take_price = None
-                trade_entry_time = None
-                position_size = 0.0
+        # 4) Aynı yönde yeniden dengeleme (scale-in / scale-out)
+        #    Hedef yüzde (pct_target) ile mevcut kullanılan yüzde karşılaştır
+        if i < last_idx:
+            if pos == 0:
+                # sinyal flat: TÜM tranche'leri tek seferde kapat
+                if tranches:
+                    total_pct = sum(t['pct'] for t in tranches)           # 0..1
+                    total_qty = sum(t['qty'] for t in tranches)
+                    side_all  = tranches[0]['side'] if tranches else 0.0
+                    lev_all   = tranches[0]['lev']  if tranches else 0.0
 
-            # --- Force close at end-of-data (treat as if pos==0) ---
-            elif i == last_idx:
-                pnl = floating_gain * balance                      # same "legacy" MTM style as signal exit
-                pnl_pct = pnl_pct_from(entry_price, price, active_position)
+                    # VWAP giriş
+                    vwap_entry = (sum(t['qty'] * t['entry'] for t in tranches) / total_qty) if total_qty > 0 else 0.0
 
-                qty = position_size
-                pnl_amount = pnl_amount_from(entry_price, price, active_position, qty)
+                    # Toplam parasal PnL (güvenli yol: tranche bazında topla)
+                    total_pnl_amount = sum(
+                        pnl_amount_from(t['entry'], price, t['side'], t['qty']) for t in tranches
+                    )
+                    pnl_pct = pnl_pct_from(vwap_entry, price, side_all)
 
-                close_type = "LONG_END_CLOSE" if active_position > 0 else "SHORT_END_CLOSE"
-        
-                if trade_entry_time:
-                    trade_duration = (ts - trade_entry_time).total_seconds() / 3600
-                    total_trade_duration += trade_duration
-        
-                trade_amount = qty
-                trade_volume = abs(trade_amount * price)
-                total_volume += trade_volume
-                #commission_fee = trade_volume * commission
-                #commission_paid_total += commission_fee
-        
-                change_str = pct_change_str(used_percentage, 0.0)
-        
-                trades.append({
-                    "id": len(trades) + 1,
-                    "date": ts,
-                    "type": close_type,                   # <- clearly labeled as end-of-data close
-                    "leverage": leverage,
-                    "usedPercentage": change_str,
-                    "amount": trade_amount,
-                    "price": price,
-                    "commission": 0.0, #round(commission_fee, 6),
-                    "pnlPercentage": round(pnl_pct, 2),
-                    "pnlAmount": round(pnl_amount, 2),
-                })
-        
-                balance += pnl
-                #balance -= commission_fee
-        
-                # reset state
-                active_position = 0.0
-                entry_price = leverage = used_percentage = 0.0
-                stop_price = take_price = None
-                trade_entry_time = None
-                position_size = 0.0
-    
+                    # Hacim / komisyon
+                    trade_volume  = abs(total_qty * price)
+                    total_volume += trade_volume
+                    commission_fee = trade_volume * commission
+                    commission_paid_total += commission_fee
 
-            # --- Hold: MTM, then rebalance by percentage change on same side ---
+                    # usedPercentage: TOPLAM -> 0
+                    used_change_str = pct_change_str(total_pct, 0.0)
+
+                    trades.append({
+                        "id": len(trades) + 1,
+                        "date": ts,
+                        "type": "LONG_CLOSE" if side_all > 0 else "SHORT_CLOSE",
+                        "leverage": lev_all,                    # ilk tranche'in kaldıraç değeri
+                        "usedPercentage": used_change_str,      # %Toplam -> %0
+                        "amount": total_qty,
+                        "price": price,
+                        "commission": round(commission_fee, 6),
+                        "pnlPercentage": round(pnl_pct, 2),
+                        "pnlAmount": round(total_pnl_amount, 2),
+                    })
+
+                    balance -= commission_fee
+                    tranches.clear()
+                    used_pct_now = 0.0
+                    side_now = 0.0
+
             else:
-                # 1) Mark-to-market using *current* used_percentage
-                balance *= (1 + floating_gain)
+                # Aynı yön mü?
+                same_side = (side_now == 0) or (pos * side_now > 0)
 
-                # 2) Rebalance size when percentage changes but side is same
-                desired_pct = pct  # 0..1
-                same_side = (pos != 0) and (active_position * pos > 0)
-
-                if same_side and abs(desired_pct - used_percentage) > 1e-12:
-                    if desired_pct > used_percentage:
-                        # SCALE IN (partial open)
-                        add_pct = desired_pct - used_percentage
-                        add_amount = (add_pct * balance) / price if price != 0 else 0.0
-
-                        # VWAP entry price after adding size
-                        if position_size + add_amount > 0:
-                            entry_price = (
-                                (entry_price * position_size) + (price * add_amount)
-                            ) / (position_size + add_amount)
-
-                        change_str = pct_change_str(used_percentage, desired_pct)
-
-                        position_size += add_amount
-                        used_percentage = desired_pct
-
-                        trade_type = "LONG_PARTIAL_OPEN" if active_position > 0 else "SHORT_PARTIAL_OPEN"
-                        trade_volume = abs(add_amount * price)
+                if same_side:
+                    # Scale-in
+                    if pct_target > used_pct_now + 1e-12:
+                        add_pct = pct_target - used_pct_now
+                        # Yeni tranche
+                        lev = abs(pos)
+                        qty = (add_pct * balance) / price if price != 0 else 0.0
+                        trade_volume = abs(qty * price)
                         total_volume += trade_volume
                         commission_fee = trade_volume * commission
                         commission_paid_total += commission_fee
 
+                        tranches.append({
+                            'pct': add_pct,
+                            'qty': qty,
+                            'entry': price,
+                            'side': 1.0 if pos > 0 else -1.0,
+                            'lev': lev,
+                            'tp': tp,
+                            'sl': sl,
+                            'time': ts,
+                        })
+
                         trades.append({
-                            "id": len(trades) + 1,
+                            "id": len(trades)+1,
                             "date": ts,
-                            "type": trade_type,
-                            "leverage": leverage,
-                            "usedPercentage": change_str,
-                            "amount": add_amount,
+                            "type": "LONG_OPEN" if pos > 0 else "SHORT_OPEN",
+                            "leverage": lev,
+                            "usedPercentage": pct_change_str(used_pct_now, pct_target),
+                            "amount": qty,
                             "price": price,
                             "commission": round(commission_fee, 6)
                         })
                         balance -= commission_fee
+                        used_pct_now = pct_target
 
-                    else:
-                        # SCALE OUT (partial close)
-                        reduce_pct = used_percentage - desired_pct  # > 0
-                        close_frac = reduce_pct / used_percentage if used_percentage > 0 else 1.0
-                        close_amount = position_size * close_frac
+                    # Scale-out (sinyal yüzdesi düştü)
+                    elif pct_target < used_pct_now - 1e-12 and tranches:
+                        reduce_pct = used_pct_now - pct_target  # 0..1 aralığında azaltılacak toplam yüzde
+                        # FIFO/LIFO üzerinde çalış, ama TEK trade kaydı yaz
+                        idxs = range(len(tranches)) if fifo_scaleout else range(len(tranches)-1, -1, -1)
 
-                        change_str = pct_change_str(used_percentage, desired_pct)
+                        total_close_pct = 0.0         # 0..1, kapatılan toplam yüzde
+                        total_close_qty = 0.0          # toplam kapatılan adet
+                        total_pnl_amount = 0.0         # kapatılanların toplam parasal PnL'i
+                        weighted_entry_value = 0.0     # VWAP için: sum(entry * close_qty)
+                        side_all = side_now            # tüm tranche'ler aynı yönde varsayımı
 
-                        trade_type = "LONG_PARTIAL_CLOSE" if active_position > 0 else "SHORT_PARTIAL_CLOSE"
-                        trade_volume = abs(close_amount * price)
+                        # Tranche'leri içerde azalt; ama trade'i toplu yazacağız
+                        for k in idxs:
+                            if reduce_pct <= 1e-12:
+                                break
+                            t = tranches[k]
+                            if t['pct'] <= 1e-12 or t['qty'] <= 1e-12:
+                                continue
+
+                            take = min(t['pct'], reduce_pct)   # bu tranche'ten kapatılacak yüzde
+                            if take <= 0:
+                                continue
+
+                            close_frac = take / t['pct']       # bu tranche'in ne kadarı kapanıyor
+                            close_qty  = t['qty'] * close_frac
+
+                            # PnL ve VWAP bileşenleri
+                            pnl_pct_t  = pnl_pct_from(t['entry'], price, t['side'])
+                            pnl_amt_t  = pnl_amount_from(t['entry'], price, t['side'], close_qty)
+
+                            total_close_pct   += take
+                            total_close_qty   += close_qty
+                            total_pnl_amount  += pnl_amt_t
+                            weighted_entry_value += (t['entry'] * close_qty)
+
+                            # Tranche küçült
+                            t['pct'] -= take
+                            t['qty'] -= close_qty
+                            reduce_pct -= take
+
+                        # Sıfırlanan tranche'leri temizle
+                        tranches = [t for t in tranches if t['pct'] > 1e-12 and t['qty'] > 1e-12]
+
+                        # Toplu trade kaydı: herhangi bir kapanış olduysa yaz
+                        if total_close_qty > 1e-12 and total_close_pct > 1e-12:
+                            vwap_entry_closed = (weighted_entry_value / total_close_qty) if total_close_qty > 0 else 0.0
+                            pnl_pct_agg = pnl_pct_from(vwap_entry_closed, price, side_all)
+
+                            trade_type = "LONG_CLOSE" if side_all > 0 else "SHORT_CLOSE"  # öncekiyle uyumlu isim
+                            trade_volume  = abs(total_close_qty * price)
+                            total_volume += trade_volume
+                            commission_fee = trade_volume * commission
+                            commission_paid_total += commission_fee
+
+                            # usedPercentage: TOPLAM → HEDEF (tek adımda)
+                            used_change_str = pct_change_str(used_pct_now, pct_target)
+
+                            trades.append({
+                                "id": len(trades)+1,
+                                "date": ts,
+                                "type": trade_type,
+                                "leverage": (tranches[0]['lev'] if tranches else 0.0),
+                                "usedPercentage": used_change_str,   # <-- %Toplam -> %Hedef
+                                "amount": total_close_qty,
+                                "price": price,
+                                "commission": round(commission_fee, 6),
+                                "pnlPercentage": round(pnl_pct_agg, 2),
+                                "pnlAmount": round(total_pnl_amount, 2),
+                            })
+                            balance -= commission_fee
+
+                            # Artık toplam kullanılan yüzde hedefe eşitlendi
+                            used_pct_now = pct_target
+
+                else:
+                    # Farklı işaret: üstte flip logic zaten kapatıyordu; burada yeni açılış (tam açılış gibi) yapılır
+                    if pct_target > 1e-12:
+                        lev = abs(pos)
+                        qty = (pct_target * balance) / price if price != 0 else 0.0
+                        #log(f"Amount: {qty}")
+                        #log(f"Tranches: {pct_target, balance}")
+                        trade_volume = abs(qty * price)
                         total_volume += trade_volume
                         commission_fee = trade_volume * commission
                         commission_paid_total += commission_fee
 
-                        realized_pct = pnl_pct_from(entry_price, price, active_position)
-                        pnl_amount = pnl_amount_from(entry_price, price, active_position, close_amount)
+                        tranches = [{
+                            'pct': pct_target,
+                            'qty': qty,
+                            'entry': price,
+                            'side': 1.0 if pos > 0 else -1.0,
+                            'lev': lev,
+                            'tp': tp,
+                            'sl': sl,
+                            'time': ts,
+                        }]
 
                         trades.append({
-                            "id": len(trades) + 1,
+                            "id": len(trades)+1,
                             "date": ts,
-                            "type": trade_type,
-                            "leverage": leverage,
-                            "usedPercentage": change_str,
-                            "amount": close_amount,
+                            "type": "LONG_OPEN" if pos > 0 else "SHORT_OPEN",
+                            "leverage": lev,
+                            "usedPercentage": pct_change_str(0.0, pct_target),
+                            "amount": qty,
                             "price": price,
-                            "commission": round(commission_fee, 6),
-                            "pnlPercentage": round(realized_pct, 2),
-                            "pnlAmount": round(pnl_amount, 2),
+                            "commission": round(commission_fee, 6)
                         })
                         balance -= commission_fee
+                        used_pct_now = pct_target
 
-                        position_size -= close_amount
-                        used_percentage = desired_pct
+        # 5) Son barda zorunlu kapanış - TÜM TRANCHE'LERİ TEK KAYITTA KAPAT
+        if i == last_idx and tranches:
+            # Tüm tranche'lerin toplam yüzdesi ve adetleri
+            total_pct = sum(t['pct'] for t in tranches)              # 0..1
+            total_qty = sum(t['qty'] for t in tranches)
+            
+            log(f"Amount: {total_qty}")
+            log(f"Tranches: {tranches}")
 
-                        if desired_pct <= 0:
-                            active_position = 0.0
-                            leverage = 0.0
-                            entry_price = 0.0
-                            take_price = None
-                            stop_price = None
-                            trade_entry_time = None
-                            position_size = 0.0
+            # Yön kontrolü (tasarım gereği hepsi aynı yönde)
+            side_all = tranches[0]['side'] if tranches else 0.0
 
-        # === Open / flip logic (only if not immediately after TP/SL) ===
-        if i > 0 and i < last_idx and pos != 0 and pos != active_position and not tpOrSlHit:
-            if active_position != 0:
-                # Close old side (flip close). MTM already applied above.
-                pnl_pct = pnl_pct_from(entry_price, price, active_position)
-                pnl_amount = pnl_amount_from(entry_price, price, active_position, position_size)
-                close_type = "LONG_CLOSE" if active_position > 0 else "SHORT_CLOSE"
+            # VWAP giriş fiyatı (tek yüzde PnL için)
+            vwap_entry = (
+                sum(t['qty'] * t['entry'] for t in tranches) / total_qty
+                if total_qty > 0 else 0.0
+            )
 
-                if trade_entry_time:
-                    trade_duration = (ts - trade_entry_time).total_seconds() / 3600
-                    total_trade_duration += trade_duration
+            # Güvenli PnL: (1) toplam parasal PnL, (2) VWAP'e göre yüzde PnL
+            total_pnl_amount = sum(
+                pnl_amount_from(t['entry'], price, t['side'], t['qty']) for t in tranches
+            )
+            pnl_pct = pnl_pct_from(vwap_entry, price, side_all)
 
-                trade_amount = position_size
-                trade_volume = abs(trade_amount * price)
-                total_volume += trade_volume
-                commission_fee = trade_volume * commission
-                commission_paid_total += commission_fee
+            # İşlem tipi
+            close_type = "LONG_END_CLOSE" if side_all > 0 else "SHORT_END_CLOSE"
 
-                change_str = pct_change_str(used_percentage, 0.0)
-
-                trades.append({
-                    "id": len(trades) + 1,
-                    "date": ts,
-                    "type": close_type,
-                    "leverage": leverage,
-                    "usedPercentage": change_str,
-                    "amount": trade_amount,
-                    "price": price,
-                    "commission": round(commission_fee, 6),
-                    "pnlPercentage": round(pnl_pct, 2),
-                    "pnlAmount": round(pnl_amount, 2),
-                })
-                balance -= commission_fee
-
-            # Open new side
-            old_pct_for_open = 0.0  # from flat
-            active_position = pos
-            leverage = abs(pos)
-            entry_price = price
-            used_percentage = pct
-            take_price = tp
-            stop_price = sl
-            trade_entry_time = ts
-            open_type = "LONG_OPEN" if pos > 0 else "SHORT_OPEN"
-
-            trade_amount = used_percentage * balance / price if price != 0 else 0.0  # asset units
-            trade_volume = abs(trade_amount * price)
+            # Hacim / komisyon (tek işlem)
+            trade_volume  = abs(total_qty * price)
             total_volume += trade_volume
-            position_size = trade_amount
             commission_fee = trade_volume * commission
             commission_paid_total += commission_fee
 
-            change_str = pct_change_str(old_pct_for_open, used_percentage)
-
+            # usedPercentage: TOPLAMDAN → 0
+            used_before = total_pct
+            used_after  = 0.0
+            used_change_str = pct_change_str(used_before, used_after)
+            #log(f"amoun: {total_qty}, used: {used_change_str}, pnl_pct: {pnl_pct:.2f}")
             trades.append({
                 "id": len(trades) + 1,
                 "date": ts,
-                "type": open_type,
-                "leverage": leverage,
-                "usedPercentage": change_str,
-                "amount": trade_amount,
+                "type": close_type,
+                # İsteğe bağlı: kaldıraç için basit bir gösterim (ağırlıklı ortalama)
+                "leverage": (tranches[0]['lev'] if tranches else 0.0),
+                "usedPercentage": used_change_str,        # <-- TOPLAMDAN → 0
+                "amount": total_qty,
                 "price": price,
-                "commission": round(commission_fee, 6)
+                "commission": round(commission_fee, 6),
+                "pnlPercentage": round(pnl_pct, 2),
+                "pnlAmount": round(total_pnl_amount, 2),
             })
-            balance -= commission_fee
 
-        # === Returns tracking ===
+            balance -= commission_fee
+            tranches.clear()
+
+
+        # 6) Getiri/bakiye serileri
         if balance == balance_prev or (balance_prev == 0):
-            ret_val = 0.0 if balance_prev != 0 else 0.0
+            ret_val = 0.0
         else:
             ret_val = (balance - balance_prev) / balance_prev * 100.0
-        returns.append((int(ts.timestamp()) if pd.notna(ts) else 0, round(ret_val, 4)))
+
+        # Görselleştirme için anlık yön ve yüzde (toplam)
+        viz_side = current_side()
+        viz_pct  = total_used_pct() * 100.0
+
+        # (YENİ) Bir sonraki aralık için: bu bar SONUNDA kullanılan yüzdeyi kaydet
+        used_pct_after_prev = total_used_pct()
+        prev_ts = ts
+
+        returns.append((
+            int(ts.timestamp()) if pd.notna(ts) else 0,
+            round(ret_val, 4),
+            viz_side,
+            round(viz_pct, 6),
+        ))
 
         balances.append((int(ts.timestamp()) if pd.notna(ts) else 0, balance))
         balance_prev = balance
 
-    # === Metrics ===
+    # ---------- Metrikler (mevcut hesaplamaları korudum) ----------
     pnl_list = [t.get('pnlPercentage', 0) for t in trades if 'pnlPercentage' in t]
     wins = [p for p in pnl_list if p > 0]
     losses = [p for p in pnl_list if p < 0]
@@ -477,7 +549,6 @@ def calculate_performance(
         round(len(wins) / (len(wins) + len(losses)) * 100, 2) if wins or losses else 0
     )
 
-    # Max Drawdown (keep original sign convention)
     max_drawdown = 0.0
     peak = balances[0][1]
     for _, b in balances:
@@ -487,7 +558,6 @@ def calculate_performance(
         if dd > max_drawdown:
             max_drawdown = dd
 
-    # Sharpe Ratio (simple daily rf; your original basis)
     if len(returns) > 1:
         return_values = [r[1] / 100 for r in returns]
         mean_return = sum(return_values) / len(return_values)
@@ -501,7 +571,6 @@ def calculate_performance(
     else:
         sharpe_ratio = 0
 
-    # Sortino Ratio (same basis)
     if len(returns) > 1:
         return_values = [r[1] / 100 for r in returns]
         mean_return = sum(return_values) / len(return_values)
@@ -516,11 +585,11 @@ def calculate_performance(
     else:
         sortino_ratio = 0
 
-    # Duration Of Trade Ratio
-    total_period_hours = (df['timestamp'].iloc[-1] - df['timestamp'].iloc[0]).total_seconds() / 3600
-    duration_ratio = total_trade_duration / total_period_hours if total_period_hours > 0 else 0
+    total_period_seconds = (df['timestamp'].iloc[-1] - df['timestamp'].iloc[0]).total_seconds()
 
-    # Buy&Hold asset return independent of initial balance
+    duration_ratio = (time_in_trade_seconds / total_period_seconds) if total_period_seconds > 0 else 0.0
+    log(f"Total time in trade: {time_in_trade_seconds,total_period_seconds} seconds, duration ratio: {duration_ratio:.4f}")
+
     buy_hold_return = ((last_close / first_close) - 1.0) * 100.0 if first_close > 0 else 0.0
 
     return {
@@ -536,13 +605,13 @@ def calculate_performance(
             "finalBalance": round(balance, 2),
             "maxDrawdown": round(-max_drawdown * 100, 2),
             "sharpeRatio": round(sharpe_ratio, 3),
-            "profitFactor": round(sum(wins) / abs(sum(losses)), 2) if losses else None,  # still % based
+            "profitFactor": round(sum(wins) / abs(sum(losses)), 2) if losses else None,
             "buyHoldReturn": round(buy_hold_return, 2),
             "sortinoRatio": round(sortino_ratio, 3),
             "mostProfitableTrade": round(most_win, 2),
             "mostLosingTrade": round(most_loss, 2),
             "durationOftradeRatio": round(duration_ratio, 4),
-            "commissionCost": round(commission_paid_total, 2),  # <— NEW, real total
+            "commissionCost": round(commission_paid_total, 2),
             "volume": round(total_volume, 2)
         },
         "trades": trades[::-1],

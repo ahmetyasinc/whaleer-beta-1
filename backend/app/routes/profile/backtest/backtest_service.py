@@ -15,7 +15,7 @@ async def run_backtest_logic(
     crypto: dict,
     user_id: int,
     db,
-    initial_balance: Optional[float] = None,  # <— CHANGED: now optional
+    initial_balance: Optional[float] = None,
 ):
     # Fetch strategy
     strategy_obj = await db.execute(
@@ -69,16 +69,12 @@ async def run_backtest_logic(
     )
     df_data_json = df_data_json.sort_values("time").reset_index(drop=True)
 
-    # Decide initial balance:
-    # - if user provided -> use it
-    # - else -> use first close
+    # Decide initial balance
     if len(df_data_json) == 0:
         raise HTTPException(status_code=404, detail="No market data found after processing.")
     first_close_raw = float(df_data_json["close"].iloc[0]) if pd.notna(df_data_json["close"].iloc[0]) else 0.0
     if first_close_raw <= 0:
-        # extremely rare/invalid; fall back to a sane default
         first_close_raw = 1.0
-
     initial_balance_used = float(initial_balance) if initial_balance is not None else first_close_raw
 
     # Normalize candles to the initial balance (overlay-friendly)
@@ -109,38 +105,24 @@ async def run_backtest_logic(
     if "position" not in df.columns or "percentage" not in df.columns:
         raise HTTPException(status_code=400, detail="Strategy must output 'position' and 'percentage'.")
 
-    # Build maps to enrich returns (shifted by 1 to align)
-    pos_series = df["position"].shift(1).where(df["position"].shift(1).notna(), 0.0)
-    pct_series = df["percentage"].shift(1).where(df["percentage"].shift(1).notna(), 0.0)
-    pos_map = dict(zip(df_data_json["time"].tolist(), pos_series.tolist()))
-    pct_map = dict(zip(df_data_json["time"].tolist(), pct_series.tolist()))
-
-    # Calculate performance with the chosen initial balance
+    # Calculate performance (returns already include position & percentage and zero-out after closes)
     result = calculate_performance(
         df,
         commission=allowed_globals.get("commission", 0.0),
-        initial_balance=initial_balance_used,  # <— pass resolved balance
+        initial_balance=initial_balance_used,
     )
-
-    # Enrich bottom chart payload
-    enriched_returns = [
-        [t, pnl, pos_map.get(t), pct_map.get(t)]
-        for (t, pnl) in result["returns"]
-    ]
-    result["returns"] = enriched_returns
 
     return {
         "chartData": result["chartData"],
         "performance": result["performance"],
         "trades": result["trades"],
-        "returns": result["returns"],
-        "candles": candlestick_data,                # scaled using initial_balance_used
+        "returns": result["returns"],       # already [time, pnl%, position, percentage]
+        "candles": candlestick_data,        # scaled with initial_balance_used
         "commission": allowed_globals.get("commission", 0.0),
         "period": period,
         "strategy_name": strategy.name,
         "strategy_id": strategy.id,
         "code": strategy.code,
         "crypto": crypto,
-        # Optional: expose which initial balance was used (handy for UI/debug)
         "initial_balance_used": initial_balance_used,
     }

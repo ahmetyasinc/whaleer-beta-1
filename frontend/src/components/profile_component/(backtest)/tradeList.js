@@ -39,7 +39,7 @@ export default function TradesList({ trades }) {
   };
 
   const formatAmount = (amount) => {
-    return amount.toFixed(3);
+    return amount.toFixed(5);
   };
 
   return (

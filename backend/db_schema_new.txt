@@ -44,6 +44,10 @@
 - close (numeric)
 - volume (numeric)
 
+## public.bot_follow
+- user_id (integer)
+- bot_id (integer)
+
 ## public.bot_holdings
 - id (integer)
 - user_id (integer)
@@ -122,6 +126,9 @@
 - sell_price (numeric)
 - rent_price (numeric)
 - running_time (integer)
+- profit_factor (integer)
+- risk_factor (integer)
+- bot_type (character varying)
 
 ## public.indicators
 - id (integer)
@@ -187,17 +194,23 @@
 - margin_leverage_infos (jsonb)
 - updated_at (timestamp without time zone)
 
-## public.user_symbol_settings
+## public.user_snapshots
 - id (integer)
 - user_id (integer)
-- api_id (integer)
-- symbol (character varying)
+- timestamp (timestamp without time zone)
+- user_usd_value (numeric)
+
+## public.user_symbol_settings
+- id (bigint)
+- user_id (bigint)
+- api_id (bigint)
+- symbol (text)
 - margin_type (boolean)
 - leverage (integer)
-- trade_type (character varying)
-- exchange (character varying)
-- created_at (timestamp without time zone)
-- updated_at (timestamp without time zone)
+- trade_type (text)
+- exchange (text)
+- created_at (timestamp with time zone)
+- updated_at (timestamp with time zone)
 
 ## public.users
 - id (bigint)
@@ -221,3 +234,4 @@
 - total_followers (integer)
 - total_sold (integer)
 - total_rented (integer)
+- last_login (timestamp without time zone)

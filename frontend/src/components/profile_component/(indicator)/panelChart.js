@@ -5,7 +5,19 @@ import { createChart } from "lightweight-charts";
 import useIndicatorDataStore from "@/store/indicator/indicatorDataStore";
 import IndicatorSettingsModal from "./(modal_tabs)/indicatorSettingsModal";
 import PropTypes from "prop-types";
-import useCryptoStore from "@/store/indicator/cryptoPinStore"; // Zustand store'u import et
+import useCryptoStore from "@/store/indicator/cryptoPinStore";
+import { installCursorWheelZoom } from "@/utils/cursorCoom";
+import {
+  RANGE_EVENT,
+  RANGE_REQUEST_EVENT,
+  nextSeq,
+  markLeader,
+  unmarkLeader,
+  isLeader,
+  minBarsFor,
+  FUTURE_PADDING_BARS,
+  getLastRangeCache,
+} from "@/utils/chartSync";
 
 
 function hexToRgba(hex, opacity) {
@@ -24,210 +36,79 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
   const { indicatorData, removeSubIndicator } = useIndicatorDataStore();
 
   const [displayName, setDisplayName] = useState(`${indicatorId} (${subId})`);
-  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+
+  // ==== Senkronizasyon guard & ID ====
+  const chartId = `${indicatorId}-${subId}`;
+  const isApplyingRef = useRef(false);
+  const lastSeqAppliedRef = useRef(0);
+  let rafHandle = null;
 
   useEffect(() => {
     const indicatorInfo = indicatorData?.[indicatorId]?.subItems?.[subId];
     if (!chartContainerRef.current || !indicatorInfo?.result) return;
 
     const { result } = indicatorInfo;
-
     const firstNonGraphItem = result.find((r) => r.on_graph === false);
-    if (firstNonGraphItem?.name) {
-      setDisplayName(firstNonGraphItem.name);
-    }
+    if (firstNonGraphItem?.name) setDisplayName(firstNonGraphItem.name);
 
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
       height: chartContainerRef.current.clientHeight,
-      layout: {
-        background: { color: "rgb(0, 0, 7)" },
-        textColor: "#FFF",
-      },
-      grid: {
-        vertLines: { color: "#111" },
-        horzLines: { color: "#111" },
-      },
+      layout: { background: { color: "rgb(0, 0, 7)" }, textColor: "#FFF" },
+      grid: { vertLines: { color: "#111" }, horzLines: { color: "#111" } },
       lastValueVisible: false,
+      timeScale: { rightBarStaysOnScroll: true, shiftVisibleRangeOnNewBar: false },
     });
 
     chartRef.current = chart;
 
-    const handleTimeRangeChange = (event) => {
-      const { start, end, sourceId } = event.detail;
-      const currentChartId = `${indicatorId}-${subId}`;
-      if (sourceId === currentChartId) return;
-
-      let adjustedStart = start;
-      let adjustedEnd = end;
-
-      console.log(`[PanelChart - ${currentChartId}] Fark değeri: ${selectedPeriod}`);
-
-      const coefficient = 1000;
-      let minBars = coefficient; // Varsayılan değer
-
-      switch (selectedPeriod) {
-        case "1m":      // 1 Dakika
-          minBars = coefficient;
-          break;
-        case "3m":      // 3 Dakika
-          minBars = coefficient * 3;
-          break;
-        case "5m":      // 5 Dakika
-          minBars = coefficient * 5;
-          break;
-        case "15m":     // 15 Dakika
-          minBars = coefficient * 15;
-          break;
-        case "30m":     // 30 Dakika
-          minBars = coefficient * 30;
-          break;
-        case "1h":      // 1 Saat
-          minBars = coefficient * 60;
-          break;
-        case "2h":      // 2 Saat
-          minBars = coefficient * 120;
-          break;
-        case "4h":      // 4 Saat
-          minBars = coefficient * 240;
-          break;
-        case "1d":      // 1 Gün
-          minBars = coefficient * 1440; // 24 saat * 60 dakika
-          break;
-        case "1w":      // 1 Hafta
-          minBars = coefficient * 10080; // 7 gün * 24 saat * 60 dakika
-          break;
-        default:
-          minBars = coefficient; // fallback
-          break;
-      }
-      
-      if (end - start < minBars) {
-        const center = (start + end) / 2;
-        adjustedStart = center - minBars / 2;
-        adjustedEnd = center + minBars / 2;
-        // Yeni aralığı ayarlamak için event yayılıyor
-        const event = new CustomEvent("chartTimeRangeChange", {
-          detail: {
-            start: adjustedStart,
-            end: adjustedEnd,
-            sourceId: `${currentChartId}`,
-          },
-        });
-        window.dispatchEvent(event)
-
-
-      }
-    
-      //console.log(`[PanelChart - ${currentChartId}] Event alındı <${sourceId}> → zaman güncelleniyor`, {
-      //  start: adjustedStart,
-      //  end: adjustedEnd,
-      //});
-    
-      if (chartRef.current) {
-        chartRef.current.timeScale().setVisibleRange({
-          from: adjustedStart,
-          to: adjustedEnd,
-        });
-      } 
-    };
-    let ghostLineSeries = null;
-
-    //const handleCrosshairMove = (event) => {
-    //  const { time, sourceId } = event.detail;
-    //  const currentChartId = `${indicatorId}-${subId}`;
-    //  if (sourceId === currentChartId) return;
-    //  if (!chartRef.current || time === undefined || time === null) return;
-    //
-    //  const chart = chartRef.current;
-    //  const timeScale = chart.timeScale();
-    //  const logicalRange = timeScale.getVisibleLogicalRange();
-    //
-    //  const series = chartSeriesRef.current; // candleSeries gibi bir şey
-    //  const priceScale = series?.getPriceScale();
-    //  const priceRange = priceScale?.getPriceRange(logicalRange);
-    //
-    //  const minValue = priceRange?.minValue ?? 0;
-    //  const maxValue = priceRange?.maxValue ?? 1;
-    //
-    //  if (!ghostLineSeries) {
-    //    ghostLineSeries = chart.addLineSeries({
-    //      color: 'rgba(255,255,255,0.4)',
-    //      lineWidth: 1,
-    //      priceLineVisible: false,
-    //      crossHairMarkerVisible: false,
-    //    });
-    //  }
-    //
-    //  const offset = 0.00001;
-    //  ghostLineSeries.setData([
-    //    { time: time - offset, value: maxValue },
-    //    { time: time + offset, value: minValue },
-    //  ]);
-    //};
-
-
-
-    //window.addEventListener("chartCrosshairMove", handleCrosshairMove);
-    window.addEventListener("chartTimeRangeChange", handleTimeRangeChange); //eventi dinler yukarıda
+    // Lider işaretleme
+    const el = chartContainerRef.current;
+    const cleanupFns = [];
+    if (el) {
+      const onStart = () => markLeader(chartId);
+      const onEnd = () => unmarkLeader(chartId);
+      el.addEventListener('mousedown', onStart);
+      el.addEventListener('wheel', onStart, { passive: false });
+      el.addEventListener('touchstart', onStart, { passive: true });
+      window.addEventListener('mouseup', onEnd);
+      el.addEventListener('mouseleave', onEnd);
+      window.addEventListener('touchend', onEnd);
+      cleanupFns.push(() => {
+        el.removeEventListener('mousedown', onStart);
+        el.removeEventListener('wheel', onStart);
+        el.removeEventListener('touchstart', onStart);
+        window.removeEventListener('mouseup', onEnd);
+        el.removeEventListener('mouseleave', onEnd);
+        window.removeEventListener('touchend', onEnd);
+      });
+    }
 
     const timeScale = chart.timeScale();
-    timeScale.subscribeVisibleTimeRangeChange((newRange) => {
-      const currentChartId = `${indicatorId}-${subId}`;
-      //console.log(`[PanelChart] Fark değeri: ${newRange.to- newRange.from}`);
-      //console.log(`[PanelChart - ${currentChartId}] Zaman değişti → Event yayılıyor`, newRange);
-      const event = new CustomEvent("chartTimeRangeChange", {
-        detail: {
-          start: newRange.from,
-          end: newRange.to,
-          sourceId: `${indicatorId}-${subId}`,
-        },
-      });
-      window.dispatchEvent(event);//eventi yayınlar
-    });
+    timeScale.applyOptions({ rightOffset: FUTURE_PADDING_BARS });
 
+    // Seriler
     result
       .filter((item) => item?.on_graph === false)
       .forEach(({ type, settings, data }) => {
         let series;
-
         switch (type) {
           case "line":
-            series = chart.addLineSeries({
-              color: settings?.color || "white",
-              lineWidth: settings?.width || 1,
-              priceLineVisible: false,
-            });
+            series = chart.addLineSeries({ color: settings?.color || "white", lineWidth: settings?.width || 1, priceLineVisible: false });
             break;
           case "histogram": {
             const defaultColor = settings?.color ?? "0, 128, 0";
             const opacity = settings?.opacity ?? 1;
-            const colorString = defaultColor.includes(",")
-              ? `rgba(${defaultColor}, ${opacity})`
-              : hexToRgba(defaultColor, opacity);
-
-            series = chart.addHistogramSeries({
-              color: colorString,
-              priceLineVisible: false,
-            });
+            const colorString = defaultColor.includes(",") ? `rgba(${defaultColor}, ${opacity})` : hexToRgba(defaultColor, opacity);
+            series = chart.addHistogramSeries({ color: colorString, priceLineVisible: false });
             break;
           }
           case "area":
-            series = chart.addAreaSeries({
-              topColor: settings?.color || "rgba(33, 150, 243, 0.5)",
-              bottomColor: "rgba(33, 150, 243, 0.1)",
-              lineColor: settings?.color || "blue",
-              priceLineVisible: false,
-            });
+            series = chart.addAreaSeries({ topColor: settings?.color || "rgba(33, 150, 243, 0.5)", bottomColor: "rgba(33, 150, 243, 0.1)", lineColor: settings?.color || "blue", priceLineVisible: false });
             break;
           default:
-            series = chart.addLineSeries({
-              color: "white",
-              lineWidth: 2,
-              priceLineVisible: false,
-            });
+            series = chart.addLineSeries({ color: "white", lineWidth: 2, priceLineVisible: false });
         }
-
         const timeValueMap = new Map();
         data.forEach(([time, value]) => {
           if (typeof time === "string" && value !== undefined) {
@@ -235,80 +116,135 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
             timeValueMap.set(unixTime, value);
           }
         });
-
         const formattedData = Array.from(timeValueMap.entries())
           .sort(([a], [b]) => a - b)
           .map(([time, value]) => ({ time, value }));
-
         series.setData(formattedData);
       });
 
     chart.timeScale().fitContent();
-    const visibleRange = timeScale.getVisibleRange();
-    if (visibleRange) {
-      const event = new CustomEvent("chartTimeRangeChange", {
-        detail: {
-          start: visibleRange.from,
-          end: visibleRange.to,
-          isLocal: true,
-        },
-      });
-      window.dispatchEvent(event);
+
+    const applyRangeSilently = (range) => {
+      if (!range) return;
+      const { from, to, rightOffset } = range;
+      isApplyingRef.current = true;
+      if (rightOffset != null) timeScale.applyOptions({ rightOffset });
+      timeScale.setVisibleLogicalRange({ from, to });
+      requestAnimationFrame(() => { isApplyingRef.current = false; });
+    };
+
+    // 1) Cache varsa direkt uygula
+    const cached = getLastRangeCache();
+    if (cached) {
+      applyRangeSilently(cached);
+    } else {
+      // 2) Cache yoksa main'den iste → ilk gelen RANGE_EVENT (main-chart) ile uygula
+      const oneShot = (e) => {
+        const { sourceId } = (e && e.detail) || {};
+        if (sourceId === 'main-chart') {
+          window.removeEventListener(RANGE_EVENT, oneShot);
+          applyRangeSilently(e.detail);
+        }
+      };
+      window.addEventListener(RANGE_EVENT, oneShot);
+    
+      // İstek yayınla
+      window.dispatchEvent(new CustomEvent(RANGE_REQUEST_EVENT));
+    
+      // 3) Emniyet: kısa süre yanıt yoksa fallback (son 5 bar, son bar ortada)
+      setTimeout(() => {
+        try { window.removeEventListener(RANGE_EVENT, oneShot); } catch (_) {}
+        let dataLen = 0;
+        try {
+          const firstNonGraph = (indicatorInfo?.result || []).find(r => r.on_graph === false);
+          if (firstNonGraph && Array.isArray(firstNonGraph.data)) {
+            dataLen = firstNonGraph.data.length;
+          }
+        } catch (_) {}
+        const barsToShow = 5;
+        const rightPad = Math.floor((barsToShow - 1) / 2);
+        const lastIndex = Math.max(0, dataLen - 1);
+        const to = lastIndex + rightPad;
+        const from = to - (barsToShow - 1);
+        applyRangeSilently({ from, to, rightOffset: rightPad });
+      }, 150);
     }
 
-    const resizeObserver = new ResizeObserver(() => {
-      if (chartContainerRef.current) {
-        chart.applyOptions({
-          width: chartContainerRef.current.clientWidth,
-          height: chartContainerRef.current.clientHeight,
-        });
+    //timeScale.scrollToRealTime();
+    const removeWheelZoom = installCursorWheelZoom({
+      chart,
+      chartId,
+      selectedPeriod,
+      containerEl: chartContainerRef.current,
+      isApplyingRef,
+      lastSeqAppliedRef,
+    });
+    cleanupFns.push(removeWheelZoom);
+
+
+    // ===== ZAMAN SİNK. – YAYIN (Sadece lider) =====
+    timeScale.subscribeVisibleTimeRangeChange(() => {
+      if (isApplyingRef.current) return;
+      if (!isLeader(chartId)) return;
+      const logical = timeScale.getVisibleLogicalRange();
+      if (!logical) return;
+      let { from, to } = logical;
+      const minBars = minBarsFor(selectedPeriod);
+      if (to - from < minBars) {
+        const c = (from + to) / 2;
+        from = c - minBars / 2;
+        to = c + minBars / 2;
+        isApplyingRef.current = true;
+        timeScale.setVisibleLogicalRange({ from, to });
+        requestAnimationFrame(() => { isApplyingRef.current = false; });
       }
+      const rightOffset = timeScale.getRightOffset ? timeScale.getRightOffset() : FUTURE_PADDING_BARS;
+      if (rafHandle) cancelAnimationFrame(rafHandle);
+      const seq = nextSeq();
+      rafHandle = requestAnimationFrame(() => {
+        window.dispatchEvent(new CustomEvent(RANGE_EVENT, { detail: { from, to, rightOffset, sourceId: chartId, seq } }));
+      });
     });
 
+    // ===== ZAMAN SİNK. – DİNLE (Uygula ama yayınlama) =====
+    const onRangeEvent = (e) => {
+      const { from, to, rightOffset, sourceId, seq } = (e && e.detail) || {};
+      if (sourceId === chartId) return;
+      if (seq && seq <= lastSeqAppliedRef.current) return;
+      lastSeqAppliedRef.current = seq;
+      isApplyingRef.current = true;
+      if (rightOffset != null) timeScale.applyOptions({ rightOffset });
+      timeScale.setVisibleLogicalRange({ from, to });
+      requestAnimationFrame(() => { isApplyingRef.current = false; });
+    };
+    window.addEventListener(RANGE_EVENT, onRangeEvent);
+    
+    // Resize
+    const resizeObserver = new ResizeObserver(() => {
+      if (chartContainerRef.current) {
+        chart.applyOptions({ width: chartContainerRef.current.clientWidth, height: chartContainerRef.current.clientHeight });
+      }
+    });
     resizeObserver.observe(chartContainerRef.current);
 
+    // cleanup
     return () => {
-      //window.removeEventListener("chartCrosshairMove", handleCrosshairMove);
-      window.removeEventListener("chartTimeRangeChange", handleTimeRangeChange);
+      window.removeEventListener(RANGE_EVENT, onRangeEvent);
       resizeObserver.disconnect();
-      if (chartRef.current) {
-        try {
-          chartRef.current.remove();
-        } catch (error) {
-          console.warn("Grafik temizlenirken hata oluştu:", error);
-        }
-      }
+      if (chartRef.current) { try { chartRef.current.remove(); } catch (error) {} }
+      cleanupFns.forEach((fn) => { try { fn(); } catch {} });
     };
-  }, [indicatorData, indicatorId, subId]);
+  }, [indicatorData, indicatorId, subId, selectedPeriod]);
 
   return (
     <div className="relative w-full h-full">
       <div className="absolute top-2 left-2 z-10 flex items-center gap-2 bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-md">
         <span>{indicatorName}</span>
-
-        <button
-          className="hover:text-yellow-400"
-          onClick={() => setSettingsModalOpen(true)}
-        >
-          ⚙️
-        </button>
-
-        <button
-          className="hover:text-red-400"
-          onClick={() => removeSubIndicator(indicatorId, subId)}
-        >
-          ❌
-        </button>
+        <button className="hover:text-yellow-400" onClick={() => console.log('Open settings via parent')}>⚙️</button>
+        <button className="hover:text-red-400" onClick={() => removeSubIndicator(indicatorId, subId)}>❌</button>
       </div>
-
       <div ref={chartContainerRef} className="absolute top-0 left-0 w-full h-full"></div>
-
-      <IndicatorSettingsModal
-        isOpen={settingsModalOpen}
-        onClose={() => setSettingsModalOpen(false)}
-        indicatorId={indicatorId}
-        subId={subId}
-      />
+      <IndicatorSettingsModal isOpen={false} onClose={() => {}} indicatorId={indicatorId} subId={subId} />
     </div>
   );
 }

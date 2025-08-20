@@ -5,11 +5,21 @@ import { usePathname } from "next/navigation";
 import { IoMdSettings } from "react-icons/io";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useProfileStore } from "@/store/profile/profileStore";
 
 export default function ProfileHeader() {
   const pathname = usePathname();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // API store
+  const {
+    apis,
+    activeApi,
+    apisStatus,
+    fetchApis,
+    setActiveApiById,
+  } = useProfileStore();
 
   const navItems = [
     { name: "My Portfolio", href: "/en/profile" },
@@ -33,6 +43,11 @@ export default function ProfileHeader() {
     };
     fetchUserInfo();
   }, []);
+
+  // API listesini yükle
+  useEffect(() => {
+    fetchApis();
+  }, [fetchApis]);
 
   return (
     <div className="relative w-full flex flex-col">
@@ -62,8 +77,39 @@ export default function ProfileHeader() {
           )}
         </div>
 
-        {/* Right Menu */}
+        {/* Right Menu + API Dropdown */}
         <div className="flex items-center gap-4">
+          {/* API Dropdown */}
+          <div className="relative">
+            <select
+              value={activeApi?.id || ""}
+              onChange={(e) => setActiveApiById(e.target.value)}
+              disabled={apisStatus === "loading" || apisStatus === "error"}
+              className={`px-4 py-[6px] rounded-2xl transition font-medium border-1 border-gray-700 text-white
+                bg-black hover:bg-gray-950 hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-cyan-500
+                ${apisStatus === "loading" ? "opacity-60 cursor-wait" : ""}
+              `}
+              title={
+                apisStatus === "error"
+                  ? "APIs could not be loaded"
+                  : "Select Active API"
+              }
+            >
+              {apisStatus === "loading" && (
+                <option value="">Loading APIs...</option>
+              )}
+              {apisStatus === "error" && (
+                <option value="">Failed to load APIs</option>
+              )}
+              {apisStatus === "success" &&
+                apis.map((api) => (
+                  <option key={api.id} value={api.id}>
+                    {api.api_name}
+                  </option>
+                ))}
+            </select>
+          </div>
+
           <nav className="flex gap-4">
             {navItems.map((item) => (
               <Link

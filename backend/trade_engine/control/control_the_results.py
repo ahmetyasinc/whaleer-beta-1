@@ -299,6 +299,13 @@ def control_the_results(bot_id, results):
                     new_result['value'] = current_value * value
                     fulness += value
                     filtered_results.append(new_result)
+                elif (value > (1-fulness)) and ((value - fulness) * current_value) >= minValue:
+                    new_result = sanitize_result(result)
+                    new_result['side'] = "buy"
+                    new_result['trade_type'] = spot
+                    new_result['value'] = current_value * (value - fulness)
+                    fulness = value
+                    filtered_results.append(new_result)
                 continue
             case ("none", "long"):
                 value = curr_per/100
@@ -314,6 +321,15 @@ def control_the_results(bot_id, results):
                     new_result['value'] = current_value * value
                     fulness += value
                     filtered_results.append(new_result)
+                elif (value > (1-fulness)) and ((value - fulness) * current_value) >= minValue:
+                    new_result = sanitize_result(result)
+                    new_result['side'] = "buy"
+                    new_result['trade_type'] = futures
+                    new_result['positionside'] = "long"
+                    new_result['leverage'] = curr_pos
+                    new_result['value'] = current_value * (value - fulness)
+                    fulness = value
+                    filtered_results.append(new_result)
                 continue
             case ("none", "short"):
                 value = curr_per/100
@@ -328,6 +344,15 @@ def control_the_results(bot_id, results):
                     new_result['leverage'] = curr_pos
                     new_result['value'] = current_value * value
                     fulness += value
+                    filtered_results.append(new_result)
+                elif (value > (1-fulness)) and ((value - fulness) * current_value) >= minValue:
+                    new_result = sanitize_result(result)
+                    new_result['side'] = "sell"
+                    new_result['trade_type'] = futures
+                    new_result['positionside'] = "short"
+                    new_result['leverage'] = curr_pos
+                    new_result['value'] = current_value * (value - fulness)
+                    fulness = value
                     filtered_results.append(new_result)
                 continue
             case ("spot", "none"):

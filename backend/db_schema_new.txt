@@ -169,6 +169,7 @@
 - stream_key (text)
 - stream_key_expires_at (timestamp without time zone)
 - is_active (boolean)
+- ws_id (integer)
 
 ## public.symbol_filters
 - id (integer)
@@ -235,3 +236,13 @@
 - total_sold (integer)
 - total_rented (integer)
 - last_login (timestamp without time zone)
+
+## public.websocket_connections
+- id (integer)
+- name (character varying)
+- exchange (character varying)
+- url (text)
+- is_connected (boolean)
+- created_at (timestamp with time zone)
+- reactivated_at (timestamp with time zone)
+- listenkey_count (integer)

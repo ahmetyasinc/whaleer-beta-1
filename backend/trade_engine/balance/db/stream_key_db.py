@@ -1,7 +1,23 @@
 from typing import Optional, List
 from asyncpg.pool import Pool
 
+async def attach_listenkeys_to_ws(pool, ws_id: int, listenkeys: list):
+    """
+    Verilen listenKey'leri ws_id'ye bağla ve status='active' yap.
+    """
+    if not listenkeys:
+        return
 
+    query = """
+        UPDATE public.stream_keys
+        SET ws_id = $1,
+            status = 'active'
+        WHERE stream_key = ANY($2::text[]);
+    """
+    async with pool.acquire() as conn:
+        await conn.execute(query, ws_id, listenkeys)
+
+        
 async def get_active_and_new_listenkeys(pool: Pool, connection_type: str = "futures") -> List[str]:
     """
     DB'den active veya new durumundaki listenKey'leri döner.

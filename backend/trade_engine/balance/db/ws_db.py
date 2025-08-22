@@ -1,6 +1,17 @@
 from typing import Optional, List
 from asyncpg.pool import Pool
 
+
+async def update_ws_name(pool: Pool, ws_id: int, name: str) -> None:
+    query = """
+        UPDATE public.websocket_connections
+        SET name = $2
+        WHERE id = $1;
+    """
+    async with pool.acquire() as conn:
+        await conn.execute(query, ws_id, name)
+
+        
 # Yeni websocket kaydı ekle
 async def insert_ws(pool: Pool, name: str, exchange: str, url: str) -> int:
     query = """
@@ -10,7 +21,6 @@ async def insert_ws(pool: Pool, name: str, exchange: str, url: str) -> int:
     """
     async with pool.acquire() as conn:
         return await conn.fetchval(query, name, exchange, url)
-
 # listenKey count güncelle
 async def update_listenkey_count(pool: Pool, ws_id: int, count: int) -> None:
     query = """

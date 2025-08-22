@@ -1,11 +1,11 @@
-from fastapi import Request, Response, HTTPException
+from fastapi import Request, Response, HTTPException, status, Header
 from jose import jwt, JWTError, ExpiredSignatureError
 from datetime import datetime, timedelta
 from typing import Optional
 
 SECRET_KEY = "38842270259879952027900728229105"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 1 saat
+ACCESS_TOKEN_EXPIRE_MINUTES = 1  # 1 saat yani 60 olmalı
 REFRESH_TOKEN_EXPIRE_DAYS = 30   # 30 gün
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):    
@@ -93,3 +93,62 @@ async def verify_token(request: Request, response: Response):
     except JWTError:
         print("Invalid token")
         raise HTTPException(status_code=401, detail="Invalid token")
+
+def _parse_bearer(auth_header: str | None) -> str | None:
+    if not auth_header:
+        return None
+    parts = auth_header.split()
+    if len(parts) == 2 and parts[0].lower() == "bearer":
+        return parts[1]
+    return None
+
+async def verify_token_mobile(
+    authorization: str | None = Header(default=None, alias="Authorization")
+) -> int:
+    """
+    Sadece mobil istemciler için:
+    - Authorization: Bearer <access_token> bekler
+    - Cookie KULLANMAZ
+    - Süresi dolmuş access'te 401 döndürür (mobil refresh endpoint'ini kullanmalı)
+    """
+    token = _parse_bearer(authorization)
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization header required")
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+        # tip güvenliği (int'e çevir)
+        try:
+            return int(user_id)
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token subject")
+    except ExpiredSignatureError:
+        # Mobil taraf 401 görünce /auth/refresh çağıracak
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    
+def validate_refresh_token_and_get_user_id(refresh_token: str) -> int:
+    """
+    - Refresh token imza + exp doğrulaması
+    - İçindeki 'sub' alanını int olarak döndürür
+    """
+    try:
+        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Refresh token expired")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Malformed refresh token")
+
+    try:
+        return int(user_id)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=401, detail="Invalid token subject")
+    

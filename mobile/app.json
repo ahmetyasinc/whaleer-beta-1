@@ -1,29 +1,36 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
-    "version": "1.0.0",
-    "orientation": "portrait",
+    "name": "Whaleer",
+    "slug": "whaleer",
+    "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "ios": {
+      "icon": "./assets/icon.png"
+    },
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true
+      "backgroundColor": "#ffffff",
+      "dark": {
+        "backgroundColor": "#000000",
+        "image": "./assets/splash-icon.png"
+      }
     },
     "android": {
+      "newArchEnabled": false,
+      "package": "com.whaleer.mobile",
+      "backgroundColor": "#ffffff",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/adaptive-icon-foreground.png",
+        "backgroundColor": "#ffffff",
+        "monochromeImage": "./assets/adaptive-icon-mono.png"
       },
       "edgeToEdgeEnabled": true
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
+    "extra": {
+      "eas": {
+        "projectId": "077c1abc-7f83-4c2b-91b9-a628efc4d486"
+      }
     }
   }
 }

@@ -1,6 +1,7 @@
 // stores/profile/lineChartStore.js
 import { create } from "zustand";
 import axios from "axios";
+import { useProfileStore } from "@/store/profile/profileStore";
 
 const useLineChartStore = create((set) => ({
   lineData: [],
@@ -11,14 +12,24 @@ const useLineChartStore = create((set) => ({
     set({ loading: true, error: null });
     try {
       axios.defaults.withCredentials = true;
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/profile_snapshots`
+
+      // aktif api'yi profileStore'dan al
+      const { activeApi } = useProfileStore.getState();
+      if (!activeApi) {
+        throw new Error("Aktif API seçili değil.");
+      }
+
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/api_snapshots`,
+        {
+          api_id: activeApi.id, // payload içine koyduk
+        }
       );
 
       // Map to time-series points and sanitize
       const pts = res.data.map((p) => ({
-        x: new Date(p.timestamp),                // <-- Date object for time scale
-        y: Number(p.user_usd_value || 0),
+        x: new Date(p.timestamp),                 // Date object for chart
+        y: Number(p.user_usd_value || 0),         // backendde user_usd_value döndürüyorduk
       }));
 
       // sort asc & dedupe by time

@@ -3,7 +3,7 @@ import pandas as pd
 from app.routes.profile.indicator.indicator_library.input_shim import InputShim
 from app.routes.profile.indicator.input.input import extract_user_inputs
 
-from app.services.allowed_globals.allowed_globals_indicator import allowed_globals_indicator
+from app.services.allowed_globals.allowed_globals import build_allowed_globals
 
 async def run_user_indicator(user_code: str, data: list[dict]):
     """
@@ -24,10 +24,11 @@ async def run_user_indicator(user_code: str, data: list[dict]):
         # Kullanıcının `print()` çıktıları burada saklanacak
         print_outputs = []  
 
-        allowed_globals = allowed_globals_indicator(df,print_outputs,indicator_results,updated=False)
+        sandbox = build_allowed_globals(df, print_outputs, indicator_results,
+                          updated=False, for_indicator=True)
 
         # Kullanıcı kodunu çalıştır
-        exec(user_code, allowed_globals)
+        exec(user_code, sandbox, sandbox)
 
         inputs = extract_user_inputs(user_code)
 
@@ -58,10 +59,11 @@ async def run_updated_user_indicator(user_code: str, data: list[dict], inputs: d
 
         input_shim = InputShim(inputs)
 
-        allowed_globals = allowed_globals_indicator(df,print_outputs,indicator_results,input_shim=input_shim ,updated=True)
+        sandbox = build_allowed_globals(df, print_outputs, indicator_results, input_shim=input_shim,
+                          updated=True, for_indicator=True)
 
         # Kullanıcı kodunu çalıştır
-        exec(user_code, allowed_globals)
+        exec(user_code, sandbox, sandbox)
 
         # JSON formatına uygun hale getir
         return indicator_results, print_outputs

@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends
 from fastapi import FastAPI, HTTPException, Depends
 from app.routes.user import router as user_router
 from app.routes.auth import router as auth_router
+from app.routes.mobile.auth.auth import router as auth_router_mobile
 from app.routes.profile.indicator.indicator_data import protected_router as indicator_data_router
 from app.routes.profile.indicator.indicator import protected_router as indicator_router
 from app.routes.profile.indicator.indicator_run import protected_router as indicator_run_router
@@ -19,6 +20,7 @@ from app.routes.profile.scan.scan import protected_router as scan_router
 from app.routes.profile.whaleer_ai.whaleer_ai import protected_router as whaleer_ai_router
 from app.routes.profile.showcase.showcase import protected_router as showcase
 from app.routes.profile.profile.profile import protected_router as profile
+from app.routes.mobile.profile.profile import protected_router as profileMobile
 from app.routes.admin.admin import protected_router as admin
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,6 +31,7 @@ app = FastAPI()
 # USER ROUTES
 app.include_router(user_router)
 app.include_router(auth_router)
+app.include_router(auth_router_mobile)
 # COINS ROUTES
 app.include_router(binance_coins_router)
 # INDICATOR ROUTES
@@ -56,6 +59,7 @@ app.include_router(whaleer_ai_router)
 app.include_router(showcase)
 # PROFİLE ROUTES
 app.include_router(profile)
+app.include_router(profileMobile)
 # ADMİN ROUTES
 app.include_router(admin)
 

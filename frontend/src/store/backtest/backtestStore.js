@@ -1,6 +1,14 @@
 import { create } from 'zustand';
 import { runBacktestApi, saveArchivedBacktest, fetchArchivedBacktests, deleteArchivedBacktestApi } from '@/services/backtest/backtestApi';
 
+const parseInitialBalance = (s) => {
+  const str = (s ?? '').trim();
+  if (!str) return undefined; // undefined => omit from API (backend will default)
+  const normalized = str.replace(/\s/g, '').replace(',', '.');
+  const v = Number(normalized);
+  return Number.isFinite(v) && v > 0 ? v : undefined;
+};
+
 const useBacktestStore = create((set, get) => ({
   selectedStrategy: null,
   selectedPeriod: '',
@@ -9,6 +17,9 @@ const useBacktestStore = create((set, get) => ({
   setSelectedStrategy: (strategy) => set({ selectedStrategy: strategy }),
   setSelectedPeriod: (period) => set({ selectedPeriod: period }),
   setSelectedCrypto: (crypto) => set({ selectedCrypto: crypto }),
+
+  initialBalanceInput: '',                                 // NEW
+  setInitialBalanceInput: (v) => set({ initialBalanceInput: v }), // NEW
 
   backtestResults: null,
   isBacktestLoading: false,
@@ -20,18 +31,20 @@ const useBacktestStore = create((set, get) => ({
   archivedBacktests: [],
 
   runBacktest: async () => {
-    const { selectedStrategy, selectedPeriod, selectedCrypto } = get();
+    const { selectedStrategy, selectedPeriod, selectedCrypto, initialBalanceInput } = get();
 
     set({ isBacktestLoading: true, backtestError: null });
 
     try {
+      const initial_balance = parseInitialBalance(initialBalanceInput); // number | undefined
+
       const result = await runBacktestApi({
         strategy: selectedStrategy,
         period: selectedPeriod,
         crypto: selectedCrypto,
+        initial_balance, // conditionally sent by API layer
       });
-      console.log("Backtest sonuçları:", result);
-      // Gelen veriyi doğrudan state'e kaydet
+
       set({ backtestResults: result, isBacktestLoading: false });
     } catch (error) {
       set({ backtestError: error.message || "Backtest işlemi başarısız", isBacktestLoading: false });
@@ -39,7 +52,6 @@ const useBacktestStore = create((set, get) => ({
   },
 
   archiveBacktest: async () => {
-    console.log("Arşivleme işlemi başlatılıyor...");
     const {
       archivedBacktests,
       selectedStrategy,
@@ -52,10 +64,7 @@ const useBacktestStore = create((set, get) => ({
 
     try {
       const savedBacktest = await saveArchivedBacktest(backtestResults);
-      console.log("Arşivleme verileri:", {
-        backtestResults
-      });
-      
+
       const archivedItem = {
         id: savedBacktest.id,
         date: new Date().toLocaleDateString('tr-TR'),
@@ -69,33 +78,28 @@ const useBacktestStore = create((set, get) => ({
         candles: backtestResults.candles || [],
         returns: backtestResults.returns || [],
       };
-      set({ isArchiveLoading: false});
-      console.log("Arşivlenen backdfsdfsdfsdtest:", archivedItem);
-      set({
-        archivedBacktests: [archivedItem, ...archivedBacktests],
-      });
 
-    }catch (error) {
+      set({ isArchiveLoading: false });
+      set({ archivedBacktests: [archivedItem, ...archivedBacktests] });
+
+    } catch (error) {
       set({ archiveError: error.message || "Arşivleme işlemi başarısız", isArchiveLoading: false });
     }
   },
 
   deleteArchivedBacktest: async (id) => {
     set({ isArchiveLoading: true, archiveError: null });
-    
     try {
       await deleteArchivedBacktestApi(id);
-      
-      // Local state'den kaldır
       const { archivedBacktests } = get();
       set({
         archivedBacktests: archivedBacktests.filter(item => item.id !== id),
         isArchiveLoading: false
       });
     } catch (error) {
-      set({ 
+      set({
         archiveError: error.message || "Arşivlenmiş backtest silinemedi",
-        isArchiveLoading: false 
+        isArchiveLoading: false
       });
       throw error;
     }
@@ -122,21 +126,19 @@ const useBacktestStore = create((set, get) => ({
         returns: item.data?.returns || [],
       }));
 
-      set({ 
+      set({
         archivedBacktests: formattedBacktests,
-        isArchiveLoading: false 
+        isArchiveLoading: false
       });
     } catch (error) {
-      set({ 
+      set({
         archiveError: error.message || "Arşivlenmiş backtestler yüklenemedi",
-        isArchiveLoading: false 
+        isArchiveLoading: false
       });
     }
   },
 
   loadArchivedBacktest: (archivedItem) => {
-    console.log("Yüklenen arşivlenmiş backtest:", archivedItem);
-
     set({
       backtestResults: archivedItem,
       selectedStrategy: archivedItem.strategy || null,
@@ -144,7 +146,6 @@ const useBacktestStore = create((set, get) => ({
       selectedPeriod: archivedItem.period || '',
     });
   },
-
 
   clearBacktestResults: () => set({
     backtestResults: null,

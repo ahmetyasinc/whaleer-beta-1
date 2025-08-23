@@ -1,4 +1,4 @@
-from app.services.allowed_globals.allowed_globals_indicator import allowed_globals_indicator
+from app.services.allowed_globals.allowed_globals import build_allowed_globals
 
 def safe_import(name, globals=None, locals=None, fromlist=(), level=0):
     allowed = ["numpy", "pandas", "math", "time"]
@@ -8,7 +8,7 @@ def safe_import(name, globals=None, locals=None, fromlist=(), level=0):
 
 def run_strategy_code(strategy_code,indicator_codes,df,target):
     
-    allowed_globals = allowed_globals_indicator(df, print_outputs=None, indicator_results=None, updated=False, for_strategy=False, for_backtest=True)
+    allowed_globals = build_allowed_globals(df, print_outputs=None, indicator_results=None, updated=False, make_empty=True)
 
     for indicator in indicator_codes:
         try:

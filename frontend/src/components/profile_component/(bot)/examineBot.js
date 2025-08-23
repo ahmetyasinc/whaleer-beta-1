@@ -34,6 +34,10 @@ export default function ExamineBot({
     return new Date(dateString).toLocaleString("en-GB", options);
   };
 
+  const sortedTrades = [...trades].sort(
+    (a, b) => new Date(b.date) - new Date(a.date)
+  );
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-zinc-900 w-[1100px] h-[85vh] rounded-xl shadow-lg overflow-hidden relative flex">
@@ -105,12 +109,13 @@ export default function ExamineBot({
                     <th>Type</th>
                     <th>Position</th>
                     <th>Leverage</th>
+                    <th>Quantity</th>
                     <th>Amount</th>
                     <th>Fee</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[...trades].reverse().map((trade, index) => (
+                  {sortedTrades.map((trade, index) => (
                     <tr
                       key={index}
                       className="border-b border-zinc-800 hover:bg-zinc-800 transition"
@@ -137,7 +142,8 @@ export default function ExamineBot({
                       <td className="text-zinc-300">
                         {trade.leverage > 0 ? `${trade.leverage}x` : "-"}
                       </td>
-                      <td className="text-zinc-300">{trade.amount}</td>
+                      <td className="text-zinc-300">$ {trade.amount}</td>
+                      <td className="text-zinc-300">$ {(trade.amount * trade.price) .toFixed(2)}</td>
                       <td className="text-zinc-300">{trade.fee}</td>
                     </tr>
                   ))}
@@ -194,7 +200,7 @@ export default function ExamineBot({
                     </div>
 
                     <div className="text-xs text-zinc-300">
-                      Amount: {((pos.amount * pos.cost) + pos.profit).toFixed(3)} $
+                      Amount: {pos.amount .toFixed(6)} 
                     </div>
 
                     <div
@@ -236,7 +242,7 @@ export default function ExamineBot({
                       {h.symbol}
                     </div>
                     <div className="text-xs text-zinc-300">
-                      Amount: {((h.amount * h.cost) + h.profit).toFixed(3)} $
+                      Amount: {h.amount.toFixed(6)}
                     </div>
 
                     <div

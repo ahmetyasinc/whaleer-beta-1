@@ -56,6 +56,6 @@ async def run_all_bots_async(bots, strategies_with_indicators, coin_data_dict, l
         result_dict = aggregate_results_by_bot_id(all_results)
         result=await send_order(await prepare_order_data(result_dict))
         #print(result)
-        await save_result_to_json(result_dict, last_time, interval)
+        #await save_result_to_json(result_dict, last_time, interval)
 
         return all_results

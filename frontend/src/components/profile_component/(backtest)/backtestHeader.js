@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import ChooseStrategy from './chooseStrategy';
 import CryptoSelectButton from './cryptoSelectButton';
 import useCryptoStore from '@/store/indicator/cryptoPinStore';
@@ -17,14 +17,24 @@ export default function BacktestHeader() {
     selectedPeriod,
     setSelectedPeriod,
     runBacktest,
-    isBacktestLoading
+    isBacktestLoading,
+    initialBalanceInput,           // NEW
+    setInitialBalanceInput,        // NEW
   } = useBacktestStore();
 
   const isReady = selectedStrategy && selectedCrypto && selectedPeriod !== '';
 
+  const isInitialBalanceValid = useMemo(() => {
+    const s = (initialBalanceInput ?? '').trim();
+    if (!s) return true; // empty is allowed
+    const normalized = s.replace(/\s/g, '').replace(',', '.');
+    const v = Number(normalized);
+    return Number.isFinite(v) && v > 0;
+  }, [initialBalanceInput]);
+
   const handleBacktest = async () => {
     setIsOpen(false);
-    if (isReady) {
+    if (isReady && isInitialBalanceValid) {
       await runBacktest();
     }
   };
@@ -34,11 +44,6 @@ export default function BacktestHeader() {
       <header className="w-full bg-black text-white px-6 py-3 h-[60px] flex justify-between items-center">
         <h1></h1>
         <div className="flex gap-4">
-          {/* 
-          <button className="bg-gray-900 text-white px-4 h-[35px] rounded hover:bg-gray-800 transition">
-            Backtest Optimization
-          </button>
-          */}
           <button
             className="bg-black border border-gray-800 text-white px-4 h-[35px] rounded-lg hover:border-gray-600 transition flex items-center gap-2"
             onClick={() => setIsOpen(true)}
@@ -75,15 +80,34 @@ export default function BacktestHeader() {
                 <option value="1d">1 day</option>
                 <option value="1w">1 week</option>
               </select>
+
+              {/* NEW: Optional Initial Balance */}
+              <div className="flex flex-col gap-1">
+                <input
+                  inputMode="decimal"
+                  placeholder="Initial Balance (USD)"
+                  className={`bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded outline-none border ${
+                    isInitialBalanceValid ? 'border-transparent' : 'border-red-500'
+                  } ${!initialBalanceInput?.trim() ? 'text-center' : 'text-left'}`}
+                  value={initialBalanceInput ?? ''}
+                  onChange={(e) => setInitialBalanceInput(e.target.value)}
+                />
+                <p className="text-xs text-gray-400">
+                  Leave empty to use the first close price as the starting balance.
+                </p>
+                {!isInitialBalanceValid && (
+                  <p className="text-xs text-red-400">Please enter a positive number.</p>
+                )}
+              </div>
             </div>
           </div>
 
           <div className="p-4 border-t border-gray-800">
             <button
-              disabled={!isReady || isBacktestLoading}
+              disabled={!isReady || isBacktestLoading || !isInitialBalanceValid}
               onClick={handleBacktest}
               className={`w-full px-4 py-2 rounded transition flex items-center justify-center gap-2 ${
-                isReady && !isBacktestLoading
+                isReady && !isBacktestLoading && isInitialBalanceValid
                   ? 'bg-blue-600 text-white hover:bg-blue-500 cursor-pointer'
                   : 'bg-gray-500 text-white cursor-not-allowed'
               }`}

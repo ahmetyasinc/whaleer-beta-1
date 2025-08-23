@@ -34,6 +34,20 @@ async def get_user_apis(db: AsyncSession = Depends(get_db), user_id: dict = Depe
     api_keys = result.scalars().all()
     return api_keys
 
+@protected_router.get("/api/get-user-apis/")
+async def get_user_apis(
+    db: AsyncSession = Depends(get_db),
+    user_id: dict = Depends(verify_token)
+):
+    result = await db.execute(
+        select(APIKey.id, APIKey.api_name, APIKey.default)
+        .where(APIKey.user_id == int(user_id))
+        .order_by(APIKey.id)
+    )
+    api_keys = result.all()
+    return [dict(row._mapping) for row in api_keys]
+
+
 
 @protected_router.post("/api/create-api/")
 async def create_api_key(

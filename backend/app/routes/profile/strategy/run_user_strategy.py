@@ -7,7 +7,7 @@ from app.routes.profile.strategy.strategy_library.mark_strategy import mark_stra
 from app.routes.profile.strategy.strategy_library.plot_strategy import plot_strategy
 from app.routes.profile.strategy.strategy_library.print_strategy import custom_print
 
-from app.services.allowed_globals.allowed_globals_indicator import allowed_globals_indicator
+from app.services.allowed_globals.allowed_globals import build_allowed_globals
 
 async def run_user_strategy(strategy_name: str, user_code: str, data: list[dict], indicator_codes: list[str]):
     """
@@ -33,14 +33,12 @@ async def run_user_strategy(strategy_name: str, user_code: str, data: list[dict]
         print_outputs = []  
 
         user_globals = {}
-
-        allowed_globals = allowed_globals_indicator(df, print_outputs=None, indicator_results=None, updated=False, for_strategy=True)
+        allowed_globals = build_allowed_globals(df, print_outputs=None, indicator_results=None, updated=False, make_empty=True)
 
         for indicator_code in indicator_codes:
             exec(indicator_code, allowed_globals)
-
+            
         allowed_globals.update(user_globals)
-
         allowed_globals["print"] = lambda *args, **kwargs: custom_print(print_outputs, *args, **kwargs)
         allowed_globals["mark"] = lambda *args, **kwargs: mark_strategy(strategy_name, strategy_results, *args, **kwargs)
         allowed_globals["plot"] = lambda *args, **kwargs: plot_strategy(strategy_name, strategy_graph,print_outputs, *args, **kwargs)
@@ -104,19 +102,18 @@ async def run_updated_user_strategy(strategy_name: str, user_code: str, data: li
         input_shim = InputShim(inputs)
 
         # ✅ Sonra allowed_globals sözlüğünü tanımla
-        allowed_globals = allowed_globals_indicator(df, print_outputs, indicator_results=None, updated=False, for_strategy=True)
+        allowed_globals = build_allowed_globals(df, print_outputs, indicator_results=None, updated=False, make_empty=True)
 
         for indicator_code in indicator_codes:
-            exec(indicator_code, allowed_globals)
+            exec(indicator_code, build_allowed_globals)
 
         allowed_globals.update(user_globals)
         allowed_globals["mark"] = lambda *args, **kwargs: mark_strategy(strategy_name, strategy_results, *args, **kwargs)
-        allowed_globals["plot"] = lambda *args, **kwargs: plot_strategy(strategy_name, strategy_graph,print_outputs, *args, **kwargs)
+        allowed_globals["plot_strategy"] = lambda *args, **kwargs: plot_strategy(strategy_name, strategy_graph,print_outputs, *args, **kwargs)
         allowed_globals["input"] = input_shim
         allowed_globals["__builtins__"]["print"] = lambda *args, **kwargs: custom_print(print_outputs, *args, **kwargs)
         
         # Kullanıcı kodunu çalıştır
-        
         exec(user_code, allowed_globals)
 
         # Strateji verisini JSON'a uygun hale getir

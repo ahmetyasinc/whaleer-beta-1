@@ -80,6 +80,7 @@ export default function PortfolioPieChart() {
       </div>
     </div>
   );
+<<<<<<< HEAD
 }
 
 
@@ -251,3 +252,6 @@ export default function PortfolioChart() {
     </div>
   );
 }*/
+=======
+}
+>>>>>>> cdacc9b0ee71204b521cd2099fc278dfafb888b8

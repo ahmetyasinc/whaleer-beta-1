@@ -4,8 +4,8 @@ def control_the_results(bot_id, results):
 
     minValue = 10.0 # Minimum işlem limiti usd dolar
 
-    spot = "test_spot"
-    futures = "test_futures"
+    spot = "spot"
+    futures = "futures"
 
     def get_state(pos, per):
         if per == 0:
@@ -25,7 +25,7 @@ def control_the_results(bot_id, results):
         return new_result
 
     holdings = load_bot_holding(bot_id)
-    holding_dict = {h['symbol']: h['percentage'] for h in holdings}
+    holding_dict = {h['symbol']: float(h['percentage']) for h in holdings}
 
     #print(f"holding_dict: {holding_dict}")
 
@@ -49,6 +49,7 @@ def control_the_results(bot_id, results):
     for result in results:
         last_positions = result.get('last_positions')
         last_percentage = result.get('last_percentage')
+        print(f"result: {result}")
         if last_positions is None or last_percentage is None:
             continue
 
@@ -298,6 +299,13 @@ def control_the_results(bot_id, results):
                     new_result['value'] = current_value * value
                     fulness += value
                     filtered_results.append(new_result)
+                elif (value > (1-fulness)) and ((value - fulness) * current_value) >= minValue:
+                    new_result = sanitize_result(result)
+                    new_result['side'] = "buy"
+                    new_result['trade_type'] = spot
+                    new_result['value'] = current_value * (value - fulness)
+                    fulness = value
+                    filtered_results.append(new_result)
                 continue
             case ("none", "long"):
                 value = curr_per/100
@@ -313,6 +321,15 @@ def control_the_results(bot_id, results):
                     new_result['value'] = current_value * value
                     fulness += value
                     filtered_results.append(new_result)
+                elif (value > (1-fulness)) and ((value - fulness) * current_value) >= minValue:
+                    new_result = sanitize_result(result)
+                    new_result['side'] = "buy"
+                    new_result['trade_type'] = futures
+                    new_result['positionside'] = "long"
+                    new_result['leverage'] = curr_pos
+                    new_result['value'] = current_value * (value - fulness)
+                    fulness = value
+                    filtered_results.append(new_result)
                 continue
             case ("none", "short"):
                 value = curr_per/100
@@ -327,6 +344,15 @@ def control_the_results(bot_id, results):
                     new_result['leverage'] = curr_pos
                     new_result['value'] = current_value * value
                     fulness += value
+                    filtered_results.append(new_result)
+                elif (value > (1-fulness)) and ((value - fulness) * current_value) >= minValue:
+                    new_result = sanitize_result(result)
+                    new_result['side'] = "sell"
+                    new_result['trade_type'] = futures
+                    new_result['positionside'] = "short"
+                    new_result['leverage'] = curr_pos
+                    new_result['value'] = current_value * (value - fulness)
+                    fulness = value
                     filtered_results.append(new_result)
                 continue
             case ("spot", "none"):

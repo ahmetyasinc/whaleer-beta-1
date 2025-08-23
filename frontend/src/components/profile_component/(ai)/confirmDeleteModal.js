@@ -8,7 +8,7 @@ export default function ConfirmDeleteModal({ open, onClose, onConfirm, message =
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60">
-      <div className="bg-zinc-900 rounded-xl shadow-2xl max-w-xs w-full p-6 text-center border-1 border-zinc-500">
+      <div className="bg-zinc-900 rounded-xl shadow-2xl max-w-xs w-full p-6 text-center border border-zinc-500">
         <div className="mb-4 text-white text-lg font-semibold">
           {message}
         </div>

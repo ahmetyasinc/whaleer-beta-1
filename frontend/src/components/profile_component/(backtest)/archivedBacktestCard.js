@@ -36,7 +36,7 @@ export default function ArchivedBacktestCard({ archivedItem }) {
   const isProfit = archivedItem.performance.totalPnL > 0;
 
   return (
-    <div className="bg-gray-900 rounded-lg p-4 mb-3 border-1 border-gray-700 transition-colors">
+    <div className="bg-gray-900 rounded-lg p-4 mb-3 border border-gray-700 transition-colors">
       {/* Top Section - Basic Info */}
       <div className="flex justify-between items-start mb-3">
         <div className="flex flex-col gap-1">

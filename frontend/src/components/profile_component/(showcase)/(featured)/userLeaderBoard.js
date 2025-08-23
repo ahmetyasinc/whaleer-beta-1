@@ -85,7 +85,7 @@ const UserLeaderBoard = () => {
   };
 
   return (
-    <div className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-lg shadow-2xl p-6 h-[calc(100vh-140px)] border-1 border-slate-700 overflow-hidden">
+    <div className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-lg shadow-2xl p-6 h-[calc(100vh-140px)] border border-slate-700 overflow-hidden">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold text-white bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
           User Leaderboard
@@ -98,7 +98,7 @@ const UserLeaderBoard = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="appearance-none bg-slate-800 border-1 border-slate-600 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-slate-200 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="appearance-none bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-slate-200 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             >
               {sortOptions.map((option) => (
                 <option key={option.value} value={option.value} className="bg-slate-800 text-slate-200">
@@ -114,7 +114,7 @@ const UserLeaderBoard = () => {
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value)}
-              className="appearance-none bg-slate-800 border-1 border-slate-600 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-slate-200 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="appearance-none bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-slate-200 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             >
               {sortOrderOptions.map((option) => (
                 <option key={option.value} value={option.value} className="bg-slate-800 text-slate-200">
@@ -130,7 +130,7 @@ const UserLeaderBoard = () => {
       {/* User Cards - Scrollable */}
       <div className="overflow-y-auto -mx-1 space-y-3 h-full pb-16 scrollbar-hide">
         {sortedUsers.map((user, index) => (
-          <div key={user.id} className="bg-slate-800/50 border-1 border-slate-700 rounded-lg p-3 hover:bg-slate-800/70 hover:border-slate-600 transition-all duration-200 backdrop-blur-sm">
+          <div key={user.id} className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 hover:bg-slate-800/70 hover:border-slate-600 transition-all duration-200 backdrop-blur-sm">
             <div className="flex items-center justify-between">
               {/* Left side */}
               <div className="flex items-center space-x-4">

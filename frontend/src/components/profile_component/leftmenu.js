@@ -7,14 +7,9 @@ import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
 import { useLogout } from "@/utils/HookLogout";
 import axios from "axios";
-
-import "@/styles/css/leftmenu.css";
-import "@/styles/css/logOut_modal.css";
-
-import { BiLock, BiUser, BiCandles, BiLineChart, BiBroadcast, BiSearchAlt, BiLogOut, BiChevronLeft } from "react-icons/bi";
-import { FaRegLightbulb } from "react-icons/fa";
+import LogoutConfirmModal from "./confirmLogout";
+import { BiUser, BiCandles, BiLineChart, BiBroadcast, BiSearchAlt, BiLogOut, BiChevronLeft } from "react-icons/bi";
 import { IoMdArrowDropright } from "react-icons/io";
-import { IoWarningOutline } from "react-icons/io5";
 import { LuBot } from "react-icons/lu";
 import { BsGrid1X2 } from "react-icons/bs";
 
@@ -72,71 +67,103 @@ const LeftMenu = ({ locale }) => {
     );
   }
 
-  return (
-    <div className={`sidebar-left ${isOpen ? "open" : ""}`}>
-      <div className="sidebar-header bg-[rgb(7,67,95)] text-white flex items-center justify-between ml-4 mt-2">
-        <img src="/img/user.jpg" alt="user_img" className="profile-img" />
+return (
+  <>
+    {/* SIDEBAR */}
+    <div
+      className={[
+        "fixed top-0 left-0 h-screen w-[260px] bg-[rgb(7,67,95)] text-white",
+        "z-[1000] overflow-y-auto rounded-tr-md",
+        "transform transition-transform duration-300",
+        isOpen ? "translate-x-0" : "-translate-x-full",
+      ].join(" ")}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-center gap-3 px-4 pt-4">
+        <img
+          src="/img/user.jpg"
+          alt="user_img"
+          className="w-10 h-10 rounded-full shadow-[0_0_9px_rgba(0,0,0,0.66)] mr-5"
+        />
         {isOpen && (
-          <div className="sidebar-header-left flex flex-col items-start text-left pl-5 pt-[10px]">
-            <p className="username-left text-base font-bold">{user.username}</p>
-            <p className="text-xs font-bold text-gray-400">#{user.username}</p>
+          <div className="flex flex-col items-start text-left pl-2">
+            <p className="text-base font-bold">{user?.username}</p>
+            <p className="text-xs font-bold text-gray-300">#{user?.username}</p>
           </div>
         )}
       </div>
 
-      {isOpen && <div className="w-[80%] h-[2px] bg-black mx-auto my-2" />}
+      {isOpen && (
+        <div className="w-[80%] h-[2px] bg-black mx-auto mt-[20px] mb-2" />
+      )}
 
-      <ul className="sidebar-links-left space-y-0">
-        {menuItems.map((item, index) => (
-          <li key={index} className="relative flex items-center">
-            <Link
-              href={item.href}
-              className={`sidebar-link ${pathname === item.href ? "active" : ""}`}
-              onClick={() => setIsOpen(false)}
-            >
-              {pathname === item.href && (
-                <IoMdArrowDropright className="absolute left-[-10px] top-1/2 transform -translate-y-1/2 text-2xl text-white" />
-              )}
-              <span className="menu-icon">{item.icon}</span>
-              {isOpen && <span className="link-label">{item.label}</span>}
-            </Link>
-          </li>
-        ))}
+      {/* Links */}
+      <ul className="space-y-1.5 pl-4 mt-4">
+        {menuItems.map((item, index) => {
+          const active = pathname === item.href;
+          return (
+            <li key={index} className="relative flex items-center">
+              <Link
+                href={item.href}
+                onClick={() => setIsOpen(false)}
+                className={[
+                  "flex items-center gap-3 w-full px-4 py-2 text-white transition-colors duration-300",
+                  active ? "bg-white/10 rounded-md" : "hover:text-[hsl(209,100%,50%)]",
+                ].join(" ")}
+              >
+                {active && (
+                  <IoMdArrowDropright className="absolute left-[-10px] top-1/2 -translate-y-1/2 text-2xl text-white" />
+                )}
+                <span className="text-[20px] inline-flex">{item.icon}</span>
+                {isOpen && <span className="text-sm">{item.label}</span>}
+              </Link>
+            </li>
+          );
+        })}
 
-        <li className="sidebar-link-item">
-          <button className="logout-button" onClick={() => setShowLogoutModal(true)}>
-            <span className="menu-icon"><BiLogOut /></span>
-            {isOpen && <span className="link-label">{t("logout")}</span>}
+        {/* Logout */}
+        <li>
+          <button
+            className="flex items-center gap-3 w-full px-4 py-2 text-left text-white hover:text-[hsl(209,100%,50%)] transition-colors duration-300"
+            onClick={() => setShowLogoutModal(true)}
+          >
+            <span className="text-[20px] inline-flex">
+              <BiLogOut />
+            </span>
+            {isOpen && <span className="text-sm">{t?.("logout") ?? "Logout"}</span>}
           </button>
         </li>
       </ul>
-
-      <button
-        id="toggleSidebar-left"
-        className="toggle-btn-left"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {isOpen ? (
-          <BiChevronLeft size={26} />
-        ) : (
-          <img src="/img/logo5_2.png" alt="Menu" width={26} height={26} />
-        )}
-      </button>
-
-      {showLogoutModal && (
-        <div className="logout-modal">
-          <div className="logout-modal-content">
-            <IoWarningOutline />
-            <p>{t("logoutConfirm")}</p>
-            <div className="logout-modal-buttons">
-              <button onClick={() => setShowLogoutModal(false)} className="cancel-btn">{t("no")}</button>
-              <button onClick={handleLogout} className="confirm-btn">{t("logout")}</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
-  );
+
+    {/* TOGGLE BUTTON */}
+    <button
+      id="toggleSidebar-left"
+      onClick={() => setIsOpen((v) => !v)}
+      className={[
+        "fixed top-2 h-10 w-10 bg-[rgb(7,67,95)] text-white rounded-[40%] p-2 z-[1101]",
+        "flex items-center justify-center transition-all duration-300",
+        "hover:scale-[1.07] hover:rotate-6",
+        isOpen ? "left-[270px]" : "left-2",
+      ].join(" ")}
+    >
+      {isOpen ? (
+        <BiChevronLeft size={26} />
+      ) : (
+        <img src="/img/logo5_2.png" alt="Menu" width={26} height={26} />
+      )}
+    </button>
+
+    {/* MODAL */}
+    <LogoutConfirmModal
+      open={showLogoutModal}
+      onCancel={() => setShowLogoutModal(false)}
+      onConfirm={handleLogout}
+      t={t}
+    />
+  </>
+);
+
 };
 
 export default LeftMenu;

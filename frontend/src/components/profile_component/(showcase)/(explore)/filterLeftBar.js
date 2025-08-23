@@ -92,7 +92,7 @@ const BotFilterSidebar = () => {
         <select
           value={filters.botType}
           onChange={(e) => handleInputChange('botType', e.target.value)}
-          className="w-full px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-sm focus:border-blue-400 focus:outline-none"
+          className="w-full px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-sm focus:border-blue-400 focus:outline-none"
         >
           <option value="">All</option>
           <option value="spot">Spot</option>
@@ -109,14 +109,14 @@ const BotFilterSidebar = () => {
             placeholder="Min" 
             value={filters.priceMin}
             onChange={(e) => handleInputChange('priceMin', e.target.value)}
-            className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
+            className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
           />
           <input 
             type="number" 
             placeholder="Max" 
             value={filters.priceMax}
             onChange={(e) => handleInputChange('priceMax', e.target.value)}
-            className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
+            className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
           />
         </div>
       </div>
@@ -130,14 +130,14 @@ const BotFilterSidebar = () => {
             placeholder="Min" 
             value={filters.rentMin}
             onChange={(e) => handleInputChange('rentMin', e.target.value)}
-            className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
+            className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
           />
           <input 
             type="number" 
             placeholder="Max" 
             value={filters.rentMax}
             onChange={(e) => handleInputChange('rentMax', e.target.value)}
-            className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
+            className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
           />
         </div>
       </div>
@@ -204,12 +204,12 @@ const BotFilterSidebar = () => {
             placeholder="Value" 
             value={filters.creationTime}
             onChange={(e) => handleInputChange('creationTime', e.target.value)}
-            className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
+            className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
           />
           <select 
             value={filters.creationUnit}
             onChange={(e) => handleInputChange('creationUnit', e.target.value)}
-            className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-xs focus:border-blue-400 focus:outline-none"
+            className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none"
           >
             <option value="gün">Day</option>
             <option value="hafta">Week</option>
@@ -227,12 +227,12 @@ const BotFilterSidebar = () => {
             placeholder="%" 
             value={filters.profitMargin}
             onChange={(e) => handleInputChange('profitMargin', e.target.value)}
-            className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
+            className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
           />
           <select 
             value={filters.profitMarginUnit}
             onChange={(e) => handleInputChange('profitMarginUnit', e.target.value)}
-            className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-xs focus:border-blue-400 focus:outline-none"
+            className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none"
           >
             <option value="day">Daily</option>
             <option value="week">Weekly</option>
@@ -251,7 +251,7 @@ const BotFilterSidebar = () => {
             placeholder="Value" 
             value={filters.transactionFrequency}
             onChange={(e) => handleInputChange('transactionFrequency', e.target.value)}
-            className="w-full px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
+            className="w-full px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
           />
         </div>
       </div>
@@ -264,7 +264,7 @@ const BotFilterSidebar = () => {
           placeholder="e.g. 525" 
           value={filters.usageTime}
           onChange={(e) => handleInputChange('usageTime', e.target.value)}
-          className="w-full px-2 py-1 bg-gray-800/50 text-white rounded border-1 border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
+          className="w-full px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none" 
         />
       </div>
 
@@ -314,7 +314,7 @@ const BotFilterSidebar = () => {
         <div className="pt-2 text-sm">
           <button 
             onClick={clearFilters}
-            className="w-full bg-red-600/20 backdrop-blur-lg border-1 border-red-500/20 text-red-300 py-[6px] rounded-xl font-semibold transition-all duration-200 hover:bg-red-600/30 hover:shadow-xl shadow-md relative overflow-hidden group"
+            className="w-full bg-red-600/20 backdrop-blur-lg border border-red-500/20 text-red-300 py-[6px] rounded-xl font-semibold transition-all duration-200 hover:bg-red-600/30 hover:shadow-xl shadow-md relative overflow-hidden group"
           >
             <div className="relative flex items-center justify-center gap-2">
               <FiX className="w-5 h-5" />

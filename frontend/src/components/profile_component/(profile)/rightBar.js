@@ -54,7 +54,7 @@ return (
         {stats.map((stat, index) => (
           <div
             key={index}
-            className="bg-gradient-to-r pt-4 from-gray-950 to-zinc-900 rounded-lg h-16 shadow-md hover:shadow-lg border-1 border-neutral-700 transition-all duration-300 flex flex-col justify-center px-4"
+            className="bg-gradient-to-r pt-4 from-gray-950 to-zinc-900 rounded-lg h-16 shadow-md hover:shadow-lg border border-neutral-700 transition-all duration-300 flex flex-col justify-center px-4"
             style={{
               animationDelay: `${index * 200}ms`,
               animation: "fadeInUpRightBar 1s ease-out forwards",
@@ -73,7 +73,11 @@ return (
           return (
             <div
               key={index}
-              className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-lg h-20 shadow-md hover:shadow-lg border-1 border-neutral-700 transition-all duration-300 flex flex-col justify-center px-4"
+              className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-lg h-20 shadow-md hover:shadow-lg border border-neutral-700 transition-all duration-300 flex flex-col justify-center px-4"
+              style={{
+                animationDelay: `${index * 200}ms`,
+                animation: "fadeInUpRightBar 1s ease-out forwards",
+            }}
             >
               <h4 className="text-xs font-medium text-zinc-400 capitalize mb-1">
                 {period} Performance

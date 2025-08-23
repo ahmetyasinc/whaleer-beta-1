@@ -46,7 +46,7 @@ export const PublishStrategyModal = ({ isOpen, onClose, onPublish }) => {
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-black/60 via-black/70 to-black/80 backdrop-blur-sm flex items-center justify-center z-[100] animate-in fade-in duration-300">
-      <div className="bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl text-white rounded-2xl w-[850px] max-h-[90vh] shadow-2xl relative flex flex-col border-1 border-slate-700/50 animate-in zoom-in-95 duration-300 overflow-hidden">
+      <div className="bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl text-white rounded-2xl w-[850px] max-h-[90vh] shadow-2xl relative flex flex-col border border-slate-700/50 animate-in zoom-in-95 duration-300 overflow-hidden">
         
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none"></div>
@@ -94,11 +94,11 @@ export const PublishStrategyModal = ({ isOpen, onClose, onPublish }) => {
             {permissionItems.map(([key, label, description]) => (
               <div 
                 key={key} 
-                className="group relative p-2 rounded-lg bg-slate-800/50 border-1 border-slate-700/50 transition-all duration-200 cursor-pointer"
+                className="group relative p-2 rounded-lg bg-slate-800/50 border border-slate-700/50 transition-all duration-200 cursor-pointer"
                 onClick={() => handleToggle(key)}
               >
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-md border-1 border-slate-600 bg-slate-900 group-hover:border-slate-500">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-md border border-slate-600 bg-slate-900 group-hover:border-slate-500">
                     {permissions[key] ? (
                       <IoCheckbox className="text-2xl text-green-500 transition-all duration-200" /> 
                     ) : (
@@ -127,7 +127,7 @@ export const PublishStrategyModal = ({ isOpen, onClose, onPublish }) => {
             </h3>
             <div className="relative">
               <textarea
-                className="w-full h-[140px] p-4 rounded-lg bg-slate-800/50 text-white placeholder-slate-400 resize-none border-1 border-slate-700/50 focus:border-blue-500/50 focus:bg-slate-800/70 transition-all duration-200 backdrop-blur-sm"
+                className="w-full h-[140px] p-4 rounded-lg bg-slate-800/50 text-white placeholder-slate-400 resize-none border border-slate-700/50 focus:border-blue-500/50 focus:bg-slate-800/70 transition-all duration-200 backdrop-blur-sm"
                 placeholder="What does this strategy do, what was it designed for, under what market conditions does it perform best..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -144,7 +144,7 @@ export const PublishStrategyModal = ({ isOpen, onClose, onPublish }) => {
           <div className="flex justify-end gap-3">
             <button 
               onClick={onClose} 
-              className="px-6 py-2.5 bg-slate-700/50 hover:bg-slate-600/50 text-slate-200 rounded-xl transition-all duration-200 border-1 border-slate-600/50 hover:border-slate-500/50 font-medium"
+              className="px-6 py-2.5 bg-slate-700/50 hover:bg-slate-600/50 text-slate-200 rounded-xl transition-all duration-200 border border-slate-600/50 hover:border-slate-500/50 font-medium"
             >
               Cancel
             </button>
@@ -162,7 +162,7 @@ export const PublishStrategyModal = ({ isOpen, onClose, onPublish }) => {
       {/* Info Modal */}
       {showInfo && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[150] animate-in fade-in duration-200">
-          <div className="bg-gradient-to-br from-slate-800/95 to-slate-900/95 backdrop-blur-xl text-white p-6 rounded-2xl w-[450px] shadow-2xl relative border-1 border-slate-700/50 animate-in zoom-in-95 duration-200">
+          <div className="bg-gradient-to-br from-slate-800/95 to-slate-900/95 backdrop-blur-xl text-white p-6 rounded-2xl w-[450px] shadow-2xl relative border border-slate-700/50 animate-in zoom-in-95 duration-200">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10 rounded-2xl pointer-events-none"></div>
             <div className="relative">
               <div className="flex items-center gap-3 mb-4">
@@ -180,7 +180,7 @@ export const PublishStrategyModal = ({ isOpen, onClose, onPublish }) => {
                 <p>
                   Each permission affects how your strategy will appear and what actions can be taken with it.
                 </p>
-                <div className="p-3 bg-blue-500/10 rounded-lg border-1 border-blue-500/20">
+                <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
                   <p className="text-blue-300 text-sm">
                     💡 <strong>Tip:</strong> Granting more permissions can help your strategy reach a broader audience.
                   </p>

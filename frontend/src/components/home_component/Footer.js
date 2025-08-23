@@ -1,62 +1,86 @@
 "use client";
 
-import { useEffect } from 'react';
-
+import { useEffect } from "react";
 import i18n from "@/i18n";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
+import { FaInstagram, FaLinkedin } from "react-icons/fa";
 
 const Footer = ({ locale }) => {
-  const { t } = useTranslation('footer');
-  
+  const { t } = useTranslation("footer");
+
   useEffect(() => {
     if (locale && i18n.language !== locale) {
       i18n.changeLanguage(locale);
     }
   }, [locale]);
 
+  const links = t("links", { returnObjects: true }) || [];
+  const leftLinks = links.slice(0, 5);
+  const rightLinks = links.slice(5);
+
   return (
-    <footer className="footer text-light">
-      <div className="container-fluid">
-        <div className="container footer-top py-5">
-          <div className="row gy-4 justify-content-between">
-            <div className="col-lg-5 col-md-6 footer-about">
-              <a href="/" className="logo d-flex align-items-center text-decoration-none mb-4">
-                <img src="/img/logo1.jpg" alt="Logo" className="me-3" style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  objectFit: 'cover'
-                }}/>
-                <span className="fs-4 fw-bold text-light">Whaleer</span>
+    <footer className="bg-[rgb(0,0,4)] text-neutral-200">
+      <div className="w-full">
+        <div className="mx-auto max-w-screen-xl px-4 py-12">
+          <div className="grid gap-10 lg:grid-cols-4 lg:gap-12">
+            {/* About */}
+            <div className="lg:col-span-2 glightbox group">
+              <a
+                href="/"
+                className="mb-4 inline-flex items-center gap-3 no-underline"
+              >
+                <img
+                  src="/img/logo1.jpg"
+                  alt="Logo"
+                  className="h-10 w-10 rounded-full object-cover ring-2 ring-sky-500/30 group-hover:scale-105 transition-transform duration-300"
+                />
+                <span className="text-xl font-bold text-neutral-200">Whaleer.com</span>
               </a>
-              <div className="footer-contact text-light text-start">
-                <p className="mb-2">{t('addressLine1')}</p>
-                <p className="mb-3">{t('addressLine2')}</p>
+
+              <div className="text-neutral-200 mt-4 text-left">
+                <p className="text-neutral-200 mb-2">{t("addressLine1")}</p>
+                <p className="text-neutral-200 mb-3">{t("addressLine2")}</p>
+
                 <p className="mb-2">
-                  <strong>{t('phoneLabel')}:</strong>
-                  <span className="ms-2">+90 552 285 34 67</span>
+                  <strong>{t("phoneLabel")}:</strong>
+                  <span className="ml-3 text-neutral-200 ">+90 552 285 34 67</span>
                 </p>
                 <p className="mb-3">
-                  <strong>{t('emailLabel')}:</strong>
-                  <span className="ms-2">whaleertrading@gmail.com</span>
+                  <strong>{t("emailLabel")}:</strong>
+                  <span className="ml-3 text-neutral-200 ">whaleertrading@gmail.com</span>
                 </p>
               </div>
-              <div className="social-links d-flex gap-3 mt-4">
-                <a href="https://www.instagram.com/thewhaleer?igsh=cjhieWpsemdvNzY5" className="text-light fs-5">
-                  <i className="bi bi-instagram"></i>
+
+              <div className="mt-4 flex items-center gap-4">
+                <a
+                  href="https://www.instagram.com/thewhaleer?igsh=cjhieWpsemdvNzY5"
+                  aria-label="Instagram"
+                  className="inline-flex text-neutral-100 transition hover:text-sky-600"
+                >
+                  <FaInstagram className="h-6 w-6" />
                 </a>
-                <a href="https://www.linkedin.com/company/106360097/" className="text-light fs-5">
-                  <i className="bi bi-linkedin"></i>
+                <a
+                  href="https://www.linkedin.com/company/106360097/"
+                  aria-label="LinkedIn"
+                  className="inline-flex text-neutral-100 transition hover:text-sky-600"
+                >
+                  <FaLinkedin className="h-6 w-6" />
                 </a>
               </div>
             </div>
 
-            <div className="col-lg-2 col-md-2 footer-links">
-              <h4 className="fw-bold mb-4 text-light">{t('usefulLinksTitle')}</h4>
-              <ul className="list-unstyled">
-                {t('links', { returnObjects: true }).slice(0, 5).map((link, index) => (
-                  <li key={index} className="mb-2 ms-5">
-                    <a href="#" className="text-light text-decoration-none">
+            {/* Useful Links */}
+            <div>
+              <h4 className="my-4 text-lg font-bold text-neutral-200">
+                {t("usefulLinksTitle")}
+              </h4>
+              <ul className="space-y-2">
+                {leftLinks.map((link, i) => (
+                  <li key={i} className="pl-5">
+                    <a
+                      href="#"
+                      className="text-neutral-400 mt-4 transition hover:text-white"
+                    >
                       {link}
                     </a>
                   </li>
@@ -64,18 +88,29 @@ const Footer = ({ locale }) => {
               </ul>
             </div>
 
-            <div className="col-lg-2 col-md-3 footer-links">
-              <h4 className="fw-bold mb-4 text-blue">{t('otherLinksTitle')}</h4>
-              <ul className="list-unstyled">
-                {t('links', { returnObjects: true }).slice(5).map((link, index) => (
-                  <li key={index} className="mb-2 ms-5">
-                    <a href="#" className="text-light text-decoration-none">
+            {/* Other Links */}
+            <div>
+              <h4 className="my-4 text-lg font-bold text-neutral-200">
+                {t("otherLinksTitle")}
+              </h4>
+              <ul className="space-y-2">
+                {rightLinks.map((link, i) => (
+                  <li key={i} className="pl-5">
+                    <a
+                      href="#"
+                      className="text-neutral-400 mt-4 transition hover:text-white"
+                    >
                       {link}
                     </a>
                   </li>
                 ))}
               </ul>
             </div>
+          </div>
+
+          {/* Divider & bottom mini bar */}
+          <div className="mt-10 border-t border-neutral-800 pt-6 text-sm text-neutral-400">
+            <p>© {new Date().getFullYear()} Whaleer. All rights reserved.</p>
           </div>
         </div>
       </div>

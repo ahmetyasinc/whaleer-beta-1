@@ -43,7 +43,7 @@ export default function TradesList({ trades }) {
   };
 
   return (
-    <div className="bg-gray-900 rounded-lg p-4 border-1 border-gray-800">
+    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-white text-lg font-semibold flex items-center gap-2">
           Trade History

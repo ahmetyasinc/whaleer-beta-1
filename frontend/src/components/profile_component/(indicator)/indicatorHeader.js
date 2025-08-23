@@ -55,7 +55,7 @@ const IndicatorHeader = ({locale}) => {
       <button
         onClick={toggleMagnetMode}
         className={`mr-[2px] flex items-center justify-center w-[50px] h-[40px] rounded-md transition-all duration-200 text-[22px] 
-          ${isMagnetMode ? "scale-95 border bg-black " : "text-white bg-gray-950 hover:bg-gray-900"}`}
+          ${isMagnetMode ? "scale-95 border bg-black " : "bg-black border border-gray-800 hover:border-gray-600 transition duration-100 text-gray-200"}`}
       >
         <BiSolidMagnet 
           className={`transition-all duration-150 
@@ -68,7 +68,7 @@ const IndicatorHeader = ({locale}) => {
       <button 
         onClick={toggleRulerMode}
         className={`flex items-center justify-center w-[50px] h-[40px] rounded-md transition-all duration-200 
-          ${isRulerMode ? "bg-blue-500 text-white" : "bg-gray-950 hover:bg-gray-900 text-white"} text-[23px]`}
+          ${isRulerMode ? "bg-gray-950 border-2 border-cyan-700 text-white" : "bg-black border border-gray-800 hover:border-gray-600 transition duration-100 text-gray-200"} text-[23px]`}
       >
         <LuRuler />
       </button>

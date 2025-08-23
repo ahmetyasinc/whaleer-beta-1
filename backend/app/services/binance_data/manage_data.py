@@ -75,7 +75,7 @@ async def binance_websocket(db_pool):
 }
 
     async with websockets.connect(uri, ping_interval=10) as websocket:
-        print("✅ WebSocket bağlantısı kuruldu.")
+        print("✅ WebSocket bağlantısı kuruldu.🖕")
         
         # 🔥 WebSocket'e çoklu abonelik isteği gönder
         await websocket.send(json.dumps(payload))

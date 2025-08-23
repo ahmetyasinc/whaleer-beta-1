@@ -117,7 +117,7 @@ const BotLeaderBoard = () => {
   };
 
   return (
-    <div className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-xl shadow-2xl p-6 h-[calc(100vh-140px)] border-1 border-slate-800 overflow-hidden">
+    <div className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-xl shadow-2xl p-6 h-[calc(100vh-140px)] border border-slate-800 overflow-hidden">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
           Bot Leaderboard
@@ -128,7 +128,7 @@ const BotLeaderBoard = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="appearance-none bg-slate-800 border-1 border-slate-600 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-slate-200 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+              className="appearance-none bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-slate-200 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
             >
               {sortOptions.map((option) => (
                 <option key={option.value} value={option.value} className="bg-slate-800 text-slate-200">
@@ -144,7 +144,7 @@ const BotLeaderBoard = () => {
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value)}
-              className="appearance-none bg-slate-800 border-1 border-slate-600 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-slate-200 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+              className="appearance-none bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-slate-200 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
             >
               {sortOrderOptions.map((option) => (
                 <option key={option.value} value={option.value} className="bg-slate-800 text-slate-200">
@@ -162,7 +162,7 @@ const BotLeaderBoard = () => {
         {sortedBots.map((bot, index) => (
           <div
             key={bot.id}
-            className="bg-slate-800/50 border-1 border-slate-700 rounded-lg py-2 px-3 hover:bg-slate-800/70 hover:border-slate-600 transition-all duration-200 backdrop-blur-sm"
+            className="bg-slate-800/50 border border-slate-700 rounded-lg py-2 px-3 hover:bg-slate-800/70 hover:border-slate-600 transition-all duration-200 backdrop-blur-sm"
           >
             <div className="flex items-center justify-between">
               {/* Left - Bot Info */}

@@ -161,7 +161,7 @@ export default function BotPieChart() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl shadow-lg border-1 border-zinc-700 p-6 text-white w-full h-full flex flex-col">
+    <div className="bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl shadow-lg border border-zinc-700 p-6 text-white w-full h-full flex flex-col">
       <div className="pb-3 mb-4 border-b border-zinc-700">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold">

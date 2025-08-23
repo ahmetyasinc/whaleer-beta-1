@@ -23,7 +23,7 @@ const BotDropdownModal = ({ onClose }) => {
   return (
     <motion.div
       ref={modalRef}
-      className="p-2 scrollbar-hide absolute top-[52px] left-[-80px] w-[600px] bg-[rgb(0,0,1)] border-1 border-gray-900 rounded-b-3xl shadow-xl z-50 max-h-[500px] overflow-y-auto"
+      className="p-2 scrollbar-hide absolute top-[52px] left-[-80px] w-[600px] bg-[rgb(0,0,1)] border border-gray-900 rounded-b-3xl shadow-xl z-50 max-h-[500px] overflow-y-auto"
       initial={{ opacity: 0, y: -50 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}

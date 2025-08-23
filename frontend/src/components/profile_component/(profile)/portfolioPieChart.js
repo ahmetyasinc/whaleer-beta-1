@@ -66,7 +66,7 @@ export default function PortfolioPieChart() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl shadow-lg border-1 border-zinc-700 p-6 text-white w-full h-full flex flex-col">
+    <div className="bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl shadow-lg border border-zinc-700 p-6 text-white w-full h-full flex flex-col">
       {/* Header */}
       <div className="pb-3 mb-4 border-b border-zinc-700">
         <h3 className="text-lg font-semibold text-center">
@@ -231,7 +231,7 @@ export default function PortfolioChart() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl shadow-lg border-1 border-zinc-700 p-6 text-white w-full h-full flex flex-col gap-6">
+    <div className="bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl shadow-lg border border-zinc-700 p-6 text-white w-full h-full flex flex-col gap-6">
      
       <div className="pb-3 mb-4 border-b border-zinc-700">
         <h3 className="text-lg font-semibold text-center">

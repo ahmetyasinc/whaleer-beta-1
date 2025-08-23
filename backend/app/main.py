@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException, Depends
 from app.routes.user import router as user_router
 from app.routes.auth import router as auth_router
 from app.routes.mobile.auth.auth import router as auth_router_mobile
+from app.routes.mobile.bots.bots import protected_router as bot_router_mobile
 from app.routes.profile.indicator.indicator_data import protected_router as indicator_data_router
 from app.routes.profile.indicator.indicator import protected_router as indicator_router
 from app.routes.profile.indicator.indicator_run import protected_router as indicator_run_router
@@ -51,6 +52,7 @@ app.include_router(api_keys_router)
 app.include_router(backtest_router)
 # BOT ROUTES
 app.include_router(bots_router)
+app.include_router(bot_router_mobile)
 # SCAN ROUTES
 app.include_router(scan_router)
 # WHALEER AI ROUTES

@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Header from "./Header";
 import { getTheme } from "../../theme";
 import { SettingsContext } from "../../context/SettingsContext";
+import Footer from "./Footer";
 
 export default function AppLayout({ children }) {
   const { theme } = useContext(SettingsContext);
@@ -27,6 +28,7 @@ export default function AppLayout({ children }) {
       <View style={[styles.content, { backgroundColor: colors.background }]}>
         {children}
       </View>
+      <Footer />
     </View>
   );
 }

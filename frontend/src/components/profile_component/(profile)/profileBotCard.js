@@ -86,7 +86,7 @@ export default function ModernBotList() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col overflow-hidden p-6 bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl border-1 border-gray-700">
+    <div className="w-full h-full flex flex-col overflow-hidden p-6 bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl border border-gray-700">
       {/* Header */}
       <div className="mb-8 border-b border-gray-700 pb-2">
         <div className="flex items-center gap-3 mb-2">
@@ -105,7 +105,7 @@ export default function ModernBotList() {
               {enrichedBots.map((bot, index) => (
                 <div
                   key={bot.id}
-                  className="group relative bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-lg py-3 px-3 border-1 border-slate-700 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-0.5"
+                  className="group relative bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-lg py-3 px-3 border border-slate-700 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-0.5"
                   style={{
                     animationDelay: `${index * 200}ms`,
                     animation: "fadeInUp 1s ease-out forwards",
@@ -202,7 +202,7 @@ export default function ModernBotList() {
                         </button>
                           
                         {menuOpen === bot.id && (
-                          <div className="absolute top-0 right-10 w-36 bg-stone-900 rounded-lg shadow-lg z-10 border-1 border-stone-700">
+                          <div className="absolute top-0 right-10 w-36 bg-stone-900 rounded-lg shadow-lg z-10 border border-stone-700">
                             <button
                               onClick={() => {
                                 setSelectedBotId(bot.id);

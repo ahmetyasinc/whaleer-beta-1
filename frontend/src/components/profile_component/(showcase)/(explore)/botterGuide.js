@@ -12,7 +12,7 @@ const BotterGuide = ({ username }) => {
   const guideText = userData?.description || 'This bot performs automated trading operations using advanced algorithms.';
 
   return (
-    <div className="mt-6 p-4 bg-gray-800 rounded-xl border-1 border-gray-700">
+    <div className="mt-6 p-4 bg-gray-800 rounded-xl border border-gray-700">
       <h2 className="text-white text-base font-semibold mb-2">
         By {username}:
       </h2>

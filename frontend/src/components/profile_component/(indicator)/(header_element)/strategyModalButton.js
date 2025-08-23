@@ -65,7 +65,7 @@ const StrategyButton = ({locale}) => {
     <>
       {/* Buton */}
       <button
-        className="flex items-center justify-center w-[130px] h-[40px] rounded-md transition-all duration-200 bg-gray-950 hover:bg-gray-900 text-white"
+        className="flex items-center justify-center w-[130px] h-[40px] rounded-md bg-black border border-gray-800 hover:border-gray-600 transition duration-100 text-gray-200"
         onClick={() => setIsModalOpen(true)}
       >
         <FaChessBishop className="mr-2 text-[19px]" /> {t("strategies")}

@@ -55,7 +55,7 @@ const StrategyButton = ({ onStrategySelect, selectedStrategy }) => {
   return (
     <>
       <button
-        className="w-full p-[6px] right-1 rounded bg-zinc-800 text-white border-1 border-zinc-500 text-sm"
+        className="w-full p-[6px] right-1 rounded bg-zinc-800 text-white border border-zinc-500 text-sm"
         onClick={() => setIsModalOpen(true)}
       >
         {selectedStrategyObj ? selectedStrategyObj.name : "Choose Strategy"}

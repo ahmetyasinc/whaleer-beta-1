@@ -11,6 +11,10 @@ export default {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      fontFamily: {
+        // Tüm sitede varsayılan
+        sans: ["var(--font-main)", "system-ui", "sans-serif"],
+      },
     },
   },
   plugins: [

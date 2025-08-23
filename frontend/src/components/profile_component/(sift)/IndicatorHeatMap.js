@@ -80,7 +80,7 @@ export default function IndicatorHeatMap() {
           value={coinSearch}
           onChange={(e) => setCoinSearch(e.target.value)}
           placeholder="Search crypto..."
-          className="w-full p-1 rounded bg-zinc-800 text-white border-1 border-zinc-500 text-xs placeholder:text-zinc-400"
+          className="w-full p-1 rounded bg-zinc-800 text-white border border-zinc-500 text-xs placeholder:text-zinc-400"
         />
       </div>
 
@@ -90,7 +90,7 @@ export default function IndicatorHeatMap() {
           <select
             value={selectedCoin}
             onChange={(e) => setSelectedCoin(e.target.value)}
-            className="w-full p-1 rounded bg-zinc-800 text-white border-1 border-zinc-500 text-xs"
+            className="w-full p-1 rounded bg-zinc-800 text-white border border-zinc-500 text-xs"
           >
             <option value="">Select</option>
             {filteredCoins.map((coin) => (
@@ -106,7 +106,7 @@ export default function IndicatorHeatMap() {
           <select
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="w-full p-1 rounded bg-zinc-800 text-white border-1 border-zinc-500 text-xs"
+            className="w-full p-1 rounded bg-zinc-800 text-white border border-zinc-500 text-xs"
           >
             <option value="">Select</option>
             {periods.map((p) => (

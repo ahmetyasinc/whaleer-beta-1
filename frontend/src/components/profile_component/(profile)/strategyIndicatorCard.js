@@ -53,7 +53,7 @@ export default function StrategyIndicatorCard() {
 
   const ListItem = ({ item, index, type }) => (
     <div
-      className="group bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-lg p-3 hover:bg-zinc-900 transition-all duration-200 border-1 border-zinc-700 hover:border-zinc-600 relative"
+      className="group bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-lg p-3 hover:bg-zinc-900 transition-all duration-200 border border-zinc-700 hover:border-zinc-600 relative"
       style={
         initialLoad
           ? {
@@ -80,7 +80,7 @@ export default function StrategyIndicatorCard() {
           </button>
 
           {menuOpenId === item.id && (
-            <div className="absolute top-0 right-8 w-32 bg-gray-900/95 backdrop-blur-sm rounded-lg shadow-xl border-1 border-gray-700 z-20 overflow-hidden">
+            <div className="absolute top-0 right-8 w-32 bg-gray-900/95 backdrop-blur-sm rounded-lg shadow-xl border border-gray-700 z-20 overflow-hidden">
               <button
                 onClick={() => handleInspect(item)}
                 className="flex items-center gap-2 w-full px-3 py-2 text-xs text-yellow-400 hover:bg-gray-800/80 transition-colors"
@@ -107,7 +107,7 @@ export default function StrategyIndicatorCard() {
   return (
     <div className="w-full h-full flex gap-3 overflow-hidden">
       {/* Strategies Card */}
-      <div className="flex-1 bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl border-1 border-zinc-700 shadow-xl flex flex-col max-h-[calc(100vh-110px)]">
+      <div className="flex-1 bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl border border-zinc-700 shadow-xl flex flex-col max-h-[calc(100vh-110px)]">
         <div className="px-4 py-3 border-b border-zinc-700 bg-gradient-to-r from-blue-900/20 to-blue-800/10">
           <div className="flex items-center gap-3">
             <div className="w-4 h-4 bg-blue-400 rounded-full"></div>
@@ -137,7 +137,7 @@ export default function StrategyIndicatorCard() {
       </div>
 
       {/* Indicators Card */}
-      <div className="flex-1 bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl border-1 border-zinc-700 shadow-xl flex flex-col max-h-[calc(100vh-110px)]">
+      <div className="flex-1 bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl border border-zinc-700 shadow-xl flex flex-col max-h-[calc(100vh-110px)]">
         <div className="px-4 py-3 border-b border-zinc-700 bg-gradient-to-r from-purple-900/20 to-purple-800/10">
           <div className="flex items-center gap-3">
             <div className="w-4 h-4 bg-purple-400 rounded-full"></div>

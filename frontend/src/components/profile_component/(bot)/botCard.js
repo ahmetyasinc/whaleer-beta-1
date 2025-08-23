@@ -96,7 +96,7 @@ export const BotCard = ({ bot, column }) => {
             <div className="h-44 overflow-y-auto mr-4 scrollbar-hide">
               {bot.cryptos?.length > 0 ? (
                 bot.cryptos.map((coin) => (
-                  <div key={coin} className="w-full text-center text-[14px] bg-gradient-to-r from-[rgb(14,20,35)] to-neutral-800 border-1 border-slate-700 px-2 py-1 rounded text-white mb-1">
+                  <div key={coin} className="w-full text-center text-[14px] bg-gradient-to-r from-[rgb(14,20,35)] to-neutral-800 border border-slate-700 px-2 py-1 rounded text-white mb-1">
                     {coin}
                   </div>
                 ))
@@ -141,7 +141,7 @@ export const BotCard = ({ bot, column }) => {
             <label className="absolute flex items-center gap-3 mb-[152px] ml-[7px] z-10 pointer-events-none scale-x-[-1]">
               <SpinningWheel isActive={bot.isActive} />
             </label>
-            <label className="flex items-center gap-3 z-20">
+            <label className="flex items-center gap-3 z-50">
               <RunBotToggle type="checkbox" checked={bot.isActive} onChange={() => toggleBotActive(bot.id)} />
             </label>
           </div>
@@ -153,7 +153,7 @@ export const BotCard = ({ bot, column }) => {
             <div className="h-44 overflow-y-auto mr-4 scrollbar-hide">
               {bot.cryptos?.length > 0 ? (
                 bot.cryptos.map((coin) => (
-                  <div key={coin} className="w-full text-center text-[14px] bg-gradient-to-r from-[rgb(14,20,35)] to-neutral-800 border-1 border-slate-700 px-2 py-1 rounded text-white mb-1">
+                  <div key={coin} className="w-full text-center text-[14px] bg-gradient-to-r from-[rgb(14,20,35)] to-neutral-800 border border-slate-700 px-2 py-1 rounded text-white mb-1">
                     {coin}
                   </div>
                 ))

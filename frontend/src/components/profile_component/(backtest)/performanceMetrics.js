@@ -111,7 +111,7 @@ export default function PerformanceMetrics({ performance }) {
   ];
 
   return (
-    <div className="bg-gray-900 rounded-xl p-4 shadow-md border-1 border-gray-800">
+    <div className="bg-gray-900 rounded-xl p-4 shadow-md border border-gray-800">
       <h3 className="text-white text-base font-semibold mb-4 flex items-center gap-2">
         Performance Metrics
       </h3>

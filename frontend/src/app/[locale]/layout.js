@@ -1,19 +1,17 @@
-import { Geist, Geist_Mono } from "next/font/google";
 import "@/styles/globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import NetworkStatus from "@/components/NetworkStatus";
 import "react-toastify/dist/ReactToastify.css";
-
-import "@/styles/vendor/bootstrap/css/bootstrap.min.css";
-import "@/styles/vendor/bootstrap-icons/bootstrap-icons.css";
-import "@/styles/vendor/glightbox/css/glightbox.min.css";
-import "@/styles/vendor/swiper/swiper-bundle.min.css";
-import "@/styles/css/main.css";
-import Script from "next/script";
-import "@/styles/css/scroll.css";
-
-// ✅ i18n import
+import { Work_Sans } from "next/font/google";   // ✅ Work Sans      Bunlar da güzel denenir   --->   (Nunito,Plus Jakarta Sans, DM Sans) 
 import "@/i18n";
+
+const mainFont = Work_Sans({
+  subsets: ["latin-ext"],   // TR için
+  display: "swap",
+  weight: "variable",       // Work Sans değişken (100–900)
+  variable: "--font-main",
+});
+
 
 // ✅ Language initializer
 
@@ -28,7 +26,7 @@ export default async function RootLayout(props) {
 
   return (
     <html lang={locale}>
-      <body>
+      <body className={`${mainFont.variable} font-sans`}>
         <NetworkStatus />
         <AuthProvider>
           <main className="min-h-screen">{children}</main>

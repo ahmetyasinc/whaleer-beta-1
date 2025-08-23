@@ -40,7 +40,7 @@ export default function WhaleerRadar() {
     .slice(0, 5);
 
   const CoinCard = ({ coin }) => (
-    <div className="flex justify-between items-center p-2 bg-zinc-800 rounded mb-2 border-1 border-zinc-700">
+    <div className="flex justify-between items-center p-2 bg-zinc-800 rounded mb-2 border border-zinc-700">
       <div className="flex items-center">
         <div className="mr-2 bg-zinc-700 rounded-full w-6 h-6 flex items-center justify-center text-xs">
           {coin.symbol.charAt(0)}
@@ -68,7 +68,7 @@ export default function WhaleerRadar() {
           value={coinSearch}
           onChange={(e) => setCoinSearch(e.target.value)}
           placeholder="Search crypto..."
-          className="w-full p-1 rounded bg-zinc-800 text-white border-1 border-zinc-500 text-xs placeholder:text-zinc-400"
+          className="w-full p-1 rounded bg-zinc-800 text-white border border-zinc-500 text-xs placeholder:text-zinc-400"
         />
       </div>
 
@@ -78,7 +78,7 @@ export default function WhaleerRadar() {
           <select
             value={selectedTimeRange}
             onChange={(e) => setSelectedTimeRange(e.target.value)}
-            className="w-full p-1 rounded bg-zinc-800 text-white border-1 border-zinc-500 text-xs"
+            className="w-full p-1 rounded bg-zinc-800 text-white border border-zinc-500 text-xs"
           >
             {timeRanges.map((range) => (
               <option key={range} value={range}>

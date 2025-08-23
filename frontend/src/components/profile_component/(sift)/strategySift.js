@@ -109,7 +109,7 @@ export default function StrategySift() {
           {coins.map((coin, index) => (
             <div 
               key={index} 
-              className="flex justify-between items-center p-2 mb-1 bg-zinc-800 rounded border-1 border-zinc-700 hover:bg-zinc-700 cursor-pointer"
+              className="flex justify-between items-center p-2 mb-1 bg-zinc-800 rounded border border-zinc-700 hover:bg-zinc-700 cursor-pointer"
             >
               <div className="flex items-center">
                 <div className={`w-2 h-2 rounded-full ${isLong ? 'bg-green-500' : 'bg-red-500'} mr-2`}></div>
@@ -146,7 +146,7 @@ export default function StrategySift() {
           <select
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="w-full p-[6px] rounded bg-zinc-800 text-white border-1 border-zinc-500 text-sm"
+            className="w-full p-[6px] rounded bg-zinc-800 text-white border border-zinc-500 text-sm"
           >
             {periods.map((p) => (
               <option key={p} value={p}>{p}</option>
@@ -159,7 +159,7 @@ export default function StrategySift() {
           <select
             value={selectedOffset}
             onChange={(e) => setSelectedOffset(e.target.value)}
-            className="w-full p-[6px] rounded bg-zinc-800 text-white border-1 border-zinc-500 text-sm"
+            className="w-full p-[6px] rounded bg-zinc-800 text-white border border-zinc-500 text-sm"
           >
             {candleOffsets.map((offset) => (
               <option key={offset} value={offset}>{offset}</option>
@@ -170,7 +170,7 @@ export default function StrategySift() {
         <div className="flex items-end">
           <button
             onClick={() => setIsCoinModalOpen(true)}
-            className="w-full bg-zinc-800 border-1 border-gray-500 text-white pt-[7px] pb-[8px] rounded text-sm"
+            className="w-full bg-zinc-800 border border-gray-500 text-white pt-[7px] pb-[8px] rounded text-sm"
           >
             Add Coin
           </button>

@@ -65,7 +65,7 @@ export default function Portfolio() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl shadow-lg border-1 border-zinc-700 overflow-hidden text-white flex flex-col h-full">
+    <div className="bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl shadow-lg border border-zinc-700 overflow-hidden text-white flex flex-col h-full">
       {/* Header - Fixed */}
       <div className="bg-gradient-to-r from-cyan-800 to-purple-800 px-4 py-3 flex-shrink-0">
         <div className="flex justify-between items-center">

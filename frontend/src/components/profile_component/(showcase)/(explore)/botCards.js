@@ -39,7 +39,7 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
 
   return (
     <motion.div
-      className="bg-gray-800 rounded-2xl shadow-2xl border-1 border-gray-700"
+      className="bg-gray-800 rounded-2xl shadow-2xl border border-gray-700"
       initial={{ y: -50, opacity: 0 }}
       animate={{ y: isAnimating ? -20 : 0, opacity: isAnimating ? 0.8 : 1 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}

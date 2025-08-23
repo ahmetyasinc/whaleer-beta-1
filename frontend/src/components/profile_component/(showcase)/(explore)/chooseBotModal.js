@@ -23,7 +23,7 @@ export default function ChooseBotModal({ open, onClose, onSelectBot }) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4">
-      <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 text-white rounded-xl shadow-2xl w-full max-w-2xl relative border-1 border-zinc-800 flex flex-col"
+      <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 text-white rounded-xl shadow-2xl w-full max-w-2xl relative border border-zinc-800 flex flex-col"
            style={{ height: 'calc(100vh - 120px)', maxHeight: 'calc(100vh - 120px)' }}>
         {/* Close Button */}
         <button
@@ -54,7 +54,7 @@ export default function ChooseBotModal({ open, onClose, onSelectBot }) {
                 {bots.map((bot) => (
                   <div
                     key={bot.id}
-                    className="bg-zinc-800/50 border-1 border-zinc-700 rounded-md px-4 py-4 hover:border-cyan-400/50 transition-all duration-200 group flex items-center gap-4"
+                    className="bg-zinc-800/50 border border-zinc-700 rounded-md px-4 py-4 hover:border-cyan-400/50 transition-all duration-200 group flex items-center gap-4"
                   >
                     <div className="flex-1 flex flex-col min-w-0">
                       {/* Bot Name & Status Dot */}

@@ -23,7 +23,7 @@ export default function SellRentModal({ open, onClose }) {
     <>
     <div className="fixed inset-0 z-[99] flex justify-center items-start bg-black/70 py-[60px]">
       <div
-        className="bg-gradient-to-br from-zinc-900 to-zinc-950 text-white rounded-xl shadow-2xl p-8 w-[95vw] max-w-2xl relative border-1 border-zinc-800
+        className="bg-gradient-to-br from-zinc-900 to-zinc-950 text-white rounded-xl shadow-2xl p-8 w-[95vw] max-w-2xl relative border border-zinc-800
           max-h-[calc(100vh-120px)] overflow-y-auto"
       >
           {/* Close Button */}
@@ -46,7 +46,7 @@ export default function SellRentModal({ open, onClose }) {
             <div className="flex gap-3">
               <div className="flex-1">
                 {selectedBot ? (
-                  <div className="bg-zinc-800/50 border-1 border-zinc-700 rounded-lg p-3 flex items-center justify-between">
+                  <div className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-3 flex items-center justify-between">
                     <div>
                       <div className="font-medium text-white">{selectedBot.name}</div>
                       <div className="text-sm text-gray-400">
@@ -58,7 +58,7 @@ export default function SellRentModal({ open, onClose }) {
                     }`} />
                   </div>
                 ) : (
-                  <div className="bg-zinc-800/50 border-1 border-zinc-700 rounded-lg p-3 text-gray-400 text-center">
+                  <div className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-3 text-gray-400 text-center">
                     No bot selected yet
                   </div>
                 )}
@@ -112,7 +112,7 @@ export default function SellRentModal({ open, onClose }) {
                     type="number"
                     min={0}
                     placeholder="Enter selling price"
-                    className="w-full p-2.5 rounded-lg bg-zinc-800/50 border-1 border-gray-700 hover:border-cyan-400 focus:border-cyan-400 focus:outline-none transition-all duration-200 text-sm placeholder-gray-400"
+                    className="w-full p-2.5 rounded-lg bg-zinc-800/50 border border-gray-700 hover:border-cyan-400 focus:border-cyan-400 focus:outline-none transition-all duration-200 text-sm placeholder-gray-400"
                     value={sellPrice}
                     onChange={e => setSellPrice(e.target.value)}
                   />
@@ -153,7 +153,7 @@ export default function SellRentModal({ open, onClose }) {
                     type="number"
                     min={0}
                     placeholder="Enter rental price"
-                    className="w-full p-2.5 rounded-lg bg-zinc-800/50 border-1 border-gray-700 hover:border-emerald-400 focus:border-emerald-400 focus:outline-none transition-all duration-200 text-sm placeholder-gray-400"
+                    className="w-full p-2.5 rounded-lg bg-zinc-800/50 border border-gray-700 hover:border-emerald-400 focus:border-emerald-400 focus:outline-none transition-all duration-200 text-sm placeholder-gray-400"
                     value={rentPrice}
                     onChange={e => setRentPrice(e.target.value)}
                   />
@@ -171,7 +171,7 @@ export default function SellRentModal({ open, onClose }) {
               Listing Description
             </label>
             <textarea
-              className="w-full min-h-[200px] max-h-[200px] bg-stone-900 border-1 border-gray-700 rounded-sm p-3 text-sm resize-none placeholder-gray-400"
+              className="w-full min-h-[200px] max-h-[200px] bg-stone-900 border border-gray-700 rounded-sm p-3 text-sm resize-none placeholder-gray-400"
               placeholder="Describe your bot’s features, use cases, and other important details..."
               value={description}
               onChange={e => setDescription(e.target.value)}

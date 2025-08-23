@@ -32,7 +32,7 @@ const CriticalConfirmModal = ({ isOpen, onClose, onConfirm }) => {
         <div className="bg-gradient-to-br from-zinc-900 via-zinc-950 to-black 
                         text-white rounded-2xl shadow-2xl shadow-red-500/20 
                         p-8 w-full max-w-md relative animate-fade-in 
-                        border-1 border-zinc-800 ring-1 ring-red-500/20">
+                        border border-zinc-800 ring-1 ring-red-500/20">
           
           {/* Glow overlay */}
           <div className="absolute inset-0 rounded-2xl 
@@ -54,7 +54,7 @@ const CriticalConfirmModal = ({ isOpen, onClose, onConfirm }) => {
             </div>
 
             {/* Content */}
-            <div className="mb-8 p-4 rounded-xl bg-red-900/20 border-1 border-red-700/40">
+            <div className="mb-8 p-4 rounded-xl bg-red-900/20 border border-red-700/40">
               <p className="text-sm leading-relaxed text-zinc-200">
                 <strong className="text-red-400">Tüm botlarınız durdurulacak</strong> ve{" "}
                 <strong className="text-red-400">aktif pozisyonlar kapatılacaktır</strong>. 

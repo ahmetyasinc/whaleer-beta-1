@@ -115,10 +115,10 @@ export default function ProfileHeader() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`px-4 py-[6px] rounded-2xl hover:scale-[1.01] transition font-medium border-1 border-gray-700 text-white ${
+                className={`px-4 py-[6px] rounded-xl transition font-medium border border-gray-800 hover:border-gray-600 text-gray-200 ${
                   pathname === item.href
-                    ? "bg-black hover:bg-gray-950 shadow-xl shadow-[rgba(97,255,242,0.14)]"
-                    : "bg-black hover:bg-gray-950"
+                    ? "bg-black shadow-xl shadow-[rgba(97,255,242,0.05)]"
+                    : "bg-black"
                 }`}
               >
                 {item.name}

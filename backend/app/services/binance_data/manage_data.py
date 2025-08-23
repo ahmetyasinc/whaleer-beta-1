@@ -77,6 +77,10 @@ ALL_STREAMS = [
         "adausdt@kline_1d",   # 1 gün
         "adausdt@kline_1w",   # 1 hafta
 
+<<<<<<< HEAD
+    async with websockets.connect(uri, ping_interval=10) as websocket:
+        print("✅ WebSocket bağlantısı kuruldu.🖕")
+=======
         "xrpusdt@kline_1m",   # 1 dakika
         "xrpusdt@kline_3m",   # 3 dakika
         "xrpusdt@kline_5m",   # 5 dakika
@@ -87,6 +91,7 @@ ALL_STREAMS = [
         "xrpusdt@kline_4h",   # 4 saat
         "xrpusdt@kline_1d",   # 1 gün
         "xrpusdt@kline_1w",   # 1 hafta
+>>>>>>> cdacc9b0ee71204b521cd2099fc278dfafb888b8
         
         #"dogeusdt@kline_1m",   # 1 dakika
         #"dogeusdt@kline_3m",   # 3 dakika

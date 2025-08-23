@@ -51,7 +51,7 @@ const PeriodDropdown = ({locale}) => {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        className="w-[106px] flex items-center bg-gray-950 hover:bg-gray-900 pl-3 py-2 rounded-md transition"
+        className="w-[106px] flex items-center bg-black border border-gray-800 hover:border-gray-600 transition duration-100 text-gray-200 pl-3 py-2 rounded-md"
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
       >
         {selectedLabel}

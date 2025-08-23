@@ -118,7 +118,7 @@ const CodePanel = () => {
 
   return (
     <div className="bg-black text-white rounded-md w-full h-full p-2 shadow-lg relative flex flex-col">
-      <div className="flex justify-start drag-handle mt-0 mr-8 h-5 ">
+      <div className="flex justify-start drag-handle cursor-grab mt-0 mr-8 h-5 ">
         <h2 className="flex justify-start drag-handle text-xs font-bold mb-2">
           {editingIndicator ? "Edit Indicator" : "Add New Indicator"}
         </h2>

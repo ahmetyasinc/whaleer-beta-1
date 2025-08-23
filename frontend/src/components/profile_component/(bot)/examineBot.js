@@ -52,8 +52,8 @@ export default function ExamineBot({
               <div
               className={`pl-2 flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-lg shadow-lg transition-all duration-300 ${
                 bot_profit >= 0
-                  ? "bg-gradient-to-br from-green-500/20 to-green-700/30 text-green-300 border-1 border-green-500/40"
-                  : "bg-gradient-to-br from-red-500/20 to-red-700/30 text-red-300 border-1 border-red-500/40"
+                  ? "bg-gradient-to-br from-green-500/20 to-green-700/30 text-green-300 border border-green-500/40"
+                  : "bg-gradient-to-br from-red-500/20 to-red-700/30 text-red-300 border border-red-500/40"
               }`}
             >
               {bot_profit >= 0 ? (
@@ -66,7 +66,7 @@ export default function ExamineBot({
               </span>
             </div>
               {/* Value Box */}
-              <div className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg bg-gray-800 text-indigo-300 border-1 border-indigo-400 shadow-sm">
+              <div className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg bg-gray-800 text-indigo-300 border border-indigo-400 shadow-sm">
                 <span className="tracking-wider">
                   Total Value: {bot_current_value.toFixed(2)} $
                 </span>
@@ -166,7 +166,7 @@ export default function ExamineBot({
               </p>
             ) : (
               open_positions.map((pos, i) => {
-                const profitColor = "from-zinc-900 border-1 border-gray-700";
+                const profitColor = "from-zinc-900 border border-gray-700";
 
                 return (
                   <div
@@ -231,7 +231,7 @@ export default function ExamineBot({
               </p>
             ) : (
               holdings.map((h, i) => {
-                const profitColor = "from-zinc-900 border-1 border-gray-700";
+                const profitColor = "from-zinc-900 border border-gray-700";
 
                 return (
                   <div

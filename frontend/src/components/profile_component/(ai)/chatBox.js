@@ -186,7 +186,7 @@ const ChatBox = () => {
 
             {isLoading && (
               <div className="flex justify-start pl-32">
-                <div className="bg-neutral-900 text-neutral-100 border-1 border-neutral-700 rounded-2xl rounded-bl-md px-4 py-3 max-w-xs lg:max-w-md xl:max-w-lg shadow-lg">
+                <div className="bg-neutral-900 text-neutral-100  border border-neutral-700 rounded-2xl rounded-bl-md px-4 py-3 max-w-xs lg:max-w-md xl:max-w-lg shadow-lg">
                   <div className="flex items-center space-x-2">
                     <GiCirclingFish className="text-sky-400 text-2xl animate-spin" />
                     <span className="text-sm text-neutral-400">Yanıt bekleniyor...</span>
@@ -209,7 +209,7 @@ const ChatBox = () => {
                 onChange={handleInputChange}
                 onKeyPress={handleKeyPress}
                 placeholder="Yanıtınızı buraya yazın..."
-                className="scrollbar-hide w-full resize-none bg-neutral-900 border-1 border-neutral-700 text-white placeholder-neutral-400 rounded-2xl px-4 py-3 pr-12 focus:outline-none hover:ring-1 hover:ring-[#1a2324] max-h-32 min-h-12 shadow-inner"
+                className="scrollbar-hide w-full resize-none bg-neutral-900 border border-neutral-700 text-white placeholder-neutral-400 rounded-2xl px-4 py-3 pr-12 focus:outline-none hover:ring-1 hover:ring-[#1a2324] max-h-32 min-h-12 shadow-inner"
                 rows={1}
                 disabled={isLoading || isTyping}
               />
@@ -266,7 +266,7 @@ const WelcomeMessage = ({ quickQuestions, handleQuickQuestion, isLoading, isComp
             className={`px-6 py-3 rounded-xl shadow-lg transition-all duration-200 ${
               isLoading
                 ? 'bg-neutral-700 border border-neutral-600 text-neutral-500 cursor-not-allowed'
-                : 'bg-neutral-900 border-1 border-neutral-600 hover:border-neutral-500 text-neutral-300 transform'
+                : 'bg-neutral-900 border border-neutral-600 hover:border-neutral-500 text-neutral-300 transform'
             }`}
           >
             {question}
@@ -503,7 +503,7 @@ const ChatBox = () => {
                           <button
                             key={code.id}
                             onClick={() => handleCodeButtonClick(globalIndex)}
-                            className="flex items-center space-x-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-3 py-2 rounded-lg transition-colors text-sm border-1 border-neutral-600 hover:border-neutral-500"
+                            className="flex items-center space-x-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-3 py-2 rounded-lg transition-colors text-sm border border-neutral-600 hover:border-neutral-500"
                           >
                             <HiCode className="text-blue-400" />
                             <span>{code.title}</span>
@@ -521,7 +521,7 @@ const ChatBox = () => {
 
             {isLoading && (
               <div className="flex justify-start pl-32">
-                <div className="bg-neutral-900 text-neutral-100 border-1 border-neutral-700 rounded-2xl rounded-bl-md px-4 py-3 max-w-xs lg:max-w-md xl:max-w-lg shadow-lg">
+                <div className="bg-neutral-900 text-neutral-100 border border-neutral-700 rounded-2xl rounded-bl-md px-4 py-3 max-w-xs lg:max-w-md xl:max-w-lg shadow-lg">
                   <div className="flex items-center space-x-2">
                     <GiCirclingFish className="text-sky-400 text-2xl animate-spin" />
                     <span className="text-sm text-neutral-400">Yanıt bekleniyor...</span>
@@ -544,7 +544,7 @@ const ChatBox = () => {
                 onChange={handleInputChange}
                 onKeyPress={handleKeyPress}
                 placeholder="Yanıtınızı buraya yazın..."
-                className="scrollbar-hide w-full resize-none bg-neutral-900 border-1 border-neutral-700 text-white placeholder-neutral-400 rounded-2xl px-4 py-3 pr-12 focus:outline-none hover:ring-1 hover:ring-[#1a2324] max-h-32 min-h-12 shadow-inner"
+                className="scrollbar-hide w-full resize-none bg-neutral-900 border border-neutral-700 text-white placeholder-neutral-400 rounded-2xl px-4 py-3 pr-12 focus:outline-none hover:ring-1 hover:ring-[#1a2324] max-h-32 min-h-12 shadow-inner"
                 rows={1}
                 disabled={isLoading || isTyping}
               />
@@ -603,8 +603,8 @@ const WelcomeMessage = ({ quickQuestions, handleQuickQuestion, isLoading }) => (
             disabled={isLoading}
             className={`px-6 py-3 rounded-xl shadow-lg transition-all duration-200 ${
               isLoading
-                ? 'bg-neutral-700 border-1 border-neutral-600 text-neutral-500 cursor-not-allowed'
-                : 'bg-neutral-900 border-1 border-neutral-600 hover:border-neutral-500 text-neutral-300 transform'
+                ? 'bg-neutral-700 border border-neutral-600 text-neutral-500 cursor-not-allowed'
+                : 'bg-neutral-900 border border-neutral-600 hover:border-neutral-500 text-neutral-300 transform'
             }`}
           >
             {question}

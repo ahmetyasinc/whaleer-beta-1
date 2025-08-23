@@ -45,7 +45,7 @@ export default function BacktestHeader() {
         <h1></h1>
         <div className="flex gap-4">
           <button
-            className="bg-black border-1 border-gray-700 text-white px-4 h-[35px] rounded-lg hover:border-gray-600 transition flex items-center gap-2"
+            className="bg-black border border-gray-800 text-white px-4 h-[35px] rounded-lg hover:border-gray-600 transition flex items-center gap-2"
             onClick={() => setIsOpen(true)}
           >
             <FaPlus className="w-3 h-3 mt-[2px]" />

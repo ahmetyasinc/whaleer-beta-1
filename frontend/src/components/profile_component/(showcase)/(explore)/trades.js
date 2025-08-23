@@ -5,7 +5,7 @@ import { BiTransfer } from 'react-icons/bi';
 
 const Trades = ({ trades = [], positions = [] }) => {
   return (
-    <div className="mb-6 bg-gray-800 p-6 border-1 border-gray-700 rounded-xl">
+    <div className="mb-6 bg-gray-800 p-6 border border-gray-700 rounded-xl">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
         {/* Trade History */}

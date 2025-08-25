@@ -209,7 +209,6 @@ async def get_profile_all_datas(
                     "name": getattr(b, "name", None),
                     "api_id": b.api_id,
                     "created_at": getattr(b, "created_at", None),
-                    "status": getattr(b, "status", None),
 
                     # yeni alanlar:
                     "active": active,

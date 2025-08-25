@@ -1,99 +1,64 @@
 import { create } from "zustand";
-import axios from "axios";
 
-const useStrategyStore = create((set, get) => ({
-    tecnic: [],
-    community: [],
-    strategies: [], // Kaydedilen stratejiler listesi
-    all_strategies: [], // Tüm stratejiler listesi
-    favorites: [], 
-    isVisible: {}, 
+const useStrategyStore = create((set) => ({
+  tecnic: [],
+  community: [],
+  strategies: [],
+  all_strategies: [],
+  favorites: [],
+  isVisible: {},
 
-    setCommunityStrategies: (newStrategies) => set((state) => {
-        const newFavorites = newStrategies.filter((strategy) => strategy.favorite);
-        const mergedFavorites = [...state.favorites, ...newFavorites];
-        const uniqueFavorites = Array.from(new Map(mergedFavorites.map((item) => [item.name, item])).values());
-        return { community: newStrategies, favorites: uniqueFavorites };
-    }),
+  setCommunityStrategies: (newStrategies) => set((state) => {
+    const newFavorites = newStrategies.filter((strategy) => strategy.favorite);
+    const mergedFavorites = [...state.favorites, ...newFavorites];
+    const uniqueFavorites = Array.from(new Map(mergedFavorites.map((item) => [item.name, item])).values());
+    const all_strategies = [...state.tecnic, ...state.strategies, ...newStrategies];
+    return { community: newStrategies, favorites: uniqueFavorites, all_strategies };
+  }),
 
-    setTecnicStrategies: (newStrategies) => set((state) => {
-        const newFavorites = newStrategies.filter((strategy) => strategy.favorite);
-        const mergedFavorites = [...state.favorites, ...newFavorites];
-        const uniqueFavorites = Array.from(new Map(mergedFavorites.map((item) => [item.name, item])).values());
-        return { tecnic: newStrategies, favorites: uniqueFavorites };
-    }),
+  setTecnicStrategies: (newStrategies) => set((state) => {
+    const newFavorites = newStrategies.filter((strategy) => strategy.favorite);
+    const mergedFavorites = [...state.favorites, ...newFavorites];
+    const uniqueFavorites = Array.from(new Map(mergedFavorites.map((item) => [item.name, item])).values());
+    const all_strategies = [...newStrategies, ...state.strategies, ...state.community];
+    return { tecnic: newStrategies, favorites: uniqueFavorites, all_strategies };
+  }),
 
-    setPersonalStrategies: (newStrategies) => set((state) => {
-        const newFavorites = newStrategies.filter((strategy) => strategy.favorite);
-        const mergedFavorites = [...state.favorites, ...newFavorites];
-        const uniqueFavorites = Array.from(new Map(mergedFavorites.map((item) => [item.name, item])).values());
-        return { strategies: newStrategies, favorites: uniqueFavorites };
-    }),
+  setPersonalStrategies: (newStrategies) => set((state) => {
+    const newFavorites = newStrategies.filter((strategy) => strategy.favorite);
+    const mergedFavorites = [...state.favorites, ...newFavorites];
+    const uniqueFavorites = Array.from(new Map(mergedFavorites.map((item) => [item.name, item])).values());
+    const all_strategies = [...state.tecnic, ...newStrategies, ...state.community];
+    return { strategies: newStrategies, favorites: uniqueFavorites, all_strategies };
+  }),
 
-    addStrategy: (strategy) => set((state) => {
-        const updatedStrategies = [...state.strategies, strategy];
-        const isFavorite = strategy.favorite;
-        const updatedFavorites = isFavorite
-            ? Array.from(new Map([...state.favorites, strategy].map((item) => [item.id, item])).values())
-            : state.favorites;
-        return { strategies: updatedStrategies, favorites: updatedFavorites };
-    }),
+  addStrategy: (strategy) => set((state) => {
+    const updatedStrategies = [...state.strategies, strategy];
+    const isFavorite = strategy.favorite;
+    const updatedFavorites = isFavorite
+      ? Array.from(new Map([...state.favorites, strategy].map((item) => [item.id, item])).values())
+      : state.favorites;
+    const all_strategies = [...state.tecnic, ...updatedStrategies, ...state.community];
+    return { strategies: updatedStrategies, favorites: updatedFavorites, all_strategies };
+  }),
 
-    deleteStrategy: (id) => set((state) => ({
-        strategies: state.strategies.filter((strategy) => strategy.id !== id)
-    })),
+  deleteStrategy: (id) => set((state) => ({
+    strategies: state.strategies.filter((strategy) => strategy.id !== id),
+    all_strategies: [...state.tecnic, ...state.strategies.filter((s)=>s.id!==id), ...state.community]
+  })),
 
-    toggleFavorite: (strategy) => set((state) => {
-        const isAlreadyFavorite = state.favorites.some((fav) => fav.id === strategy.id);
-        return {
-            favorites: isAlreadyFavorite
-                ? state.favorites.filter((fav) => fav.id !== strategy.id)
-                : [...state.favorites, strategy]
-        };
-    }),
+  toggleFavorite: (strategy) => set((state) => {
+    const isAlreadyFavorite = state.favorites.some((fav) => fav.id === strategy.id);
+    return {
+      favorites: isAlreadyFavorite
+        ? state.favorites.filter((fav) => fav.id !== strategy.id)
+        : [...state.favorites, strategy]
+    };
+  }),
 
-    toggleStrategy: (strategyId) => set((state) => ({
-        isVisible: {
-            ...state.isVisible,
-            [strategyId]: !state.isVisible[strategyId]
-        }
-    })),
-
-    // ✅ Backend'den veri çeken fonksiyon
-    fetchStrategies: async () => {
-        if (get().strategies.length > 0) return; // zaten yüklenmişse tekrar çağırma
-
-        try {
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/all-strategies/`, {
-                withCredentials: true,
-            });
-
-            console.log("Backend'den stratejiler:", response.data);
-
-            const tecnic_strategies = response.data.tecnic_strategies || [];
-            const personal_strategies = response.data.personal_strategies || [];
-            const community_strategies = response.data.community_strategies || [];
-
-            set((state) => ({
-                tecnic: tecnic_strategies,
-                strategies: personal_strategies,
-                community: community_strategies,
-                all_strategies: [
-                    ...tecnic_strategies,
-                    ...personal_strategies,
-                    ...community_strategies,
-                ],
-                favorites: [
-                    ...state.favorites,
-                    ...tecnic_strategies.filter((s) => s.favorite),
-                    ...personal_strategies.filter((s) => s.favorite),
-                    ...community_strategies.filter((s) => s.favorite),
-                ],
-            }));
-        } catch (error) {
-            console.error("Strateji verisi çekme hatası:", error);
-        }
-    },
+  toggleStrategy: (strategyId) => set((state) => ({
+    isVisible: { ...state.isVisible, [strategyId]: !state.isVisible[strategyId] }
+  })),
 }));
 
 export default useStrategyStore;

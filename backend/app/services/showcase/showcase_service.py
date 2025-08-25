@@ -26,10 +26,10 @@ class ShowcaseService:
                 (float(bot.current_usd_value or 0) - float(bot.initial_usd_value or 0)) / float(bot.initial_usd_value)
                 if bot.initial_usd_value else 0.0
             )
-    
             bot_summary = BotSummary(
                 bot_id=bot.id,
                 name=bot.name,
+                bot_type=bot.bot_type,
                 creator=user_summary.display_name,
                 profitRate=round(profit_rate, 4),
                 startDate=bot.created_at.strftime("%Y-%m-%d %H:%M"),
@@ -57,7 +57,6 @@ class ShowcaseService:
                 trades=trades,
                 positions=positions,
             )
-    
             showcase_results.append(
                 ShowcaseBotResponse(
                     user=user_summary,
@@ -66,7 +65,6 @@ class ShowcaseService:
                     tradingData=[]  # Şu an boş geliyor
                 )
             )
-    
         return showcase_results
 
 

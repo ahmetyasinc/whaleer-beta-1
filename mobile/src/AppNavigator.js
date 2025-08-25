@@ -15,6 +15,7 @@ import SignUpScreen from "./screens/Auth/SıgnUpScreen";
 import ProfileScreen from "./screens/Profile/ProfileScreen";
 import BotScreen from "./screens/Bots/BotScreen";
 import ShowcaseScreen from "./screens/Showcase/ShowcaseScreen";
+import ShowcaseFiltersScreen from "./screens/Showcase/ShowcaseFiltersScreen";
 import MarketScreen from "./screens/Market/MarketScreen";
 import SettingsScreen from "./screens/Settings/SettingsScreen";
 import BotDetailScreen from "./screens/Bots/BotDetailScreen";
@@ -82,7 +83,8 @@ export default function AppNavigator() {
           <Stack.Screen name="Profile" component={ProfileScreen} />
           <Stack.Screen name="Bots" component={BotScreen} />
           <Stack.Screen name="BotDetail" component={BotDetailScreen} options={{ headerShown: false }} />
-          {/*<Stack.Screen name="Showcase" component={ShowcaseScreen} />
+          <Stack.Screen name="Showcase" component={ShowcaseScreen} />
+          <Stack.Screen name="ShowcaseFilters" component={ShowcaseFiltersScreen} />
           <Stack.Screen name="Market" component={MarketScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
 

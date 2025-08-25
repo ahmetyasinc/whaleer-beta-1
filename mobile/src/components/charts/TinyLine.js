@@ -5,7 +5,7 @@ import { LineChart } from "react-native-gifted-charts";
 
 // Sabit (responsivedan bilerek vazgeçiyoruz → en güvenli)
 const CHART_W = 280;
-const CHART_H = 120;
+const CHART_H = 5;
 const MAX_POINTS = 12;
 
 // Son N noktayı al, sadece ilk/son label yaz

@@ -1,164 +1,191 @@
 "use client";
 
+import React, { useMemo, useState } from "react";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-import { useBotStore } from "@/store/bot/botStore";
-import useBotExamineStore from "@/store/bot/botExamineStore";
-import { useEffect, useState } from "react";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-export default function BotPieChart() {
-  const { bots } = useBotStore();
-  const { getBot, fetchAndStoreBotAnalysis } = useBotExamineStore();
-  const [activeChart, setActiveChart] = useState("amount"); // "amount" veya "pnl"
+/**
+ * Not:
+ * - Listeyi page.js zaten props olarak iletiyor: <BotPieChart bots={bots} />
+ * - Examine/analiz fetch burada yapılmaz. Sadece gösterim.
+ */
+export default function BotPieChart({ bots = [] }) {
+  const [activeChart, setActiveChart] = useState("amount"); // "amount" | "pnl"
 
-  // Bot analiz verilerini yükle
-  useEffect(() => {
-    if (!bots || bots.length === 0) return;
-    bots.forEach((bot) => {
-      fetchAndStoreBotAnalysis(bot.id);
-    });
-  }, [bots, fetchAndStoreBotAnalysis]);
+  // ------- Helpers -------
+  const trimName = (name = "") => (name.length > 15 ? name.slice(0, 15) + "..." : name);
+  const formatUsd = (v) =>
+    `$${Number(v || 0).toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
 
-  // Bot verilerini birleştir
-  const enrichedBots = (bots || []).map((bot) => {
-    const examineData = getBot(bot.id);
+  // ------- Stabilize input -------
+  const list = useMemo(() => (Array.isArray(bots) ? bots : []), [bots]);
+
+  // ------- Amount (Value) chart data -------
+  const amountData = useMemo(() => {
+    const labels = list.map((b) => trimName(b.name));
+    const data = list.map((b) =>
+      // current_usd_value varsa onu, yoksa initial_usd_value
+      Number(b.current_usd_value ?? b.initial_usd_value ?? 0)
+    );
+
     return {
-      ...bot,
-      managedAmount: bot.balance || 0,
-      totalPnl: examineData?.bot_profit || 0,
-      currentValue: examineData?.bot_current_value || 0,
-      analysisLoaded: !!examineData,
+      labels,
+      datasets: [
+        {
+          data,
+          backgroundColor: [
+            "#3B82F6",
+            "rgb(200,10,200)",
+            "#90fbff",
+            "rgb(122,255,122)",
+            "hsl(246,28%,28%)",
+            "#F59E0B",
+            "#EF4444",
+            "#8B5CF6",
+            "#10B981",
+            "#F97316",
+          ],
+          borderColor: "rgba(0,0,0,0.5)",
+          borderWidth: 1,
+        },
+      ],
     };
-  });
+  }, [list]);
 
-  // Toplam Miktar Chart Data
-  const amountData = {
-    labels: enrichedBots.map((bot) =>
-      bot.name.length > 15 ? bot.name.slice(0, 15) + "..." : bot.name
-    ),
-    datasets: [
-      {
-        data: enrichedBots.map((bot) =>
-          bot.analysisLoaded ? bot.currentValue : bot.managedAmount
-        ),
-        backgroundColor: [
-          "#3B82F6",
-          "rgb(200,10,200)",
-          "#90fbff",
-          "rgb(122,255,122)",
-          "hsl(246,28%,28%)",
-          "#F59E0B",
-          "#EF4444",
-          "#8B5CF6",
-          "#10B981",
-          "#F97316",
-        ],
-        borderColor: "rgba(0,0,0,0.5)",
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  // Kar/Zarar Chart Data
-  const profitableBots = enrichedBots.filter((bot) => bot.totalPnl > 0);
-  const losingBots = enrichedBots.filter((bot) => bot.totalPnl < 0);
-
-  const pnlData = {
-    labels: [
-      ...profitableBots.map((bot) =>
-        bot.name.length > 15 ? bot.name.slice(0, 15) + "..." : bot.name
-      ),
-      ...losingBots.map((bot) =>
-        bot.name.length > 15 ? bot.name.slice(0, 15) + "..." : bot.name
-      ),
-    ],
-    datasets: [
-      {
-        label: "Profit",
-        data: [
-          ...profitableBots.map((bot) => Math.abs(bot.totalPnl)),
-          ...losingBots.map(() => 0),
-        ],
-        backgroundColor: ["#10B981", "#22C55E", "#16A34A", "#15803D", "#166534", "#14532D", "#84CC16", "#65A30D"],
-        borderColor: "rgba(0,0,0,0.5)",
-        borderWidth: 1,
-      },
-      {
-        label: "Loss",
-        data: [
-          ...profitableBots.map(() => 0),
-          ...losingBots.map((bot) => Math.abs(bot.totalPnl)),
-        ],
-        backgroundColor: ["#EF4444", "#DC2626", "#B91C1C", "#991B1B", "#7F1D1D", "#F87171", "#FCA5A5", "#FECACA"],
-        borderColor: "rgba(0,0,0,0.5)",
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const amountOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: "right",
-        labels: {
-          color: "#fff",
-          font: { size: 12, weight: "bold" },
-          boxWidth: 12,
+  const amountOptions = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "right",
+          labels: {
+            color: "#fff",
+            font: { size: 12, weight: "bold" },
+            boxWidth: 12,
+          },
         },
-      },
-      tooltip: {
-        callbacks: {
-          label: (context) => {
-            const value = context.raw || 0;
-            const total =
-              context.dataset?.data?.reduce((a, b) => a + b, 0) || 0;
-            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-            return `${context.label}: $${value.toLocaleString()} (${percentage}%)`;
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const value = Number(context.raw || 0);
+              const total =
+                (context.dataset?.data || []).reduce((a, b) => Number(a || 0) + Number(b || 0), 0) || 0;
+              const pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+              return `${context.label}: ${formatUsd(value)} (${pct}%)`;
+            },
           },
         },
       },
-    },
-  };
+    }),
+    []
+  );
 
-  const pnlOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: "right",
-        labels: {
-          color: "#fff",
-          font: { size: 12, weight: "bold" },
-          boxWidth: 12,
-          filter: function (legendItem, chartData) {
-            try {
-              const datasetIndex = legendItem.datasetIndex;
-              const index = legendItem.index;
-              const dataset = chartData?.datasets?.[datasetIndex];
-              const value = dataset?.data?.[index];
-              return value > 0;
-            } catch (e) {
-              return false;
-            }
+  // ------- PnL chart data (profit vs loss as two rings/datasets) -------
+  const pnlData = useMemo(() => {
+    const profitable = list.filter((b) => Number(b.profit_usd || 0) > 0);
+    const losing = list.filter((b) => Number(b.profit_usd || 0) < 0);
+
+    const labels = [
+      ...profitable.map((b) => trimName(b.name)),
+      ...losing.map((b) => trimName(b.name)),
+    ];
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: "Profit",
+          data: [
+            ...profitable.map((b) => Math.abs(Number(b.profit_usd || 0))),
+            ...losing.map(() => 0),
+          ],
+          backgroundColor: [
+            "#10B981",
+            "#22C55E",
+            "#16A34A",
+            "#15803D",
+            "#166534",
+            "#14532D",
+            "#84CC16",
+            "#65A30D",
+          ],
+          borderColor: "rgba(0,0,0,0.5)",
+          borderWidth: 1,
+        },
+        {
+          label: "Loss",
+          data: [
+            ...profitable.map(() => 0),
+            ...losing.map((b) => Math.abs(Number(b.profit_usd || 0))),
+          ],
+          backgroundColor: [
+            "#EF4444",
+            "#DC2626",
+            "#B91C1C",
+            "#991B1B",
+            "#7F1D1D",
+            "#F87171",
+            "#FCA5A5",
+            "#FECACA",
+          ],
+          borderColor: "rgba(0,0,0,0.5)",
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [list]);
+
+  const pnlOptions = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "right",
+          labels: {
+            color: "#fff",
+            font: { size: 12, weight: "bold" },
+            boxWidth: 12,
+            filter: function (legendItem, chartData) {
+              try {
+                const datasetIndex = legendItem.datasetIndex;
+                const index = legendItem.index;
+                const dataset = chartData?.datasets?.[datasetIndex];
+                const value = Number(dataset?.data?.[index] || 0);
+                return value > 0;
+              } catch {
+                return false;
+              }
+            },
+          },
+        },
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const value = Number(context.raw || 0);
+              const isProfit = context.datasetIndex === 0;
+              const prefix = isProfit ? "+" : "-";
+              return `${context.label}: ${prefix}${formatUsd(value).replace("$", "$")}`;
+            },
           },
         },
       },
-      tooltip: {
-        callbacks: {
-          label: (context) => {
-            const value = context.raw || 0;
-            const isProfit = context.datasetIndex === 0;
-            const prefix = isProfit ? "+" : "-";
-            return `${context.label}: ${prefix}$${Math.abs(value).toLocaleString()}`;
-          },
-        },
-      },
-    },
-  };
+    }),
+    []
+  );
+
+  // ------- Footer totals -------
+  const totals = useMemo(() => {
+    const totalValue = list.reduce(
+      (sum, b) => sum + Number(b.current_usd_value ?? b.initial_usd_value ?? 0),
+      0
+    );
+    const totalPnl = list.reduce((sum, b) => sum + Number(b.profit_usd || 0), 0);
+    return { totalValue, totalPnl };
+  }, [list]);
 
   return (
     <div className="bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl shadow-lg border border-zinc-700 p-6 text-white w-full h-full flex flex-col">
@@ -198,8 +225,8 @@ export default function BotPieChart() {
       </div>
 
       <div className="flex-1 flex items-center justify-center min-h-0">
-        {enrichedBots.length > 0 ? (
-          <div className="w-full h-full max-h-[400px]">
+        {list.length > 0 ? (
+          <div className="w-full h-full max-h[400px]">
             <Doughnut
               data={activeChart === "amount" ? amountData : pnlData}
               options={activeChart === "amount" ? amountOptions : pnlOptions}
@@ -213,36 +240,23 @@ export default function BotPieChart() {
         )}
       </div>
 
-      {enrichedBots.length > 0 && (
+      {list.length > 0 && (
         <div className="mt-4 pt-4 border-t border-zinc-700">
           <div className="grid grid-cols-2 gap-4 text-center">
             <div>
               <p className="text-xs text-gray-400 mb-1">Total Value</p>
               <p className="text-sm font-bold text-blue-400">
-                $
-                {enrichedBots
-                  .reduce(
-                    (sum, bot) =>
-                      sum + (bot.analysisLoaded ? bot.currentValue : bot.managedAmount),
-                    0
-                  )
-                  .toLocaleString()}
+                {formatUsd(totals.totalValue)}
               </p>
             </div>
             <div>
               <p className="text-xs text-gray-400 mb-1">Total P&L</p>
               <p
                 className={`text-sm font-bold ${
-                  enrichedBots.reduce((sum, bot) => sum + bot.totalPnl, 0) >= 0
-                    ? "text-emerald-400"
-                    : "text-red-400"
+                  totals.totalPnl >= 0 ? "text-emerald-400" : "text-red-400"
                 }`}
               >
-                {enrichedBots.reduce((sum, bot) => sum + bot.totalPnl, 0) >= 0 ? "+" : ""}
-                $
-                {enrichedBots
-                  .reduce((sum, bot) => sum + bot.totalPnl, 0)
-                  .toLocaleString()}
+                {`${totals.totalPnl >= 0 ? "+" : ""}${formatUsd(Math.abs(totals.totalPnl))}`}
               </p>
             </div>
           </div>

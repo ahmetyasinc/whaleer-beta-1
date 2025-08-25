@@ -27,7 +27,23 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
   const [candleCount, setCandleCount] = useState(0);
 
   const apiList = useApiStore((state) => state.apiList);
-  const availableCoins = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "SUIUSDT", "MATICUSDT", "TRXUSDT", "LTCUSDT", "AVAXUSDT", "LINKUSDT", "DOTUSDT", "SHIBUSDT", "ADAUSDT", "XMRUSDT", "ETCUSDT", "FILUSDT", "ICPUSDT", "AAVEUSDT", "MANAUSDT", "SANDUSDT", "CHZUSDT"];
+  const availableCoins = [
+    "BTCUSDT",
+    "ETHUSDT",
+    "BNBUSDT",
+    "SOLUSDT",
+    "ADAUSDT",
+    "XRPUSDT",
+    "DOGEUSDT",
+    "TONUSDT",
+    "TRXUSDT",
+    "LINKUSDT",
+    "MATICUSDT",
+    "DOTUSDT",
+    "LTCUSDT",
+    "SHIBUSDT",
+    "AVAXUSDT",
+  ];
   const filteredCoins = availableCoins.filter(
     (coin) =>
       coin.toLowerCase().includes(searchQuery.toLowerCase()) &&

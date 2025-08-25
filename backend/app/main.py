@@ -4,6 +4,7 @@ from app.routes.user import router as user_router
 from app.routes.auth import router as auth_router
 from app.routes.mobile.auth.auth import router as auth_router_mobile
 from app.routes.mobile.bots.bots import protected_router as bot_router_mobile
+from app.routes.mobile.showcase.showcase import protected_router as showcase_router_mobile
 from app.routes.profile.indicator.indicator_data import protected_router as indicator_data_router
 from app.routes.profile.indicator.indicator import protected_router as indicator_router
 from app.routes.profile.indicator.indicator_run import protected_router as indicator_run_router
@@ -59,6 +60,7 @@ app.include_router(scan_router)
 app.include_router(whaleer_ai_router)
 # SHOWCASE ROUTES
 app.include_router(showcase)
+app.include_router(showcase_router_mobile)
 # PROFİLE ROUTES
 app.include_router(profile)
 app.include_router(profileMobile)

@@ -10,14 +10,12 @@ import IndicatorsModalButton from "./(header_element)/indcModalButton"; // Göst
 import StrategyButton from "./(header_element)/strategyModalButton"; // Stratejilerim butonu
 import useMagnetStore from "@/store/indicator/magnetStore";
 import useRulerStore from "@/store/indicator/rulerStore"; // Cetvel store'u import et
-import usePanelStore from "@/store/indicator/panelStore"; // panelStore'u kullanacağız
 import i18n from "@/i18n";
 import { useEffect } from "react";
 
 
 const IndicatorHeader = ({locale}) => {
   const [selectedOption, setSelectedOption] = useState("Periyot");
-  const [activeButton, setActiveButton] = useState(false);
   const [selectedCrypto, setSelectedCrypto] = useState("");
   const { isMagnetMode, toggleMagnetMode } = useMagnetStore();
   const { isRulerMode, toggleRulerMode } = useRulerStore();
@@ -72,21 +70,6 @@ const IndicatorHeader = ({locale}) => {
       >
         <LuRuler />
       </button>
-
-      {/*<div className="h-[30px] w-[1px] bg-gray-600 mx-2"></div>
-      <button 
-        onClick={() => {
-          toggleChatBoxVisibility();
-          isActiveB();
-        }}
-        className={`flex items-center justify-center w-[140px] h-[40px] rounded-md transition-all duration-100 text-white 
-           ${activeButton ? 'scale-95 border' : 'bg-gray-950 hover:bg-gray-900'} 
-          `}
-      >
-        <GiSpermWhale className="mr-[14px] text-[22px]" />
-        whaleerAI
-      </button>
-      <div className="h-[30px] w-[1px] bg-gray-600 mx-2"></div>*/}
 
       {/* Ayarlar Butonu */}
       <button className="ml-auto mr-2 flex items-center justify-center w-[50px] h-[40px] rounded-md transition-all duration-200 bg-gray-950 hover:bg-gray-900 text-[24px]">

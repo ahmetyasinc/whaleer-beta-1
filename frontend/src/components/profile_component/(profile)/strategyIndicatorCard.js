@@ -17,14 +17,10 @@ export default function StrategyIndicatorCard() {
   const [showIndicatorModal, setShowIndicatorModal] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
 
-  const { strategies, fetchStrategies } = useStrategyStore();
-  const { indicators, fetchIndicators } = useIndicatorStore();
+  const { strategies } = useStrategyStore();
+  const { indicators } = useIndicatorStore();
 
-  // ✅ İlk açılışta backend’den strateji ve indikatör verilerini çek
-  useEffect(() => {
-    fetchIndicators();
-    fetchStrategies();
-  }, []);
+  // ❌ fetchIndicators / fetchStrategies çağrıları kaldırıldı (bootstrap ile geliyor)
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -33,9 +29,7 @@ export default function StrategyIndicatorCard() {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-
     const timer = setTimeout(() => setInitialLoad(false), 1500);
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       clearTimeout(timer);
@@ -56,10 +50,7 @@ export default function StrategyIndicatorCard() {
       className="group bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-lg p-3 hover:bg-zinc-900 transition-all duration-200 border border-zinc-700 hover:border-zinc-600 relative"
       style={
         initialLoad
-          ? {
-              animationDelay: `${index * 200}ms`,
-              animation: "fadeInUp 1s ease-out forwards",
-            }
+          ? { animationDelay: `${index * 200}ms`, animation: "fadeInUp 1s ease-out forwards" }
           : {}
       }
     >
@@ -106,7 +97,7 @@ export default function StrategyIndicatorCard() {
 
   return (
     <div className="w-full h-full flex gap-3 overflow-hidden">
-      {/* Strategies Card */}
+      {/* Strategies */}
       <div className="flex-1 bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl border border-zinc-700 shadow-xl flex flex-col max-h-[calc(100vh-110px)]">
         <div className="px-4 py-3 border-b border-zinc-700 bg-gradient-to-r from-blue-900/20 to-blue-800/10">
           <div className="flex items-center gap-3">
@@ -136,7 +127,7 @@ export default function StrategyIndicatorCard() {
         </div>
       </div>
 
-      {/* Indicators Card */}
+      {/* Indicators */}
       <div className="flex-1 bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl border border-zinc-700 shadow-xl flex flex-col max-h-[calc(100vh-110px)]">
         <div className="px-4 py-3 border-b border-zinc-700 bg-gradient-to-r from-purple-900/20 to-purple-800/10">
           <div className="flex items-center gap-3">
@@ -172,7 +163,6 @@ export default function StrategyIndicatorCard() {
         onClose={() => setShowStrategyModal(false)}
         onPublish={handleModalPublish}
       />
-
       <PublishIndicatorModal
         isOpen={showIndicatorModal}
         onClose={() => setShowIndicatorModal(false)}
@@ -181,14 +171,8 @@ export default function StrategyIndicatorCard() {
 
       <style jsx>{`
         @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateX(-40px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
+          from { opacity: 0; transform: translateX(-40px); }
+          to   { opacity: 1; transform: translateX(0); }
         }
       `}</style>
     </div>

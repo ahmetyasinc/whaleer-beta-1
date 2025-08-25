@@ -1,19 +1,25 @@
 import { create } from 'zustand';
-import { getBots ,createBot, updateBot, toggleBotActiveApi, deleteBot } from '../../api/bots';
+import { getBots, createBot, updateBot, toggleBotActiveApi, deleteBot } from '../../api/bots';
 import useApiStore from '@/store/api/apiStore';
 import useStrategyStore from '@/store/indicator/strategyStore';
+import { useAccountDataStore } from "@/store/profile/accountDataStore";
+import { useProfileStore } from "@/store/profile/profileStore";
 
 export const useBotStore = create((set) => ({
   bots: [],
 
+  hydrateFromProfileMaps: (botsByApiId) => {
+    const merged = Object.values(botsByApiId || {}).flat();
+    set({ bots: merged });
+  },
+
   addBot: async (botData) => {
     try {
       const createdBot = await createBot(botData);
-
       if (!createdBot || !createdBot.id) return;
 
-      const apiList = useApiStore.getState().apiList;
-      const strategies = useStrategyStore.getState().all_strategies;
+      const apiList = useApiStore.getState().apiList || [];
+      const strategies = useStrategyStore.getState().all_strategies || [];
 
       const matchedApi = apiList.find((api) => api.id === createdBot.api_id);
       const matchedStrategy = strategies.find((s) => s.id === createdBot.strategy_id);
@@ -34,8 +40,25 @@ export const useBotStore = create((set) => ({
         total_balance: matchedApi?.balance || 0,
       };
 
+      // local cache
       set((state) => ({ bots: [...state.bots, newBot] }));
 
+      // tek kaynaklı görünüm için accountDataStore’u güncelle
+      const activeApiId = useProfileStore.getState().activeApiId;
+      const { botsByApiId } = useAccountDataStore.getState();
+      const rawNew = {
+        id: createdBot.id,
+        name: createdBot.name,
+        api_id: createdBot.api_id,
+        created_at: createdBot.created_at,
+        status: createdBot.active ? "active" : "inactive",
+      };
+      useAccountDataStore.setState({
+        botsByApiId: {
+          ...botsByApiId,
+          [activeApiId]: [...(botsByApiId[activeApiId] || []), rawNew],
+        }
+      });
     } catch (error) {
       console.error("Bot eklenirken hata:", error);
     }
@@ -45,6 +68,15 @@ export const useBotStore = create((set) => ({
     try {
       await deleteBot(id);
       set((state) => ({ bots: state.bots.filter((bot) => bot.id !== id) }));
+
+      const activeApiId = useProfileStore.getState().activeApiId;
+      const { botsByApiId } = useAccountDataStore.getState();
+      useAccountDataStore.setState({
+        botsByApiId: {
+          ...botsByApiId,
+          [activeApiId]: (botsByApiId[activeApiId] || []).filter(b => b.id !== id),
+        }
+      });
     } catch (error) {
       console.error("Bot silinirken hata:", error);
     }
@@ -52,13 +84,11 @@ export const useBotStore = create((set) => ({
 
   updateBot: async (updatedBot) => {
     try {
-      const result = await updateBot(updatedBot.id, updatedBot); // backend güncellemesi
-
+      const result = await updateBot(updatedBot.id, updatedBot);
       if (!result || !result.id) return;
 
-      const apiList = useApiStore.getState().apiList;
-      const strategies = useStrategyStore.getState().all_strategies;
-
+      const apiList = useApiStore.getState().apiList || [];
+      const strategies = useStrategyStore.getState().all_strategies || [];
       const matchedApi = apiList.find((api) => api.id === result.api_id);
       const matchedStrategy = strategies.find((s) => s.id === result.strategy_id);
 
@@ -66,7 +96,7 @@ export const useBotStore = create((set) => ({
         id: result.id,
         name: result.name,
         api: matchedApi?.name || "",
-        strategy: String(matchedStrategy?.name),
+        strategy: String(matchedStrategy?.name || ""),
         period: result.period,
         isActive: result.active,
         days: result.active_days,
@@ -79,39 +109,58 @@ export const useBotStore = create((set) => ({
       };
 
       set((state) => ({
-        bots: state.bots.map((bot) =>
-          bot.id === result.id ? newBot : bot
-        ),
+        bots: state.bots.map((bot) => (bot.id === result.id ? newBot : bot)),
       }));
 
+      const activeApiId = useProfileStore.getState().activeApiId;
+      const { botsByApiId } = useAccountDataStore.getState();
+      const rawUpdated = {
+        id: result.id,
+        name: result.name,
+        api_id: result.api_id,
+        created_at: result.created_at,
+        status: result.active ? "active" : "inactive",
+      };
+      useAccountDataStore.setState({
+        botsByApiId: {
+          ...botsByApiId,
+          [activeApiId]: (botsByApiId[activeApiId] || []).map(b => b.id === result.id ? rawUpdated : b),
+        }
+      });
     } catch (error) {
       console.error("Bot güncellenirken hata:", error);
     }
   },
-
 
   toggleBotActive: async (id) => {
     try {
       const bot = useBotStore.getState().bots.find((b) => b.id === id);
       if (!bot) return;
 
-      await toggleBotActiveApi(id, bot.isActive); // Şu anki duruma göre API çağrısı yapar
+      await toggleBotActiveApi(id, bot.isActive);
 
       set((state) => ({
-        bots: state.bots.map((b) =>
-          b.id === id ? { ...b, isActive: !b.isActive } : b
-        ),
+        bots: state.bots.map((b) => (b.id === id ? { ...b, isActive: !b.isActive } : b)),
       }));
+
+      const activeApiId = useProfileStore.getState().activeApiId;
+      const { botsByApiId } = useAccountDataStore.getState();
+      useAccountDataStore.setState({
+        botsByApiId: {
+          ...botsByApiId,
+          [activeApiId]: (botsByApiId[activeApiId] || []).map(b =>
+            b.id === id ? { ...b, status: bot.isActive ? "inactive" : "active" } : b
+          ),
+        }
+      });
     } catch (error) {
-      console.error("Bot aktiflik durumu değiştirilirken hata:", error);
+      console.error("Bot aktiflik değiştirilirken hata:", error);
     }
   },
-
 
   loadBots: async () => {
     try {
       const userBots = await getBots();
-      console.log("Yüklenen Botlar:", userBots);
       if (Array.isArray(userBots)) {
         set({ bots: userBots });
       } else {
@@ -123,21 +172,28 @@ export const useBotStore = create((set) => ({
   },
 
   deactivateAllBots: async () => {
-  try {
-    const state = useBotStore.getState();
-    const activeBots = state.bots.filter(bot => bot.isActive);
+    try {
+      const state = useBotStore.getState();
+      const activeBots = state.bots.filter(bot => bot.isActive);
 
-    for (const bot of activeBots) {
-      await toggleBotActiveApi(bot.id, true); // Aktif botu pasife çek
+      for (const bot of activeBots) {
+        await toggleBotActiveApi(bot.id, true);
+      }
+
+      set((state) => ({
+        bots: state.bots.map(bot => ({ ...bot, isActive: false })),
+      }));
+
+      const activeApiId = useProfileStore.getState().activeApiId;
+      const { botsByApiId } = useAccountDataStore.getState();
+      useAccountDataStore.setState({
+        botsByApiId: {
+          ...botsByApiId,
+          [activeApiId]: (botsByApiId[activeApiId] || []).map(b => ({ ...b, status: "inactive" })),
+        }
+      });
+    } catch (error) {
+      console.error("Tüm botları durdururken hata:", error);
     }
-
-    set((state) => ({
-      bots: state.bots.map(bot => ({ ...bot, isActive: false })),
-    }));
-  } catch (error) {
-    console.error("Tüm botları durdururken hata:", error);
-  }
-},
-
-
+  },
 }));

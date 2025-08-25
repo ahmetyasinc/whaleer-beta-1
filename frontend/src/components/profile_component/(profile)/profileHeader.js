@@ -3,23 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { IoMdSettings } from "react-icons/io";
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useSessionStore } from "@/store/profile/sessionStore";
 import { useProfileStore } from "@/store/profile/profileStore";
 
 export default function ProfileHeader() {
   const pathname = usePathname();
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  // API store
-  const {
-    apis,
-    activeApi,
-    apisStatus,
-    fetchApis,
-    setActiveApiById,
-  } = useProfileStore();
+  const user = useSessionStore(s => s.user);
+  const apis = useProfileStore(s => s.apis);
+  const activeApiId = useProfileStore(s => s.activeApiId);
+  const setActiveApiById = useProfileStore(s => s.setActiveApiById);
 
   const navItems = [
     { name: "My Portfolio", href: "/en/profile" },
@@ -27,36 +19,14 @@ export default function ProfileHeader() {
     { name: "My Indicators and Strategies", href: "/en/profile/myindicators" },
   ];
 
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/user-info`,
-          { withCredentials: true }
-        );
-        setUser(res.data);
-      } catch (err) {
-        console.error("Failed to fetch user", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUserInfo();
-  }, []);
-
-  // API listesini yükle
-  useEffect(() => {
-    fetchApis();
-  }, [fetchApis]);
-
   return (
     <div className="relative w-full flex flex-col">
       <div className="w-full h-[60px] bg-black flex items-center justify-between px-6 shadow-lg">
         {/* Left Profile */}
         <div className="flex items-center gap-3 border-l border-gray-700 pl-4 ml-10">
-          {loading ? (
+          {!user ? (
             <span className="text-gray-400 text-sm">Loading...</span>
-          ) : user ? (
+          ) : (
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center text-white font-bold">
                 {user.name?.[0]?.toUpperCase() ?? "?"}
@@ -70,43 +40,23 @@ export default function ProfileHeader() {
                 </span>
               </div>
             </div>
-          ) : (
-            <span className="text-red-400 text-sm">
-              Failed to load user info
-            </span>
           )}
         </div>
 
         {/* Right Menu + API Dropdown */}
         <div className="flex items-center gap-4">
-          {/* API Dropdown */}
           <div className="relative">
             <select
-              value={activeApi?.id || ""}
-              onChange={(e) => setActiveApiById(e.target.value)}
-              disabled={apisStatus === "loading" || apisStatus === "error"}
-              className={`px-4 py-[6px] rounded-2xl transition font-medium border-1 border-gray-700 text-white
-                bg-black hover:bg-gray-950 hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-cyan-500
-                ${apisStatus === "loading" ? "opacity-60 cursor-wait" : ""}
-              `}
-              title={
-                apisStatus === "error"
-                  ? "APIs could not be loaded"
-                  : "Select Active API"
-              }
+              value={activeApiId || ""}
+              onChange={(e) => setActiveApiById(Number(e.target.value))}
+              className="px-4 py-[6px] rounded-2xl transition font-medium border-1 border-gray-700 text-white
+                         bg-black hover:bg-gray-950 hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              title="Select Active API"
             >
-              {apisStatus === "loading" && (
-                <option value="">Loading APIs...</option>
-              )}
-              {apisStatus === "error" && (
-                <option value="">Failed to load APIs</option>
-              )}
-              {apisStatus === "success" &&
-                apis.map((api) => (
-                  <option key={api.id} value={api.id}>
-                    {api.api_name}
-                  </option>
-                ))}
+              {!apis?.length && <option value="">No API</option>}
+              {apis?.map(api => (
+                <option key={api.id} value={api.id}>{api.api_name}</option>
+              ))}
             </select>
           </div>
 

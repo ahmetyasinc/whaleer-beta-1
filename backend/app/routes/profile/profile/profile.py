@@ -105,6 +105,13 @@ def merge_by_symbol(
         merged.append(out)
     return merged
 
+def _pct_change(cur, init):
+    cur = _to_float(cur)
+    init = _to_float(init)
+    if init is None or init == 0:
+        return None
+    return (cur - init) / init * 100.0
+
 @protected_router.get("/api/profile")
 async def get_profile_all_datas(
     db: AsyncSession = Depends(get_db),
@@ -187,16 +194,32 @@ async def get_profile_all_datas(
         # Bu API altındaki botlar
         api_bots = [b for b in bots if b.api_id == api.id]
 
-        # --- sadece bot bilgileri ---
-        bots_payload = [{
-            "bot": {
-                "id": b.id,
-                "name": getattr(b, "name", None),
-                "api_id": b.api_id,
-                "created_at": getattr(b, "created_at", None),
-                "status": getattr(b, "status", None),
-            }
-        } for b in api_bots]
+        bots_payload = []
+        for b in api_bots:
+            cur = getattr(b, "current_usd_value", None)
+            init = getattr(b, "initial_usd_value", None)
+            active = getattr(b, "active", None)
+            profit_usd = None
+            if cur is not None and init is not None:
+                profit_usd = _to_float(cur) - _to_float(init)
+
+            profit_pct = _pct_change(cur, init)
+
+            bots_payload.append({
+                "bot": {
+                    "id": b.id,
+                    "name": getattr(b, "name", None),
+                    "api_id": b.api_id,
+                    "created_at": getattr(b, "created_at", None),
+
+                    # yeni alanlar:
+                    "active": active,
+                    "initial_usd_value": _to_float(init),
+                    "current_usd_value": _to_float(cur),
+                    "profit_usd": _to_float(profit_usd) if profit_usd is not None else None,
+                    "profit_percent": _to_float(profit_pct) if profit_pct is not None else None,
+                }
+            })
 
         # --- API seviyesinde birleştirilecek ham satırlar ---
         api_hold_rows: List[BotHoldings] = []

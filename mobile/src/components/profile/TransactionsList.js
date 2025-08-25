@@ -2,7 +2,15 @@
 import React from "react";
 import { View, Text, StyleSheet, FlatList } from "react-native";
 
-export default function TransactionsList({ trades, colors }) {
+export default function TransactionsList({
+  trades,
+  colors,
+  ListHeaderComponent,
+  refreshing = false,
+  onRefresh = () => {},
+  contentContainerStyle,
+  backgroundColor,
+}) {
   const renderItem = ({ item }) => {
     const isBuy = item.side?.toLowerCase() === "buy";
     return (
@@ -27,10 +35,15 @@ export default function TransactionsList({ trades, colors }) {
 
   return (
     <FlatList
+      style={{ flex: 1, backgroundColor: backgroundColor || "transparent" }}
       data={trades || []}
       keyExtractor={(i) => String(i.id)}
       renderItem={renderItem}
       ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+      ListHeaderComponent={ListHeaderComponent}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      contentContainerStyle={contentContainerStyle}
     />
   );
 }

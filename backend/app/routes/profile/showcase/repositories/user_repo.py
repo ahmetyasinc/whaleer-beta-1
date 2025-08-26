@@ -64,7 +64,7 @@ class UserRepository:
             win_rate = len([p for p in profits if p > 0]) / len(profits) if profits else 0.0
 
             if bot.initial_usd_value:
-                profit_rate = (float(bot.current_usd_value or 0) - float(bot.initial_usd_value)) / float(bot.initial_usd_value)
+                profit_rate = ((float(bot.current_usd_value or 0) - float(bot.initial_usd_value)) / float(bot.initial_usd_value))*100
                 total_current_value += float(bot.current_usd_value or 0)
                 total_initial_value += float(bot.initial_usd_value)
             else:

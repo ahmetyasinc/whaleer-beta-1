@@ -44,7 +44,8 @@ export const getApiKeys = async () => {
           createdAt: createdDate,
           lastUsed: item.lastUsed || 'Never',
           id: item.id,
-          balance: item.balance || 0, // Eğer balance yoksa 0 olarak ayarla
+          spot_balance: item.spot_balance || 0, // Eğer balance yoksa 0 olarak ayarla
+          futures_balance: item.futures_balance || 0, // Eğer balance yoksa 0 olarak ayarla
         };
       });
   

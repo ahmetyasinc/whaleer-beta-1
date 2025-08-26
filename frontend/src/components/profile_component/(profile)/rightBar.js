@@ -172,9 +172,6 @@ function computePerformanceForRange({ label, apiId, snapshots, trades, rangeStar
 
   // ---- DEBUG LOGS ----
   try {
-    console.groupCollapsed(
-      `[RightBar] ${label} | api:${apiId ?? "n/a"} | ${fmt(rangeStart)} → ${fmt(rangeEnd)}`
-    );
 
     // ilk 3 trade örnek
     const sample = (trades || []).slice(0, 3).map((t, i) => {
@@ -188,40 +185,8 @@ function computePerformanceForRange({ label, apiId, snapshots, trades, rangeStar
         parsedLocal: fmt(date),
       };
     });
-    if (sample.length) console.table(sample);
-    else console.log("Trades.sample: <empty>");
 
-    console.log("Snapshots.total       :", pts.length);
-    console.log("Snapshots.inRange     :", inRange.length);
-    console.log(
-      "FirstPoint            :",
-      firstPoint ? { time: fmt(firstPoint.x), value: firstPoint.y, raw: firstPoint._raw } : "<none>"
-    );
-    console.log(
-      "LastPoint             :",
-      lastPoint ? { time: fmt(lastPoint.x), value: lastPoint.y, raw: lastPoint._raw } : "<none>"
-    );
-    console.log("Computed % change     :", pct);
 
-    console.log("Trades.total          :", (trades || []).length);
-    console.log("Trades.filtered.count :", filteredTrades.length);
-    console.table(
-      filteredTrades.map((t, i) => ({
-        i,
-        dateKey: t?._dateKey,
-        parsedLocal: fmt(t?._parsedAt),
-        symbol: t?.symbol ?? "",
-        side: t?.side ?? t?.position_side ?? "",
-        qty: t?.qty ?? t?.amount ?? "",
-        price: t?.price ?? "",
-        id: t?.id ?? t?.trade_id ?? "",
-      }))
-    );
-
-    if (excluded.length) {
-      console.log("Trades.excluded.count :", excluded.length);
-      console.table(excluded);
-    }
 
     console.groupEnd();
   } catch (err) {

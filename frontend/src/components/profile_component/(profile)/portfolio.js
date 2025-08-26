@@ -12,6 +12,7 @@ export default function Portfolio() {
   const tradesMap = useAccountDataStore(s => s.tradesByApiId);
 
   const portfolio = useMemo(() => portfolioMap?.[activeApiId] || [], [portfolioMap, activeApiId]);
+  console.log("Portfolio Data:", portfolio);
   const transactions = useMemo(() => tradesMap?.[activeApiId] || [], [tradesMap, activeApiId]);
 
   const formatCurrency = (amount) =>
@@ -74,8 +75,10 @@ export default function Portfolio() {
             <div className="space-y-4">
               {portfolio.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-5 gap-2 text-xs sm:text-sm font-semibold text-gray-400 py-2 sticky top-0 bg-[rgb(0,0,0,0)] z-10 px-2">
+                  <div className="grid grid-cols-7 gap-2 text-xs sm:text-sm font-semibold text-gray-400 py-2 sticky top-0 bg-[rgb(0,0,0,0)] z-10 px-2">
                     <div className="text-left">Cryptocurrency</div>
+                    <div className="text-right">Leverage</div>
+                    <div className="text-right">Side</div>
                     <div className="text-right">Cost</div>
                     <div className="text-right">Amount</div>
                     <div className="text-right">Profit/Loss</div>
@@ -88,7 +91,7 @@ export default function Portfolio() {
                     return (
                       <div
                         key={`${item.symbol}-${index}`}
-                        className="grid grid-cols-5 gap-2 items-center py-3 rounded-lg px-2 bg-gradient-to-r from-slate-800/50 to-slate-900/50 hover:bg-zinc-900 hover:border-blue-500/70 transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/10"
+                        className="grid grid-cols-7 gap-2 items-center py-3 rounded-lg px-2 bg-gradient-to-r from-slate-800/50 to-slate-900/50 hover:bg-zinc-900 hover:border-blue-500/70 transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/10"
                         style={{ animationDelay: `${index * 200}ms`, animation: "fadeInUp 1s ease-out forwards" }}
                       >
                         <div className="flex items-center space-x-2 min-w-0">
@@ -104,6 +107,9 @@ export default function Portfolio() {
                             </div>
                           </div>
                         </div>
+
+                        <div className="text-right">{item.leverage ? `${item.leverage}x` : "-"}</div>
+                        <div className="text-right">{item.position_side ? item.position_side.toUpperCase() : "-"}</div>
 
                         <div className="text-right">
                           <div className="font-semibold text-white text-sm sm:text-base">
@@ -128,6 +134,8 @@ export default function Portfolio() {
                             {profitLossPercent >= 0 ? "+" : ""}{profitLossPercent.toFixed(2)}%
                           </span>
                         </div>
+
+
                       </div>
                     );
                   })}

@@ -6,7 +6,7 @@ axios.defaults.withCredentials = true;
 
 export const getBots = async () => {
   try {
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api2/get-bots`);
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/get-bots`);
     console.log("Botlar başarıyla alındı:", response.data);
 
     const { apiList } = useApiStore.getState();
@@ -30,8 +30,10 @@ export const getBots = async () => {
         createdAt: item.created_at,
         period: item.period,
         cryptos: item.stocks,
-        balance: item.initial_usd_value,
+        initial_usd_value: item.initial_usd_value,
+        current_usd_value: item.current_usd_value,
         total_balance: item.balance,
+        type: item.bot_type
       };
     });
 
@@ -74,6 +76,7 @@ export const createBot = async (botData) => {
       initial_usd_value: Number(botData.initial_usd_value),
       current_usd_value: Number(botData.initial_usd_value),
       balance: Number(botData.balance),
+      bot_type: botData.type || {},  // Yeni alan
     };
 
     console.log("Sunucuya gönderilen veri:", payload);
@@ -119,6 +122,7 @@ export const updateBot = async (id, botData) => {
       active_hours: `${botData.startTime}-${botData.endTime}`,
       initial_usd_value: Number(botData.initial_usd_value),
       balance: Number(botData.balance),
+      bot_type: botData.type || {},  // Yeni alan
     };
 
     const response = await axios.put(

@@ -14,6 +14,23 @@ import { FaBan } from "react-icons/fa6";
 import DeleteBotConfirmModal from "./deleteBotConfirmModal";
 import ShotDownBotModal from "./shotDownBotModal";
 
+/* ---- Type rozet stili ---- */
+function getTypeBadgeClasses(type) {
+  const t = (type || 'spot').toLowerCase();
+  if (t === 'futures') return 'bg-amber-500/15 text-amber-300 border border-amber-700';
+  return 'bg-emerald-500/15 text-emerald-300 border border-emerald-700'; // spot
+}
+function TypeBadge({ type }) {
+  return (
+    <span
+      className={`px-2 py-[2px] rounded-full uppercase tracking-wide text-[10px] ${getTypeBadgeClasses(type)} shrink-0`}
+      title={`Bot type: ${type || 'spot'}`}
+    >
+      {type || 'spot'}
+    </span>
+  );
+}
+
 export const BotCard = ({ bot, column }) => {
   const removeBot = useBotStore((state) => state.removeBot);
   const updateBot = useBotStore((state) => state.updateBot);
@@ -30,46 +47,36 @@ export const BotCard = ({ bot, column }) => {
   const menuRef = useRef(null);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setMenuOpen(false);
-      }
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  /* ==== SOL KART ==== */
   if (column === "left") {
     return (
       <>
         <div className="rounded-r-full px-4 py-4 relative border-2 border-cyan-900 bg-[hsl(227,82%,2%)] text-gray-200">
           <div className="grid grid-cols-3 gap-4">
+
             {/* SOL: Bot Bilgi Alanı */}
             <div className="border-r border-gray-700 pr-4">
-              <h3 className="text-[18px] pl-1 font-semibold mb-2 text-white border-b border-gray-600 pb-[10px]">{bot.name}</h3>
-              <p className="mb-1 text-[14px]"><span className="text-stone-500">API:</span> {bot.api}</p>
-              <p className="mb-1 text-[14px]"><span className="text-stone-500">Strategy:</span> {bot.strategy}</p>
-              <p className="mb-1 text-[14px]"><span className="text-stone-500">Period:</span> {bot.period}</p>
-              <p className="mb-1 text-[14px]">
-                <span className="text-stone-500">Days:</span> {Array.isArray(bot.days) ? bot.days.join(', ') : 'Undefined'}
-              </p>
-              <p className="mb-1 text-[14px]"><span className="text-stone-500">Hours:</span> {bot.startTime} - {bot.endTime}</p>
-              <p className="mb-1 text-[14px]">
-                <span className="text-stone-500">Status:</span>{' '}
-                <span className={bot.isActive ? 'text-green-400' : 'text-[rgb(216,14,14)]'}>
-                  {bot.isActive ? 'Bot Active' : 'Bot Inactive'}
-                </span>
-              </p>
-              <p className="mb-1 text-[14px]"><span className="text-stone-500">...</span></p>
-            </div>
-            {/* Menü */}
-              <div className="absolute left-64 top-4">
-                <div className="relative inline-block text-left" ref={menuRef}>
-                  <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 rounded hover:bg-gray-700">
-                    <BsThreeDotsVertical className="text-gray-300" size={20} />
+              {/* Başlık satırı: İsim + Type + Menü */}
+              <div className="flex items-center gap-2 border-b border-gray-600 pb-[10px] mb-2">
+                <h3 className="text-[18px] font-semibold text-white truncate flex-1">{bot.name}</h3>
+                <TypeBadge type={bot.type} />
+                <div className="relative shrink-0" ref={menuRef}>
+                  <button
+                    onClick={() => setMenuOpen(!menuOpen)}
+                    className="p-2 rounded hover:bg-gray-700"
+                    aria-label="More actions"
+                  >
+                    <BsThreeDotsVertical className="text-gray-300" size={18} />
                   </button>
                   {menuOpen && (
-                    <div className="absolute top-0 right-10 w-32 bg-gray-900 rounded shadow-md z-50">
+                    <div className="absolute right-0 top-8 w-40 bg-gray-900 rounded shadow-md z-50">
                       <button
                         onClick={() => { setEditing(true); setMenuOpen(false); }}
                         className="flex items-center gap-2 w-full px-4 py-2 text-sm text-blue-400 hover:bg-gray-800">
@@ -96,14 +103,26 @@ export const BotCard = ({ bot, column }) => {
                 </div>
               </div>
 
-            {/* ORTA: Coinler + Menü */}
+              <p className="mb-1 text-[14px]"><span className="text-stone-500">API:</span> {bot.api}</p>
+              <p className="mb-1 text-[14px]"><span className="text-stone-500">Strategy:</span> {bot.strategy}</p>
+              <p className="mb-1 text-[14px]"><span className="text-stone-500">Period:</span> {bot.period}</p>
+              <p className="mb-1 text-[14px]">
+                <span className="text-stone-500">Days:</span> {Array.isArray(bot.days) ? bot.days.join(', ') : 'Undefined'}
+              </p>
+              <p className="mb-1 text-[14px]"><span className="text-stone-500">Hours:</span> {bot.startTime} - {bot.endTime}</p>
+              <p className="mb-1 text-[14px]">
+                <span className="text-stone-500">Status:</span>{' '}
+                <span className={bot.isActive ? 'text-green-400' : 'text-[rgb(216,14,14)]'}>
+                  {bot.isActive ? 'Bot Active' : 'Bot Inactive'}
+                </span>
+              </p>
+            </div>
+
+            {/* ORTA: Coinler */}
             <div className="flex flex-col pr-1 border-r border-gray-700 relative">
               <h4 className="text-sm font-semibold mb-2 bg-gradient-to-r from-violet-900 via-sky-600 to-purple-500 text-transparent bg-clip-text">
                 Cryptocurrencies
               </h4>
-
-              
-
               <div className="h-44 overflow-y-auto mr-4 scrollbar-hide">
                 {bot.cryptos?.length > 0 ? (
                   bot.cryptos.map((coin) => (
@@ -122,11 +141,9 @@ export const BotCard = ({ bot, column }) => {
 
             {/* SAĞ: Toggle + Spinner */}
             <div className="flex flex-col justify-center items-center relative">
-              {/* Spinner (dokunma engelli, daha düşük z-index) */}
               <div className="absolute flex items-center gap-3 mb-[152px] mr-[7px] z-10 pointer-events-none">
                 <SpinningWheel isActive={bot.isActive} />
               </div>
-              {/* TOGGLE: dış label yerine div + yüksek z-index */}
               <div className="flex items-center gap-3 z-20 relative">
                 <RunBotToggle
                   checked={bot.isActive}
@@ -155,7 +172,7 @@ export const BotCard = ({ bot, column }) => {
     );
   }
 
-  // column !== "left" (sağ kart)
+  /* ==== SAĞ KART ==== */
   return (
     <>
       <div className="rounded-l-full px-4 py-4 border-2 border-cyan-900 relative bg-[hsl(227,82%,2%)] text-gray-200">
@@ -194,7 +211,46 @@ export const BotCard = ({ bot, column }) => {
 
           {/* SAĞ: Bilgiler */}
           <div className="border-gray-700 pr-4">
-            <h3 className="text-[18px] pl-1 font-semibold mb-2 text-white border-b border-gray-600 pb-[10px]">{bot.name}</h3>
+            {/* Başlık satırı: İsim + Type + Menü */}
+            <div className="flex items-center gap-2 border-b border-gray-600 pb-[10px] mb-2">
+              <h3 className="text-[18px] font-semibold text-white truncate flex-1">{bot.name}</h3>
+              <TypeBadge type={bot.type} />
+              <div className="relative shrink-0" ref={menuRef}>
+                <button
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="p-2 rounded hover:bg-gray-700"
+                  aria-label="More actions"
+                >
+                  <BsThreeDotsVertical className="text-gray-300" size={18} />
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 top-8 w-40 bg-gray-900 rounded shadow-md z-50">
+                    <button
+                      onClick={() => { setEditing(true); setMenuOpen(false); }}
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-blue-400 hover:bg-gray-800">
+                      <FiEdit3 size={16} /> Edit
+                    </button>
+                    <button
+                      onClick={() => { setSelectedBotId(bot.id); setDeleteModalOpen(true); setMenuOpen(false); }}
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-800">
+                      <FaRegTrashAlt size={16} /> Delete
+                    </button>
+                    <button
+                      onClick={() => { setIsExamineOpen(true); fetchAndStoreBotAnalysis(bot.id); setMenuOpen(false); }}
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-yellow-400 hover:bg-gray-700">
+                      <IoSearch size={16} /> Examine
+                    </button>
+                    <button
+                      onClick={() => { setSelectedBotId(bot.id); setShotDownModalOpen(true); setMenuOpen(false); }}
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-gray-700"
+                      title="Shuts down the bot and all open trades">
+                      <FaBan size={16} /> Shutdown
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <p className="mb-1 text-[14px]"><span className="text-stone-500">API:</span> {bot.api}</p>
             <p className="mb-1 text-[14px] flex items-center gap-1 max-w-[180px] overflow-hidden whitespace-nowrap">
               <span className="text-stone-500 shrink-0">Strategy:</span>
@@ -209,41 +265,6 @@ export const BotCard = ({ bot, column }) => {
                 {bot.isActive ? 'Bot Active' : 'Bot Inactive'}
               </span>
             </p>
-            <p className="mb-1 text-[14px]"><span className="text-stone-500">Profit/Loss:</span></p>
-          </div>
-        </div>
-
-        {/* Sağ kart menü */}
-        <div className="absolute top-2 right-2">
-          <div className="relative inline-block text-left" ref={menuRef}>
-            <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 rounded hover:bg-gray-700">
-              <BsThreeDotsVertical className="text-gray-300" size={20} />
-            </button>
-            {menuOpen && (
-              <div className="absolute top-0 right-10 w-32 bg-gray-900 rounded shadow-md z-50">
-                <button
-                  onClick={() => { setEditing(true); setMenuOpen(false); }}
-                  className="flex items-center gap-2 w-full px-4 py-2 text-sm text-blue-400 hover:bg-gray-800">
-                  <FiEdit3 size={16} /> Edit
-                </button>
-                <button
-                  onClick={() => { setSelectedBotId(bot.id); setDeleteModalOpen(true); setMenuOpen(false); }}
-                  className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-800">
-                  <FaRegTrashAlt size={16} /> Delete
-                </button>
-                <button
-                  onClick={() => { setIsExamineOpen(true); fetchAndStoreBotAnalysis(bot.id); setMenuOpen(false); }}
-                  className="flex items-center gap-2 w-full px-4 py-2 text-sm text-yellow-400 hover:bg-gray-700">
-                  <IoSearch size={16} /> Examine
-                </button>
-                <button
-                  onClick={() => { setSelectedBotId(bot.id); setShotDownModalOpen(true); setMenuOpen(false); }}
-                  className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-gray-700"
-                  title="Shuts down the bot and all open trades">
-                  <FaBan size={16} /> Shutdown
-                </button>
-              </div>
-            )}
           </div>
         </div>
 

@@ -25,7 +25,7 @@ from app.schemas.showcase.bot_follow import FollowCreate
 protected_router = APIRouter()
 
 # GET all bots for user
-@protected_router.get("/api2/get-bots", response_model=list[BotsOut])
+@protected_router.get("/api/get-bots", response_model=list[BotsOut])
 async def get_all_bots(db: AsyncSession = Depends(get_db), user_id: dict = Depends(verify_token)):
     result = await db.execute(
         select(Bots)

@@ -15,6 +15,7 @@ class BotsBase(BaseModel):
     initial_usd_value: float | None = 1000
     current_usd_value: float | None = 1000
     balance: float | None = None
+    bot_type: str
 
 
 class BotsCreate(BotsBase):
@@ -36,6 +37,7 @@ class BotsUpdate(BaseModel):
 class BotsOut(BotsBase):
     id: int
     created_at: datetime
+
     
     class Config:
         orm_mode = True

@@ -3,6 +3,8 @@
 import { CrosshairMode } from "lightweight-charts";
 import { useEffect, useState, useRef } from "react";
 import { createChart } from "lightweight-charts";
+import useRulerStore from "@/store/indicator/rulerStore";
+import { installRulerTool } from "@/utils/rulerTool";
 import { useLogout } from "@/utils/HookLogout";
 import useMagnetStore from "@/store/indicator/magnetStore";
 import useIndicatorDataStore from "@/store/indicator/indicatorDataStore";
@@ -32,6 +34,12 @@ export default function ChartComponent() {
   const [chartData, setChartData] = useState([]);
   const handleLogout = useLogout();
   const { isMagnetMode } = useMagnetStore();
+  const { isRulerMode } = useRulerStore();
+  const rulerModeRef = useRef(isRulerMode);
+  useEffect(() => {
+    rulerModeRef.current = isRulerMode;
+    console.log("[RULER] rulerModeRef updated:", isRulerMode);
+  }, [isRulerMode]);
   const { indicatorData, removeSubIndicator } = useIndicatorDataStore();
   const { strategyData, removeSubStrategy } = useStrategyDataStore();
   const { selectedCrypto, selectedPeriod } = useCryptoStore();
@@ -208,6 +216,23 @@ export default function ChartComponent() {
       wickDownColor: "rgb(242, 54, 69)",
     });
     candleSeries.setData(chartData);
+
+    console.log("[RULER] installing ruler tool…", {
+      hasChart: !!chart,
+      hasSeries: !!candleSeries,
+      hasContainer: !!chartContainerRef.current,
+    });
+    const removeRuler = installRulerTool({
+      chart,
+      series: candleSeries,
+      container: chartContainerRef.current,
+      isRulerModeRef: rulerModeRef,
+    });
+    cleanupFns.push(() => {
+      console.log("[RULER] cleanup ruler tool");
+      try { removeRuler?.(); } catch {}
+    });
+
 
     // ===== İMLEÇ MERKEZLİ ZOOM =====
     const removeWheelZoom = installCursorWheelZoom({

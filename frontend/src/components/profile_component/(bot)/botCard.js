@@ -60,7 +60,7 @@ export const BotCard = ({ bot, column }) => {
                   {bot.isActive ? 'Bot Active' : 'Bot Inactive'}
                 </span>
               </p>
-              <p className="mb-1 text-[14px]"><span className="text-stone-500">Profit/Loss:</span></p>
+              <p className="mb-1 text-[14px]"><span className="text-stone-500">...</span></p>
             </div>
             {/* Menü */}
               <div className="absolute left-64 top-4">

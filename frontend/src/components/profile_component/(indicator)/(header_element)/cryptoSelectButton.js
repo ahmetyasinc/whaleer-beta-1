@@ -117,7 +117,7 @@ const CryptoSelectButton = ({locale}) => {
     <>
       {/* Kripto Seçim Butonu */}
       <button
-        className="pl-4 ml-2 flex items-center w-[200px] h-[40px] rounded bg-black border border-gray-800 hover:border-gray-600 transition duration-100 text-gray-200 overflow-hidden text-ellipsis whitespace-nowrap"
+        className="pl-4 ml-2 flex items-center w-[230px] h-[40px] rounded bg-black border border-gray-800 hover:border-gray-600 transition duration-100 text-gray-200 overflow-hidden text-ellipsis whitespace-nowrap"
         onClick={() => setIsModalOpen(true)}
       >
         <IoMdSearch className="text-[19px] mr-2" />

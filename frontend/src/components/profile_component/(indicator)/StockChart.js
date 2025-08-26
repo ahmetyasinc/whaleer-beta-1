@@ -13,6 +13,7 @@ import useCryptoStore from "@/store/indicator/cryptoPinStore";
 import IndicatorSettingsModal from './(modal_tabs)/indicatorSettingsModal';
 import StrategySettingsModal from './(modal_tabs)/strategySettingsModal';
 import { installCursorWheelZoom } from "@/utils/cursorCoom";
+import usePanelStore from "@/store/indicator/panelStore";
 
 import {
   RANGE_EVENT,
@@ -36,9 +37,9 @@ export default function ChartComponent() {
   const { isMagnetMode } = useMagnetStore();
   const { isRulerMode } = useRulerStore();
   const rulerModeRef = useRef(isRulerMode);
+  const { end } = usePanelStore();
   useEffect(() => {
     rulerModeRef.current = isRulerMode;
-    console.log("[RULER] rulerModeRef updated:", isRulerMode);
   }, [isRulerMode]);
   const { indicatorData, removeSubIndicator } = useIndicatorDataStore();
   const { strategyData, removeSubStrategy } = useStrategyDataStore();
@@ -97,7 +98,7 @@ export default function ChartComponent() {
       }
     };
     recalculateIndicators();
-  }, [selectedCrypto, selectedPeriod]);
+  }, [selectedCrypto, selectedPeriod, end]);
 
   // ===== Ana datayı çek =====
   useEffect(() => {
@@ -135,7 +136,7 @@ export default function ChartComponent() {
       }
     }
     fetchData();
-  }, [selectedCrypto, selectedPeriod]);
+  }, [selectedCrypto, selectedPeriod, end]);
 
   // ===== Chart oluştur =====
   useEffect(() => {
@@ -173,13 +174,15 @@ export default function ChartComponent() {
     const chart = createChart(chartContainerRef.current, chartOptions);
     chartRef.current = chart;
 
+    const symbolText = selectedCrypto?.binance_symbol || selectedCrypto?.symbol || "—";
+
     // WATERMARK
     chart.applyOptions({
       watermark: {
-        color: '#222',
+        color: '#11111141',
         visible: true,
-        text: 'BTCUSDT',
-        fontSize: 18,
+        text: symbolText,
+        fontSize: 40,
         horzAlign: 'center',
         vertAlign: 'center',
       },

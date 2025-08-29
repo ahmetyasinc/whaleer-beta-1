@@ -21,10 +21,11 @@ const BotDiscoveryApp = () => {
   const botData = getCurrentBot();
   const isFollowed = useBotDataStore(state => state.isBotFollowed(botData?.bot?.bot_id));
   const follow = useBotDataStore(state => state.followBot);
-
+  const viewMode = useBotDataStore(s => s.viewMode);
+  
   useEffect(() => {
     initializeBots();
-  }, []);
+  }, [initializeBots, viewMode]);
 
   const handleNavigation = (dir) => {
     navigateBot(dir);

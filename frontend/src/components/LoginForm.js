@@ -158,7 +158,7 @@ return (
             <button
               type="submit"
               onClick={() => {
-                const audio = new Audio("/sounds/tencere.mp3");
+                //const audio = new Audio("/sounds/tencere.mp3");
                 audio.play();
               }}
               className="group relative w-full flex justify-center py-3 sm:py-4 px-4 mb-5 

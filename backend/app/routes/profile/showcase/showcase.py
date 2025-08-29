@@ -11,6 +11,7 @@ from app.services.showcase.showcase_service import ShowcaseService
 
 from app.models.profile.bots.bots import Bots
 from app.models.user import User
+from app.core.auth import verify_token
 
 
 protected_router = APIRouter()
@@ -19,6 +20,14 @@ protected_router = APIRouter()
 async def get_showcase_bots(filters: ShowcaseFilter, db: Session = Depends(get_db)):
     service = ShowcaseService(db=db)
     return await service.get_showcase_bots(filters)
+
+@protected_router.get("/showcase/mydata", response_model=List[ShowcaseBotResponse])
+async def get_showcase_my_bots(
+    user_id: dict = Depends(verify_token),
+    db: Session = Depends(get_db)
+):
+    service = ShowcaseService(db=db)
+    return await service.get_showcase_my_bots(int(user_id))
 
 @protected_router.get("/showcase/bot/{bot_id}", response_model=ShowcaseBotResponse)
 async def get_single_bot(bot_id: int, db: Session = Depends(get_db)):

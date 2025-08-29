@@ -9,16 +9,17 @@ import SellRentModal from "@/components/profile_component/(showcase)/(explore)/s
 import useBotDropdownSearchStore from '@/store/showcase/botDropdownSearchStore';
 import { useSiwsStore } from "@/store/auth/siwsStore";
 import useSiwsAuth from "@/hooks/useSiwsAuth";
+import useBotDataStore from '@/store/showcase/botDataStore';
 
 export default function Header() {
   const pathname = usePathname();
   const [modalOpen, setModalOpen] = useState(false);
-
+  
   const { fetchBots, hasLoadedOnce, loading } = useBotDropdownSearchStore();
   useEffect(() => { if (!hasLoadedOnce && !loading) fetchBots(); }, [fetchBots, hasLoadedOnce, loading]);
 
   const { wallet, walletLinked, signOutWallet, authLoading, hydrateSession } = useSiwsStore();
-  const { connectWalletAndSignIn } = useSiwsAuth();
+  const { connectWalletAndSignIn, isPhantomInstalled, readyState } = useSiwsAuth();
 
   // Vitrine gelindiğinde cookie’den wallet oturumunu hydrate et
   useEffect(() => { hydrateSession(); }, [hydrateSession]);
@@ -28,21 +29,53 @@ export default function Header() {
     { name: "Featured", href: "/profile/showcase/featured" }
   ];
 
+  const viewMode = useBotDataStore(s => s.viewMode);
+  const setViewMode = useBotDataStore(s => s.setViewMode);
+  const initializeBots = useBotDataStore(s => s.initializeBots);
+
+  const onChangeMode = async (mode) => {
+    setViewMode(mode);
+    await initializeBots(); // modu değiştirince listeyi yenile
+  };
+
   return (
     <>
       <header className="fixed top-0 left-0 w-full bg-black text-white h-[60px] shadow-md z-50 px-6">
         <div className="relative h-full flex items-center justify-between">
-          <button
-            className="absolute left-[45px] top-1/2 -translate-y-1/2 bg-black hover:border-stone-400 transition px-6 py-[6px] rounded-xl font-semibold shadow-lg text-white border border-stone-600 z-50 disabled:opacity-50"
-            onClick={() => setModalOpen(true)}
-            disabled={!walletLinked}
-            type="button"
-          >
-            Sell / Rent
-          </button>
+          {/* Sell / Rent */}
+          <div className="absolute left-[45px] top-1/2 -translate-y-1/2 flex items-center gap-3 z-50">
+            <button
+              className="bg-black hover:border-stone-400 transition px-6 py-[6px] rounded-xl font-semibold shadow-lg text-white border border-stone-600 disabled:opacity-50"
+              onClick={() => setModalOpen(true)}
+              disabled={!walletLinked}
+              type="button"
+            >
+              Sell / Rent
+            </button>
 
+            {/* ✅ All / My toggle */}
+            <div className="flex items-center rounded-xl border border-stone-600 overflow-hidden">
+              <button
+                className={`px-3 py-[6px] text-sm ${viewMode === 'all' ? 'bg-stone-700' : 'bg-black hover:bg-stone-800'}`}
+                onClick={() => onChangeMode('all')}
+                type="button"
+                title="Show all listings"
+              >
+                All Listings
+              </button>
+              <button
+                className={`px-3 py-[6px] text-sm border-l border-stone-600 ${viewMode === 'mine' ? 'bg-stone-700' : 'bg-black hover:bg-stone-800'}`}
+                onClick={() => onChangeMode('mine')}
+                type="button"
+                title="Show only my listings"
+              >
+                My Listings
+              </button>
+            </div>
+          </div>
+
+          {/* ortadaki arama */}
           <div className="w-[160px]" />
-
           <div className="absolute left-1/2 -translate-x-1/2">
             <SearchButton />
           </div>
@@ -62,15 +95,26 @@ export default function Header() {
               ))}
             </nav>
 
-            {!walletLinked ? (
-              <button
-                onClick={connectWalletAndSignIn}
-                disabled={authLoading}
-                className="px-4 py-[6px] rounded-xl border border-stone-600 hover:border-stone-400"
-              >
-                {authLoading ? "Connecting..." : "Connect Wallet"}
-              </button>
-            ) : (
+              {!walletLinked ? (
+                !isPhantomInstalled && readyState !== "Installed" ? (
+                  <a
+                    href="https://phantom.app/download"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-[6px] rounded-xl border border-stone-600 hover:border-stone-400"
+                  >
+                    Install Phantom
+                  </a>
+                ) : (
+                  <button
+                    onClick={connectWalletAndSignIn}
+                    disabled={authLoading}
+                    className="px-4 py-[6px] rounded-xl border border-stone-600 hover:border-stone-400"
+                  >
+                    {authLoading ? "Connecting..." : "Connect Wallet"}
+                  </button>
+                )
+              ) : (
               <div className="flex items-center gap-2">
                 <span className="text-sm opacity-80">
                   {wallet?.address ? `${wallet.address.slice(0,4)}...${wallet.address.slice(-4)}` : "Connected"}

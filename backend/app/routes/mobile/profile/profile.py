@@ -151,7 +151,7 @@ async def get_profile_all_datas(
         snapshots_by_api[api_id].append({"timestamp": ts, "usd_value": _to_float(usd)})
 
     # 4) Botlar
-    bots = (await db.scalars(select(Bots).where(Bots.api_id.in_(api_ids)))).all()
+    bots = (await db.scalars(select(Bots).where(Bots.api_id.in_(api_ids),Bots.deleted.is_(False)))).all()
     bot_ids = [b.id for b in bots] or [-1]
 
     # 5) Holdings / Positions / Trades (toplu)

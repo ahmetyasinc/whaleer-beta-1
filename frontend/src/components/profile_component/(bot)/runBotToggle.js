@@ -3,15 +3,32 @@
 import React from 'react';
 import styled from 'styled-components';
 
-const RunBotToggle = ({ type = "checkbox", checked, onChange, className = "" }) => {
+const RunBotToggle = ({
+  type = "checkbox",
+  checked,
+  onChange,
+  disabled = false,
+  className = "",
+  title,
+}) => {
+  // disabled iken controlled input kuralı için no-op onChange
+  const handleChange = disabled ? () => {} : (onChange || (() => {}));
+
   return (
-    <StyledWrapper className={className}>
-      <label className="switch">
+    <StyledWrapper
+      className={className}
+      data-disabled={disabled ? 'true' : 'false'}
+      title={title}
+      aria-disabled={disabled}
+    >
+      <label className={`switch ${disabled ? 'is-disabled' : ''}`}>
         <input
           className="checkbox"
           type={type}
           checked={!!checked}
-          onChange={onChange}
+          onChange={handleChange}
+          disabled={disabled}
+          readOnly={disabled}
         />
         <svg className="svg" width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <circle className="svg-ring" cx={12} cy={12} r={6} fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeDasharray="0 5 27.7 5" strokeDashoffset="0.01" transform="rotate(-90,12,12)" />
@@ -33,6 +50,13 @@ const StyledWrapper = styled.div`
     width: 5em;
     height: 5em;
     display: inline-block;
+    transition: opacity 0.15s ease, filter 0.15s ease;
+  }
+
+  .switch.is-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none; /* label tıklanmasın */
   }
 
   .checkbox,
@@ -73,6 +97,11 @@ const StyledWrapper = styled.div`
     cursor: pointer;
   }
 
+  /* disabled iken input’un cursor’u da not-allowed olsun */
+  [data-disabled="true"] .checkbox {
+    cursor: not-allowed;
+  }
+
   .checkbox:active {
     box-shadow:
       0 0 0 0.1em hsl(3, 90%, 25%) inset,
@@ -108,6 +137,12 @@ const StyledWrapper = styled.div`
     filter: brightness(1.1);
   }
 
+  /* disabled durumda hover/focus parlamasını iptal */
+  [data-disabled="true"] .checkbox:focus,
+  [data-disabled="true"] .checkbox:hover {
+    filter: none;
+  }
+
   .slider {
     clip: rect(1px, 1px, 1px, 1px);
     overflow: hidden;
@@ -124,6 +159,7 @@ const StyledWrapper = styled.div`
   .svg-ring,
   .svg-line {
     stroke: hsl(223, 90%, 100%);
+    transition: stroke 0.15s ease-in-out;
   }
 
   .svg-ring {
@@ -148,7 +184,6 @@ const StyledWrapper = styled.div`
   .svg-line:nth-of-type(1) {
     transition-delay: 0s, 0.25s;
   }
-
   .checkbox:checked + .svg .svg-line:nth-of-type(1) {
     stroke-dashoffset: -6;
     transition-delay: 0s;
@@ -157,7 +192,6 @@ const StyledWrapper = styled.div`
   .svg-line:nth-of-type(2) {
     stroke-dashoffset: 6;
   }
-
   .checkbox:checked + .svg .svg-line:nth-of-type(2) {
     stroke-dashoffset: -3;
     transition-delay: 0s, 0.25s;

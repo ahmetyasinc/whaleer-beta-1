@@ -1,10 +1,11 @@
 from pydantic import BaseModel
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from datetime import datetime
 
 class IndicatorCreate(BaseModel):
     name: str
     code: str
+    parent_indicator_id: Optional[int] = None
 
 class IndicatorUpdate(BaseModel):
     id: int

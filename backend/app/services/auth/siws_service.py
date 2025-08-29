@@ -24,7 +24,6 @@ async def upsert_wallet_and_log_link(
     # 1) adres var mı?
     res = await db.execute(select(Wallet).where(Wallet.chain == chain, Wallet.address == address))
     wallet = res.scalar_one_or_none()
-
     if wallet is None:
         # Yeni cüzdan; doğrudan bu kullanıcıya bağla
         wallet = Wallet(
@@ -38,6 +37,8 @@ async def upsert_wallet_and_log_link(
         db.add(wallet)
         await db.flush()
     else:
+        print("Burası daha sonra düzeltilmeli...")
+        print(wallet.user_id, user_id)
         # Adres başka kullanıcıya mı bağlı?
         if wallet.user_id != user_id:
             raise AddressTakenError("This wallet address is already linked to another account.")
@@ -57,7 +58,6 @@ async def upsert_wallet_and_log_link(
         user_agent=user_agent,
     )
     db.add(signin)
-
     # 3) nonce consume
     resn = await db.execute(select(SiwsNonce).where(SiwsNonce.id == nonce_id))
     nonce_row = resn.scalar_one_or_none()

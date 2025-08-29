@@ -72,7 +72,7 @@ const TechnicalStrategies = ({locale}) => {
   };
 
   const openCodeModal = (strategy) => {
-    setSelectedIndicator(strategy); // 'strategy' artık 'indicator' olarak kullanılacak
+    setSelectedIndicator(strategy);
     setIsModalOpen(true);
   };
 

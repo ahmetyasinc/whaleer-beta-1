@@ -134,12 +134,15 @@ async def siws_session(
     payload = extract_siws_payload_or_401(request)
     user_id = int(payload["sub"])
     wallet_id = int(payload["wid"])
+    if not user_id == int(_user_id):
+        raise HTTPException(status_code=401, detail="SIWS wallet belongs to another user")
 
     q = select(Wallet).where(Wallet.id == wallet_id, Wallet.user_id == user_id)
     res = await db.execute(q)
     wallet = res.scalar_one_or_none()
     if not wallet:
-        raise HTTPException(status_code=401, detail="SIWS wallet not found/belongs to another user")
+        raise HTTPException(status_code=401, detail="SIWS wallet not found")
+    
 
     return {
         "wallet": {

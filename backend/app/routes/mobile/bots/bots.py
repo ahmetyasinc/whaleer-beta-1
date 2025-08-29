@@ -21,7 +21,7 @@ async def get_bot_analysis(
     user_id: int = Depends(verify_token_mobile)
 ):
     result = await db.execute(
-        select(Bots).where(Bots.id == bot_id, Bots.user_id == int(user_id))
+        select(Bots).where(Bots.id == bot_id, Bots.user_id == int(user_id),Bots.deleted.is_(False),)
     )
     bot = result.scalar_one_or_none()
 

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import useBotExamineStore from "@/store/bot/botExamineStore";
 import { useBotStore } from "@/store/bot/botStore";
 import { BotModal } from './botModal';
@@ -31,6 +31,52 @@ function TypeBadge({ type }) {
   );
 }
 
+/* ---- Geri sayım yardımcıları ---- */
+function pad2(n) { return String(Math.max(0, n)).padStart(2, '0'); }
+function diffParts(ms) {
+  const clamped = Math.max(0, ms);
+  const d = Math.floor(clamped / (24 * 3600e3));
+  const h = Math.floor((clamped % (24 * 3600e3)) / 3600e3);
+  const m = Math.floor((clamped % 3600e3) / 60e3);
+  const s = Math.floor((clamped % 60e3) / 1e3);
+  return { d, h, m, s };
+}
+
+function RentedCountdown({ rent_expires_at }) {
+  const expiry = useMemo(() => rent_expires_at ? new Date(rent_expires_at).getTime() : null, [rent_expires_at]);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!expiry) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [expiry]);
+
+  const remaining = expiry ? (expiry - now) : 0;
+  const expired = !expiry || remaining <= 0;
+  const { d, h, m, s } = diffParts(remaining);
+
+  return (
+    <>
+      <div
+        className={[
+          "w-full flex items-center justify-between rounded-md px-3 py-2 border",
+          expired
+            ? "bg-gray-800/60 border-gray-700 text-gray-400"
+            : "bg-cyan-500/10 border-cyan-700 text-cyan-200"
+        ].join(' ')}
+        title={expired ? "Rental period ended" : "Time left on rental"}
+      >
+        <span className="text-[11px] uppercase tracking-wider">Rental time left :</span>
+        <span className="font-mono text-sm">
+          {pad2(d)}:{pad2(h)}:{pad2(m)}:{pad2(s)}
+        </span>
+      </div>
+      <div className="h-px w-full bg-gray-700 my-2" />
+    </>
+  );
+}
+
 export const BotCard = ({ bot, column }) => {
   const removeBot = useBotStore((state) => state.removeBot);
   const updateBot = useBotStore((state) => state.updateBot);
@@ -46,6 +92,17 @@ export const BotCard = ({ bot, column }) => {
   const [isExamineOpen, setIsExamineOpen] = useState(false);
   const menuRef = useRef(null);
 
+  // RENTED kontrol + expiry
+  const isRented = bot?.acquisition_type === 'RENTED';
+  const expiryMs = isRented && bot?.rent_expires_at ? new Date(bot.rent_expires_at).getTime() : null;
+  const isExpired = isRented && (expiryMs ? Date.now() >= expiryMs : true);
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    if (!expiryMs) return;
+    const id = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [expiryMs]);
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
@@ -53,6 +110,26 @@ export const BotCard = ({ bot, column }) => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // --- Yeni blokaj kontrolü (aktif etme ve examine için) ---
+  const isBlocked =
+    bot?.initial_usd_value == null ||
+    bot?.current_usd_value == null ||
+    (typeof bot?.api === 'undefined');
+
+  // Toggle’ın gerçek kullanılabilirliği
+  const canToggle = !(isRented && isExpired) && !isBlocked;
+
+  // Ortak kırmızı uyarı stili (toggle alanı için)
+  const redDisableWrap = !canToggle
+    ? "ring-1 ring-red-700 rounded-md p-1 bg-red-500/10"
+    : "";
+
+  const disableTitle = isBlocked
+    ? "Cannot activate: missing values (initial/current) or API undefined"
+    : (isRented && isExpired)
+      ? "Rental expired – cannot activate"
+      : undefined;
 
   /* ==== SOL KART ==== */
   if (column === "left") {
@@ -82,16 +159,31 @@ export const BotCard = ({ bot, column }) => {
                         className="flex items-center gap-2 w-full px-4 py-2 text-sm text-blue-400 hover:bg-gray-800">
                         <FiEdit3 size={16} /> Edit
                       </button>
+
                       <button
                         onClick={() => { setSelectedBotId(bot.id); setDeleteModalOpen(true); setMenuOpen(false); }}
                         className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-800">
-                        <FaRegTrashAlt size={16} /> Delete
+                        <FaRegTrashAlt size={16} /> Delete (Dev)
                       </button>
+
                       <button
-                        onClick={() => { setIsExamineOpen(true); fetchAndStoreBotAnalysis(bot.id); setMenuOpen(false); }}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-yellow-400 hover:bg-gray-700">
+                        onClick={() => {
+                          if (isBlocked) return;
+                          setIsExamineOpen(true);
+                          fetchAndStoreBotAnalysis(bot.id);
+                          setMenuOpen(false);
+                        }}
+                        disabled={isBlocked}
+                        aria-disabled={isBlocked}
+                        title={isBlocked ? "Examine disabled: missing values or API undefined" : "Examine"}
+                        className={[
+                          "flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-700",
+                          isBlocked ? "text-gray-500 cursor-not-allowed pointer-events-none" : "text-yellow-400"
+                        ].join(' ')}
+                      >
                         <IoSearch size={16} /> Examine
                       </button>
+
                       <button
                         onClick={() => { setSelectedBotId(bot.id); setShotDownModalOpen(true); setMenuOpen(false); }}
                         className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-gray-700"
@@ -118,8 +210,11 @@ export const BotCard = ({ bot, column }) => {
               </p>
             </div>
 
-            {/* ORTA: Coinler */}
+            {/* ORTA: Countdown + Coinler */}
             <div className="flex flex-col pr-1 border-r border-gray-700 relative">
+              {isRented && (
+                <RentedCountdown rent_expires_at={bot?.rent_expires_at} />
+              )}
               <h4 className="text-sm font-semibold mb-2 bg-gradient-to-r from-violet-900 via-sky-600 to-purple-500 text-transparent bg-clip-text">
                 Cryptocurrencies
               </h4>
@@ -144,11 +239,19 @@ export const BotCard = ({ bot, column }) => {
               <div className="absolute flex items-center gap-3 mb-[152px] mr-[7px] z-10 pointer-events-none">
                 <SpinningWheel isActive={bot.isActive} />
               </div>
-              <div className="flex items-center gap-3 z-20 relative">
+              <div
+                className={[
+                  "flex items-center gap-3 z-20 relative",
+                  (!canToggle) ? "opacity-90" : "",
+                  redDisableWrap
+                ].join(' ')}
+                title={disableTitle}
+                aria-disabled={!canToggle}
+              >
                 <RunBotToggle
                   checked={bot.isActive}
-                  onChange={() => toggleBotActive(bot.id)}
-                  className="z-20"
+                  onChange={canToggle ? () => toggleBotActive(bot.id) : undefined}
+                  disabled={!canToggle}
                 />
               </div>
             </div>
@@ -182,17 +285,28 @@ export const BotCard = ({ bot, column }) => {
             <div className="absolute flex items-center gap-3 mb-[152px] ml-[7px] z-10 pointer-events-none scale-x-[-1]">
               <SpinningWheel isActive={bot.isActive} />
             </div>
-            <div className="flex items-center gap-3 z-20 relative">
+            <div
+              className={[
+                "flex items-center gap-3 z-20 relative",
+                (!canToggle) ? "opacity-90" : "",
+                redDisableWrap
+              ].join(' ')}
+              title={disableTitle}
+              aria-disabled={!canToggle}
+            >
               <RunBotToggle
                 checked={bot.isActive}
-                onChange={() => toggleBotActive(bot.id)}
-                className="z-20"
+                onChange={canToggle ? () => toggleBotActive(bot.id) : undefined}
+                disabled={!canToggle}
               />
             </div>
           </div>
 
-          {/* ORTA: Coinler */}
+          {/* ORTA: Countdown + Coinler */}
           <div className="flex flex-col border-x pl-4 border-gray-700">
+            {isRented && (
+              <RentedCountdown rent_expires_at={bot?.rent_expires_at} />
+            )}
             <h4 className="text-sm font-semibold mb-2 bg-gradient-to-r from-violet-900 via-sky-600 to-purple-500 text-transparent bg-clip-text">
               Cryptocurrencies
             </h4>
@@ -230,16 +344,31 @@ export const BotCard = ({ bot, column }) => {
                       className="flex items-center gap-2 w-full px-4 py-2 text-sm text-blue-400 hover:bg-gray-800">
                       <FiEdit3 size={16} /> Edit
                     </button>
+
                     <button
                       onClick={() => { setSelectedBotId(bot.id); setDeleteModalOpen(true); setMenuOpen(false); }}
                       className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-800">
-                      <FaRegTrashAlt size={16} /> Delete
+                      <FaRegTrashAlt size={16} /> Delete (Dev)
                     </button>
+
                     <button
-                      onClick={() => { setIsExamineOpen(true); fetchAndStoreBotAnalysis(bot.id); setMenuOpen(false); }}
-                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-yellow-400 hover:bg-gray-700">
+                      onClick={() => {
+                        if (isBlocked) return;
+                        setIsExamineOpen(true);
+                        fetchAndStoreBotAnalysis(bot.id);
+                        setMenuOpen(false);
+                      }}
+                      disabled={isBlocked}
+                      aria-disabled={isBlocked}
+                      title={isBlocked ? "Examine disabled: missing values or API undefined" : "Examine"}
+                      className={[
+                        "flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-700",
+                        isBlocked ? "text-gray-500 cursor-not-allowed pointer-events-none" : "text-yellow-400"
+                      ].join(' ')}
+                    >
                       <IoSearch size={16} /> Examine
                     </button>
+
                     <button
                       onClick={() => { setSelectedBotId(bot.id); setShotDownModalOpen(true); setMenuOpen(false); }}
                       className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-gray-700"

@@ -8,7 +8,6 @@ const useApiStore = create((set,get) => ({
   loadApiKeys: async () => {
     try {
       const keys = await getApiKeys();
-      console.log("Yüklenen API Key'ler:", keys);
       if (Array.isArray(keys)) {
         set({ apiList: keys });
       } else {

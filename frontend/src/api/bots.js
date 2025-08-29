@@ -15,8 +15,8 @@ export const getBots = async () => {
     const formattedData = response.data.map(item => {
       const [startTime, endTime] = item.active_hours.split('-');
 
-      const apiName = apiList.find(api => api.id === item.api_id)?.name || 'Bulunamadı';
-      const strategyName = all_strategies.find(strategy => strategy.id === item.strategy_id)?.name || 'Bulunamadı';
+      const apiName = apiList.find(api => api.id === item.api_id)?.name;
+      const strategyName = all_strategies.find(strategy => strategy.id === item.strategy_id)?.name || 'Not Found';
       return {
         id: item.id,
         name: item.name,
@@ -32,8 +32,14 @@ export const getBots = async () => {
         cryptos: item.stocks,
         initial_usd_value: item.initial_usd_value,
         current_usd_value: item.current_usd_value,
-        total_balance: item.balance,
-        type: item.bot_type
+        type: item.bot_type,
+        for_sale: item.for_sale,
+        for_rent: item.for_rent,
+        sell_price: item.sell_price,
+        rent_price: item.rent_price,
+        revenue_wallet : item.revenue_wallet,
+        acquisition_type: item.acquisition_type,
+        rent_expires_at: item.rent_expires_at
       };
     });
 
@@ -106,13 +112,17 @@ export const updateBot = async (id, botData) => {
     } else {
       selectedStrategy = strategies.find((item) => String(item.id) === String(botData.strategy));
     }
-    if (!selectedApi || !selectedStrategy) {
-      throw new Error('Geçersiz API veya strateji seçimi.');
+    if (!selectedApi) {
+      throw new Error('Unvalid API.');
+    }
+    let selected_strategy_id = null
+    if(selectedStrategy) {
+      selected_strategy_id = selectedStrategy.id
     }
 
     const payload = {
       name: botData.name,
-      strategy_id: selectedStrategy.id,
+      strategy_id: selected_strategy_id,
       api_id: selectedApi.id,
       period: botData.period,
       stocks: botData.cryptos,
@@ -121,15 +131,13 @@ export const updateBot = async (id, botData) => {
       active_days: botData.days,
       active_hours: `${botData.startTime}-${botData.endTime}`,
       initial_usd_value: Number(botData.initial_usd_value),
-      balance: Number(botData.balance),
       bot_type: botData.type || {},  // Yeni alan
     };
 
     const response = await axios.put(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/update-bot/${id}/`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/update-bot/${id}`,
       payload
     );
-
     return response.data;
 
   } catch (error) {
@@ -138,12 +146,12 @@ export const updateBot = async (id, botData) => {
   }
 };
 
-export const deleteBot = async (id) => {
+export const deleteBot = async (id) => {// GELİŞTİRİCİ MODU
   try {
-    const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/bots/${id}`);
+    const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/bots/${id}`); //const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/bots/delete/${id}`);
     return response.data;
   } catch (error) {
-    console.error("Bot silinirken hata:", error);
+    console.error("Error occured while deleting:", error);
     throw error;
   }
 };
@@ -159,3 +167,20 @@ export const toggleBotActiveApi = async (id, isActive) => {
   }
 };
 
+export async function patchBotListing(botId, payload) {
+  const { data } = await axios.patch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/bots/${botId}/listing`,
+    payload,
+    { withCredentials: true }
+  );
+  return data;
+}
+
+export async function acquireBot(botId, payload /* { action: 'buy'|'rent', price_paid: number, tx: string, rent_duration_days?: number } */) {
+  const { data } = await axios.post(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/bots/${botId}/acquire`,
+    payload,
+    { withCredentials: true }
+  );
+  return data;
+}

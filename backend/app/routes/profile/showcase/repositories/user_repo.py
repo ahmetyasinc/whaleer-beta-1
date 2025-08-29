@@ -40,6 +40,7 @@ class UserRepository:
         bots_result = await self.db.execute(
             select(Bots).where(
                 Bots.user_id == user.id,
+                Bots.deleted.is_(False),
                 (Bots.for_sale == True) | (Bots.for_rent == True)
             )
         )

@@ -36,10 +36,14 @@ export const useBotStore = create((set) => ({
         endTime: createdBot.active_hours?.split('-')[1] || "",
         cryptos: createdBot.stocks || [],
         candleCount: createdBot.candle_count,
-        balance: createdBot.initial_usd_value,
+        initial_usd_value: createdBot.initial_usd_value,
         total_balance: matchedApi?.balance || 0,
+        acquisition_type: createdBot.acquisition_type,
+        bot_type: createdBot.bot_type,
+        current_usd_value: createdBot.current_usd_value,
       };
 
+      console.log("New Bot oluşturuldu:", newBot);
       // local cache
       set((state) => ({ bots: [...state.bots, newBot] }));
 
@@ -104,8 +108,12 @@ export const useBotStore = create((set) => ({
         endTime: result.active_hours?.split('-')[1] || "",
         cryptos: result.stocks || [],
         candleCount: result.candle_count,
-        balance: result.initial_usd_value,
+        initial_usd_value: result.initial_usd_value,
         total_balance: matchedApi?.balance || 0,
+        acquisition_type: result.acquisition_type,
+        bot_type: result.bot_type,
+        rent_expires_at: result.rent_expires_at,
+        current_usd_value: result.current_usd_value,
       };
 
       set((state) => ({

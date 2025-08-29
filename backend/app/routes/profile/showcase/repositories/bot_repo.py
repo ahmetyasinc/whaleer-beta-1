@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from sqlalchemy import func, select, or_
+from sqlalchemy import func, select, and_, or_
 
 from sqlalchemy.orm import Session
 from app.models.profile.bots.bots import Bots
@@ -25,13 +25,19 @@ class BotRepository:
 
     async def get_bot_by_id(self, bot_id: int):
         result = await self.db.execute(
-            select(Bots).where(Bots.id == bot_id)
+            select(Bots).where(Bots.id == bot_id,Bots.deleted.is_(False))
         )
         return result.scalar_one_or_none()
 
     async def get_filtered_bots(self, filters) -> list[Bots]:
-        stmt = select(Bots).where(
-            or_(Bots.for_sale == True, Bots.for_rent == True)
+        stmt = (
+            select(Bots)
+            .where(
+                and_(
+                    or_(Bots.for_sale.is_(True), Bots.for_rent.is_(True)),
+                    Bots.deleted.is_(False)
+                )
+            )
         )
 
         # For Sale / Sell Price
@@ -84,6 +90,8 @@ class BotRepository:
             #upper = unit * filters.demand
             #print(f"Demand filter: {filters.demand}, max_sold_count: {max_sold_count}, lower: {lower}, upper: {upper}")
             stmt = stmt.where(Bots.sold_count > lower)#, Bots.sold_count <= upper)
+
+        stmt = stmt.order_by(func.random()).limit(filters.limit or 5)
 
         # Execute filtered query
         result = await self.db.execute(stmt)
@@ -289,6 +297,7 @@ class BotRepository:
             select(Bots).where(
                 Bots.user_id == user_id,
                 Bots.id != exclude_id,
+                Bots.deleted.is_(False),
                 (Bots.for_sale == True) | (Bots.for_rent == True)
             )
         )
@@ -332,3 +341,21 @@ class BotRepository:
 
         return other_bots
 
+    async def get_bots_by_user(self, user_id: int) -> list[Bots]:
+        """
+        Verilen kullanıcıya ait yalnızca satışa (for_sale) veya kiralamaya (for_rent)
+        açık botları en yeni oluşturulandan eskiye doğru döndürür.
+        """
+        stmt = (
+            select(Bots)
+            .where(
+                Bots.user_id == user_id,
+                Bots.deleted.is_(False),
+                (Bots.for_sale == True) | (Bots.for_rent == True)
+            )
+            .order_by(Bots.created_at.desc())
+        )
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
+
+    

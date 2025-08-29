@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException, Depends
 from app.routes.user import router as user_router
 from app.routes.auth import router as auth_router
 from app.routes.phantom.auth import router as phantom_auth_router
+from app.routes.phantom.payments import router as phantom_purchase_router
 from app.routes.mobile.auth.auth import router as auth_router_mobile
 from app.routes.mobile.bots.bots import protected_router as bot_router_mobile
 from app.routes.mobile.showcase.showcase import protected_router as showcase_router_mobile
@@ -36,6 +37,7 @@ app.include_router(user_router)
 app.include_router(auth_router)
 app.include_router(auth_router_mobile)
 app.include_router(phantom_auth_router)
+app.include_router(phantom_purchase_router)
 # COINS ROUTES
 app.include_router(binance_coins_router)
 # INDICATOR ROUTES

@@ -8,6 +8,7 @@ from app.database import get_db
 from app.routes.profile.indicator.input.input import extract_user_inputs
 from app.schemas.indicator.indicator import IndicatorCreate, IndicatorUpdate
 from fastapi import HTTPException
+from sqlalchemy import select, or_, func
 
 protected_router = APIRouter()
 
@@ -17,10 +18,9 @@ async def get_all_indicators(
     user_id: dict = Depends(verify_token)
 ):
     """Tüm türdeki indikatörleri (kişisel, teknik, topluluk) tek API ile döner."""
-
     user_id = int(user_id)
 
-    # 1. Kullanıcının kişisel indikatörleri
+    # 1) Kullanıcının kişisel indikatörleri
     user_result = await db.execute(
         select(
             Indicator.id,
@@ -28,45 +28,60 @@ async def get_all_indicators(
             Indicator.code,
             Indicator.created_at,
             Indicator.public,
-            IndicatorsFavorite.id.isnot(None).label("favorite")
+            Indicator.tecnic,
+            Indicator.version,
+            Indicator.parent_indicator_id,
+            IndicatorsFavorite.id.isnot(None).label("favorite"),
         )
-        .outerjoin(IndicatorsFavorite,
-                   (IndicatorsFavorite.indicator_id == Indicator.id) & 
-                   (IndicatorsFavorite.user_id == user_id))
+        .outerjoin(
+            IndicatorsFavorite,
+            (IndicatorsFavorite.indicator_id == Indicator.id) &
+            (IndicatorsFavorite.user_id == user_id)
+        )
         .where(Indicator.user_id == user_id)
     )
     personal = user_result.mappings().all()
 
-    # 2. Teknik (tecnic) indikatörler
+    # 2) Teknik (tecnic) indikatörler
     tecnic_result = await db.execute(
         select(
             Indicator.id,
             Indicator.name,
             Indicator.code,
+            Indicator.created_at,
             Indicator.public,
             Indicator.tecnic,
-            IndicatorsFavorite.id.isnot(None).label("favorite")
+            Indicator.version,
+            Indicator.parent_indicator_id,
+            IndicatorsFavorite.id.isnot(None).label("favorite"),
         )
-        .outerjoin(IndicatorsFavorite,
-                   (IndicatorsFavorite.indicator_id == Indicator.id) & 
-                   (IndicatorsFavorite.user_id == user_id))
+        .outerjoin(
+            IndicatorsFavorite,
+            (IndicatorsFavorite.indicator_id == Indicator.id) &
+            (IndicatorsFavorite.user_id == user_id)
+        )
         .where(Indicator.tecnic == True)
     )
     tecnic = tecnic_result.mappings().all()
 
-    # 3. Topluluk (public) indikatörler
+    # 3) Topluluk (public) indikatörler
     public_result = await db.execute(
         select(
             Indicator.id,
             Indicator.name,
             Indicator.code,
+            Indicator.created_at,
             Indicator.public,
             Indicator.tecnic,
-            IndicatorsFavorite.id.isnot(None).label("favorite")
+            Indicator.version,
+            Indicator.parent_indicator_id,
+            IndicatorsFavorite.id.isnot(None).label("favorite"),
         )
-        .outerjoin(IndicatorsFavorite,
-                   (IndicatorsFavorite.indicator_id == Indicator.id) & 
-                   (IndicatorsFavorite.user_id == user_id))
+        .outerjoin(
+            IndicatorsFavorite,
+            (IndicatorsFavorite.indicator_id == Indicator.id) &
+            (IndicatorsFavorite.user_id == user_id)
+        )
         .where(Indicator.public == True)
     )
     public = public_result.mappings().all()
@@ -161,33 +176,101 @@ async def get_indicators(
 async def create_indicator(
     indicator_data: IndicatorCreate,
     db: AsyncSession = Depends(get_db),
-    user_id: dict = Depends(verify_token)
+    user_id: dict = Depends(verify_token),
 ):
-    """Kullanıcı için yeni bir indikatör oluşturur. Eğer aynı isimde indikatör varsa hata döner."""
-    
-    result = await db.execute(select(Indicator).where(Indicator.user_id == int(user_id), Indicator.name == indicator_data.name))
-    existing_indicator = result.scalars().first()
+    """
+    Yeni indikatör veya bir indikatörün yeni versiyonunu oluşturur.
+    - parent_indicator_id yoksa: yeni indikatör (version=1)
+    - parent_indicator_id varsa: aynı grupta max(version)+1 ile yeni versiyon
+    """
+    user_id_int = int(user_id)
 
-    if existing_indicator:
-        raise HTTPException(status_code=400, detail="Bu isimde bir indikatör zaten mevcut!")
+    # --- YENİ İNDİKATÖR (parent yok) ---
+    if not indicator_data.parent_indicator_id:
+        # Aynı isimden zaten var mı? (kullanıcı bazında)
+        result = await db.execute(
+            select(Indicator)
+            .where(
+                Indicator.user_id == user_id_int,
+                Indicator.name == indicator_data.name,
+                Indicator.parent_indicator_id.is_(None)  # sadece kök kayıtlar için
+            )
+            .limit(1)
+        )
+        existing_indicator = result.scalars().first()
+        if existing_indicator:
+            raise HTTPException(status_code=400, detail="Bu isimde bir indikatör zaten mevcut!")
 
-    # Yeni indikatör oluştur
-    new_indicator = Indicator(
-        user_id= int(user_id),
-        name=indicator_data.name,
-        code=indicator_data.code,
+        new_indicator = Indicator(
+            user_id=user_id_int,
+            name=indicator_data.name,
+            code=indicator_data.code,
+            version=1,
+            parent_indicator_id=None,
+        )
+        db.add(new_indicator)
+        await db.commit()
+        await db.refresh(new_indicator)
+
+        return {
+            "id": new_indicator.id,
+            "name": new_indicator.name,
+            "code": new_indicator.code,
+            "version": new_indicator.version,
+            "parent_indicator_id": new_indicator.parent_indicator_id,
+            "tecnic": new_indicator.tecnic,
+            "public": new_indicator.public,
+            "favorite": False,
+        }
+
+    # --- YENİ VERSİYON (parent var) ---
+    parent_id = int(indicator_data.parent_indicator_id)
+
+    # Parent doğrulama: var mı ve aynı kullanıcıya mı ait?
+    parent_q = await db.execute(
+        select(Indicator).where(
+            Indicator.id == parent_id,
+            Indicator.user_id == user_id_int,
+        )
     )
-    db.add(new_indicator)
+    parent = parent_q.scalars().first()
+    if not parent:
+        raise HTTPException(status_code=404, detail="Parent indicator bulunamadı veya yetkisiz.")
+
+    # Aynı GRUPTA (parent satırı + child'lar) max(version) hesapla
+    # Grup tanımı: parent.id = parent_id olan satır + parent_indicator_id = parent_id olan çocuklar
+    max_ver_q = await db.execute(
+        select(func.max(Indicator.version)).where(
+            or_(
+                Indicator.id == parent_id,
+                Indicator.parent_indicator_id == parent_id,
+            ),
+            Indicator.user_id == user_id_int,
+        )
+    )
+    max_ver = max_ver_q.scalar() or 1
+    next_version = int(max_ver) + 1
+
+    new_version = Indicator(
+        user_id=user_id_int,
+        name=indicator_data.name,  # versiyon ismini aynı/different kullanmak serbest
+        code=indicator_data.code,
+        version=next_version,
+        parent_indicator_id=parent_id,
+    )
+    db.add(new_version)
     await db.commit()
-    await db.refresh(new_indicator)
+    await db.refresh(new_version)
 
     return {
-        "id": new_indicator.id,
-        "name": new_indicator.name,
-        "code": new_indicator.code,
-        "tecnic": new_indicator.tecnic,
-        "public": new_indicator.public,
-        "favorite": False
+        "id": new_version.id,
+        "name": new_version.name,
+        "code": new_version.code,
+        "version": new_version.version,
+        "parent_indicator_id": new_version.parent_indicator_id,
+        "tecnic": new_version.tecnic,
+        "public": new_version.public,
+        "favorite": False,
     }
 
 @protected_router.put("/api/edit-indicator/")

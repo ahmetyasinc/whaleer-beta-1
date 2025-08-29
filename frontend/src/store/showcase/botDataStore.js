@@ -1,13 +1,14 @@
 import { create } from 'zustand';
-import { fetch_bot_data } from '@/services/showcase/fetch_bot_data'; // path'i doğru şekilde güncelle
-import { fetch_followed_bots } from '@/services/showcase/fetch_followed_bots'; // doğru path'e göre düzenleyin
-import { fetch_bot_by_id } from '@/services/showcase/fetch_bot_by_id'; // üst kısımda ekle
-import { post_follow_bot } from '@/services/showcase/post_follow_bot'; // dosya yolunu ayarla
-import { post_unfollow_bot } from '@/services/showcase/unfollow_bot'; // dosya yolunu ayarla
-
+import { fetch_bot_data } from '@/services/showcase/fetch_bot_data';
+import { fetch_my_bot_data } from '@/services/showcase/fetch_my_bot_data'; // ✅ YENİ
+import { fetch_followed_bots } from '@/services/showcase/fetch_followed_bots';
+import { fetch_bot_by_id } from '@/services/showcase/fetch_bot_by_id';
+import { post_follow_bot } from '@/services/showcase/post_follow_bot';
+import { post_unfollow_bot } from '@/services/showcase/unfollow_bot';
 
 const useBotDataStore = create((set, get) => ({
-  // State
+  // --- State ---
+  viewMode: 'all', // 'all' | 'mine'  ✅ YENİ
   filters: {},
   followedBots: [],
   allBots: [],
@@ -16,30 +17,51 @@ const useBotDataStore = create((set, get) => ({
   hasMoreBots: true,
   error: null,
 
+  // --- Helpers ---
+  setViewMode: (mode) => set({ viewMode: mode }), // ✅ YENİ
+
   getCurrentBot: () => {
     const { allBots, currentIndex } = get();
     return allBots[currentIndex] || null;
   },
 
+  // İlk yükleme veya viewMode değişiminde veri çek
   initializeBots: async () => {
-    set({ isLoading: true });
+    const { viewMode, filters } = get();
+    set({ isLoading: true, error: null });
+
     try {
-      const response = await fetch_bot_data(5);
+      let response = [];
+
+      if (viewMode === 'mine') {
+        // Sadece benim verilerim: GET /showcase/mydata (filtre yok)
+        response = await fetch_my_bot_data();
+      } else {
+        // Tümü: POST /showcase/newdata (filtre kullanılabilir)
+        response = await fetch_bot_data(5, filters);
+      }
+
       set({
         allBots: response || [],
         currentIndex: 0,
-        hasMoreBots: response.length > 0,
+        // 'mine' modunda sonsuz kaydırma yok:
+        hasMoreBots: viewMode === 'all' ? (response?.length > 0) : false,
         isLoading: false,
       });
     } catch (error) {
-      set({ error: error.message, isLoading: false });
+      set({ error: error.message, isLoading: false, allBots: [], currentIndex: 0 });
     }
   },
 
+  // Filtre uygula (yalnızca 'all' modunda anlamlı)
   fetchFilteredBots: async () => {
-    const { filters } = get();
-    set({ isLoading: true });
+    const { viewMode, filters } = get();
+    if (viewMode !== 'all') {
+      // 'mine' modunda filtre yok; sadece yeniden yükle
+      return get().initializeBots();
+    }
 
+    set({ isLoading: true });
     try {
       const response = await fetch_bot_data(null, filters);
       set({
@@ -53,7 +75,15 @@ const useBotDataStore = create((set, get) => ({
     }
   },
 
+  // Filtre dönüşümü (yalnızca 'all' modu için kaydet & uygula)
   applyFilters: async (rawFilters) => {
+    const { viewMode } = get();
+
+    // 'mine' modunda filtreleme yok → sadece initialize
+    if (viewMode !== 'all') {
+      return get().initializeBots();
+    }
+
     const convertToMinutes = (value, unit) => {
       const val = parseInt(value);
       if (isNaN(val)) return null;
@@ -83,39 +113,41 @@ const useBotDataStore = create((set, get) => ({
       limit: 10,
     };
 
-    set({ filters: transformed }); // filtreleri store’a kaydet
-
-    // ardından fetch işlemini tetikle
+    set({ filters: transformed });
     await get().fetchFilteredBots();
   },
 
+  // Navigasyon (sonsuz kaydırma sadece 'all' modunda)
   navigateBot: async (direction) => {
-    const { currentIndex, allBots, hasMoreBots, isLoading } = get();
+    const { currentIndex, allBots, hasMoreBots, isLoading, viewMode } = get();
     if (isLoading) return;
 
     if (direction === 'up' && currentIndex > 0) {
       set({ currentIndex: currentIndex - 1 });
-    } else if (direction === 'down') {
-      // Son bot mu?
-      const isLast = (allBots.length - currentIndex) < 3;
-      console.log('isLast:', isLast, 'hasMoreBots:', hasMoreBots, currentIndex, allBots.length);
-      if (isLast && hasMoreBots) {
+      return;
+    }
+
+    if (direction === 'down') {
+      if (currentIndex < allBots.length - 1) {
+        set({ currentIndex: currentIndex + 1 });
+        return;
+      }
+
+      // liste sonu → yalnızca 'all' modunda yeni sayfa çek
+      if (viewMode === 'all' && hasMoreBots) {
         try {
           const { filters } = get();
           const response = await fetch_bot_data(5, filters);
           const newBots = response || [];
-          console.log('navigateBot newBots:', response);
           set((state) => ({
             allBots: [...state.allBots, ...newBots],
-            currentIndex: state.currentIndex + 1,
+            currentIndex: state.currentIndex + 1, // bir sonrakine geç
             hasMoreBots: newBots.length > 0,
             isLoading: false,
           }));
         } catch (error) {
           set({ error: error.message, isLoading: false });
         }
-      } else if (currentIndex < allBots.length - 1) {
-        set({ currentIndex: currentIndex + 1 });
       }
     }
   },

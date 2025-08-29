@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useBotStore } from '@/store/bot/botStore';
 import useApiStore from '@/store/api/apiStore';
-import { FiSearch } from 'react-icons/fi';
+import { FiSearch, FiLock } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import StrategyButton from './chooseStrategy';
 import useBotChooseStrategyStore from '@/store/bot/botChooseStrategyStore';
@@ -31,6 +31,11 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
 
   const apiList = useApiStore((state) => state.apiList);
 
+  // --- Acquisition lock kontrolü ---
+  const isEdit = mode === 'edit' && !!bot;
+  const acquisitionType = (bot?.acquisition_type || '').toUpperCase();
+  const isAcquiredLocked = isEdit && (acquisitionType === 'PURCHASED' || acquisitionType === 'RENTED');
+
   const availableCoins = [
     'BTCUSDT','ETHUSDT','BNBUSDT','SOLUSDT','ADAUSDT','XRPUSDT','DOGEUSDT',
     'TONUSDT','TRXUSDT','LINKUSDT','MATICUSDT','DOTUSDT','LTCUSDT','SHIBUSDT','AVAXUSDT',
@@ -56,10 +61,11 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
 
   // Edit modunda başlangıç değerleri yükle
   useEffect(() => {
-    if (mode === 'edit' && bot) {
+    if (isEdit) {
       setBotName(bot.name || '');
       setApi(bot.api || '');
-      setStrategy(bot.strategy || '');
+      // Strateji adı satın alanda gösterilmeyecek → UI'da boş kalsın
+      setStrategy(isAcquiredLocked ? '' : (bot.strategy || ''));
       setPeriod(bot.period || '');
       setIsActive(bot.isActive ?? true);
       setDays(bot.days || []);
@@ -70,10 +76,9 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
       setAllocatedAmount(
         bot.initial_usd_value != null ? bot.initial_usd_value : (bot.balance || 0)
       );
-      console.log("Edit modunda bot:", bot);
       setType(bot.type === 'futures' ? 'futures' : 'spot');
     }
-  }, [mode, bot]);
+  }, [isEdit, bot, isAcquiredLocked]);
 
   // API veya TIP değişince balance'ı güncelle
   useEffect(() => {
@@ -120,7 +125,10 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
 
     if (!botName.trim()) errors.push('Bot name is required.');
     if (!api) errors.push('API selection is required.');
-    if (!selectedStrategy || !selectedStrategy.name) errors.push('Strategy must be selected.');
+    // Strateji seçme zorunluluğu sadece kilitli olmayanlarda
+    if (!isAcquiredLocked) {
+      if (!selectedStrategy || !selectedStrategy.name) errors.push('Strategy must be selected.');
+    }
     if (!period) errors.push('Period must be selected.');
     if (!candleCount || candleCount <= 0) errors.push('Invalid candle count.');
     if (days.length === 0) errors.push('At least one day must be selected.');
@@ -129,8 +137,8 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
     if (cryptoList.length === 0) errors.push('At least one crypto must be selected.');
 
     // çalışma aralığı en az 1 saat
-    const [startH, startM] = startTime.split(':').map(Number);
-    const [endH, endM] = endTime.split(':').map(Number);
+    const [startH, startM] = (startTime || '0:0').split(':').map(Number);
+    const [endH, endM] = (endTime || '0:0').split(':').map(Number);
     if (endH * 60 + endM - (startH * 60 + startM) < 60) {
       toast.error('End time must be at least 1 hour after start time.', { autoClose: 2000 });
       return;
@@ -150,7 +158,8 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
       id: bot?.id,
       name: botName,
       api,
-      strategy: selectedStrategy?.name,
+      // Satın alınan/kiralanan botta strateji gönderilmez (backend'de saklı)
+      ...(isAcquiredLocked ? {} : { strategy: selectedStrategy?.name }),
       period,
       isActive: false,
       days,
@@ -199,14 +208,17 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
 
             <div>
               <label className="block mb-2 text-gray-200 font-medium">Type</label>
-              <select
-                className="w-40 p-2 bg-gray-800 text-white rounded"
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-              >
-                <option value="spot">Spot</option>
-                <option value="futures">Futures</option>
-              </select>
+              <div className="relative">
+                <select
+                  className={`w-40 p-2 bg-gray-800 text-white rounded ${isAcquiredLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  disabled={isAcquiredLocked}
+                >
+                  <option value="spot">Spot</option>
+                  <option value="futures">Futures</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -231,7 +243,16 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
 
             <div>
               <label className="block mb-1 text-gray-300">Strategy</label>
-              <StrategyButton onSelect={(selected) => setStrategy(selected)} />
+              {!isAcquiredLocked ? (
+                <StrategyButton onSelect={(selected) => setStrategy(selected)} />
+              ) : (
+                <div className="w-full p-2 bg-gray-800 text-gray-300 rounded flex items-center gap-2">
+                  <FiLock className="shrink-0" />
+                  <span className="text-sm">
+                    Hidden.
+                  </span>
+                </div>
+              )}
             </div>
 
             <div>
@@ -262,9 +283,10 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
                 type="number"
                 min="1"
                 placeholder="Exp: 100"
-                className="w-full p-2 bg-gray-800 text-white rounded"
+                className={`w-full p-2 bg-gray-800 text-white rounded ${isAcquiredLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
                 value={candleCount}
                 onChange={(e) => setCandleCount(Number(e.target.value))}
+                disabled={isAcquiredLocked}
               />
             </div>
           </div>

@@ -28,11 +28,9 @@ const CriticalConfirmModal = ({ isOpen, onClose, onConfirm }) => {
         <div className="fixed inset-0 z-[9999] bg-white animate-fadeout pointer-events-none" />
       )}
 
-      <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div className="bg-gradient-to-br from-zinc-900 via-zinc-950 to-black 
-                        text-white rounded-2xl shadow-2xl shadow-red-500/20 
-                        p-8 w-full max-w-md relative animate-fade-in 
-                        border border-zinc-800 ring-1 ring-red-500/20">
+      <div className="fixed inset-0 z-50">
+        <div className="relative grid min-h-dvh place-items-center p-4">
+          <div className="bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white rounded-2xl shadow-2xl shadow-red-500/20 border border-zinc-800 ring-1 ring-red-500/20 w-full max-w-md p-8 relative max-h-[calc(100dvh-2rem)] overflow-y-auto animate-fade-in">
           
           {/* Glow overlay */}
           <div className="absolute inset-0 rounded-2xl 
@@ -95,6 +93,7 @@ const CriticalConfirmModal = ({ isOpen, onClose, onConfirm }) => {
               </button>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </>

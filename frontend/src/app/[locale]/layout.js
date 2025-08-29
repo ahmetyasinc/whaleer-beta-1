@@ -14,7 +14,13 @@ const mainFont = Work_Sans({
   variable: "--font-main",
 });
 
-export default function RootLayout({ children, params }) {
+export default async function RootLayout(props) {
+  const params = await props.params;
+
+  const {
+    children
+  } = props;
+
   const locale = params?.locale || "en"; // use(props.params) yerine doğrudan params
 
   return (

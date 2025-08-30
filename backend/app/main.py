@@ -1,5 +1,4 @@
 from fastapi import FastAPI, HTTPException, Depends
-from fastapi import FastAPI, HTTPException, Depends
 from app.routes.user import router as user_router
 from app.routes.auth import router as auth_router
 from app.routes.phantom.auth import router as phantom_auth_router
@@ -19,6 +18,7 @@ from app.routes.profile.strategy.strategy_run import protected_router as strateg
 from app.routes.profile.strategy.strategy_imports import protected_router as strategy_imports_router
 from app.routes.profile.backtest.backtest import protected_router as backtest_router
 from app.routes.profile.api_keys.api_keys import protected_router as api_keys_router
+from app.routes.profile.api_keys.binance import router as api_keys_binance_router
 from app.routes.profile.bots.bots import protected_router as bots_router
 from app.routes.profile.scan.scan import protected_router as scan_router
 from app.routes.profile.whaleer_ai.whaleer_ai import protected_router as whaleer_ai_router
@@ -53,6 +53,7 @@ app.include_router(strategy_run_router)
 app.include_router(strategy_imports_router)
 # API KEYS ROUTES
 app.include_router(api_keys_router)
+app.include_router(api_keys_binance_router)
 # BACKTEST ROUTES
 app.include_router(backtest_router)
 # BOT ROUTES

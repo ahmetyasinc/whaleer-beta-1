@@ -5,111 +5,90 @@ import { useEffect, useState } from 'react';
 import { FaRegTrashAlt } from "react-icons/fa";
 import { FiEdit } from "react-icons/fi";
 import { HiPlusSmall } from "react-icons/hi2";
+import { IoMdStar } from "react-icons/io";
 import useApiStore from '@/store/api/apiStore';
 import AddApiModal from '@/components/profile_component/(api)/addApiModal';
-import ConfirmApiModal from '@/components/profile_component/(api)/confirmApiModal';
 import ConfirmDeleteModal from '@/components/profile_component/(api)/confirmDeleteApi';
-import { getTotalUSDBalance } from '@/api/apiKeys';
 import { toast } from 'react-toastify';
 
+const fmtUSD = (n) =>
+  Number(n ?? 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+
 export default function ApiConnectionClient() {
-  const { apiList, addApi, deleteApi, updateApi, loadApiKeys } = useApiStore();
-  useEffect(() => {
-    loadApiKeys();
-  }, []);
+  const {
+    apiList,
+    addApi,
+    deleteApiCascade,   // YENİ
+    updateApi,
+    loadApiKeys,
+    setDefaultApi,
+    fetchApiBots,       // YENİ
+  } = useApiStore();
+
+  useEffect(() => { loadApiKeys(); }, []);
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [tempApiData, setTempApiData] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
+
   const [deleteIndex, setDeleteIndex] = useState(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
-  const handleAddNewApi = () => {
-    setEditMode(false);
-    setEditIndex(null);
-    setIsAddModalOpen(true);
-  };
+  // Bot listesi state’i
+  const [botsForDelete, setBotsForDelete] = useState([]);
+  const [loadingBots, setLoadingBots] = useState(false);
 
-  const handleEditApi = (index) => {
-    setEditMode(true);
-    setEditIndex(index);
-    setIsAddModalOpen(true);
-  };
+  const handleAddNewApi = () => { setEditMode(false); setEditIndex(null); setIsAddModalOpen(true); };
+  const handleEditApi = (index) => { setEditMode(true); setEditIndex(index); setIsAddModalOpen(true); };
+  const handleCloseModal = () => { setIsAddModalOpen(false); setEditMode(false); setEditIndex(null); };
 
-  const handleCloseModal = () => {
-    setIsAddModalOpen(false);
-    setEditMode(false);
-    setEditIndex(null);
-  };
-
-  const handleAddModalSave = (formData, isEdit) => {
-    if (isEdit) {
-      updateApi(editIndex, formData);
-      handleCloseModal();
-    } else {
-      setTempApiData(formData);
-      setIsConfirmModalOpen(true);
-    }
-  };
-
-  const handleConfirmSave = async (userInputBalance) => {
+  const handleAddModalSave = async (formData, isEdit) => {
     try {
-      const { key, secretkey } = tempApiData;
-      const realBalance = await getTotalUSDBalance(key, secretkey);
-      if ((realBalance != null)) {
-        console.log("Real balance:", realBalance);
-        const difference = Math.abs(realBalance - parseFloat(userInputBalance));
-        if (difference > 3) {
-          toast.error("The balance you entered does not match your Binance account!", {
-            position: "top-center",
-            autoClose: 3000,
-          });
-          return;
-        }
-
-        const createdAt = new Date().toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric'
-        });
-
+      if (isEdit) {
+        await updateApi(editIndex, formData);
+      } else {
         await addApi({
-          ...tempApiData,
-          createdAt,
+          ...formData,
+          createdAt: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
           lastUsed: 'Never',
         });
-
-        setIsConfirmModalOpen(false);
-        handleCloseModal();
-        setTempApiData(null);
       }
-
+      handleCloseModal();
     } catch (error) {
       console.error(error);
-      toast.error(error.message || "Binance balance could not be verified. Please check your API credentials.", {
-        position: "top-center",
-        autoClose: 3500,
-      });
+      toast.error(error?.message || "API key kaydedilemedi.", { position: "top-center", autoClose: 3500 });
     }
   };
 
-  // Handle delete confirmation
-  const handleDeleteClick = (index) => {
+  // Silme: modal aç ve botları çek
+  const handleDeleteClick = async (index) => {
     setDeleteIndex(index);
     setIsDeleteConfirmOpen(true);
+
+    const apiId = apiList[index]?.id;
+    if (!apiId) return;
+
+    setLoadingBots(true);
+    try {
+      const bots = await fetchApiBots(apiId);
+      setBotsForDelete(bots || []);
+    } catch (e) {
+      setBotsForDelete([]);
+    } finally {
+      setLoadingBots(false);
+    }
   };
 
-  const handleDeleteConfirm = () => {
-    deleteApi(deleteIndex);
+  const handleDeleteConfirm = async () => {
+    await deleteApiCascade(deleteIndex);
     setIsDeleteConfirmOpen(false);
     setDeleteIndex(null);
+    setBotsForDelete([]);
   };
 
-  const handleDeleteCancel = () => {
-    setIsDeleteConfirmOpen(false);
-    setDeleteIndex(null);
-  };
+  const handleMakeDefault = async (apiId) => { await setDefaultApi(apiId); };
+
+  const currentApiName = deleteIndex !== null ? apiList[deleteIndex]?.name : '';
 
   return (
     <>
@@ -123,9 +102,7 @@ export default function ApiConnectionClient() {
           >
             <span className="text-sm">Add New API</span>
             <HiPlusSmall className="text-2xl relative font-semibold" />
-            <div
-              className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-13deg)_translateX(-100%)] group-hover/button:duration-1000 group-hover/button:[transform:skew(-13deg)_translateX(100%)]"
-            >
+            <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-13deg)_translateX(-100%)] group-hover/button:duration-1000 group-hover/button:[transform:skew(-13deg)_translateX(100%)]">
               <div className="relative h-full w-10 bg-white/20"></div>
             </div>
           </button>
@@ -148,34 +125,68 @@ export default function ApiConnectionClient() {
                 <tr className="text-gray-300 border-b border-gray-700">
                   <th className="py-2 px-4 font-semibold">Name</th>
                   <th className="py-2 px-4 font-semibold">Exchange</th>
+                  <th className="py-2 px-4 font-semibold">Balance (USD)</th>
                   <th className="py-2 px-4 font-semibold">Added</th>
-                  <th className="py-2 px-4 font-semibold">Last Used</th>
                   <th className="py-2 px-4 font-semibold text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {apiList.map((api, idx) => (
-                  <tr key={idx} className="border-b border-gray-700 hover:bg-gray-800">
-                    <td className="py-2 px-4">{api.name}</td>
-                    <td className="py-2 px-4">{api.exchange}</td>
-                    <td className="py-2 px-4">{api.createdAt}</td>
-                    <td className="py-2 px-4">{api.lastUsed}</td>
-                    <td className="py-2 px-4 text-center space-x-3">
-                      <button
-                        onClick={() => handleEditApi(idx)}
-                        className="text-blue-400 hover:text-blue-200"
-                      >
-                        <FiEdit />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(idx)}
-                        className="text-red-400 hover:text-red-300"
-                      >
-                        <FaRegTrashAlt />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {apiList.map((api, idx) => {
+                  const spot = Number(api.spot_balance ?? 0);
+                  const futures = Number(api.futures_balance ?? 0);
+                  const total = spot + futures;
+
+                  return (
+                    <tr key={api.id ?? idx} className="border-b border-gray-700 hover:bg-gray-800">
+                      <td className="py-2 px-4">
+                        <div className="flex items-center gap-2">
+                          <span>{api.name}</span>
+                          {api.default && (
+                            <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
+                              <IoMdStar className="text-yellow-300" />
+                              Default
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-2 px-4">{api.exchange}</td>
+                      <td className="py-2 px-4">
+                        <div className="flex flex-col">
+                          <span className="font-medium">{fmtUSD(total)}</span>
+                          <span className="text-xs text-gray-400">
+                            spot {fmtUSD(spot)} • futures {fmtUSD(futures)}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-2 px-4">{api.createdAt}</td>
+                      <td className="py-2 px-4 text-center space-x-3">
+                        {!api.default && (
+                          <button
+                            onClick={() => handleMakeDefault(api.id)}
+                            className="text-yellow-400 hover:text-yellow-300 mr-2"
+                            title="Set as Default"
+                          >
+                            <IoMdStar />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleEditApi(idx)}
+                          className="text-blue-400 hover:text-blue-200"
+                          title="Edit name"
+                        >
+                          <FiEdit />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(idx)}
+                          className="text-red-400 hover:text-red-300"
+                          title="Delete"
+                        >
+                          <FaRegTrashAlt />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -190,17 +201,13 @@ export default function ApiConnectionClient() {
         initialData={editMode && editIndex !== null ? apiList[editIndex] : null}
       />
 
-      <ConfirmApiModal
-        isOpen={isConfirmModalOpen}
-        onClose={() => setIsConfirmModalOpen(false)}
-        onConfirm={handleConfirmSave}
-        apiData={tempApiData || {}}
-      />
-
       <ConfirmDeleteModal
         isOpen={isDeleteConfirmOpen}
-        onCancel={handleDeleteCancel}
+        onCancel={() => { setIsDeleteConfirmOpen(false); setDeleteIndex(null); setBotsForDelete([]); }}
         onConfirm={handleDeleteConfirm}
+        bots={botsForDelete}
+        loading={loadingBots}
+        apiName={currentApiName}
       />
     </>
   );

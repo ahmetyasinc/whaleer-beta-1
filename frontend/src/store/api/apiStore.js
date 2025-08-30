@@ -1,21 +1,23 @@
+// src/store/api/apiStore.js
 import { create } from 'zustand';
-import { createApiKey, getApiKeys, deleteApiKey, updateApiKey } from '../../api/apiKeys';
+import {
+  createApiKey,
+  getApiKeys,
+  deleteApiKeyCascade, // YENİ
+  updateApiKey,
+  changeDefaultApi,
+  getApiBots,          // YENİ
+} from '../../api/apiKeys';
 import { toast } from 'react-toastify';
 
-const useApiStore = create((set,get) => ({
+const useApiStore = create((set, get) => ({
   apiList: [],
 
   loadApiKeys: async () => {
     try {
       const keys = await getApiKeys();
-      if (Array.isArray(keys)) {
-        set({ apiList: keys });
-      } else {
-        console.warn("Beklenmeyen veri formatı:", keys);
-      }
-    } catch (error) {
-      console.error("API Key'ler yüklenirken hata:", error);
-    }
+      if (Array.isArray(keys)) set({ apiList: keys });
+    } catch (e) { console.error(e); }
   },
 
   addApi: async (apiData) => {
@@ -23,74 +25,75 @@ const useApiStore = create((set,get) => ({
       const result = await createApiKey(apiData);
       if (result) {
         set((state) => ({
-          apiList: [...state.apiList, { ...apiData, id: result.id }],
+          apiList: [
+            ...state.apiList,
+            {
+              ...apiData,
+              id: result.id,
+              spot_balance: Number(apiData.spot_balance || 0),
+              futures_balance: Number(apiData.futures_balance || 0),
+            },
+          ],
         }));
-          toast.success("Bakiye doğrulandı! API Ekleniyor.", {
-          position: "top-center",
-          autoClose: 2500,
-        });
-      } else {
-        console.warn("API'den boş sonuç döndü, state güncellenmedi.");
+        toast.success("API eklendi.", { position: "top-center", autoClose: 2000 });
       }
     } catch (error) {
-      // 400 için kullanıcıya özel mesaj döndür
       if (error.message === "Bu API zaten ekli.") {
-        toast.error("Bu API zaten eklenmiş!", {
-          position: "top-center",
-          autoClose: 3000,
-        });
+        toast.error("Bu API zaten eklenmiş!", { position: "top-center" });
       } else {
-        toast.error("API eklenirken bir hata oluştu.", {
-          position: "top-center",
-          autoClose: 3000,
-        });
+        toast.error("API eklenirken bir hata oluştu.", { position: "top-center" });
       }
     }
   },
 
-  
-
-  deleteApi: async (index) => {
-    try {
-      // 1. İlgili API nesnesini al
-      const apiToDelete = get().apiList[index];
-      if (!apiToDelete) {
-        console.warn("Belirtilen index geçersiz:", index);
-        return;
-      }
-      // 2. API isteğini gönder
-      await deleteApiKey(apiToDelete.id);
-
-      // 3. Başarılıysa state'ten çıkar
-      set((state) => ({
-        apiList: state.apiList.filter((_, i) => i !== index),
-      }));
-
-    } catch (error) {
-      console.error("API silme işlemi başarısız:", error);
-    }
+  // YENİ: modal açıldığında botları çekmek için
+  fetchApiBots: async (apiId) => {
+    try { return await getApiBots(apiId); }
+    catch (e) { console.error(e); return []; }
   },
 
-    
+  // YENİ: cascade delete
+  deleteApiCascade: async (index) => {
+    const apiToDelete = get().apiList[index];
+    if (!apiToDelete) return;
+    const res = await deleteApiKeyCascade(apiToDelete.id);
+
+    set((state) => {
+      let list = state.apiList.filter((_, i) => i !== index);
+      if (res?.default_reassigned_to) {
+        list = list.map(a => ({ ...a, default: a.id === res.default_reassigned_to }));
+      }
+      return { apiList: list };
+    });
+
+    toast.success("API ve bağlı botlar silindi.", { position: "top-center", autoClose: 2200 });
+  },
 
   updateApi: async (id, name) => {
     try {
-      id = name.id || id; // Eğer name içinde id varsa onu kullan, yoksa mevcut id'yi kullan
-      name = name.name || name; // Eğer name içinde name varsa onu kullan, yoksa mevcut name'i kullan
+      id = name.id || id;
+      name = name.name || name;
       const result = await updateApiKey(id, name);
       if (result) {
         set((state) => ({
-          apiList: state.apiList.map((api) =>
-            api.id === id ? { ...api, name } : api
-          ),
+          apiList: state.apiList.map((api) => (api.id === id ? { ...api, name } : api)),
         }));
       }
-    } catch (error) {
-      console.error("API güncelleme sırasında hata:", error);
-    }
+    } catch (e) { console.error(e); }
   },
 
-
+  setDefaultApi: async (id) => {
+    try {
+      await changeDefaultApi(id);
+      set((state) => ({
+        apiList: state.apiList.map(api => ({ ...api, default: api.id === id })),
+      }));
+      toast.success("Default API güncellendi.", { position: "top-center", autoClose: 2200 });
+    } catch (e) {
+      const msg = e?.response?.data?.detail || "Default API değiştirilemedi.";
+      toast.error(msg, { position: "top-center" });
+    }
+  },
 }));
 
 export default useApiStore;

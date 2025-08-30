@@ -71,8 +71,6 @@ const useApiStore = create((set, get) => ({
 
   updateApi: async (id, name) => {
     try {
-      id = name.id || id;
-      name = name.name || name;
       const result = await updateApiKey(id, name);
       if (result) {
         set((state) => ({

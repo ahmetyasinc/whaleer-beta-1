@@ -71,36 +71,28 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
 
   useEffect(() => {
     if (!isOpen) return;
-    setStep("ed");
-    setErrors({});
-    setEdBalance(null);
-    setHmacBalance(null);
-    setShowEdConfirm(false);
-    setShowHmacConfirm(false);
-
-    if (editMode && initialData) {
-      setFormData(prev => ({
-        ...prev,
-        exchange: initialData.exchange || 'Binance',
-        name: initialData.name || '',
-        key: initialData.key || '',
-        secretkey: initialData.secretkey || '',
-        edKey: initialData.edKey || '',
-        edPublicPem: initialData.edPublicPem || '',
-        edPrivatePem: initialData.edPrivatePem || '',
-      }));
-    } else {
-      setFormData({
-        exchange: 'Binance',
-        name: '',
-        edKey: '',
-        edPublicPem: '',
-        edPrivatePem: '',
-        key: '',
-        secretkey: ''
-      });
-      claimEdPair();
-    }
+   setErrors({});
+   setEdBalance(null);
+   setHmacBalance(null);
+   setShowEdConfirm(false);
+   setShowHmacConfirm(false);
+   if (editMode && initialData) {
+     // EDIT: sadece isim alanını doldur; diğer hiçbir veriyi UI/state’e alma
+     setFormData({ name: initialData.name || '' });
+   } else {
+     setStep("ed");
+     setFormData({
+       exchange: 'Binance',
+       name: '',
+       edKey: '',
+       edPublicPem: '',
+       edPrivatePem: '',
+       key: '',
+       secretkey: ''
+     });
+     // sadece yeni eklemede ED çifti çek
+     claimEdPair();
+   }
   }, [isOpen, editMode, initialData]);
 
   // ED Stoğundan bir çift çek (private PEM'i UI'da göstermeyeceğiz)
@@ -261,10 +253,12 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
             transition={{ duration: 0.25, ease: 'easeOut' }}
             className="bg-[rgb(0,3,15)] rounded p-6 w-full max-w-lg shadow-lg text-white relative"
           >
-            <h2 className="text-lg font-bold mb-1">{editMode ? 'Edit API' : 'Add New API'}</h2>
-            <p className="text-xs text-gray-400 mb-4">
-              {step === "ed" ? "Step 1/2 — Verify with ED Key (direct to Binance)" : "Step 2/2 — Verify HMAC Keys (direct to Binance)"}
-            </p>
+           <h2 className="text-lg font-bold mb-1">{editMode ? 'Rename API' : 'Add New API'}</h2>
+           {!editMode && (
+             <p className="text-xs text-gray-400 mb-4">
+               {step === "ed" ? "Step 1/2 — Verify with ED Key (direct to Binance)" : "Step 2/2 — Verify HMAC Keys (direct to Binance)"}
+             </p>
+           )}
 
             <div className="space-y-4">
               {/* API Name */}
@@ -282,123 +276,136 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
               </div>
 
               {/* STEP: ED */}
-              {step === "ed" && (
+              {!editMode && (
                 <>
-                  {/* ED Key */}
-                  <div>
-                    <label className="block font-medium">ED Key <span className="text-red-500">*</span></label>
-                    <input
-                      type="text"
-                      name="edKey"
-                      ref={edKeyRef}
-                      value={formData.edKey}
-                      onChange={handleChange}
-                      placeholder="Enter your ED Key (from Binance)"
-                      className={`w-full mt-1 rounded-sm px-3 py-2 bg-gray-900 text-white ${errors.edKey ? 'border border-red-500' : ''}`}
-                    />
-                    {errors.edKey && <p className="text-red-500 text-sm mt-1">{errors.edKey}</p>}
-                  </div>
-
-                  {/* ED Public PEM (gösteriyoruz) */}
-                  <div>
-                    <label className="block font-medium">ED Public PEM</label>
-                    <div className="relative">
-                      <textarea
-                        name="edPublicPem"
-                        value={formData.edPublicPem}
-                        readOnly
-                        className={`w-full mt-1 rounded-sm px-3 py-2 bg-gray-900 text-white font-mono text-xs min-h-[84px] ${errors.edPublicPem ? 'border border-red-500' : ''}`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => copy(formData.edPublicPem)}
-                        className="absolute top-1 right-1 text-xs bg-gray-700 hover:bg-gray-600 rounded px-2 py-1"
-                      >
-                        Copy
-                      </button>
-                    </div>
-                    {errors.edPublicPem && <p className="text-red-500 text-sm mt-1">{errors.edPublicPem}</p>}
-                  </div>
-
-                  {/* ED Private PEM — UI'DA GÖSTERİLMİYOR */}
-                  {/* (işlevsel olarak state'te duruyor ve verifyEdOnServer'da kullanılıyor) */}
-                </>
-              )}
-
-              {/* STEP: HMAC */}
-              {step === "hmac" && (
-                <>
-                  <div>
-                    <label className="block font-medium">API Key <span className="text-red-500">*</span></label>
-                    <div className="relative w-full">
+                {step === "ed" && (
+                  <>
+                    {/* ED Key */}
+                    <div>
+                      <label className="block font-medium">ED Key <span className="text-red-500">*</span></label>
                       <input
                         type="text"
-                        name="key"
-                        ref={keyInputRef}
-                        value={formData.key}
+                        name="edKey"
+                        ref={edKeyRef}
+                        value={formData.edKey}
                         onChange={handleChange}
-                        onKeyDown={handleKeyInput}
-                        onPaste={(e) => handlePaste(e, 'key')}
-                        className={`w-full mt-1 rounded-sm px-3 py-2 bg-gray-900 text-white ${errors.key ? 'border border-red-500' : ''}`}
-                        placeholder="Paste your API key"
+                        placeholder="Enter your ED Key (from Binance)"
+                        className={`w-full mt-1 rounded-sm px-3 py-2 bg-gray-900 text-white ${errors.edKey ? 'border border-red-500' : ''}`}
                       />
-                      <span className="absolute inset-y-0 right-2 flex items-center text-gray-600 pointer-events-none text-base">
-                        <FaKey />
-                      </span>
+                      {errors.edKey && <p className="text-red-500 text-sm mt-1">{errors.edKey}</p>}
                     </div>
-                    {errors.key && <p className="text-red-500 text-sm mt-1">{errors.key}</p>}
-                  </div>
 
-                  <div>
-                    <label className="block font-medium">Secret API Key <span className="text-red-500">*</span></label>
-                    <div className="relative w-full">
-                      <input
-                        type="text"
-                        name="secretkey"
-                        ref={secretKeyInputRef}
-                        value={formData.secretkey}
-                        onChange={handleChange}
-                        onKeyDown={handleKeyInput}
-                        onPaste={(e) => handlePaste(e, 'secretkey')}
-                        className={`w-full mt-1 rounded-sm px-3 py-2 bg-gray-900 text-white ${errors.secretkey ? 'border border-red-500' : ''}`}
-                        placeholder="Paste your Secret"
-                      />
-                      <span className="absolute inset-y-0 right-2 flex items-center text-gray-600 pointer-events-none text-base">
-                        <FaKey />
-                      </span>
+                    {/* ED Public PEM (gösteriyoruz) */}
+                    <div>
+                      <label className="block font-medium">ED Public PEM</label>
+                      <div className="relative">
+                        <textarea
+                          name="edPublicPem"
+                          value={formData.edPublicPem}
+                          readOnly
+                          className={`w-full mt-1 rounded-sm px-3 py-2 bg-gray-900 text-white font-mono text-xs min-h-[84px] ${errors.edPublicPem ? 'border border-red-500' : ''}`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => copy(formData.edPublicPem)}
+                          className="absolute top-1 right-1 text-xs bg-gray-700 hover:bg-gray-600 rounded px-2 py-1"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                      {errors.edPublicPem && <p className="text-red-500 text-sm mt-1">{errors.edPublicPem}</p>}
                     </div>
-                    {errors.secretkey && <p className="text-red-500 text-sm mt-1">{errors.secretkey}</p>}
-                  </div>
-                </>
+
+                    {/* ED Private PEM — UI'DA GÖSTERİLMİYOR */}
+                    {/* (işlevsel olarak state'te duruyor ve verifyEdOnServer'da kullanılıyor) */}
+                  </>
+                )}
+
+                {/* STEP: HMAC */}
+                {step === "hmac" && (
+                  <>
+                    <div>
+                      <label className="block font-medium">API Key <span className="text-red-500">*</span></label>
+                      <div className="relative w-full">
+                        <input
+                          type="text"
+                          name="key"
+                          ref={keyInputRef}
+                          value={formData.key}
+                          onChange={handleChange}
+                          onKeyDown={handleKeyInput}
+                          onPaste={(e) => handlePaste(e, 'key')}
+                          className={`w-full mt-1 rounded-sm px-3 py-2 bg-gray-900 text-white ${errors.key ? 'border border-red-500' : ''}`}
+                          placeholder="Paste your API key"
+                        />
+                        <span className="absolute inset-y-0 right-2 flex items-center text-gray-600 pointer-events-none text-base">
+                          <FaKey />
+                        </span>
+                      </div>
+                      {errors.key && <p className="text-red-500 text-sm mt-1">{errors.key}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block font-medium">Secret API Key <span className="text-red-500">*</span></label>
+                      <div className="relative w-full">
+                        <input
+                          type="text"
+                          name="secretkey"
+                          ref={secretKeyInputRef}
+                          value={formData.secretkey}
+                          onChange={handleChange}
+                          onKeyDown={handleKeyInput}
+                          onPaste={(e) => handlePaste(e, 'secretkey')}
+                          className={`w-full mt-1 rounded-sm px-3 py-2 bg-gray-900 text-white ${errors.secretkey ? 'border border-red-500' : ''}`}
+                          placeholder="Paste your Secret"
+                        />
+                        <span className="absolute inset-y-0 right-2 flex items-center text-gray-600 pointer-events-none text-base">
+                          <FaKey />
+                        </span>
+                      </div>
+                      {errors.secretkey && <p className="text-red-500 text-sm mt-1">{errors.secretkey}</p>}
+                    </div>
+                  </>
+                )}
+              </>
               )}
-
               {/* Buttons */}
               <div className="flex justify-between items-center mt-4">
                 <button onClick={closeAll} className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">Cancel</button>
 
-                {step === "ed" ? (
-                  <button
-                    onClick={onNextFromED}
-                    disabled={verifying || loadingEDPair}
-                    className={`px-4 py-2 rounded ${verifying || loadingEDPair ? 'bg-gray-700' : 'bg-blue-600 hover:bg-blue-700'} text-white`}
-                  >
-                    {verifying || loadingEDPair ? 'Verifying…' : 'Next'}
-                  </button>
-                ) : (
-                  <div className="flex gap-2">
-                    <button onClick={() => setStep("ed")} className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded">Back</button>
-                    <button
-                      onClick={onVerifyHmac}
-                      disabled={verifying}
-                      className={`px-4 py-2 rounded ${verifying ? 'bg-gray-700' : 'bg-blue-600 hover:bg-blue-700'} text-white`}
-                    >
-                      {verifying ? 'Verifying…' : 'Verify & Next'}
-                    </button>
-                  </div>
-                )}
+              {editMode ? (
+                 <button
+                   onClick={() => {
+                     if (!formData.name?.trim()) {
+                       setErrors({ name: "Please enter an API name" }); return;
+                     }
+                     // Sadece id + yeni isim gönder
+                     onSave({ id: initialData?.id, name: formData.name.trim() }, true);
+                   }}
+                   className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white"
+                 >
+                   Save
+                 </button>
+               ) : (
+                 step === "ed" ? (
+                   <button onClick={onNextFromED} disabled={verifying || loadingEDPair}
+                     className={`px-4 py-2 rounded ${verifying || loadingEDPair ? 'bg-gray-700' : 'bg-blue-600 hover:bg-blue-700'} text-white`}>
+                     {verifying || loadingEDPair ? 'Verifying…' : 'Next'}
+                   </button>
+                 ) : (
+                   <div className="flex gap-2">
+                     <button onClick={() => setStep("ed")} className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded">Back</button>
+                     <button onClick={onVerifyHmac} disabled={verifying}
+                       className={`px-4 py-2 rounded ${verifying ? 'bg-gray-700' : 'bg-blue-600 hover:bg-blue-700'} text-white`}>
+                       {verifying ? 'Verifying…' : 'Verify & Next'}
+                     </button>
+                   </div>
+                 )
+               )}
               </div>
             </div>
-
+           {!editMode && (
+             <>
             {/* ED Confirm */}
             <AnimatePresence>
               {showEdConfirm && (
@@ -458,7 +465,8 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
                 </motion.div>
               )}
             </AnimatePresence>
-
+            </>
+            )}
             {loadingEDPair && (
               <div className="absolute top-2 right-3 text-xs text-gray-400">fetching ED pair…</div>
             )}

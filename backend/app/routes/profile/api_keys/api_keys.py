@@ -10,7 +10,7 @@ from app.database import get_db
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import update
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import aiohttp
 import hmac
 import hashlib
@@ -20,8 +20,8 @@ from app.core.auth import verify_token
 from app.database import get_db
 
 class UpdateApiRequest(BaseModel):
-    id: int
-    name: str
+    id: int = Field(..., gt=0)
+    name: str = Field(..., min_length=1)
 
 class BalanceRequest(BaseModel):
     key: str
@@ -277,27 +277,19 @@ async def delete_api_key(
 async def update_api_key(
     data: UpdateApiRequest,
     db: AsyncSession = Depends(get_db),
-    user_id: dict = Depends(verify_token)
+    user_id: int = Depends(verify_token),
 ):
-    api_id = data.id
-    new_name = data.name
+    new_name = data.name.strip()
+    if not new_name:
+        raise HTTPException(status_code=400, detail="Yeni isim boş olamaz.")
 
-    if not api_id or not new_name:
-        raise HTTPException(status_code=400, detail="API ID veya yeni isim belirtilmedi.")
-
-    # Kullanıcının bu ID'ye sahip bir API key'i var mı?
-    result = await db.execute(
-        select(APIKey).where(APIKey.user_id == int(user_id), APIKey.id == api_id)
+    api_key = await db.scalar(
+        select(APIKey).where(APIKey.user_id == int(user_id), APIKey.id == data.id)
     )
-    api_key = result.scalar_one_or_none()
-
     if not api_key:
         raise HTTPException(status_code=404, detail="API anahtarı bulunamadı.")
 
-    # Yeni ismi ata
     api_key.api_name = new_name
-
-    # Veritabanına kaydet
     await db.commit()
     await db.refresh(api_key)
 

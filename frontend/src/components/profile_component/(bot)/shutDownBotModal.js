@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { IoWarningOutline } from "react-icons/io5";
 
-export default function ShotDownBotModal({ isOpen, onClose, onConfirm }) {
+export default function ShutDownBotModal({ isOpen, onClose, onConfirm }) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -24,7 +24,7 @@ export default function ShotDownBotModal({ isOpen, onClose, onConfirm }) {
             <div className="flex items-start gap-2 mb-2">
               <IoWarningOutline className="text-3xl text-orange-500 mt-0.5" />
               <p className="text-sm text-zinc-200">
-                Your bot will be stopped and all open positions will be closed. Please check your account wallet.
+                Your bot will be deleted and all open positions will be closed. Please check your account wallet.
               </p>
             </div>
 

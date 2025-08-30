@@ -107,10 +107,6 @@ export default function ConfirmDeleteModal({
                           <span className={`h-2.5 w-2.5 rounded-full ${dot}`} />
                           <div>
                             <p className="font-medium leading-tight">{b.name}</p>
-                            <p className="text-xs text-slate-400">
-                              ID #{b.id}
-                              {typeof b.strategy_id !== 'undefined' ? ` • Strat ${b.strategy_id}` : ''}
-                            </p>
                           </div>
                         </div>
 

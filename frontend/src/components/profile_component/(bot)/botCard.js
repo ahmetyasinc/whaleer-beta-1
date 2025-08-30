@@ -12,7 +12,7 @@ import SpinningWheel from './spinningWheel';
 import ExamineBot from "./examineBot";
 import { FaBan } from "react-icons/fa6";
 import DeleteBotConfirmModal from "./deleteBotConfirmModal";
-import ShotDownBotModal from "./shotDownBotModal";
+import ShutDownBotModal from "./shutDownBotModal";
 
 /* ---- Type rozet stili ---- */
 function getTypeBadgeClasses(type) {
@@ -79,6 +79,7 @@ function RentedCountdown({ rent_expires_at }) {
 
 export const BotCard = ({ bot, column }) => {
   const removeBot = useBotStore((state) => state.removeBot);
+  const shutDownBot = useBotStore((state) => state.shutDownBot);
   const updateBot = useBotStore((state) => state.updateBot);
   const toggleBotActive = useBotStore((state) => state.toggleBotActive);
   const { fetchAndStoreBotAnalysis } = useBotExamineStore.getState();
@@ -266,10 +267,10 @@ export const BotCard = ({ bot, column }) => {
           onClose={() => setDeleteModalOpen(false)}
           onConfirm={() => { removeBot(selectedBotId); setSelectedBotId(null); }}
         />
-        <ShotDownBotModal
+        <ShutDownBotModal
           isOpen={isShotDownModalOpen}
           onClose={() => setShotDownModalOpen(false)}
-          onConfirm={() => { removeBot(selectedBotId); setSelectedBotId(null); }}
+          onConfirm={() => { shutDownBot({ scope: "bot", id: selectedBotId }); setSelectedBotId(null); }}
         />
       </>
     );
@@ -406,10 +407,10 @@ export const BotCard = ({ bot, column }) => {
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={() => { removeBot(selectedBotId); setSelectedBotId(null); }}
       />
-      <ShotDownBotModal
+      <ShutDownBotModal
         isOpen={isShotDownModalOpen}
         onClose={() => setShotDownModalOpen(false)}
-        onConfirm={() => { removeBot(selectedBotId); setSelectedBotId(null); }}
+        onConfirm={() => { shutDownBot({ scope: "bot", id: selectedBotId }); setSelectedBotId(null); }}
       />
     </>
   );

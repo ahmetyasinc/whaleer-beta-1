@@ -1,9 +1,10 @@
 import { create } from 'zustand';
-import { getBots, createBot, updateBot, toggleBotActiveApi, deleteBot } from '../../api/bots';
+import { getBots, createBot, updateBot, toggleBotActiveApi, deleteBot, shutdownBots } from '../../api/bots';
 import useApiStore from '@/store/api/apiStore';
 import useStrategyStore from '@/store/indicator/strategyStore';
 import { useAccountDataStore } from "@/store/profile/accountDataStore";
 import { useProfileStore } from "@/store/profile/profileStore";
+import { toast } from "react-toastify";
 
 export const useBotStore = create((set) => ({
   bots: [],
@@ -83,6 +84,41 @@ export const useBotStore = create((set) => ({
       });
     } catch (error) {
       console.error("Bot silinirken hata:", error);
+    }
+  },
+
+  // TÜM "shutdown" senaryoları (bot/api/user) için tek giriş noktası
+  shutDownBot: async ({ scope = "bot", id } = {}) => {
+    try {
+      const res = await shutdownBots({ scope, id });
+      const affected = Array.isArray(res?.affected_bot_ids) ? res.affected_bot_ids : [];
+
+      if (affected.length) {
+        // 1) UI'daki bot kartlarını pasif yap
+        set((state) => ({
+          bots: state.bots.map(b => affected.includes(b.id) ? { ...b, isActive: false } : b)
+        }));
+
+        // 2) Tek kaynaklı görünüm için accountDataStore'ı güncelle (opsiyonel)
+        const { botsByApiId } = useAccountDataStore.getState();
+        const updated = Object.fromEntries(
+          Object.entries(botsByApiId || {}).map(([apiId, list]) => [
+            apiId,
+            (list || []).map(x =>
+              affected.includes(x.id) ? { ...x, status: "inactive" } : x
+            ),
+          ])
+        );
+        useAccountDataStore.setState({ botsByApiId: updated });
+      }
+
+      const msg = res?.message || "Seçilen kapsamda bot(lar) kapatıldı.";
+      toast.success(msg, { position: "top-center", autoClose: 2200 });
+      return res;
+    } catch (err) {
+      console.error("Shutdown error:", err);
+      toast.error(err?.response?.data?.detail || "Kapatma işlemi başarısız.", { position: "top-center" });
+      throw err;
     }
   },
 

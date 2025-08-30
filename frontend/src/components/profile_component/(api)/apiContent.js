@@ -42,13 +42,13 @@ export default function ApiConnectionClient() {
   const handleEditApi = (index) => { setEditMode(true); setEditIndex(index); setIsAddModalOpen(true); };
   const handleCloseModal = () => { setIsAddModalOpen(false); setEditMode(false); setEditIndex(null); };
 
-  const handleAddModalSave = async (formData, isEdit) => {
+  const handleAddModalSave = async (payload, isEdit) => {
     try {
       if (isEdit) {
-        await updateApi(editIndex, formData);
+        await updateApi(payload.id, payload.name);
       } else {
         await addApi({
-          ...formData,
+          ...payload,
           createdAt: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
           lastUsed: 'Never',
         });

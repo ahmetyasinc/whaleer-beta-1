@@ -156,6 +156,15 @@ export const deleteBot = async (id) => {// GELİŞTİRİCİ MODU
   }
 };
 
+export const shutdownBots = async ({ scope = "bot", id }) => {
+  // scope: "bot" | "api" | "user"
+  if (!id) throw new Error("shutdownBots: id gerekli.");
+  const url = `${process.env.NEXT_PUBLIC_API_URL}/api/shutdown/bots`;
+  const { data } = await axios.post(url, { scope, id });
+  // beklenen response örn: { affected_bot_ids: [..], closed_positions: 5 }
+  return data;
+};
+
 export const toggleBotActiveApi = async (id, isActive) => {
   try {
     const endpoint = isActive ? "deactivate" : "activate";

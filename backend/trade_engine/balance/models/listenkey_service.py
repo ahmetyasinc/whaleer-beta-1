@@ -117,13 +117,17 @@ async def bulk_upsert_listenkeys(pool, records):
 
 
 async def refresh_or_create_all(pool, connection_type="futures"):
-    """status = active veya new olanlar için refresh dene, başarısızsa yeni listenKey oluştur."""
+    """
+    status = active, new veya expired olanlar için:
+    - active/new → refresh dene, olmazsa yeni oluştur
+    - expired    → direkt yeni oluştur
+    """
     query = """
-        SELECT ak.id, ak.api_key, ak.user_id
+        SELECT ak.id, ak.api_key, ak.user_id, sk.status
         FROM public.api_keys ak
         JOIN public.stream_keys sk ON sk.api_id = ak.id
         WHERE sk.connection_type = $1
-          AND sk.status IN ('active', 'new');
+          AND sk.status IN ('active', 'new', 'expired');
     """
     async with pool.acquire() as conn:
         records = await conn.fetch(query, connection_type)
@@ -132,13 +136,23 @@ async def refresh_or_create_all(pool, connection_type="futures"):
         print(f"⚠️ Uygun kriterlere sahip api bulunamadı (connection_type={connection_type})")
         return
 
-    managers = [ListenKeyManager(pool, r["id"], r["api_key"], r["user_id"], connection_type) for r in records]
-    results = await asyncio.gather(*(m.refresh_or_create() for m in managers), return_exceptions=True)
+    results = []
+    for r in records:
+        mgr = ListenKeyManager(pool, r["id"], r["api_key"], r["user_id"], connection_type)
 
-    for m, res in zip(managers, results):
-        if isinstance(res, Exception):
-            print(f"❌ api_id={m.api_id} refresh_or_create sırasında hata: {res}")
+        try:
+            if r["status"] == "expired":
+                # expired ise → direkt yeni listenKey oluştur
+                res = await mgr.create()
+                print(f"♻️ api_id={r['id']} expired → yeni listenKey oluşturuldu.")
+            else:
+                # active/new → önce refresh dene, başarısızsa yeni oluştur
+                res = await mgr.refresh_or_create()
+            results.append(res)
+        except Exception as e:
+            print(f"❌ api_id={r['id']} işlem sırasında hata: {e}")
 
+    return results
 
 async def main():
     pool = await config.get_async_pool()

@@ -27,13 +27,7 @@ API_URLS = {
 # Test data
 test_order_data = {
         "111": [
-            {
-                "trade_type": "test_spot",
-                "coin_id": "BTCUSDT",
-                "side": "buy",
-                "order_type": "MARKET",
-                "value": 100.0
-            },
+            
             {
                 "trade_type": "test_futures",
                 "coin_id": "BTCUSDT",
@@ -74,7 +68,7 @@ test_order_data = {
             }
         ]
     }
-MARGIN_LEVERAGE_CONFIG = {
+"""MARGIN_LEVERAGE_CONFIG = {
     41: {  # API ID 41 için
         "BTCUSDT": {
             "margin_type": True,
@@ -109,7 +103,7 @@ MARGIN_LEVERAGE_CONFIG = {
             "leverage": 5
         }
     }
-}
+}"""
 
 from trade_engine.taha_part.utils.order_final import (
     update_margin_type,

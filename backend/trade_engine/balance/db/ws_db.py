@@ -1,6 +1,11 @@
 from typing import Optional, List
 from asyncpg.pool import Pool
 
+async def delete_ws(pool: Pool, ws_id: int) -> None:
+    """Verilen ws_id'yi websocket_connections tablosundan sil."""
+    query = "DELETE FROM public.websocket_connections WHERE id = $1;"
+    async with pool.acquire() as conn:
+        await conn.execute(query, ws_id)
 
 async def update_ws_name(pool: Pool, ws_id: int, name: str) -> None:
     query = """
@@ -11,7 +16,6 @@ async def update_ws_name(pool: Pool, ws_id: int, name: str) -> None:
     async with pool.acquire() as conn:
         await conn.execute(query, ws_id, name)
 
-        
 # Yeni websocket kaydı ekle
 async def insert_ws(pool: Pool, name: str, exchange: str, url: str) -> int:
     query = """
@@ -21,6 +25,7 @@ async def insert_ws(pool: Pool, name: str, exchange: str, url: str) -> int:
     """
     async with pool.acquire() as conn:
         return await conn.fetchval(query, name, exchange, url)
+
 # listenKey count güncelle
 async def update_listenkey_count(pool: Pool, ws_id: int, count: int) -> None:
     query = """
@@ -51,13 +56,27 @@ async def get_active_ws(pool: Pool) -> List[dict]:
         rows = await conn.fetch(query)
         return [dict(r) for r in rows]
 
-# ws_id'ye bağlı stream_keys getir
+# ws_id'ye bağlı stream_keys getir (GÜNCELLENMİŞ VE DOĞRU HALİ)
 async def get_streamkeys_by_ws(pool: Pool, ws_id: int) -> List[dict]:
+    """
+    Verilen bir ws_id'ye bağlı olan SADECE 'active' veya 'new' durumundaki
+    stream_key'leri getirir.
+    """
     query = """
         SELECT id, api_id, user_id, connection_type, stream_key
         FROM public.stream_keys
-        WHERE ws_id = $1;
+        WHERE ws_id = $1 AND status IN ('active', 'new');
     """
     async with pool.acquire() as conn:
         rows = await conn.fetch(query, ws_id)
         return [dict(r) for r in rows]
+    
+
+async def update_ws_url_and_count(pool: Pool, ws_id: int, url: str, count: int) -> None:
+    query = """
+        UPDATE public.websocket_connections
+        SET url = $2, listenkey_count = $3, reactivated_at = NOW()
+        WHERE id = $1;
+    """
+    async with pool.acquire() as conn:
+        await conn.execute(query, ws_id, url, count)

@@ -277,7 +277,6 @@ export default function BacktestChart() {
       }
     } catch (error) {
       console.error('Bottom series formatting error:', error);
-      console.log('Raw returns payload:', returns);
     }
 
     if (returnsChartRef.current) {

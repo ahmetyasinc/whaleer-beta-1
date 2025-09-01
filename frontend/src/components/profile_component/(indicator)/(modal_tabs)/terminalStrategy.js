@@ -20,7 +20,6 @@ const TerminalStrategy = ({ id }) => {
     if (!currentSub) return;
 
     const { prints, strategy_result } = currentSub;
-    console.log(currentSub);
 
     if (strategy_result?.status === "error" && strategy_result?.message) {
       setOutput((prev) => [

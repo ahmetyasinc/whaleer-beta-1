@@ -53,6 +53,15 @@ const useIndicatorStore = create((set) => ({
   toggleIndicator: (indicatorId) => set((state) => ({
     isVisible: { ...state.isVisible, [indicatorId]: !state.isVisible[indicatorId] }
   })),
+
+  setIndicatorPendingRelease: (indicatorId, pendingRelease) => set((state) => {
+    const indicators = state.indicators.map((it) =>
+      it.id === indicatorId ? { ...it, pending_release: pendingRelease } : it
+    );
+    // favorites vs. dokunma; sadece kişisel listede güncelleme yeterli
+    return { indicators };
+  }),
+
 }));
 
 export default useIndicatorStore;

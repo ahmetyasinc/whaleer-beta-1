@@ -220,11 +220,6 @@ export default function ChartComponent() {
     });
     candleSeries.setData(chartData);
 
-    console.log("[RULER] installing ruler tool…", {
-      hasChart: !!chart,
-      hasSeries: !!candleSeries,
-      hasContainer: !!chartContainerRef.current,
-    });
     const removeRuler = installRulerTool({
       chart,
       series: candleSeries,
@@ -232,7 +227,6 @@ export default function ChartComponent() {
       isRulerModeRef: rulerModeRef,
     });
     cleanupFns.push(() => {
-      console.log("[RULER] cleanup ruler tool");
       try { removeRuler?.(); } catch {}
     });
 

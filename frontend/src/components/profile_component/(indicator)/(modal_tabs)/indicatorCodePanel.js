@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { IoMdClose } from "react-icons/io";
 import { FaRegSave } from "react-icons/fa";
+import { MdOpenInFull } from "react-icons/md"; // 👈 Tam ekran ikonu
 import CodeEditor from "../../CodeEditor";
 import usePanelStore from "@/store/indicator/panelStore";
 import useCodePanelStore from "@/store/indicator/indicatorCodePanelStore";
@@ -10,7 +11,8 @@ import useIndicatorStore from "@/store/indicator/indicatorStore";
 import RunButton from "./run_button";
 import TerminalIndicator from "./terminalIndicator";
 import axios from "axios";
-import VersionSelect from "./versionSelect"; 
+import VersionSelect from "./versionSelect";
+import CodeModal from "./fullScreenCodeModal"; // 👈 aynı klasördeyse bu yol doğru
 
 const CodePanel = () => {
   const removeCustomPanel = usePanelStore((s) => s.removeCustomPanel);
@@ -36,6 +38,10 @@ const CodePanel = () => {
   const [localCode, setLocalCode] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const terminalRef = useRef(null);
+
+  // Tam ekran CodeModal durumu
+  const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
+  const [codeModalIndicator, setCodeModalIndicator] = useState(null);
 
   useEffect(() => {
     setLocalName(indicatorName);
@@ -113,6 +119,16 @@ const CodePanel = () => {
     removeCustomPanel("panel-indicator-editor");
   };
 
+  // Tam ekran modal aç (Run'ın solundaki ikon)
+  const openFullscreenModal = () => {
+    setCodeModalIndicator({
+      id: selected?.id ?? null,
+      name: (localName ?? "").trim() || "Untitled Indicator",
+      code: localCode ?? "",
+    });
+    setIsCodeModalOpen(true);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -123,9 +139,21 @@ const CodePanel = () => {
         </h2>
       </div>
 
+      {/* Sağ üst aksiyon çubuğu: [Tam ekran ikonu] [Run] [Save] [Close] */}
       {selected && !isNewVersion && (
-        <RunButton indicatorId={selected.id} onBeforeRun={handleSaveIndicator} />
+        <div className="absolute top-10 right-[10px] flex items-center gap-2">
+          {/* Tam ekran ikonu — Run'ın SOLUNDA */}
+          <button
+            onClick={openFullscreenModal}
+            className="p-[1px] "
+            title="Tam ekran"
+          >
+            <MdOpenInFull size={16} />
+          </button>
+
+        </div>
       )}
+      <RunButton indicatorId={selected.id} onBeforeRun={handleSaveIndicator} />
 
       {/* Save button */}
       <button
@@ -144,6 +172,7 @@ const CodePanel = () => {
       <button
         className="absolute top-2 right-1 gap-1 px-[9px] py-[5px] mr-1 bg-[rgb(100,16,16)] hover:bg-[rgb(189,49,49)] rounded text-sm font-medium"
         onClick={handleClose}
+        title="Close"
       >
         <IoMdClose />
       </button>
@@ -161,13 +190,13 @@ const CodePanel = () => {
 
         {/* Versiyon seçici */}
         {versions.length > 0 && (
-            <VersionSelect
-              versions={versions}
-              selectedId={selected?.id || null}
-              onChange={(id) => selectVersion(id)}
-              onAdd={() => startNewVersion()}
-            />
-          )}
+          <VersionSelect
+            versions={versions}
+            selectedId={selected?.id || null}
+            onChange={(id) => selectVersion(id)}
+            onAdd={() => startNewVersion()}
+          />
+        )}
       </div>
 
       {/* Editor */}
@@ -180,6 +209,15 @@ const CodePanel = () => {
         {...(selected ? { id: selected.id } : {})}
         ref={terminalRef}
         initialOutput="🚀 Terminal ready..."
+      />
+
+      {/* Tam ekran CodeModal */}
+      <CodeModal
+        isOpen={isCodeModalOpen}
+        onClose={() => setIsCodeModalOpen(false)}
+        indicator={codeModalIndicator}
+        onSave={handleSaveIndicator}          // 👈 Kaydet işlevini CodePanel’den al
+        runIndicatorId={selected?.id || null} // 👈 RunButton için id ver
       />
     </div>
   );

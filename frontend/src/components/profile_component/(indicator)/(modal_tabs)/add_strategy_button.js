@@ -33,9 +33,6 @@ const AddStrategyButton = ({ strategyId }) => {
         }
       );
 
-      console.log("== RESPONSE (AddStrategyButton) ==");
-      console.log(response.data);
-
       const {
         strategy_result = {},
         strategy_name = "",

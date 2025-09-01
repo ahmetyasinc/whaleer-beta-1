@@ -810,7 +810,6 @@ export default function SurveyPage() {
                     if (validateCurrentQuestion()) {
                       setIsSubmitting(true);
                       try {
-                        console.log(answers)
                         const res = await fetch('/api/save', {
                           method: 'POST',
                           headers: {

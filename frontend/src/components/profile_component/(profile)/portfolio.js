@@ -12,7 +12,6 @@ export default function Portfolio() {
   const tradesMap = useAccountDataStore(s => s.tradesByApiId);
 
   const portfolio = useMemo(() => portfolioMap?.[activeApiId] || [], [portfolioMap, activeApiId]);
-  console.log("Portfolio Data:", portfolio);
   const transactions = useMemo(() => tradesMap?.[activeApiId] || [], [tradesMap, activeApiId]);
 
   const formatCurrency = (amount) =>

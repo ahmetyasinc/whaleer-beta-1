@@ -32,9 +32,6 @@ const AddIndicatorButton = ({ indicatorId }) => {
                 end: end,
             });
 
-            console.log("== RESPONSE ==")
-            console.log(response)
-
             const { indicator_result = [], indicator_name=[], prints = [], inputs = [] } = response.data || {};
             insertIndicatorData(indicatorId, indicator_name, indicator_result, prints, inputs, addSyncedPanel);
 

@@ -54,7 +54,7 @@ const StrategyButton = () => {
         className="bg-gray-800 w-[120px] px-4 py-[10px] rounded text-sm text-white truncate"
         onClick={() => setIsModalOpen(true)}
       >
-        {selectedStrategy ? selectedStrategy.name : "Select Strategy"}
+        {selectedStrategy ? selectedStrategy.name : "Select"}
       </button>
 
       {isModalOpen && (

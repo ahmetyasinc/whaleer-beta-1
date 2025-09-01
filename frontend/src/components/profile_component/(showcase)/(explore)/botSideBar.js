@@ -33,13 +33,11 @@ export default function BotSidebar() {
 
   const handleInspect = (botId) => {
     inspectBot(botId);
-    console.log('Inspect:', botId);
   };
 
   // ⬇️ Load followed bots on first render
   useEffect(() => {
     getFollowedBots();
-    console.log('BotSidebar mounted, followed bots:', followedBots);
   }, []);
 
   return (

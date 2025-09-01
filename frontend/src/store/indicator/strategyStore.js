@@ -59,6 +59,15 @@ const useStrategyStore = create((set) => ({
   toggleStrategy: (strategyId) => set((state) => ({
     isVisible: { ...state.isVisible, [strategyId]: !state.isVisible[strategyId] }
   })),
+
+  setStrategyPendingRelease: (strategyId, pendingRelease) => set((state) => {
+    const strategies = state.strategies.map((st) =>
+      st.id === strategyId ? { ...st, pending_release: pendingRelease } : st
+    );
+    const all_strategies = [...state.tecnic, ...strategies, ...state.community];
+    return { strategies, all_strategies };
+  }),
+
 }));
 
 export default useStrategyStore;

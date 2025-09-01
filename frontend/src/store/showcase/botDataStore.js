@@ -174,7 +174,6 @@ const useBotDataStore = create((set, get) => ({
     const isAlreadyFollowed = followedBots.some(bot => bot.bot_id === botData.bot_id);
 
     if (isAlreadyFollowed) {
-      console.log('Bot zaten takip ediliyor:', botData.name);
       return;
     }
 
@@ -194,7 +193,6 @@ const useBotDataStore = create((set, get) => ({
       };
 
       set({ followedBots: [...followedBots, followedBot] });
-      console.log('Bot başarıyla takip edildi:', botData.name);
     } catch (error) {
       set({ error: error.message });
       console.error('followBot API hatası:', error);
@@ -216,7 +214,6 @@ const useBotDataStore = create((set, get) => ({
       );
 
       set({ followedBots: updatedBots });
-      console.log('Bot takipten çıkarıldı:', botId);
     } catch (error) {
       set({ error: error.message });
       console.error('unfollowBot API hatası:', error);

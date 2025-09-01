@@ -32,7 +32,6 @@ export default function ModernBotList({ bots = [] }) {
   const list = useMemo(() => Array.isArray(bots) ? bots : [], [bots]);
 
   const handlePreviewBot = (botId) => {
-    console.log("Previewing bot:", botId);
     setMenuOpen(null);
   };
 
@@ -40,7 +39,6 @@ export default function ModernBotList({ bots = [] }) {
     try {
       setExamineLoadingId(botId);
       // Analiz verisini sadece burada çekiyoruz
-      console.log("Fetching analysis for bot:", botId);
       await fetchAndStoreBotAnalysis(botId);
       setSelectedBotId(botId);
       setIsExamineOpen(true);

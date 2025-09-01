@@ -11,6 +11,20 @@ const CommunityStrategies = ({ onSelect }) => {
   const { favorites, community } = useStrategyStore();
   const [searchTerm, setSearchTerm] = useState("");
 
+  const filtered = (community || [])
+    // sadece allow_bot_execution true olanları göster
+    .filter((s) => {
+      const allowBotExecution =
+        s?.release?.permissions?.allow_bot_execution ??
+        s?.approved_release?.permissions?.allow_bot_execution ??
+        false;
+      return allowBotExecution === true;
+    })
+    // arama filtresi
+    .filter((strategy) =>
+      (strategy.name || "").toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
   return (
     <div className="text-white">
       {/* Arama Çubuğu */}
@@ -27,38 +41,34 @@ const CommunityStrategies = ({ onSelect }) => {
 
       {/* Strateji Listesi */}
       <div className="flex flex-col gap-2 w-full mt-2 max-h-[440px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
-        {community
-          .filter((strategy) =>
-            strategy.name.toLowerCase().includes(searchTerm.toLowerCase())
-          )
-          .map((strategy) => (
-            <div
-              key={strategy.id}
-              className="bg-gray-900 hover:bg-gray-800 pl-1 pr-2 flex items-center justify-between w-full h-[40px]"
-            >
-              {/* Sol */}
-              <div className="flex items-center">
-                <div className="bg-transparent p-2 rounded-md hover:bg-gray-800">
-                  {favorites.some((fav) => fav.id === strategy.id) ? (
-                    <IoMdStar className="text-lg text-yellow-500" />
-                  ) : (
-                    <IoIosStarOutline className="text-lg text-gray-600" />
-                  )}
-                </div>
-                <span className="text-[14px]">{strategy.name}</span>
+        {filtered.map((strategy) => (
+          <div
+            key={strategy.id}
+            className="bg-gray-900 hover:bg-gray-800 pl-1 pr-2 flex items-center justify-between w-full h-[40px]"
+          >
+            {/* Sol */}
+            <div className="flex items-center">
+              <div className="bg-transparent p-2 rounded-md hover:bg-gray-800">
+                {favorites.some((fav) => fav.id === strategy.id) ? (
+                  <IoMdStar className="text-lg text-yellow-500" />
+                ) : (
+                  <IoIosStarOutline className="text-lg text-gray-600" />
+                )}
               </div>
-
-              {/* Sağ */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => onSelect(strategy)} // SEÇİLDİĞİNDE FONKSİYON ÇAĞRILIR
-                  className="bg-blue-600 px-2 rounded-md py-[1px] h-[26px] mr-3 hover:bg-blue-800 text-white text-xs"
-                >
-                  Select
-                </button>
-              </div>
+              <span className="text-[14px]">{strategy.name}</span>
             </div>
-          ))}
+
+            {/* Sağ */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => onSelect(strategy)} // seçildiğinde fonksiyon çağrılır
+                className="bg-blue-600 px-2 rounded-md py-[1px] h-[26px] mr-3 hover:bg-blue-800 text-white text-xs"
+              >
+                Select
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

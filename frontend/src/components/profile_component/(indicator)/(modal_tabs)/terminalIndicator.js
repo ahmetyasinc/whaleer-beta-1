@@ -21,7 +21,6 @@ const TerminalIndicator = ({ id }) => {
     if (!currentSub) return;
   
     const { prints, result } = currentSub;
-    console.log(currentSub);
 
     if (result?.status === "error" && result?.message) {
       setOutput((prev) => [

@@ -39,7 +39,6 @@ const StrategySettingsModal = ({ isOpen, onClose, strategyId, subId }) => {
   };
 
   const handleSave = async () => {
-    console.log(strategyId, subId, formState)
     await updateInputs(strategyId, subId, formState);
     onClose();
   };

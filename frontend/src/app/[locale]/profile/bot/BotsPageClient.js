@@ -151,7 +151,6 @@ export default function BotsPageClient() {
             onConfirm={() => {
               deactivateAllBots();
               setConfirmModalOpen(false);
-              console.log("All bots deactivated, positions closed.");
             }}
           />
 

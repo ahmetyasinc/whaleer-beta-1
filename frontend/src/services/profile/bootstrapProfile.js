@@ -141,10 +141,6 @@ export async function bootstrapProfile() {
   useBotStore.getState().hydrateFromProfileMaps(bots);
 }
 
-/**
- * İhtiyaç varsa boot et. Daha önce hydrate edilmişse (ve veri varsa) yeniden fetch yapmaz.
- * Aynı anda birden fazla çağrı gelirse tek Promise döner.
- */
 export function bootstrapProfileIfNeeded() {
   const acc = useAccountDataStore.getState();
   if (acc.isHydrated && hasAnyAccountData(acc)) {

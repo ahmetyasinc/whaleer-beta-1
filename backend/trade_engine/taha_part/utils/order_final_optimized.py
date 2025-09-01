@@ -1221,17 +1221,18 @@ async def last_trial():
            
         
     }
-    test_one ={"112": [
+    test_one ={"110": [
             
               {
                 "trade_type": "test_futures",
-                "coin_id": "ADAUSDT",
+                "coin_id": "BTCUSDT",
                 "side": "buy",
                 "order_type": "LIMIT",
-                "value": 150.0,
-                "price": 0.80,
+                "value": 108700,
+                "price": 3000,
                 "positionside": "long",  # ✅ Kullanıcı "long" gönderdi, DB'ye "long" kaydedilir, Binance'e "BOTH"
-                "timeInForce": "GTC"
+                "timeInForce": "GTC",
+                "leverage": 10,
             }
         ]
         
@@ -1242,7 +1243,7 @@ async def last_trial():
         
         # Cache'in hazır olmasını bekle
     cache_ready = await wait_for_cache_ready(timeout_seconds=15)
-    result=await send_order(await prepare_order_data(testttt))
+    result=await send_order(await prepare_order_data(test_one))
 
 if __name__ == "__main__":
     import asyncio

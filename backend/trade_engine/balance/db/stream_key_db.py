@@ -115,12 +115,11 @@ async def refresh_stream_key_expiration(
 async def update_streamkey_status(pool: Pool, streamkey_id: int, new_status: str) -> None:
     query = """
         UPDATE public.stream_keys
-        SET status = $2, updated_at = NOW()
+        SET status = $2
         WHERE id = $1;
     """
     async with pool.acquire() as conn:
         await conn.execute(query, streamkey_id, new_status)
-
 
 # 5. Toplu expiration yenileme
 async def bulk_refresh_stream_keys(

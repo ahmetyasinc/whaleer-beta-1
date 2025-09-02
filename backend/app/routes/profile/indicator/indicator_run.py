@@ -23,9 +23,7 @@ async def run_indicator(
 ):
     """Gönderilen coin_id, interval ve end değerlerine göre binance_data tablosundan veri çeker, indikatörü doğrular ve çalıştırır."""
 
-    start_time = time.time()  # Fonksiyon başlangıcındaki zaman damgası
-
-
+    print(indicator_data.end)
     # **1️⃣ BinanceData tablosundan son 5000 veriyi çek**
     query = (
         select(BinanceData)
@@ -95,10 +93,7 @@ async def run_indicator(
     # **5️⃣ Kullanıcının indikatör kodunu çalıştır**
     indicator_result, print_outputs, inputs = await run_user_indicator(indicator.code, historical_data)
 
-    end_time = time.time()  # Fonksiyon bitişindeki zaman damgası
-    execution_time = end_time - start_time  # Çalışma süresi hesaplanıyor
-
-    return {"indicator_id": indicator.id, "indicator_name": indicator.name, "execution_time": execution_time, "indicator_result": indicator_result, "prints": print_outputs, "inputs": inputs}
+    return {"indicator_id": indicator.id, "indicator_name": indicator.name, "indicator_result": indicator_result, "prints": print_outputs, "inputs": inputs}
 
 @protected_router.post("/api/run-updated-indicator/")
 async def run_updated_indicator(

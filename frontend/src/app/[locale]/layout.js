@@ -1,11 +1,11 @@
-// app/layout.js  ← DİKKAT: "use client" YOK
+// app/[locale]/layout.js  ← Server Component
 import "@/styles/globals.css";
 import NetworkStatus from "@/components/NetworkStatus";
 import "react-toastify/dist/ReactToastify.css";
 import { Work_Sans } from "next/font/google";
-import "@/i18n";
-
-import ClientProviders from "./client-providers"; // ↓ client sarmalayıcı
+import "@/i18n"; // i18n init (tek sefer)
+import { getI18n } from "@/i18n/server";
+import ClientProviders from "./client-providers";
 
 const mainFont = Work_Sans({
   subsets: ["latin-ext"],
@@ -14,23 +14,25 @@ const mainFont = Work_Sans({
   variable: "--font-main",
 });
 
-export default async function RootLayout(props) {
-  const params = await props.params;
+// ✅ DOĞRU: { params } doğrudan alınır, await YOK
+export async function generateMetadata({ params }) {
+  const locale = params?.locale ?? "en";
+  const i18n = await getI18n(locale);
+  return {
+    title: i18n.t("metadata:root.title", "Whaleer"),
+    description: i18n.t("metadata:root.description", "Algorithmic trading platform."),
+  };
+}
 
-  const {
-    children
-  } = props;
-
-  const locale = params?.locale || "en"; // use(props.params) yerine doğrudan params
+// ✅ DOĞRU: Server Component; async olması gerekmiyor
+export default function RootLayout({ children, params }) {
+  const locale = params?.locale ?? "en";
 
   return (
     <html lang={locale}>
       <body className={`${mainFont.variable} font-sans`}>
-        {/* Bu component client olsa bile server layout içinde kullanılabilir */}
         <NetworkStatus />
-
-        {/* Tüm client context/provideler client wrapper içinde */}
-        <ClientProviders>
+        <ClientProviders locale={locale}>
           <main className="min-h-screen">{children}</main>
         </ClientProviders>
       </body>

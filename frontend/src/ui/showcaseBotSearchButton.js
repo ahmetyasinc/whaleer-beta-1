@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import styled from 'styled-components';
 import { IoIosSearch } from "react-icons/io";
 import useBotDropdownSearchStore from '@/store/showcase/botDropdownSearchStore';
+import useBotDataStore from '@/store/showcase/botDataStore'; // NEW
 
 const Input = () => {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -19,7 +20,9 @@ const Input = () => {
     fetchBots,
   } = useBotDropdownSearchStore();
 
-  // Fetch on first open if not loaded yet
+  const { inspectBot } = useBotDataStore(); // NEW
+
+  // İlk açılışta (daha önce yüklenmemişse) botları çek
   useEffect(() => {
     if (!hasLoadedOnce && !loading) {
       fetchBots();
@@ -27,7 +30,7 @@ const Input = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasLoadedOnce, loading]);
 
-  // Close dropdown on outside click
+  // Dropdown’ı dışarı tıklayınca kapat
   useEffect(() => {
     function handleClickOutside(e) {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
@@ -53,6 +56,23 @@ const Input = () => {
     [showDropdown, loading, error, filteredBots.length, searchQuery]
   );
 
+  // Bir bot seçildiğinde: inspect et + dropdown’ı kapat
+  const handleSelectBot = useCallback((botId) => {        // NEW
+    try {
+      inspectBot(botId);                                  // NEW
+    } finally {
+      setShowDropdown(false);                             // NEW
+    }
+  }, [inspectBot]);                                       // NEW
+
+  // Klavye ile seçim (Enter/Space)                           // NEW
+  const handleItemKeyDown = useCallback((e, botId) => {   // NEW
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleSelectBot(botId);
+    }
+  }, [handleSelectBot]);                                  // NEW
+
   return (
     <StyledWrapper ref={wrapperRef}>
       <div className="search-header">
@@ -64,6 +84,9 @@ const Input = () => {
           onChange={(e) => setSearchQuery(e.target.value)}
           value={searchQuery}
           aria-label="Search bot or creator"
+          role="combobox"                                  // NEW (erişilebilirlik)
+          aria-expanded={showDropdown}                     // NEW
+          aria-controls="bot-search-dropdown"              // NEW
         />
         <button
           className="search-header__button"
@@ -76,7 +99,12 @@ const Input = () => {
       </div>
 
       {showDropdown && (
-        <div className="dropdown" role="listbox" aria-label="Search results">
+        <div
+          id="bot-search-dropdown"                         // NEW
+          className="dropdown"
+          role="listbox"
+          aria-label="Search results"
+        >
           {loading && <div className="info">Loading…</div>}
           {!!error && <div className="error">An error occurred: {error}</div>}
           {!loading && !error && emptyState && (
@@ -84,7 +112,15 @@ const Input = () => {
           )}
 
           {!loading && !error && filteredBots.map((bot) => (
-            <div key={bot.id} className="item" role="option" tabIndex={0}>
+            <div
+              key={bot.id}
+              className="item"
+              role="option"
+              tabIndex={0}
+              aria-selected={false}
+              onClick={() => handleSelectBot(bot.id)}           // NEW
+              onKeyDown={(e) => handleItemKeyDown(e, bot.id)}   // NEW
+            >
               <div className="left">
                 <div className="title-row">
                   <span className="name">{bot.name}</span>
@@ -211,10 +247,12 @@ const StyledWrapper = styled.div`
     border: 1px solid transparent;
   }
 
-  .item:hover {
+  .item:hover,
+  .item:focus {
     background: rgba(255,255,255,0.03);
     border-color: #2b2b2b;
     cursor: pointer;
+    outline: none;
   }
 
   .left {

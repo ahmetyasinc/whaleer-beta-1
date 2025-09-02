@@ -1,4 +1,4 @@
-import { getI18n } from "@/i18n/server"; // Eğer SSR destekliyorsan
+import { getI18n } from "@/i18n/server";
 import FeaturesTabs from "@/components/home_component/FeaturesTabs";
 import Footer from "@/components/home_component/Footer";
 import About from "@/components/home_component/About";
@@ -17,18 +17,13 @@ export async function generateMetadata(props) {
 }
 
 export default async function Home(props) {
-  const params = await props.params;
-  const resolvedParams = typeof params?.then === "function" ? await params : params;
-  const locale = resolvedParams.locale;
-
   return (
     <main>
-      <Header pageClass={0} locale={locale} key={`header-${locale}`} />
-      <HomeClientComponent locale={locale} key={`home-${locale}`} />
-      <About locale={locale} key={`about-${locale}`} />
-      <FeaturesTabs locale={locale} key={`features-${locale}`} />
-      <Footer locale={locale} key={`footer-${locale}`} />
+      <Header pageClass={0} />
+      <HomeClientComponent />
+      <About />
+      <FeaturesTabs />
+      <Footer />
     </main>
   );
 }
-

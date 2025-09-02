@@ -25,7 +25,6 @@ const RunButton = ({ indicatorId, onBeforeRun }) => {
         console.warn("Eksik veri ile API çağrısı engellendi.");
         return;
       }
-
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/run-indicator/`,
         {
@@ -35,7 +34,6 @@ const RunButton = ({ indicatorId, onBeforeRun }) => {
           end: end,
         }
       );
-
       const {
         indicator_result = [],
         indicator_name = "",

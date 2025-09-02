@@ -181,7 +181,7 @@ const CodePanel = () => {
       )}
 
       {!isLockedActive && (
-        <RunButton strategyId={selected.id} onBeforeRun={handleSaveStrategy} />
+        <RunButton strategyId={selected?.id} onBeforeRun={handleSaveStrategy} />
       )}
 
       {/* Save */}

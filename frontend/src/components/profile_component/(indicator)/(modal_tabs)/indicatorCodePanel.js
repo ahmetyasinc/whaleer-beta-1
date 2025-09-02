@@ -153,7 +153,7 @@ const CodePanel = () => {
 
         </div>
       )}
-      <RunButton indicatorId={selected.id} onBeforeRun={handleSaveIndicator} />
+      <RunButton indicatorId={selected?.id} onBeforeRun={handleSaveIndicator} />
 
       {/* Save button */}
       <button

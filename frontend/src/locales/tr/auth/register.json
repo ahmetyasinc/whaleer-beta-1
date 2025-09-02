@@ -1,0 +1,32 @@
+{
+  "title": "Kayıt Ol",
+  "subtitle": "Whaleer'a kayıt olun",
+  "backHome": "Anasayfa",
+  "placeholders": {
+    "firstName": "İsim",
+    "lastName": "Soyisim",
+    "username": "Kullanıcı Adı",
+    "email": "E-Posta",
+    "password": "Şifre",
+    "passwordConfirm": "Şifreyi Onayla"
+  },
+  "submit": {
+    "label": "Kayıt Ol",
+    "loading": "Gönderiliyor…"
+  },
+  "haveAccount": "Zaten bir hesabın var mı?",
+  "login": "Giriş Yap",
+  "beta": {
+    "title": "Sadece Beta Erişimi",
+    "bodyLine1": "Whaleer'a ilgin için teşekkürler!",
+    "bodyLine2": "Şu anda kayıt, beta test sürecinde kapalıdır.",
+    "bodyLine3": "Yakında tekrar kontrol edin veya erken erişim için bize ulaşın."
+  },
+  "toast": {
+    "passwordMismatch": "Şifreler eşleşmiyor!",
+    "submitting": "Kayıt yapılıyor…",
+    "success": "Kayıt başarılı! Giriş sayfasına yönlendiriliyorsunuz…",
+    "unexpected": "Beklenmeyen bir hata oluştu.",
+    "genericError": "İşlem sırasında bir hata oluştu."
+  }
+}

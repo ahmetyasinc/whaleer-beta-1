@@ -77,7 +77,7 @@ export default function ProfileHeader() {
           </nav>
 
           <Link
-            href="/settings"
+            href="/profile/settings"
             className={`flex items-center justify-center w-10 h-10 rounded-full transition-all ${
               pathname === "/settings"
                 ? "text-gray-100 shadow-lg hover:text-gray-400 shadow-cyan-500/30"

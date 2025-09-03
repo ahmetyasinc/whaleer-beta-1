@@ -1,0 +1,24 @@
+{
+  "title": "Delete API Key",
+  "subtitle": {
+    "withNameSuffix": "API key will be deleted.",
+    "noName": "You are about to delete this API key."
+  },
+  "botsHeader": "Bots using this API:",
+  "empty": "No bots are linked to this API.",
+  "badge": {
+    "titleActive": "Active bot",
+    "titleInactive": "Inactive bot",
+    "labelActive": "Active",
+    "labelInactive": "Inactive"
+  },
+  "warning": {
+    "part1": "If you confirm, the listed bots will be",
+    "bold": "disabled and deleted",
+    "part2": "then the API key will be deleted. This action cannot be undone."
+  },
+  "buttons": {
+    "cancel": "Cancel",
+    "confirm": "Yes, Delete"
+  }
+}

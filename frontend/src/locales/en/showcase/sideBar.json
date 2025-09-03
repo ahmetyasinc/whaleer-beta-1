@@ -1,0 +1,25 @@
+{
+  "title": "Followed Bots",
+  "counts": {
+    "followed": "{{count}} bots followed"
+  },
+  "empty": {
+    "primary": "You haven't followed any bots yet",
+    "hint": "You can follow bots by clicking the \"Follow\" button on their cards"
+  },
+  "actions": {
+    "unfollow": "Unfollow",
+    "inspect": "Inspect"
+  },
+  "labels": {
+    "uptime": "Uptime",
+    "creator": "Creator",
+    "status": "Status"
+  },
+  "runtime": {
+    "startedToday": "Started today",
+    "hoursOnly": "{{hours}} hours",
+    "daysOnly": "{{days}} days",
+    "daysHours": "{{days}} days {{hours}} hours"
+  }
+}

@@ -4,10 +4,12 @@ import { useState } from "react";
 import { IoIosStarOutline, IoMdSearch, IoMdStar } from "react-icons/io";
 import useStrategyStore from "@/store/indicator/strategyStore";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 
 axios.defaults.withCredentials = true;
 
 const CommunityStrategies = ({ onSelect }) => {
+  const { t } = useTranslation("backtestCommunityStrategies");
   const { favorites, community } = useStrategyStore();
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -31,10 +33,11 @@ const CommunityStrategies = ({ onSelect }) => {
       <div className="bg-gray-800 flex items-center border-b border-gray-800 mb-2">
         <input
           type="text"
-          placeholder="Search..."
+          placeholder={t("searchPlaceholder")}
           className="w-full px-3 py-2 bg-gray-800 text-white focus:outline-none"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          aria-label={t("searchPlaceholder")}
         />
         <IoMdSearch className="text-gray-400 text-[20px] mr-2" />
       </div>
@@ -63,8 +66,10 @@ const CommunityStrategies = ({ onSelect }) => {
               <button
                 onClick={() => onSelect(strategy)} // SEÇİLDİĞİNDE FONKSİYON ÇAĞRILIR
                 className="bg-blue-600 px-2 rounded-md py-[1px] h-[26px] mr-3 hover:bg-blue-800 text-white text-xs"
+                aria-label={t("choose")}
+                title={t("choose")}
               >
-                Choose
+                {t("choose")}
               </button>
             </div>
           </div>

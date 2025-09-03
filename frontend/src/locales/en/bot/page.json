@@ -1,0 +1,18 @@
+{
+  "tabs": {
+    "myBots": "My Bots",
+    "purchased": "Purchased",
+    "rented": "Rented",
+    "noTabYet": "No items in {{tab}} yet"
+  },
+  "actions": {
+    "panicButton": "Panic Button!",
+    "panicButtonTitle": "Stop All Bots and Close Positions",
+    "createNewBot": "Create New Bot"
+  },
+  "empty": {
+    "original": "You don't have any original bots yet.",
+    "purchased": "You haven't purchased any bots yet.",
+    "rented": "You haven't rented any bots yet."
+  }
+}

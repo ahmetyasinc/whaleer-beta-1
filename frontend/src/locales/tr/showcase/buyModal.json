@@ -1,0 +1,34 @@
+{
+  "title": "Satın Alımı Onayla",
+  "rows": {
+    "action": "İşlem",
+    "botName": "Bot Adı",
+    "sellerName": "Satıcı Adı",
+    "priceUsd": "Fiyat (USD)",
+    "approxSol": "Tahmini Fiyat (SOL)",
+    "revenueWallet": "Gelir Cüzdanı"
+  },
+  "actionNames": {
+    "buy": "Satın Al"
+  },
+  "buttons": {
+    "cancel": "İptal",
+    "continue": "Devam Et",
+    "processing": "İşleniyor..."
+  },
+  "toasts": {
+    "preparing": "Ödeme hazırlanıyor...",
+    "signWallet": "Lütfen cüzdanınızda işlemi imzalayın...",
+    "confirmOnchain": "Zincir üzerindeki ödeme doğrulanıyor...",
+    "activatingLicense": "Lisansınız etkinleştiriliyor..."
+  },
+  "errors": {
+    "connectWallet": "Lütfen cüzdanınızı bağlayın.",
+    "invalidCheckout": "Geçersiz ödeme verisi.",
+    "nonJson": "Sunucudan JSON olmayan yanıt alındı.",
+    "prepareFailed": "Hazırlık başarısız.",
+    "invalidIntent": "Sunucudan geçersiz intent döndü.",
+    "notConfirmed": "Ödeme doğrulanamadı.",
+    "operationFailed": "İşlem başarısız."
+  }
+}

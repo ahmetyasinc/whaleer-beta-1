@@ -3,8 +3,11 @@
 import { useEffect, useState } from 'react';
 import { FiEye, FiTrash2 } from 'react-icons/fi';
 import useBotDataStore from '@/store/showcase/botDataStore';
+import { useTranslation } from 'react-i18next';
 
 export default function BotSidebar() {
+  const { t } = useTranslation('sideBar');
+
   const {
     getFollowedBots,
     unfollowBot,
@@ -13,17 +16,17 @@ export default function BotSidebar() {
   } = useBotDataStore();
 
   const formatRunningTime = (hours) => {
-    if (hours < 1) return 'Started today';
+    if (hours < 1) return t('runtime.startedToday');
 
     const days = Math.floor(hours / 24);
     const remainingHours = hours % 24;
 
     if (days === 0) {
-      return `${hours} hours`;
+      return t('runtime.hoursOnly', { hours });
     } else if (remainingHours === 0) {
-      return `${days} days`;
+      return t('runtime.daysOnly', { days });
     } else {
-      return `${days} days ${remainingHours} hours`;
+      return t('runtime.daysHours', { days, hours: remainingHours });
     }
   };
 
@@ -44,10 +47,10 @@ export default function BotSidebar() {
     <aside className="fixed top-[60px] right-0 w-[320px] h-[calc(100vh-60px)] bg-black border-t border-gray-600 text-white shadow-2xl z-40 flex flex-col">
       <div className="p-3">
         <h2 className="text-lg font-semibold bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
-          Followed Bots
+          {t('title')}
         </h2>
         <p className="text-xs text-gray-400 mt-1">
-          {followedBots.length} bots followed
+          {t('counts.followed', { count: followedBots.length })}
         </p>
       </div>
 
@@ -55,10 +58,10 @@ export default function BotSidebar() {
         {followedBots.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-400 text-sm">
-              You haven't followed any bots yet
+              {t('empty.primary')}
             </p>
             <p className="text-gray-500 text-xs mt-1">
-              You can follow bots by clicking the "Follow" button on their cards
+              {t('empty.hint')}
             </p>
           </div>
         ) : (
@@ -71,14 +74,14 @@ export default function BotSidebar() {
                 <button
                   onClick={() => handleUnfollow(bot.id)}
                   className="text-[rgb(231,46,46)] hover:text-red-400 p-1 rounded transition-all duration-100"
-                  title="Unfollow"
+                  title={t('actions.unfollow')}
                 >
                   <FiTrash2 size={14} />
                 </button>
                 <button
                   onClick={() => handleInspect(bot.id)}
                   className="text-blue-600 hover:text-blue-400 p-1 rounded transition-all duration-100"
-                  title="Inspect"
+                  title={t('actions.inspect')}
                 >
                   <FiEye size={14} />
                 </button>
@@ -86,10 +89,18 @@ export default function BotSidebar() {
 
               <h3 className="text-sm font-semibold text-gray-100 pr-8">{bot.name}</h3>
               <div className="space-y-0.5 mt-1">
-                <p className="text-xs text-gray-400">Uptime: {formatRunningTime(bot.runningTime)}</p>
-                <p className="text-xs text-gray-400">Creator: {bot.creator}</p>
-                <p className={`text-xs mt-3 ${parseFloat(bot.totalMargin) > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  Status: {parseFloat(bot.totalMargin) > 0 ? '+' : ''}{bot.totalMargin}%
+                <p className="text-xs text-gray-400">
+                  {t('labels.uptime')}: {formatRunningTime(bot.runningTime)}
+                </p>
+                <p className="text-xs text-gray-400">
+                  {t('labels.creator')}: {bot.creator}
+                </p>
+                <p
+                  className={`text-xs mt-3 ${
+                    parseFloat(bot.totalMargin) > 0 ? 'text-green-400' : 'text-red-400'
+                  }`}
+                >
+                  {t('labels.status')}: {parseFloat(bot.totalMargin) > 0 ? '+' : ''}{bot.totalMargin}%
                 </p>
               </div>
             </div>

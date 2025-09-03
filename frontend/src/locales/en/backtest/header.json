@@ -1,0 +1,27 @@
+{
+  "titles": {
+    "createBacktest": "Create Backtest"
+  },
+  "buttons": {
+    "runBacktest": "Run Backtest",
+    "close": "Close"
+  },
+  "periods": {
+    "select": "Select Period",
+    "m1": "1 min",
+    "m3": "3 min",
+    "m5": "5 min",
+    "m15": "15 min",
+    "m30": "30 min",
+    "h1": "1 hour",
+    "h2": "2 hours",
+    "h4": "4 hours",
+    "d1": "1 day",
+    "w1": "1 week"
+  },
+  "inputs": {
+    "initialBalancePlaceholder": "Initial Balance (USD)",
+    "initialBalanceHelp": "Leave empty to use the first close price as the starting balance.",
+    "initialBalanceInvalid": "Please enter a positive number."
+  }
+}

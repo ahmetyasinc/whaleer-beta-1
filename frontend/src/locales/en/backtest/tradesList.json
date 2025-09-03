@@ -1,0 +1,26 @@
+{
+  "titles": {
+    "tradeHistory": "Trade History"
+  },
+  "headers": {
+    "totalTrades": "Total {{count}} trades"
+  },
+  "table": {
+    "date": "Date",
+    "type": "Type",
+    "leverage": "Leverage",
+    "usedPct": "Used %",
+    "amount": "Amount",
+    "value": "Value",
+    "commission": "Commission",
+    "plDollar": "P/L ($)",
+    "plPercent": "P/L (%)",
+    "priceClose": "Price (Close)"
+  },
+  "types": {
+    "longOpen": "OPEN LONG",
+    "longClose": "CLOSE LONG",
+    "shortOpen": "OPEN SHORT",
+    "shortClose": "CLOSE SHORT"
+  }
+}

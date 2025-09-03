@@ -1,8 +1,10 @@
 "use client";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function VersionSelect({ versions, selectedId, onChange, onAdd }) {
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation("indicatorEditor");
 
   const selected = versions.find((v) => v.id === selectedId);
 
@@ -13,8 +15,10 @@ export default function VersionSelect({ versions, selectedId, onChange, onAdd })
         type="button"
         onClick={() => setOpen(!open)}
         className="w-full h-full bg-[#232323] border border-gray-700 text-white text-xs py-1 rounded-sm text-center"
+        title={t("versionSelect.title")}
+        aria-label={t("versionSelect.title")}
       >
-        {selected ? `v${selected.version}` : "New"}
+        {selected ? `v${selected.version}` : t("versionSelect.new")}
       </button>
 
       {/* Açılan menü */}
@@ -30,6 +34,7 @@ export default function VersionSelect({ versions, selectedId, onChange, onAdd })
                 setOpen(false);
               }}
               className="w-full text-center py-1 text-sm text-white hover:bg-gray-700 cursor-pointer"
+              title={`v${v.version}`}
             >
               v{v.version}
             </div>
@@ -40,8 +45,9 @@ export default function VersionSelect({ versions, selectedId, onChange, onAdd })
               setOpen(false);
             }}
             className="w-full text-center py-1 text-sm text-green-400 hover:bg-gray-700 cursor-pointer"
+            title={t("versionSelect.new")}
           >
-            New
+            {t("versionSelect.new")}
           </div>
         </div>
       )}

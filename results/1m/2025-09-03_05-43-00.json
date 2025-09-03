@@ -1,0 +1,14 @@
+{
+    "119": [
+        {
+            "coin_id": "BTCUSDT",
+            "trade_type": "spot",
+            "side": "buy",
+            "status": "success",
+            "order_type": "market",
+            "stop_loss": 99693.477,
+            "take_profit": 121847.58300000001,
+            "value": 658.0799999999999
+        }
+    ]
+}

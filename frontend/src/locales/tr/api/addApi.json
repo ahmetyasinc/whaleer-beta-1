@@ -1,0 +1,66 @@
+{
+  "titles": {
+    "rename": "API Adını Değiştir",
+    "addNew": "Yeni API Ekle"
+  },
+  "steps": {
+    "step1": "Adım 1/2 — ED Key ile doğrula (Binance'e doğrudan)",
+    "step2": "Adım 2/2 — HMAC Anahtarlarıyla doğrula (Binance'e doğrudan)"
+  },
+  "fields": {
+    "apiName": "API Adı",
+    "edKey": "ED Key",
+    "edPublicPem": "ED Public PEM",
+    "apiKey": "API Key",
+    "secret": "Secret API Key"
+  },
+  "placeholders": {
+    "apiName": "API adını girin",
+    "edKey": "ED Key'inizi girin (Binance)",
+    "apiKey": "API anahtarınızı yapıştırın",
+    "secret": "Secret anahtarınızı yapıştırın"
+  },
+  "buttons": {
+    "copy": "Kopyala",
+    "cancel": "İptal",
+    "save": "Kaydet",
+    "verifying": "Doğrulanıyor…",
+    "next": "İleri",
+    "back": "Geri",
+    "verifyNext": "Doğrula ve İleri"
+  },
+  "confirmEd": {
+    "title": "ED Bakiye (Spot)",
+    "estimated": "Tahmini USD:",
+    "reenter": "ED Key'i Yeniden Gir",
+    "continue": "Devam Et"
+  },
+  "confirmHmac": {
+    "title": "Bakiye Onayı (Spot + Vadeli)",
+    "total": "Toplam USD:",
+    "spot": "Spot:",
+    "futures": "Vadeli:"
+  },
+  "warning": {
+    "title": "Uyarı:",
+    "desc": "ED (Spot) ile HMAC (Spot) bakiyeleri arasında %{{diff}} fark var. API bilgilerinizin aynı Binance hesabına ait olduğundan emin olun. Aksi halde işlemler ve sonuçlardan doğan sorumluluk tamamen kullanıcıya aittir."
+  },
+  "labels": {
+    "fetchingEdPair": "ED çifti alınıyor…"
+  },
+  "toasts": {
+    "edStockEmpty": "ED anahtar stoğu boş.",
+    "edFetchFailed": "ED ile bakiye alınamadı. Lütfen ED Key'i kontrol edin.",
+    "hmacFetchFailed": "HMAC ile bakiye alınamadı. Lütfen bilgilerinizi kontrol edin.",
+    "copied": "Kopyalandı!",
+    "copyFailed": "Kopyalama başarısız"
+  },
+  "errors": {
+    "enterApiName": "Lütfen bir API adı girin",
+    "edKeyEmpty": "ED Key boş olamaz",
+    "edPublicMissing": "ED Public PEM eksik",
+    "edPrivateMissing": "ED Private PEM eksik",
+    "apiKeyEmpty": "API key boş olamaz",
+    "secretEmpty": "Secret boş olamaz"
+  }
+}

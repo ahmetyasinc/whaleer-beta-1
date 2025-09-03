@@ -1,0 +1,27 @@
+{
+    "119": [
+        {
+            "coin_id": "BTCUSDT",
+            "trade_type": "futures",
+            "positionside": "long",
+            "side": "sell",
+            "reduceOnly": true,
+            "status": "success",
+            "order_type": "market",
+            "stop_loss": 99874.52100000001,
+            "take_profit": 122068.85900000001,
+            "amount": 0.0001,
+            "value": 11.097169
+        },
+        {
+            "coin_id": "BTCUSDT",
+            "trade_type": "spot",
+            "side": "buy",
+            "status": "success",
+            "order_type": "market",
+            "stop_loss": 99874.52100000001,
+            "take_profit": 122068.85900000001,
+            "value": 599.97
+        }
+    ]
+}

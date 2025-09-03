@@ -1,0 +1,27 @@
+{
+  "titles": {
+    "archive": "Backtest Arşivim",
+    "results": "Backtest Sonuçları"
+  },
+  "loading": {
+    "archiveTitle": "Arşiv yükleniyor...",
+    "archiveDesc": "Backtest arşiviniz getiriliyor.",
+    "backtestTitle": "Backtest çalışıyor...",
+    "backtestDesc": "Lütfen bekleyin, stratejiniz test ediliyor."
+  },
+  "errors": {
+    "archiveTitle": "Arşiv Yüklenirken Hata",
+    "backtestTitle": "Bir Hata Oluştu"
+  },
+  "buttons": {
+    "retry": "Tekrar Dene"
+  },
+  "empty": {
+    "archiveTitle": "Arşiv Boş",
+    "archiveDesc": "Backtest sonuçlarınızı arşivlemek için \"Arşivle\" düğmesini kullanın."
+  },
+  "awaiting": {
+    "title": "Backtest Sonucu Bekleniyor",
+    "desc": "Yukarıdaki \"Backtest’i Çalıştır\" düğmesini kullanarak backtest başlatın."
+  }
+}

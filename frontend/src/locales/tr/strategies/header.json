@@ -1,0 +1,16 @@
+{
+  "buttons": {
+    "addIndicator": "Yeni indikatör ekle",
+    "addStrategy": "Yeni strateji ekle",
+    "refresh": "Yenile",
+    "settings": "Ayarlar"
+  },
+  "labels": {
+    "magnetMode": "Mıknatıs modu",
+    "ruler": "Cetvel"
+  },
+  "loading": "Yükleniyor...",
+  "period": {
+    "default": "Periyot"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "typeBadgeTitle": "Bot türü: {{type}}",
+  "rental": {
+    "ended": "Kiralama süresi bitti",
+    "timeLeft": "Kiralama için kalan süre",
+    "label": "Kalan kiralama süresi :"
+  },
+  "menu": {
+    "moreActions": "Diğer işlemler",
+    "edit": "Düzenle",
+    "deleteDev": "Sil (Geliştirici)",
+    "examine": "İncele",
+    "shutdown": "Kapat",
+    "shutdownTitle": "Botu ve tüm açık işlemleri kapatır"
+  },
+  "fields": {
+    "api": "API:",
+    "strategy": "Strateji:",
+    "period": "Periyot:",
+    "days": "Günler:",
+    "hours": "Saatler:",
+    "status": "Durum:",
+    "cryptocurrencies": "Kripto Paralar"
+  },
+  "daysUndefined": "Tanımsız",
+  "status": {
+    "active": "Bot Aktif",
+    "inactive": "Bot Pasif"
+  },
+  "coins": {
+    "none": "Seçili coin yok"
+  },
+  "toggle": {
+    "blocked": "Aktifleştirilemez: başlangıç/mevcut değerler eksik veya API tanımsız",
+    "expired": "Kiralama süresi doldu – aktifleştirilemez"
+  },
+  "examine": {
+    "disabledTitle": "İnceleme kapalı: değerler eksik veya API tanımsız"
+  }
+}

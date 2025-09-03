@@ -1,0 +1,15 @@
+{
+    "119": [
+        {
+            "coin_id": "ETHUSDT",
+            "trade_type": "spot",
+            "side": "sell",
+            "status": "success",
+            "order_type": "limit",
+            "stop_loss": 3875.364,
+            "take_profit": 4736.5560000000005,
+            "amount": 0.01,
+            "value": 43.12257
+        }
+    ]
+}

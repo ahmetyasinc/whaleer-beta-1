@@ -1,0 +1,12 @@
+{
+  "buttons": {
+    "add": "Ekle"
+  },
+  "errors": {
+    "title": "Hata",
+    "fetch": "Strateji verisi çekilirken hata oluştu"
+  },
+  "warnings": {
+    "missingData": "Eksik veri nedeniyle API çağrısı engellendi."
+  }
+}

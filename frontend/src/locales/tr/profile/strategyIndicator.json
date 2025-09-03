@@ -1,0 +1,51 @@
+{
+  "headers": {
+    "strategies": "Stratejilerim",
+    "indicators": "İndikatörlerim"
+  },
+  "badges": {
+    "versions_one": "{{count}} versiyon",
+    "versions_other": "{{count}} versiyon",
+    "versions": "{{count}} versiyon"
+  },
+  "menu": {
+    "inspect": "İncele",
+    "publish": "Yayınla",
+    "actions": "İşlemler"
+  },
+  "empty": {
+    "strategies": "Henüz strateji eklenmedi",
+    "indicators": "Henüz indikatör eklenmedi"
+  },
+  "release": {
+    "approved": "Onaylı",
+    "pending": "Beklemede",
+    "versionPrefix": "v"
+  },
+  "permissions": {
+    "code": "Kod",
+    "chart": "Grafik",
+    "scan": "Tara",
+    "backtest": "Backtest",
+    "bot": "Bot"
+  },
+  "toast": {
+    "titles": {
+      "success": "Başarılı",
+      "error": "Hata",
+      "info": "Bilgi"
+    },
+    "messages": {
+      "strategyPublish": {
+        "ok": "Strateji başarıyla yayınlandı.",
+        "failed": "Strateji yayınlanamadı.",
+        "unexpected": "Strateji yayınlanırken beklenmeyen bir hata oluştu."
+      },
+      "indicatorPublish": {
+        "ok": "İndikatör başarıyla yayınlandı.",
+        "failed": "İndikatör yayınlanamadı.",
+        "unexpected": "İndikatör yayınlanırken beklenmeyen bir hata oluştu."
+      }
+    }
+  }
+}

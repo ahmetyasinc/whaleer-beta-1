@@ -7,8 +7,10 @@ import { FiSearch, FiLock } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import StrategyButton from './chooseStrategy';
 import useBotChooseStrategyStore from '@/store/bot/botChooseStrategyStore';
+import { useTranslation } from 'react-i18next';
 
 export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
+  const { t } = useTranslation('botModal');
   const { selectedStrategy } = useBotChooseStrategyStore();
 
   // ---- State ----
@@ -123,24 +125,24 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
   const handleSave = () => {
     const errors = [];
 
-    if (!botName.trim()) errors.push('Bot name is required.');
-    if (!api) errors.push('API selection is required.');
+    if (!botName.trim()) errors.push(t('errors.nameRequired'));
+    if (!api) errors.push(t('errors.apiRequired'));
     // Strateji seçme zorunluluğu sadece kilitli olmayanlarda
     if (!isAcquiredLocked) {
-      if (!selectedStrategy || !selectedStrategy.name) errors.push('Strategy must be selected.');
+      if (!selectedStrategy || !selectedStrategy.name) errors.push(t('errors.strategyRequired'));
     }
-    if (!period) errors.push('Period must be selected.');
-    if (!candleCount || candleCount <= 0) errors.push('Invalid candle count.');
-    if (days.length === 0) errors.push('At least one day must be selected.');
-    if (!startTime || !endTime) errors.push('Working hours must be provided.');
-    if (!allocatedAmount || Number(allocatedAmount) <= 10) errors.push('Amount must be greater than $10.');
-    if (cryptoList.length === 0) errors.push('At least one crypto must be selected.');
+    if (!period) errors.push(t('errors.periodRequired'));
+    if (!candleCount || candleCount <= 0) errors.push(t('errors.candleInvalid'));
+    if (days.length === 0) errors.push(t('errors.dayRequired'));
+    if (!startTime || !endTime) errors.push(t('errors.hoursRequired'));
+    if (!allocatedAmount || Number(allocatedAmount) <= 10) errors.push(t('errors.amountMin'));
+    if (cryptoList.length === 0) errors.push(t('errors.cryptoRequired'));
 
     // çalışma aralığı en az 1 saat
     const [startH, startM] = (startTime || '0:0').split(':').map(Number);
     const [endH, endM] = (endTime || '0:0').split(':').map(Number);
     if (endH * 60 + endM - (startH * 60 + startM) < 60) {
-      toast.error('End time must be at least 1 hour after start time.', { autoClose: 2000 });
+      toast.error(t('errors.endAfterStart'), { autoClose: 2000 });
       return;
     }
 
@@ -150,7 +152,7 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
     }
 
     if (Number(allocatedAmount) > Number(balance)) {
-      toast.error('Allocated amount cannot be greater than total balance.', { autoClose: 2000 });
+      toast.error(t('errors.amountGtBalance'), { autoClose: 2000 });
       return;
     }
 
@@ -174,10 +176,10 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
 
     if (mode === 'edit') {
       updateBot(botData);
-      toast.success('Bot updated!', { autoClose: 2000 });
+      toast.success(t('toast.updated'), { autoClose: 2000 });
     } else {
       addBot(botData);
-      toast.success('Bot created!', { autoClose: 2000 });
+      toast.success(t('toast.created'), { autoClose: 2000 });
     }
 
     onClose();
@@ -189,17 +191,17 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
         {/* SOL - FORM */}
         <div className="w-2/3 pr-4">
           <h2 className="text-2xl font-bold text-white mb-6">
-            {mode === 'edit' ? 'Edit Bot' : 'Create New Bot'}
+            {mode === 'edit' ? t('titles.edit') : t('titles.create')}
           </h2>
 
           {/* Bot Name + Type yan yana */}
           <div className="flex items-end gap-4 mb-4">
             <div>
-              <label className="block mb-2 text-gray-200 font-medium">Bot Name</label>
+              <label className="block mb-2 text-gray-200 font-medium">{t('labels.botName')}</label>
               <input
                 type="text"
                 maxLength={15}
-                placeholder="Enter bot name"
+                placeholder={t('labels.enterBotName')}
                 className="w-60 p-2 bg-gray-800 text-white rounded"
                 value={botName}
                 onChange={(e) => setBotName(e.target.value)}
@@ -207,7 +209,7 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
             </div>
 
             <div>
-              <label className="block mb-2 text-gray-200 font-medium">Type</label>
+              <label className="block mb-2 text-gray-200 font-medium">{t('labels.type')}</label>
               <div className="relative">
                 <select
                   className={`w-40 p-2 bg-gray-800 text-white rounded ${isAcquiredLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
@@ -215,8 +217,8 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
                   onChange={(e) => setType(e.target.value)}
                   disabled={isAcquiredLocked}
                 >
-                  <option value="spot">Spot</option>
-                  <option value="futures">Futures</option>
+                  <option value="spot">{t('types.spot')}</option>
+                  <option value="futures">{t('types.futures')}</option>
                 </select>
               </div>
             </div>
@@ -224,14 +226,14 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
 
           <div className="grid grid-cols-4 gap-4 mb-6">
             <div>
-              <label className="block mb-1 text-gray-300">API</label>
+              <label className="block mb-1 text-gray-300">{t('labels.api')}</label>
               <select
                 className="w-full p-2 bg-gray-800 text-white rounded"
                 value={api}
                 onChange={(e) => setApi(e.target.value)}
               >
                 <option value="" disabled hidden>
-                  Select
+                  {t('labels.select')}
                 </option>
                 {apiList.map((item, i) => (
                   <option key={i} value={item.name}>
@@ -242,47 +244,47 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
             </div>
 
             <div>
-              <label className="block mb-1 text-gray-300">Strategy</label>
+              <label className="block mb-1 text-gray-300">{t('labels.strategy')}</label>
               {!isAcquiredLocked ? (
                 <StrategyButton onSelect={(selected) => setStrategy(selected)} />
               ) : (
                 <div className="w-full p-2 bg-gray-800 text-gray-300 rounded flex items-center gap-2">
                   <FiLock className="shrink-0" />
                   <span className="text-sm">
-                    Hidden.
+                    {t('labels.hidden')}
                   </span>
                 </div>
               )}
             </div>
 
             <div>
-              <label className="block mb-1 text-gray-300">Period</label>
+              <label className="block mb-1 text-gray-300">{t('labels.period')}</label>
               <select
                 className="w-full p-2 bg-gray-800 text-white rounded"
                 value={period}
                 onChange={(e) => setPeriod(e.target.value)}
               >
                 <option value="" disabled hidden>
-                  Select
+                  {t('labels.select')}
                 </option>
-                <option value="1m">1 min</option>
-                <option value="5m">5 min</option>
-                <option value="15m">15 min</option>
-                <option value="30m">30 min</option>
-                <option value="1h">1 hour</option>
-                <option value="2h">2 hours</option>
-                <option value="4h">4 hours</option>
-                <option value="1d">1 day</option>
-                <option value="1w">1 week</option>
+                <option value="1m">{t('periods.1m')}</option>
+                <option value="5m">{t('periods.5m')}</option>
+                <option value="15m">{t('periods.15m')}</option>
+                <option value="30m">{t('periods.30m')}</option>
+                <option value="1h">{t('periods.1h')}</option>
+                <option value="2h">{t('periods.2h')}</option>
+                <option value="4h">{t('periods.4h')}</option>
+                <option value="1d">{t('periods.1d')}</option>
+                <option value="1w">{t('periods.1w')}</option>
               </select>
             </div>
 
             <div>
-              <label className="block mb-1 text-gray-300">Candle Count</label>
+              <label className="block mb-1 text-gray-300">{t('labels.candleCount')}</label>
               <input
                 type="number"
                 min="1"
-                placeholder="Exp: 100"
+                placeholder={t('labels.candleCountPlaceholder')}
                 className={`w-full p-2 bg-gray-800 text-white rounded ${isAcquiredLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
                 value={candleCount}
                 onChange={(e) => setCandleCount(Number(e.target.value))}
@@ -292,7 +294,7 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
           </div>
 
           <div className="mb-6">
-            <label className="block mb-2 text-gray-200 font-medium">Working Days</label>
+            <label className="block mb-2 text-gray-200 font-medium">{t('labels.workingDays')}</label>
             <div className="grid grid-cols-4 gap-2 text-gray-300">
               {dayList.map((day) => (
                 <label key={day} className="flex items-center gap-2">
@@ -302,14 +304,14 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
                     onChange={() => toggleDay(day)}
                     className="accent-black h-3 w-3 border-gray-600 rounded-sm"
                   />
-                  <span>{day}</span>
+                  <span>{t(`days.${day}`)}</span>
                 </label>
               ))}
             </div>
           </div>
 
           <div className="mb-6">
-            <label className="block mb-2 text-gray-200 font-medium">Allocate Balance for Bot</label>
+            <label className="block mb-2 text-gray-200 font-medium">{t('labels.allocateBalance')}</label>
 
             <div className="flex items-center gap-3 mb-2">
               <input
@@ -329,7 +331,7 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
             </div>
 
             <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">Total Balance: ${balance}</span>
+              <span className="text-gray-400 text-sm">{t('labels.totalBalance')}: ${balance}</span>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -351,7 +353,7 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
           </div>
 
           <div className="mb-6">
-            <label className="block mb-2 text-gray-200 font-medium">Bot Working Hours</label>
+            <label className="block mb-2 text-gray-200 font-medium">{t('labels.botWorkingHours')}</label>
             <div className="flex justify-start gap-2 mb-2">
               <input
                 type="time"
@@ -373,7 +375,7 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
               }}
               className="text-sm text-blue-400 hover:text-blue-300 underline"
             >
-              Run All Day
+              {t('labels.startEndAllDay')}
             </button>
           </div>
 
@@ -382,13 +384,13 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
               onClick={onClose}
               className="px-4 py-2 bg-gray-600 text-gray-200 rounded-lg hover:bg-gray-500"
             >
-              Cancel
+              {t('labels.cancel')}
             </button>
             <button
               onClick={handleSave}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Save
+              {t('labels.save')}
             </button>
           </div>
         </div>
@@ -396,12 +398,12 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
         {/* SAĞ - KRİPTO PANELİ */}
         <div className="w-1/3 flex flex-col bg-gray-950 p-3 rounded max-h-[500px]">
           <div className="mb-4">
-            <label className="block mb-1 text-gray-300">Add Cryptocurrency</label>
+            <label className="block mb-1 text-gray-300">{t('labels.addCryptocurrency')}</label>
             <div className="relative w-full">
               <input
                 type="text"
                 className="w-full p-2 pr-10 mb-2 bg-gray-900 text-white rounded-sm"
-                placeholder="Exp: BTCUSDT"
+                placeholder={t('labels.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -424,12 +426,12 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
                         onClick={() => setCryptoList((prev) => [...prev, coin])}
                         className="text-green-400 text-sm px-2 py-1 hover:text-green-500 rounded"
                       >
-                        Add
+                        {t('labels.add')}
                       </button>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-gray-400 px-3 py-2">No matching crypto found</p>
+                  <p className="text-sm text-gray-400 px-3 py-2">{t('labels.noMatchingCrypto')}</p>
                 )}
               </div>
             )}
@@ -443,7 +445,7 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
                   onClick={() => removeCrypto(crypto)}
                   className="text-red-500 hover:text-red-600 text-sm"
                 >
-                  Remove
+                  {t('labels.remove')}
                 </button>
               </div>
             ))}

@@ -1,0 +1,10 @@
+{
+  "titles": {
+    "tradeHistory": "Trade History",
+    "openPositions": "Open Positions"
+  },
+  "counts": {
+    "trades": "({{count}} trades)",
+    "positions": "({{count}} positions)"
+  }
+}

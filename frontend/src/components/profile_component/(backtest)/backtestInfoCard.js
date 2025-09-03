@@ -4,8 +4,11 @@ import useBacktestStore from '@/store/backtest/backtestStore';
 import { FaRegFileAlt } from "react-icons/fa";
 import { PiBroomDuotone } from "react-icons/pi";
 import { MdRocketLaunch } from "react-icons/md";
+import { useTranslation } from 'react-i18next';
 
 export default function BacktestInfoCard() {
+  const { t } = useTranslation('backtestInfoCard');
+
   const {
     selectedStrategy,
     selectedPeriod,
@@ -24,19 +27,9 @@ export default function BacktestInfoCard() {
   };
 
   const getPeriodLabel = (period) => {
-    const periodLabels = {
-      '1m': '1 Minute',
-      '3m': '3 Minutes',
-      '5m': '5 Minutes',
-      '15m': '15 Minutes',
-      '30m': '30 Minutes',
-      '1h': '1 Hour',
-      '2h': '2 Hours',
-      '4h': '4 Hours',
-      '1d': '1 Day',
-      '1w': '1 Week'
-    };
-    return periodLabels[period] || period;
+    const key = `periods.${period}`;
+    const label = t(key);
+    return label && !label.includes('periods.') ? label : period;
   };
 
   if (!backtestResults) {
@@ -48,21 +41,21 @@ export default function BacktestInfoCard() {
       <div className="flex justify-between items-center flex-wrap gap-4">
         <div className="flex flex-wrap items-center gap-6 text-sm">
           <div className="flex items-center gap-2">
-            <span className="text-gray-400">Strategy:</span>
+            <span className="text-gray-400">{t('labels.strategy')}:</span>
             <span className="bg-blue-800 text-blue-300 px-3 py-[2px] rounded-full font-medium text-sm">
-              {selectedStrategy?.name || 'Not Selected'}
+              {selectedStrategy?.name || t('defaults.notSelected')}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-gray-400">Crypto:</span>
+            <span className="text-gray-400">{t('labels.crypto')}:</span>
             <span className="bg-yellow-800 text-yellow-300 px-3 py-[2px] rounded-full font-medium text-sm">
-              {selectedCrypto?.symbol || 'Not Selected'}
+              {selectedCrypto?.symbol || t('defaults.notSelected')}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-gray-400">Period:</span>
+            <span className="text-gray-400">{t('labels.period')}:</span>
             <span className="bg-green-800 text-green-300 px-3 py-[2px] rounded-full font-medium text-sm">
               {getPeriodLabel(selectedPeriod)}
             </span>
@@ -73,25 +66,29 @@ export default function BacktestInfoCard() {
           <button
             onClick={handleSave}
             className="bg-green-700 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition text-sm font-medium flex items-center gap-2"
+            aria-label={t('buttons.archive')}
+            title={t('buttons.archive')}
           >
             <FaRegFileAlt className="w-4 h-4" />
-            Archive
+            {t('buttons.archive')}
           </button>
 
           <button
             onClick={handleClear}
             className="bg-pink-600 hover:bg-pink-500 text-white px-4 py-2 rounded-lg transition text-sm font-medium flex items-center gap-2"
+            aria-label={t('buttons.clear')}
+            title={t('buttons.clear')}
           >
             <PiBroomDuotone className="w-4 h-4" />
-            Clear
+            {t('buttons.clear')}
           </button>
         </div>
       </div>
 
       <div className="mt-4 pt-4 border-t border-gray-700 text-xs text-gray-400 flex flex-wrap gap-4">
-        <span>🔵 Test Date: {new Date().toLocaleDateString('en-GB')}</span>
-        <span>🔵 Total Trades: {backtestResults?.performance?.totalTrades || 0}</span>
-        <span>🔵 Status: Completed</span>
+        <span>🔵 {t('stats.testDate')}: {new Date().toLocaleDateString('en-GB')}</span>
+        <span>🔵 {t('stats.totalTrades')}: {backtestResults?.performance?.totalTrades || 0}</span>
+        <span>🔵 {t('stats.status')}: {t('stats.completed')}</span>
       </div>
     </div>
   );

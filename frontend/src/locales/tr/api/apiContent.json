@@ -1,0 +1,33 @@
+{
+  "title": "API Anahtarlarım",
+  "buttons": {
+    "addNew": "Yeni API Ekle"
+  },
+  "info": {
+    "line1": "Bu sayfada kaydettiğiniz tüm API anahtarlarını görüntüleyebilir ve yönetebilirsiniz.",
+    "line2": "API anahtarlarınızı asla herkese açık platformlarda veya tarayıcılarda paylaşmayın.",
+    "line3": "Botlarınızın çalışabilmesi için API anahtarınıza okuma ve trade izinlerini açtığınızdan emin olun.",
+    "line4": "API anahtarınızın aktif ve geçerli olduğundan emin olun.",
+    "line5": "Borsanızın API limitlerini kontrol edin — çok fazla istek kısıtlamalara neden olabilir."
+  },
+  "empty": "Henüz API anahtarı eklenmedi.",
+  "table": {
+    "name": "Ad",
+    "exchange": "Borsa",
+    "balance": "Bakiye (USD)",
+    "added": "Eklendi",
+    "actions": "İşlemler",
+    "spot": "spot",
+    "futures": "vadeli",
+    "default": "Varsayılan",
+    "never": "Hiç"
+  },
+  "tooltips": {
+    "setDefault": "Varsayılan Yap",
+    "edit": "Adı düzenle",
+    "delete": "Sil"
+  },
+  "errors": {
+    "saveFailed": "API anahtarı kaydedilemedi."
+  }
+}

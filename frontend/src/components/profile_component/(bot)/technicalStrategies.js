@@ -4,10 +4,13 @@ import { useEffect, useState } from "react";
 import { IoIosStarOutline, IoMdSearch, IoMdStar } from "react-icons/io";
 import useStrategyStore from "@/store/indicator/strategyStore";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 
 axios.defaults.withCredentials = true;
 
 const TechnicalStrategies = ({ onSelect }) => {
+  const { t } = useTranslation("technicalStrategies");
+
   const {
     favorites,
     setTecnicStrategies,
@@ -38,7 +41,7 @@ const TechnicalStrategies = ({ onSelect }) => {
     };
 
     fetchStrategies();
-  }, [tecnic.length, setTecnicStrategies]);
+  }, [tecnic.length, setTecnicStrategies, setPersonalStrategies, setCommunityStrategies]);
 
   return (
     <div className="text-white">
@@ -46,19 +49,20 @@ const TechnicalStrategies = ({ onSelect }) => {
       <div className="bg-gray-800 flex items-center border-b border-gray-800 mb-2">
         <input
           type="text"
-          placeholder="Search..."
+          placeholder={t("searchPlaceholder")}
           className="w-full px-3 py-2 bg-gray-800 text-white focus:outline-none"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          aria-label={t("searchAria")}
         />
-        <IoMdSearch className="text-gray-400 text-[20px] mr-2" />
+        <IoMdSearch className="text-gray-400 text-[20px] mr-2" aria-hidden />
       </div>
 
       {/* Liste */}
       <div className="flex flex-col gap-2 w-full mt-2 max-h-[440px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
         {tecnic
           .filter((strategy) =>
-            strategy.name.toLowerCase().includes(searchTerm.toLowerCase())
+            (strategy?.name || "").toLowerCase().includes(searchTerm.toLowerCase())
           )
           .map((strategy) => (
             <div
@@ -67,7 +71,7 @@ const TechnicalStrategies = ({ onSelect }) => {
             >
               {/* Sol */}
               <div className="flex items-center">
-                <div className="bg-transparent p-2 rounded-md hover:bg-gray-800">
+                <div className="bg-transparent p-2 rounded-md hover:bg-gray-800" aria-hidden>
                   {favorites.some((fav) => fav.id === strategy.id) ? (
                     <IoMdStar className="text-lg text-yellow-500" />
                   ) : (
@@ -82,8 +86,9 @@ const TechnicalStrategies = ({ onSelect }) => {
                 <button
                   onClick={() => onSelect(strategy)} // 👈 Strateji seçimini tetikleyen yer
                   className="bg-blue-600 px-2 rounded-md py-[1px] h-[26px] mr-3 hover:bg-blue-800 text-white text-xs"
+                  aria-label={t("select")}
                 >
-                  Select
+                  {t("select")}
                 </button>
               </div>
             </div>

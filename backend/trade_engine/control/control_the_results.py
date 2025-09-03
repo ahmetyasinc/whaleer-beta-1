@@ -1,501 +1,299 @@
-from backend.trade_engine.data.bot_features import load_bot_holding, load_bot_positions, load_bot_value, get_bot_percentage
+from collections import defaultdict
+from backend.trade_engine.data.bot_features import load_bot_context
 
-def control_the_results(bot_id, results):
+def control_the_results(bot_id, results, min_usd=10.0, ctx=None):
+    """
+    Spot bot:
+      - SADECE spot (holdings) dikkate alınır.
+      - Hedef: target_spot% = curr_pos(0..1) * curr_per(0..100)
 
-    minValue = 10.0 # Minimum işlem limiti usd dolar
+    Futures bot:
+      - SADECE futures (positions) dikkate alınır.
+      - Tek leverage kuralı: hedef leverage != mevcut leverage ise önce TAM kapat, sonra hedef leverage ile aç.
+        Eğer kapatma min_usd sebebiyle gerçekleşmezse, açma o bacakta BLOKLANIR.
 
-    spot = "spot"
-    futures = "futures"
+    Kapatma min_usd altı kaldıysa:
+      - fulness DEĞİŞMEZ
+      - mevcut yüzde/levrage DEĞİŞMEZ
+      - açma fazı mevcut duruma göre karar verir.
+    """
 
-    def get_state(pos, per):
-        if per == 0:
+    # ---------- context ----------
+    ctx = ctx or load_bot_context(bot_id)
+    bot_type = ctx["bot_type"]           # "spot" | "futures"
+    current_value = float(ctx["current_value"] or 0.0)
+    fulness = float(ctx["fulness"] or 0.0)  # 0..1
+
+    holdings = ctx.get("holdings", [])
+    positions = ctx.get("positions", [])
+
+    # ---------- helpers ----------
+    def clamp_pct(p):
+        try:
+            p = float(p)
+        except (TypeError, ValueError):
+            return 0.0
+        if p < 0:   return 0.0
+        if p > 100: return 100.0
+        return p
+
+    def get_state(pos, pct):
+        pct = clamp_pct(pct)
+        try:
+            pos = float(pos)
+        except (TypeError, ValueError):
             return "none"
-        if pos < 0:
-            return "short"
-        elif pos > 1:
-            return "long"
-        elif 0 < pos <= 1:
-            return "spot"
+        if pct == 0 or pos == 0:
+            return "none"
+        if pos < 0:  return "short"
+        if pos > 1:  return "long"
+        if 0 < pos <= 1: return "spot"
         return "none"
 
-    def sanitize_result(result): #result içini temizleme
-        new_result = result.copy()
-        new_result.pop("last_positions", None)
-        new_result.pop("last_percentage", None)
-        return new_result
+    def sanitize_result(res):
+        return {k: v for k, v in res.items()
+                if k not in ("last_positions", "last_percentage")}
 
-    holdings = load_bot_holding(bot_id)
-    holding_dict = {h['symbol']: float(h['percentage']) for h in holdings}
+    # USD eşiğini fraction
+    min_frac = (min_usd / current_value) if current_value > 0 else float("inf")
 
-    #print(f"holding_dict: {holding_dict}")
+    # ---------- mevcutı haritalama ----------
+    holding_map = {
+        h["symbol"]: {
+            "spot_pct": clamp_pct((h.get("percentage") or 0.0)),
+            "spot_amount": float(h.get("amount") or 0.0),
+        }
+        for h in holdings
+    }
 
-    open_positions = load_bot_positions(bot_id)
-    open_position_map = {p['symbol']: p for p in open_positions}
+    pos_map = {}  # {sym: {"long_pct":..,"long_amount":..,"long_lev":..,"short_pct":..,"short_amount":..,"short_lev":..}}
+    for p in positions:
+        sym = p["symbol"]
+        side = (p.get("position_side") or "").lower()
+        pct  = clamp_pct(p.get("percentage"))
+        amt  = float(p.get("amount") or 0.0)
+        lev  = p.get("leverage")  # None olabilir
 
-    #print(f"open_position_map: {open_position_map}")
+        entry = pos_map.setdefault(sym, {
+            "long_pct": 0.0, "long_amount": 0.0, "long_lev": None,
+            "short_pct": 0.0, "short_amount": 0.0, "short_lev": None,
+        })
+        if side == "long":
+            entry["long_pct"] = pct
+            entry["long_amount"] = amt
+            entry["long_lev"] = lev
+        elif side == "short":
+            entry["short_pct"] = pct
+            entry["short_amount"] = amt
+            entry["short_lev"] = lev
 
-    current_value = load_bot_value(bot_id)
+    # ---------- hedef kurulumu ----------
+    targets = {}  # {symbol: {"spot": pct, "long": {"pct":..,"lev":..}, "short": {"pct":..,"lev":..}, "meta": {...}}}
 
-    fulness = get_bot_percentage(bot_id)
-
-    #print(f"current_value: {current_value}, fulness: {fulness}")
-
-    filtered_results = []
-    
-    prev_state = "none"
-    curr_state = "none"
-
-    # KAPAMA İŞLEMLERİ İÇİN KONTROL ET
-    for result in results:
-        last_positions = result.get('last_positions')
-        last_percentage = result.get('last_percentage')
-        print(f"result: {result}")
-        if last_positions is None or last_percentage is None:
+    for res in (results or []):
+        lp = res.get("last_positions")
+        lper = res.get("last_percentage")
+        if not (isinstance(lp, (list, tuple)) and isinstance(lper, (list, tuple)) and len(lp) == 2 and len(lper) == 2):
             continue
 
-        prev_pos, curr_pos = float(str(last_positions[0])), float(str(last_positions[1]))
-        prev_per, curr_per = float(str(last_percentage[0])), float(str(last_percentage[1]))
+        curr_pos = float(lp[1])      # spot: 0..1, futures: leverage
+        curr_per = clamp_pct(lper[1])
+        state = get_state(curr_pos, curr_per)
 
-        if prev_pos > 100:
-            prev_pos = 100
-        if curr_per > 100:
-            curr_per = 100
-        
-        if (
-            not isinstance(last_positions, list) or 
-            len(last_positions) != 2 or 
-            last_positions[0] == last_positions[1] and
-            last_percentage[0] == last_percentage[1]
-        ):
+        sym = res.get("coin_id")
+        if not sym:
             continue
-        
-        # STATE İSİMLENDİRMELERİNİ YAP
-        prev_state = get_state(prev_pos, prev_per)
-        curr_state = get_state(curr_pos, curr_per)
 
-        #print(f"prev_state: {prev_state}, curr_state: {curr_state}")
+        t = targets.setdefault(sym, {
+            "spot": 0.0,
+            "long": {"pct": 0.0, "lev": None},
+            "short": {"pct": 0.0, "lev": None},
+            "meta": sanitize_result(res),
+        })
 
-        symbol = result.get('coin_id')
-        percentage_hold = holding_dict.get(symbol, float('0'))
-        if percentage_hold == None:
-            percentage_hold = 0
-        try:
-            percentage_pos = float(open_position_map[symbol]['percentage'])
-        except KeyError:
-            percentage_pos = 0.0
+        if bot_type == "spot":
+            if state == "spot":
+                t["spot"] = max(0.0, curr_pos * curr_per)
+        else:  # futures
+            if state == "long":
+                t["long"]["pct"] = curr_per
+                t["long"]["lev"] = curr_pos
+            elif state == "short":
+                t["short"]["pct"] = curr_per
+                t["short"]["lev"] = curr_pos
 
-        # KAPAMA İŞLEMLERİ İÇİN KONTROL ET
-        match (prev_state, curr_state):
-            case ("none", "none"):
-                continue
-            case ("none", "spot"):
-                continue
-            case ("none", "long"):
-                continue
-            case ("none", "short"):
-                continue
-            case ("spot", "none"):
-                if percentage_hold != 0:
-                    new_result = sanitize_result(result)
-                    new_result['side'] = "sell"
-                    new_result['trade_type'] = spot
-                    value = percentage_hold/100
-                    new_result['value'] = current_value * value
-                    fulness -= value
-                    filtered_results.append(new_result)
-                continue
-            case ("spot", "spot"):
-                curr_spot = curr_pos * curr_per
-                prev_spot = prev_pos * prev_per
-                if curr_spot < prev_spot and percentage_hold != 0 and curr_spot < percentage_hold:
-                    new_result = sanitize_result(result)
-                    new_result['side'] = "sell"
-                    new_result['trade_type'] = spot
-                    value = (percentage_hold/100) - (curr_spot/100)
-                    new_result['value'] = current_value * value
-                    fulness -= value
-                    filtered_results.append(new_result)
-                continue
-            case ("spot", "long"):
-                if percentage_hold != 0:
-                    new_result = sanitize_result(result)
-                    new_result['side'] = "sell"
-                    new_result['trade_type'] = spot
-                    value = percentage_hold/100
-                    new_result['value'] = current_value * value
-                    fulness -= value
-                    filtered_results.append(new_result)
-                continue
-            case ("spot", "short"):
-                if percentage_hold != 0:
-                    new_result = sanitize_result(result)
-                    new_result['side'] = "sell"
-                    new_result['trade_type'] = spot
-                    value = percentage_hold/100
-                    new_result['value'] = current_value * value
-                    fulness -= value
-                    filtered_results.append(new_result)
-                continue
-            case ("long", "none"):
-                if percentage_pos != 0:
-                    new_result = sanitize_result(result)
-                    if open_position_map[symbol]['position_side']== "short":
-                        new_result['side'] = "buy"
-                        new_result['trade_type'] = futures
-                        new_result['positionside'] = "short"
-                    elif open_position_map[symbol]['position_side']== "long":
-                        new_result['side'] = "sell"
-                        new_result['trade_type'] = futures
-                        new_result['positionside'] = "long"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
-                    value = percentage_pos/100
-                    new_result['value'] = current_value * value
-                    fulness -= value
-                    filtered_results.append(new_result)
-                continue
-            case ("long", "spot"):
-                if percentage_pos != 0:
-                    new_result = sanitize_result(result)
-                    if open_position_map[symbol]['position_side']== "short":
-                        new_result['side'] = "buy"
-                        new_result['trade_type'] = futures
-                        new_result['positionside'] = "short"
-                    elif open_position_map[symbol]['position_side']== "long":
-                        new_result['side'] = "sell"
-                        new_result['trade_type'] = futures
-                        new_result['positionside'] = "long"
-                    value = percentage_pos/100
-                    new_result['value'] = current_value * value
-                    fulness -= value
-                    filtered_results.append(new_result)
-                continue
-            case ("long", "long"):
-                curr_position = curr_pos * curr_per
-                prev_position = prev_pos * prev_per
-                if curr_position < prev_position and percentage_pos != 0 and curr_position < percentage_pos and open_position_map[symbol]['position_side']== "long":
-                    new_result = sanitize_result(result)
-                    new_result['side'] = "sell"
-                    new_result['trade_type'] = futures
-                    new_result['positionside'] = "long"
-                    value = (percentage_pos-curr_position)/100
-                    new_result['value'] = current_value * value
-                    fulness -= value
-                    filtered_results.append(new_result)
-                continue
-            case ("long", "short"):
-                if percentage_pos != 0:
-                    new_result = sanitize_result(result)
-                    if open_position_map[symbol]['position_side']== "short":
-                        new_result['side'] = "buy"
-                        new_result['trade_type'] = futures
-                        new_result['positionside'] = "short"
-                    elif open_position_map[symbol]['position_side']== "long":
-                        new_result['side'] = "sell"
-                        new_result['trade_type'] = futures
-                        new_result['positionside'] = "long"
-                    value = percentage_pos/100
-                    new_result['value'] = current_value * value
-                    fulness -= value
-                    filtered_results.append(new_result)
-                continue
-            case ("short", "none"):
-                if percentage_pos != 0:
-                    new_result = sanitize_result(result)
-                    if open_position_map[symbol]['position_side']== "short":
-                        new_result['side'] = "buy"
-                        new_result['trade_type'] = futures
-                        new_result['positionside'] = "short"
-                    elif open_position_map[symbol]['position_side']== "long":
-                        new_result['side'] = "sell"
-                        new_result['trade_type'] = futures
-                        new_result['positionside'] = "long"
-                    value = percentage_pos/100
-                    new_result['value'] = current_value * value
-                    fulness -= value
-                    filtered_results.append(new_result)
-                continue
-            case ("short", "spot"):
-                if percentage_pos != 0:
-                    new_result = sanitize_result(result)
-                    if open_position_map[symbol]['position_side']== "short":
-                        new_result['side'] = "buy"
-                        new_result['trade_type'] = futures
-                        new_result['positionside'] = "short"
-                    elif open_position_map[symbol]['position_side']== "long":
-                        new_result['side'] = "sell"
-                        new_result['trade_type'] = futures
-                        new_result['positionside'] = "long"
-                    value = percentage_pos/100
-                    new_result['value'] = current_value * value
-                    fulness -= value
-                    filtered_results.append(new_result)
-                continue
-            case ("short", "long"):
-                if percentage_pos != 0:
-                    new_result = sanitize_result(result)
-                    new_result['side'] = "buy"
-                    new_result['trade_type'] = futures
-                    new_result['positionside'] = "short"
-                    value = percentage_pos/100
-                    new_result['value'] = current_value * value
-                    fulness -= value
-                    filtered_results.append(new_result)
-                continue
-            case ("short", "short"):
-                if curr_per < prev_per and percentage_pos != 0 and curr_per < percentage_pos:
-                    new_result['side'] = "buy"
-                    new_result['trade_type'] = futures
-                    new_result['positionside'] = "short"
-                    value = (percentage_pos-curr_position)/100
-                    new_result = sanitize_result(result)
-                    new_result['value'] = current_value * value
-                    fulness -= value
-                    filtered_results.append(new_result)
-                continue
+    actions = []
 
-    # AÇMA İŞLEMLERİ İÇİN KONTROL ET
-    for result in results:
-        last_positions = result.get('last_positions')
-        last_percentage = result.get('last_percentage')
+    # Leverage değişimi kapatması min_usd’a takılırsa ilgili bacağı açmayı engellemek için:
+    blocked_open = defaultdict(lambda: {"long": False, "short": False})
 
-        if last_positions is None or last_percentage is None:
-            continue
-        
-        prev_pos, curr_pos = float(str(last_positions[0])), float(str(last_positions[1]))
-        prev_per, curr_per = float(str(last_percentage[0])), float(str(last_percentage[1]))
+    def maybe_append(act, frac):
+        """Emri uygunsa ekle ve True döndür; değilse False."""
+        if frac <= 0:
+            return False
+        if frac < min_frac:
+            # print("Minimum şartı sağlanmadı:", act, "frac=", frac)
+            return False
+        usd = current_value * frac
+        a = act.copy()
+        a["value"] = usd
+        actions.append(a)
+        return True
 
-        if prev_pos > 100:
-            prev_pos = 100
-        if curr_per > 100:
-            curr_per = 100
-        
-        prev_state = get_state(prev_pos, prev_per)
-        curr_state = get_state(curr_pos, curr_per)
-        
-        #print(f"prev_states: {prev_state}, curr_state: {curr_state}")
+    # ---------- 1) REDUCE/CLOSE ----------
+    if bot_type == "spot":
+        for sym, tgt in targets.items():
+            meta = tgt["meta"]
+            cur = holding_map.get(sym, {"spot_pct": 0.0, "spot_amount": 0.0})
 
-        symbol = result.get('coin_id')
-        percentage_hold = holding_dict.get(symbol, float('0'))
-        if percentage_hold == None:
-            percentage_hold = 0
-        try:
-            percentage_pos = float(open_position_map[symbol]['percentage'])
-        except KeyError:
-            percentage_pos = 0
-            
+            delta_spot = (tgt["spot"] - cur["spot_pct"]) / 100.0
+            if delta_spot < 0:
+                reduce_frac = -delta_spot
+                act = {"coin_id": sym, "trade_type": "spot", "side": "sell", **meta}
+                if cur["spot_amount"] > 0:
+                    act["amount"] = (cur["spot_amount"] * reduce_frac /
+                                     (cur["spot_pct"] / 100.0)) if cur["spot_pct"] else cur["spot_amount"]
+                ok = maybe_append(act, reduce_frac)
+                if ok:
+                    # Kapama gerçekleştiyse fulness ve mevcut yüzdeleri güncelle
+                    fulness = max(0.0, fulness - reduce_frac)
+                    cur["spot_pct"] = max(0.0, cur["spot_pct"] - reduce_frac * 100.0)
 
-        # AÇMA İŞLEMLERİ İÇİN KONTROL ET
-        match (prev_state, curr_state):
-            case ("none", "none"): #TRUE
-                continue
-            case ("none", "spot"): #TRUE
-                value = curr_pos * (curr_per/100)
-                #print(f"curr_pos: {curr_pos}, curr_per: {curr_per}, value: {value}, minValue: {minValue}, current_value: {current_value}, fulness: {fulness}")
-                if (value*current_value) < minValue:
-                    continue
-                if (value <= (1-fulness)):
-                    new_result = sanitize_result(result)
-                    new_result['side'] = "buy"
-                    new_result['trade_type'] = spot
-                    new_result['value'] = current_value * value
-                    fulness += value
-                    filtered_results.append(new_result)
-                elif (value > (1-fulness)) and ((value - fulness) * current_value) >= minValue:
-                    new_result = sanitize_result(result)
-                    new_result['side'] = "buy"
-                    new_result['trade_type'] = spot
-                    new_result['value'] = current_value * (value - fulness)
-                    fulness = value
-                    filtered_results.append(new_result)
-                continue
-            case ("none", "long"):
-                value = curr_per/100
-                print(f"prev_pos: {prev_pos}, prev_per: {prev_per}, curr_pos: {curr_pos}, curr_per: {curr_per}, value: {value}, minValue: {minValue}, current_value: {current_value}, fulness: {fulness}")
-                if (value*current_value) < minValue:
-                    continue
-                if value <= (1-fulness):
-                    new_result = sanitize_result(result)
-                    new_result['side'] = "buy"
-                    new_result['trade_type'] = futures
-                    new_result['positionside'] = "long"
-                    new_result['leverage'] = curr_pos
-                    new_result['value'] = current_value * value
-                    fulness += value
-                    filtered_results.append(new_result)
-                elif (value > (1-fulness)) and ((value - fulness) * current_value) >= minValue:
-                    new_result = sanitize_result(result)
-                    new_result['side'] = "buy"
-                    new_result['trade_type'] = futures
-                    new_result['positionside'] = "long"
-                    new_result['leverage'] = curr_pos
-                    new_result['value'] = current_value * (value - fulness)
-                    fulness = value
-                    filtered_results.append(new_result)
-                continue
-            case ("none", "short"):
-                value = curr_per/100
-                #print(f"prev_pos: {prev_pos}, prev_per: {prev_per}, curr_pos: {curr_pos}, curr_per: {curr_per}, value: {value}, minValue: {minValue}, current_value: {current_value}, fulness: {fulness}")
-                if (value*current_value) < minValue:
-                    continue
-                if value <= (1-fulness):
-                    new_result = sanitize_result(result)
-                    new_result['side'] = "sell"
-                    new_result['trade_type'] = futures
-                    new_result['positionside'] = "short"
-                    new_result['leverage'] = curr_pos
-                    new_result['value'] = current_value * value
-                    fulness += value
-                    filtered_results.append(new_result)
-                elif (value > (1-fulness)) and ((value - fulness) * current_value) >= minValue:
-                    new_result = sanitize_result(result)
-                    new_result['side'] = "sell"
-                    new_result['trade_type'] = futures
-                    new_result['positionside'] = "short"
-                    new_result['leverage'] = curr_pos
-                    new_result['value'] = current_value * (value - fulness)
-                    fulness = value
-                    filtered_results.append(new_result)
-                continue
-            case ("spot", "none"):
-                continue
-            case ("spot", "spot"):
-                curr_spot = curr_pos * curr_per
-                prev_spot = prev_pos * prev_per
-                value = (curr_spot-percentage_hold)/100
-                if (value*current_value) < minValue:
-                    continue
-                if curr_spot > prev_spot and percentage_hold != 0 and curr_spot > percentage_hold and value < (1-fulness):
-                    new_result = sanitize_result(result)
-                    new_result['side'] = "buy"
-                    new_result['trade_type'] = spot
-                    new_result['value'] = current_value * value
-                    fulness += value
-                    filtered_results.append(new_result)
-                continue
-            case ("spot", "long"):
-                value = curr_per/100
-                if (value*current_value) < minValue:
-                    continue
-                if value <= (1-fulness):
-                    new_result = sanitize_result(result)
-                    new_result['side'] = "buy"
-                    new_result['trade_type'] = futures
-                    new_result['positionside'] = "long"
-                    new_result['leverage'] = curr_pos
-                    new_result['value'] = current_value * value
-                    fulness += value
-                    filtered_results.append(new_result)
-                continue
-            case ("spot", "short"):
-                value = curr_per/100
-                if (value*current_value) < minValue:
-                    continue
-                if value <= (1-fulness):
-                    new_result = sanitize_result(result)
-                    new_result['side'] = "sell"
-                    new_result['trade_type'] = futures
-                    new_result['positionside'] = "short"
-                    new_result['leverage'] = curr_pos
-                    new_result['value'] = current_value * value
-                    fulness += value
-                    filtered_results.append(new_result)
-                continue
-            case ("long", "none"):
-                continue
-            case ("long", "spot"):
-                value = curr_pos * (curr_per/100)
-                if (value*current_value) < minValue:
-                    continue
-                if value <= (1-fulness):
-                    new_result = sanitize_result(result)
-                    new_result['side'] = "buy"
-                    new_result['trade_type'] = spot
-                    new_result['value'] = current_value * value
-                    fulness += value
-                    filtered_results.append(new_result)
-                continue
-            case ("long", "long"):
-                curr_position = curr_pos * curr_per
-                prev_position = prev_pos * prev_per
-                if percentage_pos != 0 and curr_position > percentage_pos:
-                    value = (percentage_pos-curr_position)/100
-                    if (value*current_value) < minValue:
-                        continue
-                    if curr_position > prev_position and value < (1-fulness):
-                        new_result = sanitize_result(result)
-                        new_result['side'] = "sell"
-                        new_result['trade_type'] = futures
-                        new_result['positionside'] = "long"
-                        new_result['reduceOnly'] = True
-                        new_result['value'] = current_value * value
-                        fulness += value
-                        filtered_results.append(new_result)
-                continue
-            case ("long", "short"):
-                value = curr_per/100
-                if (value*current_value) < minValue:
-                    continue
-                if value <= (1-fulness):
-                    new_result = sanitize_result(result)
-                    new_result['side'] = "sell"
-                    new_result['trade_type'] = futures
-                    new_result['positionside'] = "short"
-                    new_result['leverage'] = curr_pos
-                    new_result['value'] = current_value * value
-                    fulness += value
-                    filtered_results.append(new_result)
-                continue
-            case ("short", "none"):
-                continue
-            case ("short", "spot"):
-                value = curr_pos * (curr_per/100)
-                if (value*current_value) < minValue:
-                    continue
-                if value <= (1-fulness):
-                    new_result = sanitize_result(result)
-                    new_result['side'] = "buy"
-                    new_result['trade_type'] = spot
-                    new_result['value'] = current_value * value
-                    fulness += value
-                    filtered_results.append(new_result)
-                continue
-            case ("short", "long"):
-                value = curr_per/100
-                if (value*current_value) < minValue:
-                    continue
-                if value <= (1-fulness):
-                    new_result = sanitize_result(result)
-                    new_result['side'] = "buy"
-                    new_result['trade_type'] = futures
-                    new_result['positionside'] = "long"
-                    new_result['leverage'] = curr_pos
-                    new_result['value'] = current_value * value
-                    fulness += value
-                    filtered_results.append(new_result)
-                continue
-            case ("short", "short"):
-                if percentage_pos != 0 and curr_per > percentage_pos:
-                    value = (curr_per-percentage_pos)/100
-                    if (value*current_value) < minValue:
-                        continue
-                    if value <= (1-fulness):
-                        new_result = sanitize_result(result)
-                        new_result['side'] = "sell"
-                        new_result['trade_type'] = futures
-                        new_result['positionside'] = "short"
-                        new_result['value'] = current_value * value
-                        fulness += value
-                        filtered_results.append(new_result)
-                elif percentage_pos == 0:
-                    value = (curr_per)/100
-                    if (value*current_value) < minValue:
-                        continue
-                    if value <= (1-fulness):
-                        new_result = sanitize_result(result)
-                        new_result['side'] = "sell"
-                        new_result['trade_type'] = futures
-                        new_result['positionside'] = "short"
-                        new_result['value'] = current_value * value
-                        fulness += value
-                        filtered_results.append(new_result)
-                continue
-    return filtered_results
+    else:  # futures
+        for sym, tgt in targets.items():
+            meta = tgt["meta"]
+            cur = pos_map.get(sym, {
+                "long_pct": 0.0, "long_amount": 0.0, "long_lev": None,
+                "short_pct": 0.0, "short_amount": 0.0, "short_lev": None
+            })
+
+            # ---- LONG reduce ----
+            target_pct = tgt["long"]["pct"]
+            target_lev = tgt["long"]["lev"]
+            cur_pct = cur["long_pct"]
+            cur_lev = cur["long_lev"]
+
+            # Leverage mismatch → önce FULL CLOSE dene
+            if cur_pct > 0 and target_pct > 0 and (cur_lev is not None and target_lev is not None) and (cur_lev != target_lev):
+                reduce_frac = cur_pct / 100.0
+                act = {"coin_id": sym, "trade_type": "futures", "positionside": "long", "side": "sell", "reduceOnly": True, **meta}
+                if cur["long_amount"] > 0:
+                    act["amount"] = cur["long_amount"]  # tam kapat
+                ok = maybe_append(act, reduce_frac)
+                if ok:
+                    fulness = max(0.0, fulness - reduce_frac)
+                    cur["long_pct"] = 0.0
+                    cur["long_lev"] = None
+                    cur_pct = 0.0
+                    cur_lev = None
+                else:
+                    # Kapatma olmadı → bu bacağı açmayı blokla (lev karışmasın)
+                    blocked_open[sym]["long"] = True
+
+            # Normal delta azaltma
+            delta_long = (target_pct - cur_pct) / 100.0
+            if delta_long < 0:
+                reduce_frac = -delta_long
+                act = {"coin_id": sym, "trade_type": "futures", "positionside": "long", "side": "sell", "reduceOnly": True, **meta}
+                if cur["long_amount"] > 0:
+                    act["amount"] = (cur["long_amount"] * reduce_frac /
+                                     (cur_pct / 100.0)) if cur_pct else cur["long_amount"]
+                ok = maybe_append(act, reduce_frac)
+                if ok:
+                    fulness = max(0.0, fulness - reduce_frac)
+                    cur["long_pct"] = max(0.0, cur["long_pct"] - reduce_frac * 100.0)
+
+            # ---- SHORT reduce ----
+            target_pct = tgt["short"]["pct"]
+            target_lev = tgt["short"]["lev"]
+            cur_pct = cur["short_pct"]
+            cur_lev = cur["short_lev"]
+
+            if cur_pct > 0 and target_pct > 0 and (cur_lev is not None and target_lev is not None) and (cur_lev != target_lev):
+                reduce_frac = cur_pct / 100.0
+                act = {"coin_id": sym, "trade_type": "futures", "positionside": "short", "side": "buy", "reduceOnly": True, **meta}
+                if cur["short_amount"] > 0:
+                    act["amount"] = cur["short_amount"]
+                ok = maybe_append(act, reduce_frac)
+                if ok:
+                    fulness = max(0.0, fulness - reduce_frac)
+                    cur["short_pct"] = 0.0
+                    cur["short_lev"] = None
+                    cur_pct = 0.0
+                    cur_lev = None
+                else:
+                    blocked_open[sym]["short"] = True
+
+            delta_short = (target_pct - cur_pct) / 100.0
+            if delta_short < 0:
+                reduce_frac = -delta_short
+                act = {"coin_id": sym, "trade_type": "futures", "positionside": "short", "side": "buy", "reduceOnly": True, **meta}
+                if cur["short_amount"] > 0:
+                    act["amount"] = (cur["short_amount"] * reduce_frac /
+                                     (cur_pct / 100.0)) if cur_pct else cur["short_amount"]
+                ok = maybe_append(act, reduce_frac)
+                if ok:
+                    fulness = max(0.0, fulness - reduce_frac)
+                    cur["short_pct"] = max(0.0, cur["short_pct"] - reduce_frac * 100.0)
+
+    # ---------- 2) INCREASE/OPEN ----------
+    if bot_type == "spot":
+        for sym, tgt in targets.items():
+            meta = tgt["meta"]
+            cur = holding_map.get(sym, {"spot_pct": 0.0, "spot_amount": 0.0})
+
+            delta_spot = (tgt["spot"] - cur["spot_pct"]) / 100.0
+            if delta_spot > 0:
+                add_frac = min(delta_spot, max(0.0, 1.0 - fulness))
+                if add_frac >= min_frac:
+                    act = {"coin_id": sym, "trade_type": "spot", "side": "buy", **meta}
+                    ok = maybe_append(act, add_frac)
+                    if ok:
+                        fulness = min(1.0, fulness + add_frac)
+                        cur["spot_pct"] = min(100.0, cur["spot_pct"] + add_frac * 100.0)
+
+    else:
+        for sym, tgt in targets.items():
+            meta = tgt["meta"]
+            cur = pos_map.get(sym, {
+                "long_pct": 0.0, "long_amount": 0.0, "long_lev": None,
+                "short_pct": 0.0, "short_amount": 0.0, "short_lev": None
+            })
+
+            # LONG open (leverage bloğu yoksa)
+            if not blocked_open[sym]["long"]:
+                target_pct = tgt["long"]["pct"]
+                target_lev = tgt["long"]["lev"]
+                cur_pct = cur["long_pct"]
+                delta_long = (target_pct - cur_pct) / 100.0
+                if delta_long > 0:
+                    add_frac = min(delta_long, max(0.0, 1.0 - fulness))
+                    if add_frac >= min_frac:
+                        act = {"coin_id": sym, "trade_type": "futures", "positionside": "long", "side": "buy", **meta}
+                        if target_lev is not None:
+                            act["leverage"] = target_lev
+                        ok = maybe_append(act, add_frac)
+                        if ok:
+                            fulness = min(1.0, fulness + add_frac)
+                            cur["long_pct"] = min(100.0, cur["long_pct"] + add_frac * 100.0)
+                            cur["long_lev"] = target_lev if target_lev is not None else cur["long_lev"]
+
+            # SHORT open (leverage bloğu yoksa)
+            if not blocked_open[sym]["short"]:
+                target_pct = tgt["short"]["pct"]
+                target_lev = tgt["short"]["lev"]
+                cur_pct = cur["short_pct"]
+                delta_short = (target_pct - cur_pct) / 100.0
+                if delta_short > 0:
+                    add_frac = min(delta_short, max(0.0, 1.0 - fulness))
+                    if add_frac >= min_frac:
+                        act = {"coin_id": sym, "trade_type": "futures", "positionside": "short", "side": "sell", **meta}
+                        if target_lev is not None:
+                            act["leverage"] = target_lev
+                        ok = maybe_append(act, add_frac)
+                        if ok:
+                            fulness = min(1.0, fulness + add_frac)
+                            cur["short_pct"] = min(100.0, cur["short_pct"] + add_frac * 100.0)
+                            cur["short_lev"] = target_lev if target_lev is not None else cur["short_lev"]
+
+    return actions

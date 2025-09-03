@@ -1,0 +1,37 @@
+{
+  "header": {
+    "totalProfit": "Toplam Kâr",
+    "totalValue": "Toplam Değer"
+  },
+  "charts": {
+    "pnlTitle": "Kâr / Zarar Grafiği (%)"
+  },
+  "trades": {
+    "empty": "Herhangi bir işlem bulunamadı.",
+    "columns": {
+      "hash": "#",
+      "date": "Tarih",
+      "symbol": "Sembol",
+      "price": "Fiyat",
+      "side": "Yön",
+      "type": "Tür",
+      "position": "Pozisyon",
+      "leverage": "Kaldıraç",
+      "quantity": "Miktar",
+      "amount": "Tutar",
+      "fee": "Komisyon"
+    }
+  },
+  "positions": {
+    "title": "Açık Pozisyonlar",
+    "empty": "Herhangi bir pozisyon bulunamadı.",
+    "amount": "Miktar",
+    "profit": "Kâr"
+  },
+  "holdings": {
+    "title": "Spot Varlıklar",
+    "empty": "Herhangi bir spot varlık bulunamadı.",
+    "amount": "Miktar",
+      "profit": "Kâr"
+  }
+}

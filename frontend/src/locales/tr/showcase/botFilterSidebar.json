@@ -1,0 +1,37 @@
+{
+  "title": "Filtreler",
+  "fields": {
+    "botType": "Bot Türü",
+    "priceRangeSale": "Fiyat Aralığı ($) (Satış)",
+    "priceRangeRent": "Fiyat Aralığı ($) (Kiralama)",
+    "onlyActive": "Sadece Aktif Botlar",
+    "profitFactor": "Profit Factor (min): {{value}}",
+    "riskFactor": "Risk Factor (maks): {{value}}",
+    "creationTime": "Oluşturulma Süresi",
+    "profitMargin": "Kâr Marjı (min)",
+    "transactionFrequency": "Ortalama İşlem Sıklığı (dk)",
+    "usageTime": "Kullanım Süresi (saat) (min)",
+    "demand": "Talep Seviyesi: {{value}}"
+  },
+  "options": {
+    "all": "Tümü",
+    "spot": "Spot",
+    "futures": "Vadeli"
+  },
+  "units": {
+    "day": "Gün",
+    "week": "Hafta",
+    "month": "Ay",
+    "all": "Tüm Zamanlar"
+  },
+  "actions": {
+    "apply": "Filtreyi Uygula",
+    "clear": "Filtreyi Temizle"
+  },
+  "placeholders": {
+    "min": "Min",
+    "max": "Maks",
+    "value": "Değer",
+    "exampleHours": "örn. 525"
+  }
+}

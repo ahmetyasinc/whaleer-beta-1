@@ -93,7 +93,7 @@ function labelForIana(tz) {
    Page
    ========================= */
 export default function SettingsPage() {
-  const { t } = useTranslation();
+  const { t } = useTranslation('settings');
   const pathname = usePathname();
   const router = useRouter();
 
@@ -143,12 +143,12 @@ export default function SettingsPage() {
       }
     } catch (e) {
       console.error(e);
-      setError('Ayarlar yüklenirken bir sorun oluştu.');
+      setError(t('errors.load'));
     } finally {
       if (mounted) setLoading(false);
     }
     return () => { mounted = false; };
-  }, []);
+  }, [t]);
 
   const update = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -173,7 +173,7 @@ export default function SettingsPage() {
       setSavedAt(new Date());
     } catch (e) {
       console.error(e);
-      setError('Kaydetme sırasında bir hata oluştu.');
+      setError(t('errors.save'));
     } finally {
       setSaving(false);
     }
@@ -195,7 +195,7 @@ export default function SettingsPage() {
     if (!savedAt) return null;
     const hh = String(savedAt.getHours()).padStart(2, '0');
     const mm = String(savedAt.getMinutes()).padStart(2, '0');
-    return `✔ ${t('saved', { defaultValue: 'Kaydedildi' })} • ${hh}:${mm}`;
+    return `✔ ${t('saved')} • ${hh}:${mm}`;
   }, [savedAt, t]);
 
   // TZ arama filtresi
@@ -222,7 +222,7 @@ export default function SettingsPage() {
             {/* Title + Actions */}
             <div className="flex items-center justify-between">
               <h1 className="text-2xl font-semibold">
-                {t('settings.title', { defaultValue: 'Ayarlar' })}
+                {t('title')}
               </h1>
               <div className="flex items-center gap-3">
                 {savedInfo && <span className="text-sm text-emerald-300/90">{savedInfo}</span>}
@@ -231,17 +231,15 @@ export default function SettingsPage() {
                   disabled={saving || loading}
                   className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed transition"
                 >
-                  {saving
-                    ? t('settings.saving', { defaultValue: 'Kaydediliyor…' })
-                    : t('settings.save', { defaultValue: 'Kaydet' })}
+                  {saving ? t('saving') : t('save')}
                 </button>
                 <button
                   onClick={onResetDefaults}
                   disabled={saving}
                   className="px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 transition"
-                  title={t('settings.reset', { defaultValue: 'Varsayılanlara dön' })}
+                  title={t('reset')}
                 >
-                  {t('settings.reset', { defaultValue: 'Sıfırla' })}
+                  {t('reset')}
                 </button>
               </div>
             </div>
@@ -255,12 +253,12 @@ export default function SettingsPage() {
             {/* Dil */}
             <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
               <h2 className="text-lg font-medium mb-3">
-                {t('settings.language', { defaultValue: 'Dil' })}
+                {t('language')}
               </h2>
               <div className="flex flex-wrap items-center gap-3">
                 {[
-                  { key: 'tr', label: 'Türkçe' },
-                  { key: 'en', label: 'English' },
+                  { key: 'tr', label: t('languages.tr') },
+                  { key: 'en', label: t('languages.en') },
                 ].map((lng) => (
                   <button
                     key={lng.key}
@@ -275,22 +273,20 @@ export default function SettingsPage() {
                 ))}
               </div>
               <p className="text-sm text-zinc-400 mt-3">
-                {t('settings.language_hint', {
-                  defaultValue: 'Seçtiğiniz dil anında uygulanır ve çereze kaydedilir.',
-                })}
+                {t('language_hint')}
               </p>
             </section>
 
             {/* Tema */}
             <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
               <h2 className="text-lg font-medium mb-3">
-                {t('settings.theme', { defaultValue: 'Tema' })}
+                {t('theme')}
               </h2>
               <div className="flex items-center gap-3">
                 {[
-                  { key: 'system', label: t('settings.theme_system', { defaultValue: 'Sistem' }) },
-                  { key: 'light', label: t('settings.theme_light', { defaultValue: 'Açık' }) },
-                  { key: 'dark', label: t('settings.theme_dark', { defaultValue: 'Koyu' }) },
+                  { key: 'system', label: t('theme_system') },
+                  { key: 'light', label: t('theme_light') },
+                  { key: 'dark', label: t('theme_dark') },
                 ].map((opt) => (
                   <button
                     key={opt.key}
@@ -312,12 +308,12 @@ export default function SettingsPage() {
             {/* Zaman Dilimi (cookie: GMT±HH:MM) */}
             <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
               <h2 className="text-lg font-medium mb-4">
-                {t('settings.timezone', { defaultValue: 'Zaman Dilimi' })}
+                {t('timezone')}
               </h2>
 
               {/* Mevcut cookie değeri */}
               <div className="mb-2 text-sm text-zinc-300">
-                {t('settings.current_timezone', { defaultValue: 'Geçerli değer:' })}{' '}
+                {t('current_timezone')}{' '}
                 <span className="font-medium">{form.timezone}</span>
               </div>
 
@@ -327,7 +323,7 @@ export default function SettingsPage() {
                   type="text"
                   value={tzQuery}
                   onChange={(e) => setTzQuery(e.target.value)}
-                  placeholder={t('settings.timezone_search', { defaultValue: 'Bölge ara… (ör. Istanbul, Tokyo, New_York)' })}
+                  placeholder={t('timezone_search')}
                   className="w-full px-3 py-2 bg-zinc-800 text-white border border-zinc-700 rounded-lg outline-none focus:ring-2 focus:ring-emerald-700"
                 />
               </div>
@@ -347,7 +343,7 @@ export default function SettingsPage() {
                         <span className="text-sm">{labelForIana(tz)}</span>
                         {selected && (
                           <span className="text-xs text-emerald-300">
-                            {t('settings.selected', { defaultValue: 'Seçildi' })}
+                            {t('selected')}
                           </span>
                         )}
                       </li>
@@ -355,34 +351,30 @@ export default function SettingsPage() {
                   })}
                   {filteredTimezones.length === 0 && (
                     <li className="px-3 py-2 text-zinc-400 text-sm">
-                      {t('settings.no_results', { defaultValue: 'Sonuç bulunamadı.' })}
+                      {t('no_results')}
                     </li>
                   )}
                 </ul>
               </div>
 
               <p className="text-sm text-zinc-400 mt-3">
-                {t('settings.timezone_hint', {
-                  defaultValue: 'Seçim yaptığınızda çerezde yalnızca GMT ofset değeri tutulur (örn. GMT+03:00).',
-                })}
+                {t('timezone_hint')}
               </p>
             </section>
 
             {/* Bildirimler */}
             <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
               <h2 className="text-lg font-medium mb-4">
-                {t('settings.notifications', { defaultValue: 'Bildirimler' })}
+                {t('notifications')}
               </h2>
 
               <div className="flex items-center justify-between py-2">
                 <div>
                   <p className="font-medium">
-                    {t('settings.email_reports', { defaultValue: 'E-posta raporları' })}
+                    {t('email_reports')}
                   </p>
-                <p className="text-sm text-zinc-400">
-                    {t('settings.email_reports_hint', {
-                      defaultValue: 'Haftalık performans raporlarını e-posta ile al.',
-                    })}
+                  <p className="text-sm text-zinc-400">
+                    {t('email_reports_hint')}
                   </p>
                 </div>
                 <button
@@ -396,16 +388,14 @@ export default function SettingsPage() {
                       ? 'bg-emerald-800/40 text-emerald-200 border-emerald-700/60'
                       : 'bg-zinc-800/60 text-zinc-200 border-zinc-700 hover:bg-zinc-800'}`}
                 >
-                  {form.emailReports
-                    ? t('settings.on', { defaultValue: 'Açık' })
-                    : t('settings.off', { defaultValue: 'Kapalı' })}
+                  {form.emailReports ? t('on') : t('off')}
                 </button>
               </div>
             </section>
 
             {loading && (
               <div className="text-sm text-zinc-400">
-                {t('settings.loading', { defaultValue: 'Yükleniyor…' })}
+                {t('loading')}
               </div>
             )}
           </div>

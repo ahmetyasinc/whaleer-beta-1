@@ -4,9 +4,13 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import styled from 'styled-components';
 import { IoIosSearch } from "react-icons/io";
 import useBotDropdownSearchStore from '@/store/showcase/botDropdownSearchStore';
-import useBotDataStore from '@/store/showcase/botDataStore'; // NEW
+import useBotDataStore from '@/store/showcase/botDataStore';
+import { useTranslation } from 'react-i18next';
 
 const Input = () => {
+  const { t, i18n } = useTranslation('searchButton');
+  const locale = i18n.language || 'en-US';
+
   const [showDropdown, setShowDropdown] = useState(false);
   const wrapperRef = useRef(null);
 
@@ -20,7 +24,7 @@ const Input = () => {
     fetchBots,
   } = useBotDropdownSearchStore();
 
-  const { inspectBot } = useBotDataStore(); // NEW
+  const { inspectBot } = useBotDataStore();
 
   // İlk açılışta (daha önce yüklenmemişse) botları çek
   useEffect(() => {
@@ -43,7 +47,7 @@ const Input = () => {
 
   const formatUSD = (n) =>
     typeof n === 'number'
-      ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
+      ? new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
       : null;
 
   const formatPct = (n) => `${n >= 0 ? '+' : ''}${Number(n || 0).toFixed(2)}%`;
@@ -57,41 +61,41 @@ const Input = () => {
   );
 
   // Bir bot seçildiğinde: inspect et + dropdown’ı kapat
-  const handleSelectBot = useCallback((botId) => {        // NEW
+  const handleSelectBot = useCallback((botId) => {
     try {
-      inspectBot(botId);                                  // NEW
+      inspectBot(botId);
     } finally {
-      setShowDropdown(false);                             // NEW
+      setShowDropdown(false);
     }
-  }, [inspectBot]);                                       // NEW
+  }, [inspectBot]);
 
-  // Klavye ile seçim (Enter/Space)                           // NEW
-  const handleItemKeyDown = useCallback((e, botId) => {   // NEW
+  // Klavye ile seçim (Enter/Space)
+  const handleItemKeyDown = useCallback((e, botId) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       handleSelectBot(botId);
     }
-  }, [handleSelectBot]);                                  // NEW
+  }, [handleSelectBot]);
 
   return (
     <StyledWrapper ref={wrapperRef}>
       <div className="search-header">
         <input
-          placeholder="Search bot or creator..."
+          placeholder={t('placeholder.search')}
           className="search-header__input"
           type="text"
           onFocus={() => setShowDropdown(true)}
           onChange={(e) => setSearchQuery(e.target.value)}
           value={searchQuery}
-          aria-label="Search bot or creator"
-          role="combobox"                                  // NEW (erişilebilirlik)
-          aria-expanded={showDropdown}                     // NEW
-          aria-controls="bot-search-dropdown"              // NEW
+          aria-label={t('aria.searchInput')}
+          role="combobox"
+          aria-expanded={showDropdown}
+          aria-controls="bot-search-dropdown"
         />
         <button
           className="search-header__button"
           onClick={() => setShowDropdown((s) => !s)}
-          aria-label="Toggle search results"
+          aria-label={t('aria.toggleDropdown')}
           type="button"
         >
           <IoIosSearch className="text-xl" />
@@ -100,15 +104,15 @@ const Input = () => {
 
       {showDropdown && (
         <div
-          id="bot-search-dropdown"                         // NEW
+          id="bot-search-dropdown"
           className="dropdown"
           role="listbox"
-          aria-label="Search results"
+          aria-label={t('aria.searchResults')}
         >
-          {loading && <div className="info">Loading…</div>}
-          {!!error && <div className="error">An error occurred: {error}</div>}
+          {loading && <div className="info">{t('info.loading')}</div>}
+          {!!error && <div className="error">{t('info.error', { message: String(error) })}</div>}
           {!loading && !error && emptyState && (
-            <div className="empty">No results found</div>
+            <div className="empty">{t('info.empty')}</div>
           )}
 
           {!loading && !error && filteredBots.map((bot) => (
@@ -118,20 +122,20 @@ const Input = () => {
               role="option"
               tabIndex={0}
               aria-selected={false}
-              onClick={() => handleSelectBot(bot.id)}           // NEW
-              onKeyDown={(e) => handleItemKeyDown(e, bot.id)}   // NEW
+              onClick={() => handleSelectBot(bot.id)}
+              onKeyDown={(e) => handleItemKeyDown(e, bot.id)}
             >
               <div className="left">
                 <div className="title-row">
                   <span className="name">{bot.name}</span>
                   <span className={`type-badge ${bot.type === 'futures' ? 'futures' : 'spot'}`}>
-                    {bot.type === 'futures' ? 'Futures' : 'Spot'}
+                    {bot.type === 'futures' ? t('type.futures') : t('type.spot')}
                   </span>
                 </div>
                 <div className="meta">
                   <span className="creator">@{bot.creator}</span>
                   <span className={`profit ${bot.totalProfit >= 0 ? 'pos' : 'neg'}`}>
-                    Total Profit: {formatPct(bot.totalProfit)}
+                    {t('labels.totalProfit')} {formatPct(bot.totalProfit)}
                   </span>
                 </div>
               </div>
@@ -139,10 +143,14 @@ const Input = () => {
               {hasAnyPrice(bot) && (
                 <div className="right">
                   {typeof bot.salePriceUSD === 'number' && (
-                    <span className="pill pill-sale">For Sale: {formatUSD(bot.salePriceUSD)}</span>
+                    <span className="pill pill-sale">
+                      {t('labels.forSale', { price: formatUSD(bot.salePriceUSD) })}
+                    </span>
                   )}
                   {typeof bot.rentPriceUSD === 'number' && (
-                    <span className="pill pill-rent">For Rent: {formatUSD(bot.rentPriceUSD)}</span>
+                    <span className="pill pill-rent">
+                      {t('labels.forRent', { price: formatUSD(bot.rentPriceUSD) })}
+                    </span>
                   )}
                 </div>
               )}

@@ -5,7 +5,7 @@ from backend.trade_engine.control.control_the_results import control_the_results
 def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
 
     order_fields = {
-        "order_type": "", "limit_price": 0.0, "stop_price": 0.0, "stop_limit_price": 0.0,
+        "order_type": "", "stop_loss": 0.0, "take_profit": 0.0, "price": 0.0, "stop_price": 0.0, "stop_limit_price": 0.0,
         "callback_rate": 0.0, "activation_price": 0.0, "time_in_force": ""
     }
 
@@ -60,8 +60,9 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
             result_entry.update(order_info)
             results.append(result_entry)
 
-        results = control_the_results(bot['id'], results)
+        results = control_the_results(bot['id'], results, min_usd=10.0)
 
+        
         # 💡 Toplam sürenin de eklenmesi için metadata objesi
         return {
             "bot_id": bot['id'],

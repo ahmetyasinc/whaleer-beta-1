@@ -1,0 +1,14 @@
+{
+  "titles": {
+    "priceChart": "Fiyat Grafiği"
+  },
+  "buttons": {
+    "candles": "Mumlar",
+    "line": "Çizgi"
+  },
+  "metrics": {
+    "returns": "Getiri",
+    "position": "Pozisyon",
+    "percentage": "Yüzde"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "titles": {
+    "strategies": "Stratejiler"
+  },
+  "buttons": {
+    "chooseStrategy": "Strateji Seç",
+    "close": "Kapat"
+  },
+  "tabs": {
+    "technicals": "Teknikler",
+    "my": "Stratejilerim",
+    "community": "Topluluk"
+  },
+  "misc": {
+    "noContent": "İçerik bulunamadı."
+  }
+}

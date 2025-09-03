@@ -6,6 +6,7 @@ import useStrategyStore from "@/store/indicator/strategyStore";
 import { useMemo } from "react";
 import { useProfileStore } from "@/store/profile/profileStore";
 import { useAccountDataStore } from "@/store/profile/accountDataStore";
+import { useTranslation } from "react-i18next";
 
 /* ------------------ Tarih yardımcıları (local) ------------------ */
 function startOfToday() {
@@ -28,15 +29,11 @@ function startOfMonth() {
   return d;
 }
 
-/* ------------------ Local time parser ------------------
-   "2025-08-20T10:05:00" -> 10:05 local (UTC'ye kaydırmaz)
-   Epoch saniye/ms/mikrosaniye de desteklenir.
--------------------------------------------------------- */
+/* ------------------ Local time parser ------------------ */
 function toDateLocal(v) {
   if (v == null) return new Date(NaN);
   if (v instanceof Date) return v;
 
-  // Numerik string/number → epoch
   if (typeof v === "number" || (typeof v === "string" && /^\d+$/.test(v.trim()))) {
     const n = Number(v);
     if (n < 1e11) return new Date(n * 1000); // saniye
@@ -47,39 +44,29 @@ function toDateLocal(v) {
   if (typeof v === "string") {
     let s = v.trim();
 
-    // "YYYY-MM-DD HH:mm:ss(.ssssss)?" → boşluğu 'T' yap
     if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(s)) {
       s = s.replace(" ", "T");
     }
 
-    // "YYYY-MM-DD[T ]HH:mm:ss(.sss)?" → bileşenlerine ayır ve local Date oluştur
     const m = s.match(
       /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?$/
     );
     if (m) {
       const [_, Y, M, D, h, mi, sec = "0", frac = "0"] = m;
       return new Date(
-        Number(Y),
-        Number(M) - 1,
-        Number(D),
-        Number(h),
-        Number(mi),
-        Number(sec),
-        Number(frac.slice(0, 3)) // milisaniye
+        Number(Y), Number(M) - 1, Number(D),
+        Number(h), Number(mi), Number(sec),
+        Number(frac.slice(0, 3))
       );
     }
 
-    // Diğer formatlar: son çare
     return new Date(s);
   }
 
   return new Date(NaN);
 }
 
-/* ------------------ Snapshots normalize ------------------
-   Giriş: {timestamp, usd_value} veya {x, y}
-   Çıkış: {x: Date(local), y: number}
--------------------------------------------------------- */
+/* ------------------ Snapshots normalize ------------------ */
 function normalizeSnapshots(raw) {
   const pts = (raw || []).map((p) => {
     const ts = p && (p.timestamp ?? p.x);
@@ -100,7 +87,6 @@ const DATE_KEYS = [
   "order_time", "orderTime", "date"
 ];
 
-// İç içe objelerde de arar
 function pickNested(obj, key) {
   if (!obj || typeof obj !== "object") return undefined;
   if (key in obj) return obj[key];
@@ -140,7 +126,6 @@ function computePerformanceForRange({ label, apiId, snapshots, trades, rangeStar
   const firstPoint = inRange[0];
   const lastPoint = inRange[inRange.length - 1];
 
-  // Yüzde
   let pct = null;
   if (firstPoint && lastPoint) {
     const start = Number(firstPoint.y || 0);
@@ -148,7 +133,6 @@ function computePerformanceForRange({ label, apiId, snapshots, trades, rangeStar
     pct = start !== 0 ? ((end - start) / Math.abs(start)) * 100 : null;
   }
 
-  // Trades filtre + debug
   const filteredTrades = [];
   const excluded = [];
 
@@ -170,10 +154,7 @@ function computePerformanceForRange({ label, apiId, snapshots, trades, rangeStar
     filteredTrades.push({ ...t, _parsedAt: date, _dateKey: key });
   });
 
-  // ---- DEBUG LOGS ----
   try {
-
-    // ilk 3 trade örnek
     const sample = (trades || []).slice(0, 3).map((t, i) => {
       const keys = Object.keys(t || {});
       const { key, raw, date } = toDateSmartFromTrade(t);
@@ -185,9 +166,6 @@ function computePerformanceForRange({ label, apiId, snapshots, trades, rangeStar
         parsedLocal: fmt(date),
       };
     });
-
-
-
     console.groupEnd();
   } catch (err) {
     console.warn("[RightBar] Debug log error:", err);
@@ -197,6 +175,8 @@ function computePerformanceForRange({ label, apiId, snapshots, trades, rangeStar
 }
 
 export default function RightBar() {
+  const { t } = useTranslation("rightBar");
+
   const { strategies } = useStrategyStore();
   const { indicators } = useIndicatorStore();
 
@@ -227,7 +207,7 @@ export default function RightBar() {
     [tradesByApiId, activeApiId]
   );
 
-  /* ---- Performanslar (aktif API) ---- */
+  /* ---- Performans (aktif API) ---- */
   const now = new Date();
 
   const daily = useMemo(
@@ -272,10 +252,10 @@ export default function RightBar() {
   const performance = { daily, weekly, monthly };
 
   const stats = [
-    { title: "Number of Indicators", value: indicatorsCount },
-    { title: "Number of Strategies", value: strategiesCount },
-    { title: "Number of Total Bots", value: botCount },
-    { title: "Total Active Bots", value: activeBotCount },
+    { title: t("stats.numberOfIndicators"), value: indicatorsCount },
+    { title: t("stats.numberOfStrategies"), value: strategiesCount },
+    { title: t("stats.numberOfTotalBots"), value: botCount },
+    { title: t("stats.totalActiveBots"), value: activeBotCount },
   ];
 
   return (
@@ -284,16 +264,16 @@ export default function RightBar() {
       <div className="p-3 border-b border-neutral-800">
         <div className="grid grid-cols-1 gap-[10px]">
           <button className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-pink-700 hover:from-pink-700 hover:to-orange-500 duration-200 text-white px-3 py-2 rounded-lg text-xs font-medium hover:shadow-lg transition">
-            <FaBolt className="text-[16px]" /> Hızlı İşlemler
+            <FaBolt className="text-[16px]" /> {t("buttons.quickActions")}
           </button>
           <button className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-blue-800 hover:from-blue-700 hover:to-indigo-500 duration-200 text-white px-3 py-2 rounded-lg text-xs font-medium hover:shadow-lg transition">
-            <FaChartBar className="text-[16px]" /> Yayınladığım Göstergeler
+            <FaChartBar className="text-[16px]" /> {t("buttons.publishedIndicators")}
           </button>
           <button className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-700 hover:from-emerald-700 hover:to-green-600 duration-200 text-white px-3 py-2 rounded-lg text-xs font-medium hover:shadow-lg transition">
-            <FaRecycle className="text-[16px]" /> Geri Dönüşüm Kutusu
+            <FaRecycle className="text-[16px]" /> {t("buttons.recycleBin")}
           </button>
           <button className="flex items-center gap-2 bg-gradient-to-r from-fuchsia-600 to-rose-700 hover:from-rose-700 hover:to-fuchsia-600 duration-200 text-white px-3 py-2 rounded-lg text-xs font-medium hover:shadow-lg transition">
-            <FaHistory className="text-[16px]" /> Alışveriş Geçmişim
+            <FaHistory className="text-[16px]" /> {t("buttons.purchaseHistory")}
           </button>
         </div>
       </div>
@@ -318,7 +298,7 @@ export default function RightBar() {
         <div className="space-y-3">
           {["daily", "weekly", "monthly"].map((period, index) => {
             const perf = performance[period] || { value: null, trades: 0 };
-            const val = perf.value; // number | null
+            const val = perf.value;
             const trades = perf.trades || 0;
 
             const colorClass =
@@ -331,13 +311,15 @@ export default function RightBar() {
                 style={{ animationDelay: `${index * 200}ms`, animation: "fadeInUpRightBar 1s ease-out forwards" }}
               >
                 <h4 className="text-xs font-medium text-zinc-400 capitalize mb-1">
-                  {period} API Performance
+                  {t(`performance.labels.${period}`)}
                 </h4>
                 <div className="flex justify-between items-center">
                   <p className={`text-lg font-bold ${colorClass}`}>
                     {val === null ? "–" : `${val >= 0 ? "+" : "-"}${Math.abs(val).toFixed(2)}%`}
                   </p>
-                  <span className="text-xs mb-3 text-zinc-400">{trades} trades</span>
+                  <span className="text-xs mb-3 text-zinc-400">
+                    {t("performance.trades", { count: trades })}
+                  </span>
                 </div>
               </div>
             );

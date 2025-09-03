@@ -1,0 +1,30 @@
+{
+  "titles": {
+    "addNewVersion": "Add New Version",
+    "editStrategy": "Edit Strategy",
+    "addNewStrategy": "Add New Strategy"
+  },
+  "buttons": {
+    "save": "Save",
+    "close": "Close",
+    "newVersion": "New Version"
+  },
+  "tooltips": {
+    "fullscreen": "Full screen",
+    "fullscreenLocked": "Locked versions cannot be viewed full-screen for edit",
+    "saveLocked": "Locked versions cannot be modified"
+  },
+  "inputs": {
+    "namePlaceholder": "Strategy name..."
+  },
+  "banners": {
+    "locked": "This version is locked (used by an active bot). Create a new version to edit."
+  },
+  "labels": {
+    "untitled": "Untitled Strategy"
+  },
+  "errors": {
+    "save": "Strategy save error"
+  },
+  "terminalReady": "🚀 Terminal ready..."
+}

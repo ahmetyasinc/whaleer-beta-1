@@ -1,0 +1,26 @@
+{
+  "tabs": {
+    "new": "Yeni İlan",
+    "update": "Mevcut İlanı Güncelle"
+  },
+  "aria": {
+    "close": "Kapat"
+  },
+  "search": {
+    "placeholder": "Bot adına göre ara",
+    "aria": "Bot adına göre ara"
+  },
+  "list": {
+    "empty": "Bot bulunamadı.",
+    "noPnl": "Kâr/Zarar verisi yok"
+  },
+  "badges": {
+    "forSale": "Satış: {{price}}",
+    "forRentPerDay": "Kiralama: {{price}}/gün"
+  },
+  "actions": {
+    "select": "Seç",
+    "selectNew": "Yeni ilan oluşturmak için seç",
+    "selectUpdate": "İlanı güncellemek için seç"
+  }
+}

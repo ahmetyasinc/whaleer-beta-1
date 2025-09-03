@@ -138,7 +138,7 @@ const CommunityIndicators = ({ locale }) => {
                 <button
                   className="bg-transparent p-2 rounded-md hover:bg-gray-800 shrink-0"
                   onClick={() => handleToggleFavorite(indicator)}
-                  title={isFav(indicator.id) ? "Favorilerden çıkar" : "Favorilere ekle"}
+                  title={isFav(indicator.id) ? t("tooltips.fav_remove") : t("tooltips.fav_add")}
                 >
                   {isFav(indicator.id) ? (
                     <IoMdStar className="text-lg text-yellow-500" />
@@ -151,10 +151,10 @@ const CommunityIndicators = ({ locale }) => {
                   <span className="text-[14px] truncate">{indicator.name}</span>
                   <div className="flex items-center gap-2 mt-[2px]">
                     {typeof indicator.version !== "undefined" && (
-                      <Pill>Version {indicator.version}</Pill>
+                      <Pill>{t("version", { version: indicator.version })}</Pill>
                     )}
                     {typeof viewsCount === "number" && (
-                      <Pill tone="neutral">{viewsCount} views</Pill>
+                      <Pill tone="neutral">{t("views", { count: viewsCount })}</Pill>
                     )}
                   </div>
                 </div>
@@ -166,9 +166,7 @@ const CommunityIndicators = ({ locale }) => {
                 <div
                   className={`relative ${allowChartView ? "" : "opacity-50 cursor-not-allowed"}`}
                   title={
-                    allowChartView
-                      ? "İndikatörü ekle"
-                      : "Grafiğe ekleme izni yok (allow_chart_view=false)"
+                    allowChartView ? t("tooltips.add") : t("tooltips.add_disabled")
                   }
                   onClickCapture={async () => {
                     if (allowChartView) await notifyIndicatorView(releaseId);
@@ -187,9 +185,7 @@ const CommunityIndicators = ({ locale }) => {
                   }`}
                   onClick={() => openCodeModal(indicator)}
                   title={
-                    allowCodeView
-                      ? "Kodu görüntüle"
-                      : "Kod görüntüleme izni yok (allow_code_view=false)"
+                    allowCodeView ? t("tooltips.code") : t("tooltips.code_disabled")
                   }
                 >
                   <IoIosCode

@@ -13,6 +13,7 @@ import ExamineBot from "./examineBot";
 import { FaBan } from "react-icons/fa6";
 import DeleteBotConfirmModal from "./deleteBotConfirmModal";
 import ShutDownBotModal from "./shutDownBotModal";
+import { useTranslation } from "react-i18next";
 
 /* ---- Type rozet stili ---- */
 function getTypeBadgeClasses(type) {
@@ -21,10 +22,11 @@ function getTypeBadgeClasses(type) {
   return 'bg-emerald-500/15 text-emerald-300 border border-emerald-700'; // spot
 }
 function TypeBadge({ type }) {
+  const { t: tr } = useTranslation("botCard");
   return (
     <span
       className={`px-2 py-[2px] rounded-full uppercase tracking-wide text-[10px] ${getTypeBadgeClasses(type)} shrink-0`}
-      title={`Bot type: ${type || 'spot'}`}
+      title={tr("typeBadgeTitle", { type: type || 'spot' })}
     >
       {type || 'spot'}
     </span>
@@ -43,6 +45,7 @@ function diffParts(ms) {
 }
 
 function RentedCountdown({ rent_expires_at }) {
+  const { t } = useTranslation("botCard");
   const expiry = useMemo(() => rent_expires_at ? new Date(rent_expires_at).getTime() : null, [rent_expires_at]);
   const [now, setNow] = useState(() => Date.now());
 
@@ -65,9 +68,9 @@ function RentedCountdown({ rent_expires_at }) {
             ? "bg-gray-800/60 border-gray-700 text-gray-400"
             : "bg-cyan-500/10 border-cyan-700 text-cyan-200"
         ].join(' ')}
-        title={expired ? "Rental period ended" : "Time left on rental"}
+        title={expired ? t("rental.ended") : t("rental.timeLeft")}
       >
-        <span className="text-[11px] uppercase tracking-wider">Rental time left :</span>
+        <span className="text-[11px] uppercase tracking-wider">{t("rental.label")}</span>
         <span className="font-mono text-sm">
           {pad2(d)}:{pad2(h)}:{pad2(m)}:{pad2(s)}
         </span>
@@ -78,6 +81,8 @@ function RentedCountdown({ rent_expires_at }) {
 }
 
 export const BotCard = ({ bot, column }) => {
+  const { t } = useTranslation("botCard");
+
   const removeBot = useBotStore((state) => state.removeBot);
   const shutDownBot = useBotStore((state) => state.shutDownBot);
   const updateBot = useBotStore((state) => state.updateBot);
@@ -127,9 +132,9 @@ export const BotCard = ({ bot, column }) => {
     : "";
 
   const disableTitle = isBlocked
-    ? "Cannot activate: missing values (initial/current) or API undefined"
+    ? t("toggle.blocked")
     : (isRented && isExpired)
-      ? "Rental expired – cannot activate"
+      ? t("toggle.expired")
       : undefined;
 
   /* ==== SOL KART ==== */
@@ -149,7 +154,8 @@ export const BotCard = ({ bot, column }) => {
                   <button
                     onClick={() => setMenuOpen(!menuOpen)}
                     className="p-2 rounded hover:bg-gray-700"
-                    aria-label="More actions"
+                    aria-label={t("menu.moreActions")}
+                    title={t("menu.moreActions")}
                   >
                     <BsThreeDotsVertical className="text-gray-300" size={18} />
                   </button>
@@ -158,13 +164,13 @@ export const BotCard = ({ bot, column }) => {
                       <button
                         onClick={() => { setEditing(true); setMenuOpen(false); }}
                         className="flex items-center gap-2 w-full px-4 py-2 text-sm text-blue-400 hover:bg-gray-800">
-                        <FiEdit3 size={16} /> Edit
+                        <FiEdit3 size={16} /> {t("menu.edit")}
                       </button>
 
                       <button
                         onClick={() => { setSelectedBotId(bot.id); setDeleteModalOpen(true); setMenuOpen(false); }}
                         className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-800">
-                        <FaRegTrashAlt size={16} /> Delete (Dev)
+                        <FaRegTrashAlt size={16} /> {t("menu.deleteDev")}
                       </button>
 
                       <button
@@ -176,37 +182,37 @@ export const BotCard = ({ bot, column }) => {
                         }}
                         disabled={isBlocked}
                         aria-disabled={isBlocked}
-                        title={isBlocked ? "Examine disabled: missing values or API undefined" : "Examine"}
+                        title={isBlocked ? t("examine.disabledTitle") : t("menu.examine")}
                         className={[
                           "flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-700",
                           isBlocked ? "text-gray-500 cursor-not-allowed pointer-events-none" : "text-yellow-400"
                         ].join(' ')}
                       >
-                        <IoSearch size={16} /> Examine
+                        <IoSearch size={16} /> {t("menu.examine")}
                       </button>
 
                       <button
                         onClick={() => { setSelectedBotId(bot.id); setShotDownModalOpen(true); setMenuOpen(false); }}
                         className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-gray-700"
-                        title="Shuts down the bot and all open trades">
-                        <FaBan size={16} /> Shutdown
+                        title={t("menu.shutdownTitle")}>
+                        <FaBan size={16} /> {t("menu.shutdown")}
                       </button>
                     </div>
                   )}
                 </div>
               </div>
 
-              <p className="mb-1 text-[14px]"><span className="text-stone-500">API:</span> {bot.api}</p>
-              <p className="mb-1 text-[14px]"><span className="text-stone-500">Strategy:</span> {bot.strategy}</p>
-              <p className="mb-1 text-[14px]"><span className="text-stone-500">Period:</span> {bot.period}</p>
+              <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.api")}</span> {bot.api}</p>
+              <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.strategy")}</span> {bot.strategy}</p>
+              <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.period")}</span> {bot.period}</p>
               <p className="mb-1 text-[14px]">
-                <span className="text-stone-500">Days:</span> {Array.isArray(bot.days) ? bot.days.join(', ') : 'Undefined'}
+                <span className="text-stone-500">{t("fields.days")}</span> {Array.isArray(bot.days) ? bot.days.join(', ') : t("daysUndefined")}
               </p>
-              <p className="mb-1 text-[14px]"><span className="text-stone-500">Hours:</span> {bot.startTime} - {bot.endTime}</p>
+              <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.hours")}</span> {bot.startTime} - {bot.endTime}</p>
               <p className="mb-1 text-[14px]">
-                <span className="text-stone-500">Status:</span>{' '}
+                <span className="text-stone-500">{t("fields.status")}</span>{' '}
                 <span className={bot.isActive ? 'text-green-400' : 'text-[rgb(216,14,14)]'}>
-                  {bot.isActive ? 'Bot Active' : 'Bot Inactive'}
+                  {bot.isActive ? t("status.active") : t("status.inactive")}
                 </span>
               </p>
             </div>
@@ -217,7 +223,7 @@ export const BotCard = ({ bot, column }) => {
                 <RentedCountdown rent_expires_at={bot?.rent_expires_at} />
               )}
               <h4 className="text-sm font-semibold mb-2 bg-gradient-to-r from-violet-900 via-sky-600 to-purple-500 text-transparent bg-clip-text">
-                Cryptocurrencies
+                {t("fields.cryptocurrencies")}
               </h4>
               <div className="h-44 overflow-y-auto mr-4 scrollbar-hide">
                 {bot.cryptos?.length > 0 ? (
@@ -230,7 +236,7 @@ export const BotCard = ({ bot, column }) => {
                     </div>
                   ))
                 ) : (
-                  <span className="text-[13px] text-gray-500">No selected coins</span>
+                  <span className="text-[13px] text-gray-500">{t("coins.none")}</span>
                 )}
               </div>
             </div>
@@ -309,7 +315,7 @@ export const BotCard = ({ bot, column }) => {
               <RentedCountdown rent_expires_at={bot?.rent_expires_at} />
             )}
             <h4 className="text-sm font-semibold mb-2 bg-gradient-to-r from-violet-900 via-sky-600 to-purple-500 text-transparent bg-clip-text">
-              Cryptocurrencies
+              {t("fields.cryptocurrencies")}
             </h4>
             <div className="h-44 overflow-y-auto mr-4 scrollbar-hide">
               {bot.cryptos?.length > 0 ? (
@@ -319,7 +325,7 @@ export const BotCard = ({ bot, column }) => {
                   </div>
                 ))
               ) : (
-                <span className="text-[13px] text-gray-500">No selected coins</span>
+                <span className="text-[13px] text-gray-500">{t("coins.none")}</span>
               )}
             </div>
           </div>
@@ -334,7 +340,8 @@ export const BotCard = ({ bot, column }) => {
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
                   className="p-2 rounded hover:bg-gray-700"
-                  aria-label="More actions"
+                  aria-label={t("menu.moreActions")}
+                  title={t("menu.moreActions")}
                 >
                   <BsThreeDotsVertical className="text-gray-300" size={18} />
                 </button>
@@ -343,13 +350,13 @@ export const BotCard = ({ bot, column }) => {
                     <button
                       onClick={() => { setEditing(true); setMenuOpen(false); }}
                       className="flex items-center gap-2 w-full px-4 py-2 text-sm text-blue-400 hover:bg-gray-800">
-                      <FiEdit3 size={16} /> Edit
+                      <FiEdit3 size={16} /> {t("menu.edit")}
                     </button>
 
                     <button
                       onClick={() => { setSelectedBotId(bot.id); setDeleteModalOpen(true); setMenuOpen(false); }}
                       className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-800">
-                      <FaRegTrashAlt size={16} /> Delete (Dev)
+                      <FaRegTrashAlt size={16} /> {t("menu.deleteDev")}
                     </button>
 
                     <button
@@ -361,38 +368,38 @@ export const BotCard = ({ bot, column }) => {
                       }}
                       disabled={isBlocked}
                       aria-disabled={isBlocked}
-                      title={isBlocked ? "Examine disabled: missing values or API undefined" : "Examine"}
+                      title={isBlocked ? t("examine.disabledTitle") : t("menu.examine")}
                       className={[
                         "flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-700",
                         isBlocked ? "text-gray-500 cursor-not-allowed pointer-events-none" : "text-yellow-400"
                       ].join(' ')}
                     >
-                      <IoSearch size={16} /> Examine
+                      <IoSearch size={16} /> {t("menu.examine")}
                     </button>
 
                     <button
                       onClick={() => { setSelectedBotId(bot.id); setShotDownModalOpen(true); setMenuOpen(false); }}
                       className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-gray-700"
-                      title="Shuts down the bot and all open trades">
-                      <FaBan size={16} /> Shutdown
+                      title={t("menu.shutdownTitle")}>
+                      <FaBan size={16} /> {t("menu.shutdown")}
                     </button>
                   </div>
                 )}
               </div>
             </div>
 
-            <p className="mb-1 text-[14px]"><span className="text-stone-500">API:</span> {bot.api}</p>
+            <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.api")}</span> {bot.api}</p>
             <p className="mb-1 text-[14px] flex items-center gap-1 max-w-[180px] overflow-hidden whitespace-nowrap">
-              <span className="text-stone-500 shrink-0">Strategy:</span>
+              <span className="text-stone-500 shrink-0">{t("fields.strategy")}</span>
               <span className="truncate">{bot.strategy}</span>
             </p>
-            <p className="mb-1 text-[14px]"><span className="text-stone-500">Period:</span> {bot.period}</p>
-            <p className="mb-1 text-[14px]"><span className="text-stone-500">Days:</span> {Array.isArray(bot.days) ? bot.days.join(', ') : 'Undefined'}</p>
-            <p className="mb-1 text-[14px]"><span className="text-stone-500">Hours:</span> {bot.startTime} - {bot.endTime}</p>
+            <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.period")}</span> {bot.period}</p>
+            <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.days")}</span> {Array.isArray(bot.days) ? bot.days.join(', ') : t("daysUndefined")}</p>
+            <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.hours")}</span> {bot.startTime} - {bot.endTime}</p>
             <p className="mb-1 text-[14px]">
-              <span className="text-stone-500">Status:</span>{' '}
+              <span className="text-stone-500">{t("fields.status")}</span>{' '}
               <span className={bot.isActive ? 'text-green-400' : 'text-[rgb(216,14,14)]'}>
-                {bot.isActive ? 'Bot Active' : 'Bot Inactive'}
+                {bot.isActive ? t("status.active") : t("status.inactive")}
               </span>
             </p>
           </div>

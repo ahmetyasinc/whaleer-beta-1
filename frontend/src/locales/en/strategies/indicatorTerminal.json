@@ -1,0 +1,15 @@
+{
+  "ready": "🌊 Welcome, Terminal is ready...",
+  "placeholder": "Enter command (type 'help' for list)",
+  "commands": {
+    "helpTitle": "Available commands:",
+    "cls": "cls - Clear terminal",
+    "help": "help - List available commands",
+    "time": "time - Show current date and time",
+    "uptime": "uptime - Show how long the page has been open"
+  },
+  "uptimeFormat": "⏱️ Page has been open for: {{seconds}} seconds",
+  "warningSample": "This is a warning message!",
+  "successSample": "This is a success message!",
+  "unknown": "Undefined command: {{cmd}}"
+}

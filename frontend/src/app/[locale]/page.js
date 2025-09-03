@@ -16,7 +16,7 @@ export async function generateMetadata(props) {
   };
 }
 
-export default async function Home(props) {
+export default async function Home() {
   return (
     <main>
       <Header pageClass={0} />

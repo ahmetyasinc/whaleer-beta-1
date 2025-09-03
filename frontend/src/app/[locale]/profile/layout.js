@@ -3,7 +3,8 @@ import ClientLayoutWrapper from "./client-layout-wrapper";
 import { getI18n } from "@/i18n/server";
 
 // ✅ Doğru imza: { params } ile al, await YOK
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+  const params = await props.params;
   const locale = params?.locale ?? "en";
   const i18n = await getI18n(locale);
   return {
@@ -13,7 +14,13 @@ export async function generateMetadata({ params }) {
 }
 
 // ✅ Layout'ı async yapmana gerek yok (yaparsan da params Promise değildir)
-export default function ProfileLayout({ children, params }) {
+export default async function ProfileLayout(props) {
+  const params = await props.params;
+
+  const {
+    children
+  } = props;
+
   const locale = params?.locale ?? "en";
   return <ClientLayoutWrapper locale={locale}>{children}</ClientLayoutWrapper>;
 }

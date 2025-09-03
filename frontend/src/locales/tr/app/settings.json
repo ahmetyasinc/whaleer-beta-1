@@ -1,0 +1,33 @@
+{
+  "title": "Ayarlar",
+  "saving": "Kaydediliyor…",
+  "save": "Kaydet",
+  "reset": "Varsayılanlara dön",
+  "saved": "Kaydedildi",
+  "language": "Dil",
+  "language_hint": "Seçiminiz anında uygulanır ve çereze kaydedilir.",
+  "languages": {
+    "tr": "Türkçe",
+    "en": "English"
+  },
+  "theme": "Tema",
+  "theme_system": "Sistem",
+  "theme_light": "Açık",
+  "theme_dark": "Koyu",
+  "timezone": "Zaman Dilimi",
+  "current_timezone": "Geçerli değer:",
+  "timezone_search": "Bölge ara… (ör. Istanbul, Tokyo, New_York)",
+  "selected": "Seçildi",
+  "no_results": "Sonuç bulunamadı.",
+  "timezone_hint": "Seçiminizde çerezde yalnızca GMT ofset değeri tutulur (örn. GMT+03:00).",
+  "notifications": "Bildirimler",
+  "email_reports": "E-posta raporları",
+  "email_reports_hint": "Haftalık performans raporlarını e-posta ile al.",
+  "on": "Açık",
+  "off": "Kapalı",
+  "loading": "Yükleniyor…",
+  "errors": {
+    "load": "Ayarlar yüklenirken bir sorun oluştu.",
+    "save": "Kaydetme sırasında bir hata oluştu."
+  }
+}

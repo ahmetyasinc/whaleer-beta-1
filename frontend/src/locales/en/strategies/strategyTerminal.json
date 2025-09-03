@@ -1,0 +1,45 @@
+{
+  "ready": "🌊 Welcome, Terminal is ready...",
+  "placeholder": "Enter command (type 'help' for list)",
+  "alerts": {
+    "sessionExpired": "Session expired or invalid token! Please log in again."
+  },
+  "errors": {
+    "requestFailed": "Request failed",
+    "notFoundPrefix": "Indicator not found:"
+  },
+  "load": {
+    "successCount": "✅ {{count}} indicators loaded.",
+    "failed": "❌ Failed to load indicators: {{message}}"
+  },
+  "import": {
+    "enterName": "⚠️ Please enter an indicator name. E.g. import rsi",
+    "already": "⚠️ {{indicator}} is already imported.",
+    "success": "✅ {{indicator}} successfully imported."
+  },
+  "reset": {
+    "specify": "⚠️ Please specify the indicator to delete. E.g. reset RSI",
+    "allDone": "♻️ All imported indicators have been reset.",
+    "removed": "🗑️ {{indicator}} removed from import list.",
+    "notFound": "⚠️ {{indicator}} was not found in the import list."
+  },
+  "help": {
+    "title": "Available commands:",
+    "cls": "cls - Clear the terminal",
+    "help": "help - List commands",
+    "time": "time - Show current time",
+    "uptime": "uptime - Show how long the page has been open",
+    "import": "import <indicator> - Import an indicator",
+    "list": "list imports - List imported indicators",
+    "reset": "reset <indicator|imports> - Remove specific or all indicators"
+  },
+  "uptimeFormat": "⏱️ Page uptime: {{seconds}} seconds",
+  "errorSample": "This is an error message!",
+  "warningSample": "This is a warning message!",
+  "successSample": "This is a success message!",
+  "list": {
+    "none": "📭 No indicators imported yet.",
+    "title": "📦 Imported indicators:"
+  },
+  "unknown": "Unknown command: {{cmd}}"
+}

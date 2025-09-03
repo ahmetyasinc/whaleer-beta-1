@@ -13,6 +13,7 @@ import TerminalIndicator from "./terminalIndicator";
 import axios from "axios";
 import VersionSelect from "./versionSelect";
 import CodeModal from "./fullScreenCodeModal"; // 👈 aynı klasördeyse bu yol doğru
+import { useTranslation } from "react-i18next";
 
 const CodePanel = () => {
   const removeCustomPanel = usePanelStore((s) => s.removeCustomPanel);
@@ -35,6 +36,7 @@ const CodePanel = () => {
   const { addIndicator, deleteIndicator, indicators } = useIndicatorStore();
 
   const [localName, setLocalName] = useState("");
+  0;
   const [localCode, setLocalCode] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const terminalRef = useRef(null);
@@ -42,6 +44,8 @@ const CodePanel = () => {
   // Tam ekran CodeModal durumu
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [codeModalIndicator, setCodeModalIndicator] = useState(null);
+
+  const { t } = useTranslation("indicatorEditor");
 
   useEffect(() => {
     setLocalName(indicatorName);
@@ -108,7 +112,7 @@ const CodePanel = () => {
         setIndicatorCode(newIndicator.code);
       }
     } catch (err) {
-      console.error("Indicator save error:", err);
+      console.error(t("errors.save"), err);
     }
 
     setIsSaving(false);
@@ -123,7 +127,7 @@ const CodePanel = () => {
   const openFullscreenModal = () => {
     setCodeModalIndicator({
       id: selected?.id ?? null,
-      name: (localName ?? "").trim() || "Untitled Indicator",
+      name: (localName ?? "").trim() || t("labels.untitled"),
       code: localCode ?? "",
     });
     setIsCodeModalOpen(true);
@@ -135,7 +139,11 @@ const CodePanel = () => {
     <div className="bg-black text-white rounded-md w-full h-full p-2 shadow-lg relative flex flex-col">
       <div className="flex justify-start drag-handle cursor-grab mt-0 mr-8 h-5">
         <h2 className="flex justify-start drag-handle text-xs font-bold mb-2">
-          {isNewVersion ? "Add New Version" : selected ? "Edit Indicator" : "Add New Indicator"}
+          {isNewVersion
+            ? t("titles.addNewVersion")
+            : selected
+            ? t("titles.editIndicator")
+            : t("titles.addNewIndicator")}
         </h2>
       </div>
 
@@ -143,14 +151,9 @@ const CodePanel = () => {
       {selected && !isNewVersion && (
         <div className="absolute top-10 right-[10px] flex items-center gap-2">
           {/* Tam ekran ikonu — Run'ın SOLUNDA */}
-          <button
-            onClick={openFullscreenModal}
-            className="p-[1px] "
-            title="Tam ekran"
-          >
+          <button onClick={openFullscreenModal} className="p-[1px]" title={t("tooltips.fullscreen")}>
             <MdOpenInFull size={16} />
           </button>
-
         </div>
       )}
       <RunButton indicatorId={selected?.id} onBeforeRun={handleSaveIndicator} />
@@ -158,7 +161,7 @@ const CodePanel = () => {
       {/* Save button */}
       <button
         className="absolute top-2 right-10 gap-1 px-[9px] py-[5px] mr-[6px] bg-[rgb(16,45,100)] hover:bg-[rgb(27,114,121)] rounded text-xs font-medium flex items-center"
-        title="Save"
+        title={t("buttons.save")}
         onClick={handleSaveIndicator}
       >
         {isSaving ? (
@@ -172,7 +175,7 @@ const CodePanel = () => {
       <button
         className="absolute top-2 right-1 gap-1 px-[9px] py-[5px] mr-1 bg-[rgb(100,16,16)] hover:bg-[rgb(189,49,49)] rounded text-sm font-medium"
         onClick={handleClose}
-        title="Close"
+        title={t("buttons.close")}
       >
         <IoMdClose />
       </button>
@@ -182,7 +185,7 @@ const CodePanel = () => {
         <input
           type="text"
           className="w-64 h-[32px] p-2 bg-[#232323] text-white focus:outline-none rounded-sm"
-          placeholder="Indicator name..."
+          placeholder={t("inputs.namePlaceholder")}
           value={localName}
           onChange={(e) => setLocalName(e.target.value)}
           maxLength={40}
@@ -208,7 +211,7 @@ const CodePanel = () => {
       <TerminalIndicator
         {...(selected ? { id: selected.id } : {})}
         ref={terminalRef}
-        initialOutput="🚀 Terminal ready..."
+        initialOutput={t("terminal.ready")}
       />
 
       {/* Tam ekran CodeModal */}

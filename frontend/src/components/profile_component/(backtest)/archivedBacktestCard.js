@@ -3,8 +3,10 @@
 import { FiTrendingUp, FiTrendingDown, FiEye, FiTrash2 } from 'react-icons/fi';
 import useBacktestStore from '@/store/backtest/backtestStore';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function ArchivedBacktestCard({ archivedItem }) {
+  const { t } = useTranslation('backtestArchivedBacktest');
   const { deleteArchivedBacktest, loadArchivedBacktest } = useBacktestStore();
 
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -18,19 +20,10 @@ export default function ArchivedBacktestCard({ archivedItem }) {
   };
 
   const getPeriodLabel = (period) => {
-    const periodLabels = {
-      '1m': '1min',
-      '3m': '3min',
-      '5m': '5min',
-      '15m': '15min',
-      '30m': '30min',
-      '1h': '1h',
-      '2h': '2h',
-      '4h': '4h',
-      '1d': '1d',
-      '1w': '1w'
-    };
-    return periodLabels[period] || period;
+    const key = `periods.${period}`;
+    const label = t(key);
+    // i18next, bulunamazsa anahtarı döndürebilir. O durumda orijinal period'u göster.
+    return label && !label.includes('periods.') ? label : period;
   };
 
   const isProfit = archivedItem.performance.totalPnL > 0;
@@ -42,7 +35,7 @@ export default function ArchivedBacktestCard({ archivedItem }) {
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <span className="text-white font-medium text-sm">
-              {archivedItem.strategy?.name || 'Strategy'}
+              {archivedItem.strategy?.name || t('defaults.strategy')}
             </span>
             <span className="text-xs text-gray-400">•</span>
             <span className="text-yellow-400 text-sm font-medium">
@@ -69,14 +62,18 @@ export default function ArchivedBacktestCard({ archivedItem }) {
       {/* Middle Section - Performance Metrics */}
       <div className="grid grid-cols-2 gap-3 mb-3 text-xs">
         <div className="bg-gray-900 rounded p-2">
-          <div className="text-gray-400 mb-1">Trades</div>
+          <div className="text-gray-400 mb-1">{t('labels.trades')}</div>
           <div className="flex justify-between text-white">
-            <span className="text-green-400">Winning: {archivedItem.performance.winningTrades}</span>
-            <span className="text-red-400">Losing: {archivedItem.performance.losingTrades}</span>
+            <span className="text-green-400">
+              {t('labels.winning')}: {archivedItem.performance.winningTrades}
+            </span>
+            <span className="text-red-400">
+              {t('labels.losing')}: {archivedItem.performance.losingTrades}
+            </span>
           </div>
         </div>
         <div className="bg-gray-900 rounded p-2">
-          <div className="text-gray-400 mb-1">Success Rate</div>
+          <div className="text-gray-400 mb-1">{t('labels.successRate')}</div>
           <div className="text-white font-medium">
             %{archivedItem.performance.winRate.toFixed(1)}
           </div>
@@ -88,13 +85,17 @@ export default function ArchivedBacktestCard({ archivedItem }) {
         <button
           onClick={handleView}
           className=" bg-[rgb(27,150,113)] hover:bg-[rgb(27,150,150)] text-white px-3 py-2 rounded text-xs font-medium flex items-center justify-center gap-1 transition-colors"
+          aria-label={t('buttons.view')}
+          title={t('buttons.view')}
         >
           <FiEye size={18} />
-          View
+          {t('buttons.view')}
         </button>
         <button
           onClick={() => setIsDeleteConfirmOpen(true)}
           className="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded text-xs font-medium flex items-center justify-center transition-colors"
+          aria-label={t('buttons.delete')}
+          title={t('buttons.delete')}
         >
           <FiTrash2 size={16} />
         </button>
@@ -102,14 +103,16 @@ export default function ArchivedBacktestCard({ archivedItem }) {
         {isDeleteConfirmOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-gray-900 p-6 rounded-lg shadow-lg text-white max-w-sm w-full">
-              <h2 className="text-lg font-semibold mb-4">Are you sure you want to delete?</h2>
-              <p className="mb-6 text-sm text-gray-300">This archive will be permanently deleted and cannot be undone.</p>
+              <h2 className="text-lg font-semibold mb-4">{t('modal.title')}</h2>
+              <p className="mb-6 text-sm text-gray-300">{t('modal.desc')}</p>
               <div className="flex justify-end gap-4">
                 <button
                   onClick={() => setIsDeleteConfirmOpen(false)}
                   className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm"
+                  aria-label={t('buttons.cancel')}
+                  title={t('buttons.cancel')}
                 >
-                  Cancel
+                  {t('buttons.cancel')}
                 </button>
                 <button
                   onClick={() => {
@@ -117,8 +120,10 @@ export default function ArchivedBacktestCard({ archivedItem }) {
                     setIsDeleteConfirmOpen(false);
                   }}
                   className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded text-sm"
+                  aria-label={t('buttons.confirmDelete')}
+                  title={t('buttons.confirmDelete')}
                 >
-                  Yes, Delete
+                  {t('buttons.confirmDelete')}
                 </button>
               </div>
             </div>

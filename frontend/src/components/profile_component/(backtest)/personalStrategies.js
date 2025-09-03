@@ -3,8 +3,10 @@
 import { useMemo, useState } from "react";
 import useStrategyStore from "@/store/indicator/strategyStore";
 import { IoMdStar, IoIosStarOutline } from "react-icons/io";
+import { useTranslation } from "react-i18next";
 
 const PersonalStrategies = ({ onSelect }) => {
+  const { t } = useTranslation("backtestPersonalStrategies");
   const { favorites, strategies } = useStrategyStore();
 
   // 1) Gruplama: parent_strategy_id || id
@@ -76,7 +78,8 @@ const PersonalStrategies = ({ onSelect }) => {
                           [groupId]: Number(e.target.value),
                         }))
                       }
-                      title="Select version"
+                      title={t("versionSelect")}
+                      aria-label={t("versionSelect")}
                     >
                       {versions.map((v) => (
                         <option key={v.id} value={v.id}>
@@ -92,8 +95,10 @@ const PersonalStrategies = ({ onSelect }) => {
                   <button
                     className="bg-blue-600 px-2 rounded-md py-[1px] h-[26px] mr-3 hover:bg-blue-800 text-white text-xs"
                     onClick={() => onSelect?.(selected)}
+                    title={t("choose")}
+                    aria-label={t("choose")}
                   >
-                    Choose
+                    {t("choose")}
                   </button>
                 </div>
               </div>

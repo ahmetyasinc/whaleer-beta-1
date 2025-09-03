@@ -1,0 +1,17 @@
+{
+  "actions": {
+    "favorite": "Favori",
+    "edit": "Düzenle / Aç",
+    "delete": "Sil",
+    "new": "Yeni İndikatör"
+  },
+  "error": {
+    "compile": "Derleme Hatası !"
+  },
+  "deleteModal": {
+    "title": "Silme Onayı",
+    "confirm": "{{name}} indikatörünü silmek istediğinize emin misiniz?",
+    "no": "Hayır",
+    "yes": "Sil"
+  }
+}

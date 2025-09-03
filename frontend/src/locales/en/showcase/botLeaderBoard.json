@@ -1,0 +1,21 @@
+{
+  "title": "Bot Leaderboard",
+  "sort": {
+    "byProfit": "By Profit",
+    "bySuccessRate": "By Success Rate",
+    "byProfitFactor": "By Profit Factor",
+    "byWeeklyTrades": "By Weekly Trades",
+    "byPrice": "By Price"
+  },
+  "sortOrder": {
+    "desc": "Descending",
+    "asc": "Ascending"
+  },
+  "cards": {
+    "profit": "Profit",
+    "success": "Success",
+    "profitFactor": "Profit Factor",
+    "weeklyTrades": "Weekly Trades",
+    "price": "Price"
+  }
+}

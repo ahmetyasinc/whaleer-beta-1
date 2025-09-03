@@ -1,0 +1,37 @@
+{
+  "header": {
+    "totalProfit": "Total Profit",
+    "totalValue": "Total Value"
+  },
+  "charts": {
+    "pnlTitle": "Profit / Loss Chart (%)"
+  },
+  "trades": {
+    "empty": "No trades found.",
+    "columns": {
+      "hash": "#",
+      "date": "Date",
+      "symbol": "Symbol",
+      "price": "Price",
+      "side": "Side",
+      "type": "Type",
+      "position": "Position",
+      "leverage": "Leverage",
+      "quantity": "Quantity",
+      "amount": "Amount",
+      "fee": "Fee"
+    }
+  },
+  "positions": {
+    "title": "Open Positions",
+    "empty": "No positions found.",
+    "amount": "Amount",
+    "profit": "Profit"
+  },
+  "holdings": {
+    "title": "Spot Holdings",
+    "empty": "No spot holdings found.",
+    "amount": "Amount",
+    "profit": "Profit"
+  }
+}

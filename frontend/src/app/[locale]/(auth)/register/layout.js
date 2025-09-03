@@ -2,7 +2,8 @@
 import { getI18n } from "@/i18n/server";
 
 // Her locale için sayfa başlığı + açıklama
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+  const params = await props.params;
   const locale = params?.locale || "en";
   const i18n = await getI18n(locale);
   return {

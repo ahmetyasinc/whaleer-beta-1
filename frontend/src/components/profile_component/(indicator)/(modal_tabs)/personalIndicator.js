@@ -10,10 +10,13 @@ import useIndicatorStore from "@/store/indicator/indicatorStore";
 import useCodePanelStore from "@/store/indicator/indicatorCodePanelStore";
 import useIndicatorDataStore from "@/store/indicator/indicatorDataStore";
 import { RiErrorWarningFill } from "react-icons/ri";
+import { useTranslation } from "react-i18next";
 
 axios.defaults.withCredentials = true;
 
 export default function PersonalIndicators() {
+  const { t } = useTranslation("personalIndicators");
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [toDelete, setToDelete] = useState(null);
 
@@ -28,19 +31,16 @@ export default function PersonalIndicators() {
       if (!map.has(groupId)) map.set(groupId, []);
       map.get(groupId).push(ind);
     }
-    // her grubun versiyonlarını küçükten büyüğe sırala
     for (const [g, list] of map.entries()) {
       list.sort((a, b) => (a.version || 1) - (b.version || 1));
       map.set(g, list);
     }
-    return map; // Map<groupId, Indicator[]>
+    return map;
   }, [indicators]);
 
-  // Hangi grupta hangi versiyonun seçili olduğunu tut
-  const [selectedByGroup, setSelectedByGroup] = useState({}); // { [groupId]: versionId }
+  const [selectedByGroup, setSelectedByGroup] = useState({});
 
   const ensureSelected = (groupId, versions) => {
-    // yoksa default: en büyük versiyon
     const current = selectedByGroup[groupId];
     if (current && versions.some(v => v.id === current)) return current;
     const last = versions[versions.length - 1];
@@ -96,24 +96,20 @@ export default function PersonalIndicators() {
             const selectedId = ensureSelected(groupId, versions);
             const selected = versions.find(v => v.id === selectedId) || versions[versions.length - 1];
 
-            // error badge (son çalıştırma)
             const subItems = indicatorData?.[selected.id]?.subItems;
             const lastSub = subItems && Object.values(subItems)[Object.values(subItems).length - 1];
             const hasError = lastSub?.result?.status === "error";
-            const errorMessage = lastSub?.result?.message || "Derleme Hatası !";
+            const errorMessage = lastSub?.result?.message || t("error.compile");
 
-            // Dropdown için label: varsayılan görünürde SON versiyonun adı
             const displayName = selected?.name;
 
             return (
               <div key={groupId} className="bg-gray-900 hover:bg-gray-800 flex items-center justify-between w-full h-[40px] mb-2">
-                {/* left */}
                 <div className="flex items-center pl-2 gap-2">
-                  {/* favori sadece SEÇİLİ versiyon için */}
                   <button
                     className="bg-transparent p-2 rounded-md hover:bg-gray-800"
                     onClick={() => handleToggleFavorite(selected)}
-                    title="Favori"
+                    title={t("actions.favorite")}
                   >
                     {favorites.some((fav) => fav.id === selected.id) ? (
                       <IoMdStar className="text-lg text-yellow-500" />
@@ -122,7 +118,6 @@ export default function PersonalIndicators() {
                     )}
                   </button>
 
-                  {/* İsim + Versiyon seçici */}
                   <span className="text-[15px]">{displayName}</span>
 
                   {versions.length > 1 && (
@@ -150,31 +145,27 @@ export default function PersonalIndicators() {
                   )}
                 </div>
 
-                {/* right */}
                 <div className="flex items-center gap-2">
-                  {/* AddIndicatorButton SEÇİLİ versiyona gider */}
                   <AddIndicatorButton indicatorId={selected.id} />
 
-                  {/* Aç (panel) → TÜM versiyonları ve grupId’yi gönder */}
                   <button
                     className="bg-transparent p-2 rounded-md hover:bg-gray-800"
                     onClick={() =>
                       openPanel({
                         groupId,
-                        versions,                 // tüm versiyon objeleri
+                        versions,
                         initialSelectedId: selected.id,
                       })
                     }
-                    title="Düzenle / Aç"
+                    title={t("actions.edit")}
                   >
                     <SiRobinhood className="text-blue-400 hover:text-blue-700 text-lg cursor-pointer" />
                   </button>
 
-                  {/* Silme sadece SEÇİLİ versiyonda */}
                   <button
                     className="bg-transparent pr-4 pl-2 rounded-md hover:bg-gray-800"
                     onClick={() => askDelete(selected)}
-                    title="Sil"
+                    title={t("actions.delete")}
                   >
                     <HiOutlineTrash className="text-red-700 hover:text-red-900 text-[19.5px] cursor-pointer" />
                   </button>
@@ -185,27 +176,31 @@ export default function PersonalIndicators() {
         )}
       </div>
 
-      {/* + yeni indikatör */}
       <button
         className="mt-1 p-3 bg-green-500 hover:bg-green-600 text-white rounded-sm flex items-center justify-center h-3 w-16"
         onClick={() => openPanel({ groupId: null, versions: [], initialSelectedId: null })}
-        title="Yeni indikatör"
+        title={t("actions.new")}
       >
         <IoMdAdd className="text-lg" />
       </button>
 
-      {/* Silme Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/10">
           <div className="bg-gray-900 text-white rounded-md w-[400px] p-6 shadow-lg relative">
-            <h2 className="text-lg font-bold mb-4">Silme Onayı</h2>
-            <p>{toDelete?.name} indikatörünü silmek istediğinize emin misiniz?</p>
+            <h2 className="text-lg font-bold mb-4">{t("deleteModal.title")}</h2>
+            <p>{t("deleteModal.confirm", { name: toDelete?.name })}</p>
             <div className="flex justify-end mt-4 gap-2">
-              <button className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded" onClick={() => { setShowDeleteModal(false); setToDelete(null); }}>
-                Hayır
+              <button
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded"
+                onClick={() => { setShowDeleteModal(false); setToDelete(null); }}
+              >
+                {t("deleteModal.no")}
               </button>
-              <button className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded" onClick={confirmDelete}>
-                Sil
+              <button
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded"
+                onClick={confirmDelete}
+              >
+                {t("deleteModal.yes")}
               </button>
             </div>
           </div>

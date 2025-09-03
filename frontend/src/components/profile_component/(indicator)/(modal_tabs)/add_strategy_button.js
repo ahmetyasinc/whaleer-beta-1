@@ -7,6 +7,7 @@ import axios from "axios";
 
 import { IoDownloadOutline } from "react-icons/io5";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { useTranslation } from "react-i18next";
 
 axios.defaults.withCredentials = true;
 
@@ -16,10 +17,12 @@ const AddStrategyButton = ({ strategyId }) => {
   const { insertStrategyData } = useStrategyDataStore();
   const [isLoading, setIsLoading] = useState(false);
 
+  const { t } = useTranslation("addStrategyButton"); // ✅ yeni namespace
+
   const fetchStrategyData = useCallback(async () => {
     try {
       if (!selectedCrypto?.binance_symbol || !selectedPeriod || !strategyId) {
-        console.warn("Eksik veri ile API çağrısı engellendi.");
+        console.warn(t("warnings.missingData"));
         return;
       }
 
@@ -51,15 +54,14 @@ const AddStrategyButton = ({ strategyId }) => {
         strategy_graph,
         prints,
         inputs,
-        { status, message } // ✅ error/success meta bilgisi eklendi
+        { status, message }
       );
-
     } catch (error) {
-      console.error("Strategy verisi çekilirken hata oluştu:", error);
+      console.error(t("errors.fetch"), error);
 
       insertStrategyData(
         strategyId,
-        "Hata",
+        t("errors.title"),
         {},
         [],
         [],
@@ -67,7 +69,7 @@ const AddStrategyButton = ({ strategyId }) => {
         { status: "error", message: error.message }
       );
     }
-  }, [strategyId, selectedCrypto, selectedPeriod, end, insertStrategyData]);
+  }, [strategyId, selectedCrypto, selectedPeriod, end, insertStrategyData, t]);
 
   const handleClick = async () => {
     setIsLoading(true);
@@ -81,7 +83,7 @@ const AddStrategyButton = ({ strategyId }) => {
     <button
       onClick={handleClick}
       className="p-1 rounded transition-all"
-      title={"Ekle"}
+      title={t("buttons.add")}
     >
       {isLoading ? (
         <AiOutlineLoading3Quarters className="animate-spin text-yellow-400 text-lg" />

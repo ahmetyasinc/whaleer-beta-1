@@ -8,8 +8,12 @@ import { IoSearch } from "react-icons/io5";
 import { FaEye } from "react-icons/fa";
 import useBotExamineStore from "@/store/bot/botExamineStore";
 import ExamineBot from "@/components/profile_component/(bot)/examineBot";
+import { useTranslation } from "react-i18next";
 
 export default function ModernBotList({ bots = [] }) {
+  const { t, i18n } = useTranslation("botsList");
+  const locale = i18n.language || "en";
+
   const { fetchAndStoreBotAnalysis } = useBotExamineStore();
   const [menuOpen, setMenuOpen] = useState(null);
   const menuRef = useRef(null);
@@ -28,8 +32,8 @@ export default function ModernBotList({ bots = [] }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // UI’da kullanacağımız listeyi stabilize et (gereksiz re-render engeli)
-  const list = useMemo(() => Array.isArray(bots) ? bots : [], [bots]);
+  // UI’da kullanacağımız listeyi stabilize et
+  const list = useMemo(() => (Array.isArray(bots) ? bots : []), [bots]);
 
   const handlePreviewBot = (botId) => {
     setMenuOpen(null);
@@ -38,7 +42,6 @@ export default function ModernBotList({ bots = [] }) {
   const handleExamineBot = async (botId) => {
     try {
       setExamineLoadingId(botId);
-      // Analiz verisini sadece burada çekiyoruz
       await fetchAndStoreBotAnalysis(botId);
       setSelectedBotId(botId);
       setIsExamineOpen(true);
@@ -51,7 +54,11 @@ export default function ModernBotList({ bots = [] }) {
   };
 
   const formatUsd = (v) =>
-    `$${Number(v || 0).toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+    new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 2,
+    }).format(Number(v || 0));
 
   const formatPercent = (v) =>
     `${Number(v || 0) >= 0 ? "" : "-"}${Math.abs(Number(v || 0)).toFixed(2)}%`;
@@ -62,7 +69,7 @@ export default function ModernBotList({ bots = [] }) {
       <div className="mb-8 border-b border-gray-700 pb-2">
         <div className="flex items-center gap-3 mb-2">
           <h1 className="text-xl font-bold bg-gradient-to-r from-white to-gray-100 bg-clip-text text-transparent">
-            My Bots
+            {t("title")}
           </h1>
         </div>
       </div>
@@ -104,7 +111,7 @@ export default function ModernBotList({ bots = [] }) {
                             {bot.name}
                           </h3>
                           <p className={`text-xs ${isActive ? "text-emerald-400" : "text-red-400"} font-medium`}>
-                            {isActive ? "Active" : "Inactive"}
+                            {isActive ? t("status.active") : t("status.inactive")}
                           </p>
                         </div>
                       </div>
@@ -115,7 +122,7 @@ export default function ModernBotList({ bots = [] }) {
                         <div className="text-right">
                           <div className="flex items-center gap-1.5 mb-1">
                             <FaDollarSign className="w-3.5 h-3.5 text-blue-400" />
-                            <span className="text-xs text-gray-400">Current Value</span>
+                            <span className="text-xs text-gray-400">{t("fields.currentValue")}</span>
                           </div>
                           <span className="text-sm font-bold text-blue-400">
                             {formatUsd(currentValue)}
@@ -126,7 +133,7 @@ export default function ModernBotList({ bots = [] }) {
                         <div className="text-right">
                           <div className="flex items-center gap-1.5 mb-1">
                             <FaChartLine className="w-3.5 h-3.5 text-emerald-400" />
-                            <span className="text-xs text-gray-400">Margin</span>
+                            <span className="text-xs text-gray-400">{t("fields.margin")}</span>
                           </div>
                           <span className={`text-sm font-bold ${Number(totalPnl) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                             {formatPercent(marginPct)}
@@ -137,7 +144,7 @@ export default function ModernBotList({ bots = [] }) {
                         <div className="text-right">
                           <div className="flex items-center gap-1.5 mb-1">
                             <FaDollarSign className="w-3.5 h-3.5 text-purple-400" />
-                            <span className="text-xs text-gray-400">Total P&L</span>
+                            <span className="text-xs text-gray-400">{t("fields.totalPl")}</span>
                           </div>
                           <span className={`text-sm font-bold ${Number(totalPnl) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                             {`${Number(totalPnl) >= 0 ? "+" : ""}${formatUsd(totalPnl).replace("$", "")}`}
@@ -161,13 +168,13 @@ export default function ModernBotList({ bots = [] }) {
                                 disabled={examineLoadingId === bot.id}
                               >
                                 <IoSearch size={16} />
-                                {examineLoadingId === bot.id ? "Loading..." : "Examine"}
+                                {examineLoadingId === bot.id ? t("menu.loading") : t("menu.examine")}
                               </button>
                               <button
                                 onClick={() => handlePreviewBot(bot.id)}
                                 className="flex items-center gap-2 w-full px-4 py-2 text-sm text-violet-400 hover:bg-stone-800 rounded-b-lg transition-colors duration-200"
                               >
-                                <FaEye size={16} /> Preview
+                                <FaEye size={16} /> {t("menu.preview")}
                               </button>
                             </div>
                           )}
@@ -185,9 +192,9 @@ export default function ModernBotList({ bots = [] }) {
               <div className="p-6 bg-slate-800/30 rounded-full mb-4">
                 <FaRobot className="w-12 h-12 text-gray-500" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-300 mb-2">No Bots Yet</h3>
+              <h3 className="text-xl font-semibold text-gray-300 mb-2">{t("empty.title")}</h3>
               <p className="text-gray-500 max-w-sm">
-                To create your trading bot, go to the automated bots page and click the "Add New Bot" button.
+                {t("empty.desc")}
               </p>
             </div>
           )}

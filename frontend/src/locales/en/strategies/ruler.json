@@ -1,0 +1,15 @@
+{
+  "title": "Ruler",
+  "titleLive": "Ruler (live)",
+  "fields": {
+    "start": "Start",
+    "end": "End",
+    "change": "Change",
+    "duration": "Duration"
+  },
+  "units": {
+    "h": "h",
+    "m": "m",
+    "s": "s"
+  }
+}

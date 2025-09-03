@@ -1,0 +1,22 @@
+{
+  "buttons": {
+    "sellRent": "Sat / Kirala",
+    "allListings": "Tüm İlanlar",
+    "myListings": "Benim İlanlarım",
+    "installPhantom": "Phantom Yükle",
+    "connectWallet": "Cüzdanı Bağla",
+    "connecting": "Bağlanıyor...",
+    "signOut": "Çıkış Yap"
+  },
+  "titles": {
+    "allListings": "Tüm ilanları göster",
+    "myListings": "Sadece benim ilanlarımı göster"
+  },
+  "nav": {
+    "explore": "Keşfet",
+    "featured": "Öne Çıkanlar"
+  },
+  "labels": {
+    "connected": "Bağlı"
+  }
+}

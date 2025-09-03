@@ -12,6 +12,7 @@ import { toast } from "react-toastify";
 import { createPurchaseIntent, confirmPayment } from "@/api/payments";
 import { acquireBot } from "@/api/bots";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 const API = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
 const RPC_URL = "https://api.mainnet-beta.solana.com";
@@ -47,6 +48,8 @@ async function fetchSolUsdtPrice(signal) {
 }
 
 export default function BuyModal({ botId, onClose }) {
+  const { t } = useTranslation("buyModal");
+
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState(null);
@@ -73,17 +76,17 @@ export default function BuyModal({ botId, onClose }) {
           { params: { action: "buy" }, withCredentials: true }
         );
         const data = res?.data;
-        if (typeof data === "string") throw new Error("Non-JSON response received from server.");
+        if (typeof data === "string") throw new Error(t("errors.nonJson"));
         if (data?.detail) throw new Error(data.detail);
         if (alive) setSummary(data);
       } catch (e) {
-        if (alive) setError(e?.response?.data?.detail || "Failed to preparation.");
+        if (alive) setError(e?.response?.data?.detail || t("errors.prepareFailed"));
       } finally {
         if (alive) setLoading(false);
       }
     })();
     return () => { alive = false; };
-  }, [botId]);
+  }, [botId, t]);
 
   // SOL/USDT periyodik fiyat
   useEffect(() => {
@@ -109,15 +112,15 @@ export default function BuyModal({ botId, onClose }) {
     setError(null);
 
     if (!connected || !publicKey) {
-      setError("Please connect your wallet.");
+      setError(t("errors.connectWallet"));
       return;
     }
     if (!summary?.revenue_wallet || !(usd > 0)) {
-      setError("Invalid checkout data.");
+      setError(t("errors.invalidCheckout"));
       return;
     }
 
-    const toastId = toast.loading("Preparing payment...");
+    const toastId = toast.loading(t("toasts.preparing"));
     setSubmitting(true);
     try {
       // 1) Intent
@@ -126,24 +129,24 @@ export default function BuyModal({ botId, onClose }) {
         seller_wallet: summary.revenue_wallet,
         price_usd: Number(usd)
       });
-      if (!intent?.message_b64 || !intent?.intent_id) throw new Error("Invalid intent from server.");
+      if (!intent?.message_b64 || !intent?.intent_id) throw new Error(t("errors.invalidIntent"));
 
       // 2) Wallet işlemi
       const msgBytes = b64ToUint8Array(intent.message_b64);
       const message = VersionedMessage.deserialize(msgBytes);
       const tx = new VersionedTransaction(message);
 
-      toast.update(toastId, { render: "Sign the transaction in your wallet...", isLoading: true });
+      toast.update(toastId, { render: t("toasts.signWallet"), isLoading: true });
       const connection = new Connection(RPC_URL, "confirmed");
       const signature = await sendTransaction(tx, connection, { skipPreflight: false });
 
       // 3) Sunucu onayı
-      toast.update(toastId, { render: "Confirming on-chain payment...", isLoading: true });
+      toast.update(toastId, { render: t("toasts.confirmOnchain"), isLoading: true });
       const confirmation = await confirmPayment(intent.intent_id, signature);
-      if (!confirmation?.ok) throw new Error("Payment could not be confirmed.");
+      if (!confirmation?.ok) throw new Error(t("errors.notConfirmed"));
 
       // 4) Lisansı/kopyayı oluştur
-      toast.update(toastId, { render: "Activating your license...", isLoading: true });
+      toast.update(toastId, { render: t("toasts.activatingLicense"), isLoading: true });
       await acquireBot(botId, {
         action: "buy",
         price_paid: Number(usd),
@@ -154,7 +157,7 @@ export default function BuyModal({ botId, onClose }) {
       setShowSuccessAnim(true);
       toast.dismiss(toastId);
 
-      // 1 saniye sonra modalı kapat + yönlendir
+      // 1.2 sn sonra modalı kapat + yönlendir
       setTimeout(() => {
         setShowSuccessAnim(false);
         onClose?.();
@@ -163,36 +166,41 @@ export default function BuyModal({ botId, onClose }) {
 
     } catch (e) {
       console.error(e);
-      toast.update(toastId, { render: e?.response?.data?.detail || e?.message || "Operation failed.", type: "error", isLoading: false, autoClose: 3000 });
-      setError(e?.response?.data?.detail || e?.message || "Operation failed.");
+      toast.update(toastId, {
+        render: e?.response?.data?.detail || e?.message || t("errors.operationFailed"),
+        type: "error",
+        isLoading: false,
+        autoClose: 3000
+      });
+      setError(e?.response?.data?.detail || e?.message || t("errors.operationFailed"));
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <ModalFrame title="Confirm Purchase" onClose={onClose}>
+    <ModalFrame title={t("title")} onClose={onClose}>
       {loading && <SkeletonLines />}
       {!loading && error && <ErrorBar message={error} />}
       {!loading && !error && summary && (
         <div className="space-y-4 relative">
-          <InfoRow label="Action" value="Buy" />
-          <InfoRow label="Bot Name" value={summary.bot_name} />
-          <InfoRow label="Seller Name" value={summary.owner_username} />
-          <InfoRow label="Price (USD)" value={usd !== null ? `${usd.toFixed(2)} $` : "-"} />
-          {sol !== null && <InfoRow label="Approx. Price (SOL)" value={`${sol.toFixed(4)} SOL`} />}
-          <InfoRow label="Revenue Wallet" value={summary.revenue_wallet} mono />
+          <InfoRow label={t("rows.action")} value={t("actionNames.buy")} />
+          <InfoRow label={t("rows.botName")} value={summary.bot_name} />
+          <InfoRow label={t("rows.sellerName")} value={summary.owner_username} />
+          <InfoRow label={t("rows.priceUsd")} value={usd !== null ? `${usd.toFixed(2)} $` : "-"} />
+          {sol !== null && <InfoRow label={t("rows.approxSol")} value={`${sol.toFixed(4)} SOL`} />}
+          <InfoRow label={t("rows.revenueWallet")} value={summary.revenue_wallet} mono />
 
           <div className="mt-6 flex gap-2">
             <button className="px-4 py-2 rounded-lg bg-gray-700 text-gray-100 hover:bg-gray-600" onClick={onClose}>
-              Cancel
+              {t("buttons.cancel")}
             </button>
             <button
               className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-500 disabled:opacity-60"
               onClick={handleContinue}
               disabled={submitting}
             >
-              {submitting ? "Processing..." : "Continue"}
+              {submitting ? t("buttons.processing") : t("buttons.continue")}
             </button>
           </div>
 

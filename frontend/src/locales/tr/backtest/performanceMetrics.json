@@ -1,0 +1,28 @@
+{
+  "titles": {
+    "performanceMetrics": "Performans Metrikleri"
+  },
+  "labels": {
+    "returnRate": "Getiri Oranı",
+    "totalPnL": "Toplam Kâr/Zarar",
+    "buyHoldReturn": "Al-Tut Getirisi",
+    "totalTrades": "Toplam İşlem",
+    "winningTrades": "Kazanan İşlemler",
+    "losingTrades": "Kaybeden İşlemler",
+    "initialBalance": "Başlangıç Bakiyesi",
+    "finalBalance": "Bitiş Bakiyesi",
+    "winRate": "Kazanma Oranı",
+    "sharpeRatio": "Sharpe Oranı",
+    "sortinoRatio": "Sortino Oranı",
+    "profitFactor": "Kârlılık Faktörü",
+    "maxDrawdown": "Maksimum Düşüş",
+    "mostProfitableTrade": "En Kârlı İşlem",
+    "mostLosingTrade": "En Zararlı İşlem",
+    "tradeDurationRatio": "İşlem Süresi Oranı",
+    "commissionCost": "Komisyon Maliyeti",
+    "tradeVolume": "İşlem Hacmi"
+  },
+  "values": {
+    "na": "Yok"
+  }
+}

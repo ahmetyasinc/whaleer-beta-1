@@ -1,0 +1,30 @@
+{
+  "titles": {
+    "addNewVersion": "Yeni Sürüm Ekle",
+    "editIndicator": "İndikatörü Düzenle",
+    "addNewIndicator": "Yeni İndikatör Ekle"
+  },
+  "buttons": {
+    "save": "Kaydet",
+    "close": "Kapat"
+  },
+  "tooltips": {
+    "fullscreen": "Tam ekran"
+  },
+  "inputs": {
+    "namePlaceholder": "İndikatör adı..."
+  },
+  "terminal": {
+    "ready": "🚀 Terminal hazır..."
+  },
+  "labels": {
+    "untitled": "Adsız İndikatör"
+  },
+  "errors": {
+    "save": "İndikatör kaydedilirken hata"
+  },
+  "versionSelect": {
+    "title": "Sürüm seç",
+    "new": "Yeni"
+  }
+}

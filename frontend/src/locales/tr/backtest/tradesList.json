@@ -1,0 +1,26 @@
+{
+  "titles": {
+    "tradeHistory": "İşlem Geçmişi"
+  },
+  "headers": {
+    "totalTrades": "Toplam {{count}} işlem"
+  },
+  "table": {
+    "date": "Tarih",
+    "type": "Tür",
+    "leverage": "Kaldıraç",
+    "usedPct": "Kullanılan %",
+    "amount": "Miktar",
+    "value": "Tutar",
+    "commission": "Komisyon",
+    "plDollar": "K/Z ($)",
+    "plPercent": "K/Z (%)",
+    "priceClose": "Fiyat (Kapanış)"
+  },
+  "types": {
+    "longOpen": "LONG AÇ",
+    "longClose": "LONG KAPAT",
+    "shortOpen": "SHORT AÇ",
+    "shortClose": "SHORT KAPAT"
+  }
+}

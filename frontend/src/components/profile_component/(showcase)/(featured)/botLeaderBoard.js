@@ -11,13 +11,15 @@ import {
   FiArrowUp,
   FiArrowDown
 } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 
 const BotLeaderBoard = () => {
+  const { t } = useTranslation('botLeaderBoard');
+
   const [sortBy, setSortBy] = useState('profit');
   const [sortOrder, setSortOrder] = useState('desc');
   const [setBots] = useState([]);
   const [loading, setLoading] = useState(true);
-
 
   const bots = [
     { id: 1, name: 'Bitcoin Master', creator: 'Ali Kaan Özdemir', profit: 12, successRate: 78, profitFactor: 1.45, weeklyTrades: 32, price: 299 },
@@ -51,8 +53,6 @@ const BotLeaderBoard = () => {
     { id: 29, name: 'VelocityX', creator: 'Eren Bulut', profit: 110, successRate: 83, profitFactor: 1.72, weeklyTrades: 39, price: 325 },
     { id: 30, name: 'GridManager', creator: 'Fatma Uçar', profit: 77, successRate: 79, profitFactor: 1.4, weeklyTrades: 27, price: 199 }
   ];
-  
-
 
   useEffect(() => {
     const fetchBots = async () => {
@@ -68,20 +68,20 @@ const BotLeaderBoard = () => {
       }
     };
 
-    //fetchBots();
+    // fetchBots(); // mevcut davranış korunuyor (yorumlu)
   }, [sortBy, sortOrder]);
 
   const sortOptions = [
-    { value: 'profit', label: 'By Profit', icon: FiTrendingUp },
-    { value: 'successRate', label: 'By Success Rate', icon: FiAward },
-    { value: 'profitFactor', label: 'By Profit Factor', icon: FiZap },
-    { value: 'weeklyTrades', label: 'By Weekly Trades', icon: FiActivity },
-    { value: 'price', label: 'By Price', icon: FiDollarSign }
+    { value: 'profit', label: t('sort.byProfit'), icon: FiTrendingUp },
+    { value: 'successRate', label: t('sort.bySuccessRate'), icon: FiAward },
+    { value: 'profitFactor', label: t('sort.byProfitFactor'), icon: FiZap },
+    { value: 'weeklyTrades', label: t('sort.byWeeklyTrades'), icon: FiActivity },
+    { value: 'price', label: t('sort.byPrice'), icon: FiDollarSign }
   ];
 
   const sortOrderOptions = [
-    { value: 'desc', label: 'Descending', icon: FiArrowDown },
-    { value: 'asc', label: 'Ascending', icon: FiArrowUp }
+    { value: 'desc', label: t('sortOrder.desc'), icon: FiArrowDown },
+    { value: 'asc', label: t('sortOrder.asc'), icon: FiArrowUp }
   ];
 
   const sortedBots = [...bots].sort((a, b) => {
@@ -120,7 +120,7 @@ const BotLeaderBoard = () => {
     <div className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-xl shadow-2xl p-6 h-[calc(100vh-140px)] border border-slate-800 overflow-hidden">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-          Bot Leaderboard
+          {t('title')}
         </h2>
         <div className="flex items-center space-x-3">
           {/* Sort By Dropdown */}
@@ -182,23 +182,23 @@ const BotLeaderBoard = () => {
               <div className="flex items-center space-x-8 text-sm">
                 <div className="text-center">
                   <div className="font-bold text-green-400 text-base">{formatValue(bot.profit, 'profit')}</div>
-                  <div className="text-xs text-slate-400">Profit</div>
+                  <div className="text-xs text-slate-400">{t('cards.profit')}</div>
                 </div>
                 <div className="text-center">
                   <div className="font-bold text-blue-400 text-base">{formatValue(bot.successRate, 'successRate')}</div>
-                  <div className="text-xs text-slate-400">Success</div>
+                  <div className="text-xs text-slate-400">{t('cards.success')}</div>
                 </div>
                 <div className="text-center">
                   <div className="font-bold text-purple-400 text-base">{formatValue(bot.profitFactor, 'profitFactor')}</div>
-                  <div className="text-xs text-slate-400">Profit Factor</div>
+                  <div className="text-xs text-slate-400">{t('cards.profitFactor')}</div>
                 </div>
                 <div className="text-center">
                   <div className="font-bold text-cyan-400 text-base">{formatValue(bot.weeklyTrades, 'weeklyTrades')}</div>
-                  <div className="text-xs text-slate-400">Weekly Trades</div>
+                  <div className="text-xs text-slate-400">{t('cards.weeklyTrades')}</div>
                 </div>
                 <div className="text-center">
                   <div className="font-bold text-yellow-400 text-base">{formatValue(bot.price, 'price')}</div>
-                  <div className="text-xs text-slate-400">Price</div>
+                  <div className="text-xs text-slate-400">{t('cards.price')}</div>
                 </div>
               </div>
             </div>

@@ -1,0 +1,37 @@
+{
+  "title": "Kiralamayı Onayla",
+  "rows": {
+    "action": "İşlem",
+    "botName": "Bot Adı",
+    "owner": "Sahibi",
+    "durationTitle": "Kiralama Süresi (gün)",
+    "minDaysHint": "(min {{minDays}} gün)",
+    "dailyUsd": "Günlük Fiyat (USD)",
+    "totalUsd": "Toplam Fiyat (USD)",
+    "totalSol": "Tahmini Toplam (SOL)",
+    "revenueWallet": "Gelir Cüzdanı"
+  },
+  "actionNames": {
+    "rent": "Kirala"
+  },
+  "buttons": {
+    "cancel": "İptal",
+    "continue": "Devam Et",
+    "processing": "İşleniyor..."
+  },
+  "toasts": {
+    "preparing": "Ödeme hazırlanıyor...",
+    "signWallet": "Lütfen cüzdanınızda işlemi imzalayın...",
+    "confirmOnchain": "Zincir üzerindeki ödeme doğrulanıyor...",
+    "activatingRental": "Kiralamanız etkinleştiriliyor..."
+  },
+  "errors": {
+    "connectWallet": "Lütfen cüzdanınızı bağlayın.",
+    "invalidCheckout": "Geçersiz ödeme verisi.",
+    "nonJson": "Sunucudan JSON olmayan yanıt alındı.",
+    "prepareFailed": "Hazırlık başarısız.",
+    "invalidIntent": "Sunucudan geçersiz intent döndü.",
+    "notConfirmed": "Ödeme doğrulanamadı.",
+    "operationFailed": "İşlem başarısız."
+  }
+}

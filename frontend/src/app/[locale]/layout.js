@@ -15,7 +15,8 @@ const mainFont = Work_Sans({
 });
 
 // ✅ DOĞRU: { params } doğrudan alınır, await YOK
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+  const params = await props.params;
   const locale = params?.locale ?? "en";
   const i18n = await getI18n(locale);
   return {
@@ -25,7 +26,13 @@ export async function generateMetadata({ params }) {
 }
 
 // ✅ DOĞRU: Server Component; async olması gerekmiyor
-export default function RootLayout({ children, params }) {
+export default async function RootLayout(props) {
+  const params = await props.params;
+
+  const {
+    children
+  } = props;
+
   const locale = params?.locale ?? "en";
 
   return (

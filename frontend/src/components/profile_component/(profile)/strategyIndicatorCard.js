@@ -11,30 +11,39 @@ import { PublishIndicatorModal } from "./publishIndicatorModal";
 import { publishStrategy, publishIndicator } from "@/api/strategies";
 import CodeModal from "@/components/profile_component/(indicator)/(modal_tabs)/CodeModal";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 /* ------------------------ Toast (yüksek kontrast) ------------------------ */
 function Toast({ toasts }) {
+  const { t } = useTranslation("strategyIndicator");
   return (
     <div className="fixed top-4 right-4 z-[9999] space-y-3">
-      {toasts.map((t) => (
-        <div
-          key={t.id}
-          className={`min-w-[260px] max-w-[380px] px-4 py-3 rounded-xl text-sm shadow-2xl border backdrop-blur-md animate-[toastIn_0.25s_ease-out]
-          ${
-            t.type === "success"
-              ? "bg-emerald-600/80 text-white border-emerald-300/30"
-              : t.type === "error"
-              ? "bg-rose-600/80 text-white border-rose-300/30"
-              : "bg-black/80 text-white border-white/10"
-          }`}
-          role="status"
-        >
-          <div className="font-medium">
-            {t.title || (t.type === "success" ? "Success" : t.type === "error" ? "Error" : "Info")}
+      {toasts.map((to) => {
+        const title =
+          to.title ||
+          (to.type === "success"
+            ? t("toast.titles.success")
+            : to.type === "error"
+            ? t("toast.titles.error")
+            : t("toast.titles.info"));
+        return (
+          <div
+            key={to.id}
+            className={`min-w-[260px] max-w-[380px] px-4 py-3 rounded-xl text-sm shadow-2xl border backdrop-blur-md animate-[toastIn_0.25s_ease-out]
+            ${
+              to.type === "success"
+                ? "bg-emerald-600/80 text-white border-emerald-300/30"
+                : to.type === "error"
+                ? "bg-rose-600/80 text-white border-rose-300/30"
+                : "bg-black/80 text-white border-white/10"
+            }`}
+            role="status"
+          >
+            <div className="font-medium">{title}</div>
+            {to.msg && <div className="opacity-90 mt-0.5">{to.msg}</div>}
           </div>
-          {t.msg && <div className="opacity-90 mt-0.5">{t.msg}</div>}
-        </div>
-      ))}
+        );
+      })}
 
       <style jsx>{`
         @keyframes toastIn {
@@ -47,7 +56,9 @@ function Toast({ toasts }) {
 }
 
 /* ------------------------ UI helpers ------------------------ */
-function PermissionPill({ ok, label }) {
+function PermissionPill({ ok, labelKey }) {
+  const { t } = useTranslation("strategyIndicator");
+  const label = t(`permissions.${labelKey}`);
   return (
     <span
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border ${
@@ -62,7 +73,8 @@ function PermissionPill({ ok, label }) {
 }
 
 /* undefined olan izinleri gizler; böylece indicator tarafında Scan/Backtest/Bot görünmez */
-function ReleaseStrip({ title, color, release }) {
+function ReleaseStrip({ titleKey, color, release }) {
+  const { t } = useTranslation("strategyIndicator");
   if (!release) return null;
   const p = release.permissions || {};
   const ColorBar = () => (
@@ -70,20 +82,20 @@ function ReleaseStrip({ title, color, release }) {
   );
 
   const pills = [
-    Object.prototype.hasOwnProperty.call(p, "allow_code_view")  ? <PermissionPill key="code"  ok={!!p.allow_code_view}  label="Code" /> : null,
-    Object.prototype.hasOwnProperty.call(p, "allow_chart_view") ? <PermissionPill key="chart" ok={!!p.allow_chart_view} label="Chart" /> : null,
-    Object.prototype.hasOwnProperty.call(p, "allow_scanning")   ? <PermissionPill key="scan"  ok={!!p.allow_scanning}   label="Scan" /> : null,
-    Object.prototype.hasOwnProperty.call(p, "allow_backtesting")? <PermissionPill key="back"  ok={!!p.allow_backtesting}label="Backtest" /> : null,
-    Object.prototype.hasOwnProperty.call(p, "allow_bot_execution") ? <PermissionPill key="bot" ok={!!p.allow_bot_execution} label="Bot" /> : null,
+    Object.prototype.hasOwnProperty.call(p, "allow_code_view")   ? <PermissionPill key="code"   ok={!!p.allow_code_view}   labelKey="code" /> : null,
+    Object.prototype.hasOwnProperty.call(p, "allow_chart_view")  ? <PermissionPill key="chart"  ok={!!p.allow_chart_view}  labelKey="chart" /> : null,
+    Object.prototype.hasOwnProperty.call(p, "allow_scanning")    ? <PermissionPill key="scan"   ok={!!p.allow_scanning}    labelKey="scan" /> : null,
+    Object.prototype.hasOwnProperty.call(p, "allow_backtesting") ? <PermissionPill key="back"   ok={!!p.allow_backtesting} labelKey="backtest" /> : null,
+    Object.prototype.hasOwnProperty.call(p, "allow_bot_execution") ? <PermissionPill key="bot" ok={!!p.allow_bot_execution} labelKey="bot" /> : null,
   ].filter(Boolean);
 
   return (
     <div className="flex items-center gap-2 text-[11px] bg-zinc-900/80 border border-zinc-600/70 rounded-md px-2 py-1 mt-2">
       <ColorBar />
       <span className={`font-medium ${color === "blue" ? "text-blue-300" : "text-amber-300"}`}>
-        {title}
+        {t(`release.${titleKey}`)}
       </span>
-      <span className="text-zinc-400">v{release.no ?? "-"}</span>
+      <span className="text-zinc-400">{t("release.versionPrefix")}{release.no ?? "-"}</span>
       {typeof release.views_count === "number" && (
         <span className="inline-flex items-center gap-1 text-zinc-200 ml-1">
           <IoEye size={12} /> {release.views_count}
@@ -99,7 +111,7 @@ function ReleaseStrip({ title, color, release }) {
   );
 }
 
-function EmptyState({ color = "blue", text = "Empty" }) {
+function EmptyState({ color = "blue", text }) {
   const ring = color === "purple" ? "bg-purple-500/15" : "bg-blue-500/15";
   const dot  = color === "purple" ? "bg-purple-400/50" : "bg-blue-400/50";
   return (
@@ -114,6 +126,9 @@ function EmptyState({ color = "blue", text = "Empty" }) {
 
 /* ------------------------ Main Component ------------------------ */
 export default function StrategyIndicatorCard() {
+  const { t, i18n } = useTranslation("strategyIndicator");
+  const locale = i18n.language || "en";
+
   const [menuOpenKey, setMenuOpenKey] = useState(null); // "s-<id>" | "i-<id>"
   const menuRef = useRef(null);
   const [showStrategyModal, setShowStrategyModal] = useState(false);
@@ -239,13 +254,13 @@ export default function StrategyIndicatorCard() {
           },
         };
         setStrategyPendingRelease(selectedStrategyId, pr);
-        showToast("success", "Strategy published successfully.", "Publish OK");
+        showToast("success", t("toast.messages.strategyPublish.ok"), t("toast.titles.success"));
       } else {
-        showToast("error", res.error || "Failed to publish strategy.", "Publish Failed");
+        showToast("error", res.error || t("toast.messages.strategyPublish.failed"), t("toast.titles.error"));
       }
     } catch (e) {
       console.error("Publish error:", e);
-      showToast("error", "Unexpected error while publishing strategy.", "Publish Error");
+      showToast("error", t("toast.messages.strategyPublish.unexpected"), t("toast.titles.error"));
     } finally {
       setShowStrategyModal(false);
       setSelectedStrategyId(null);
@@ -267,13 +282,13 @@ export default function StrategyIndicatorCard() {
           },
         };
         setIndicatorPendingRelease(selectedIndicatorId, pr);
-        showToast("success", "Indicator published successfully.", "Publish OK");
+        showToast("success", t("toast.messages.indicatorPublish.ok"), t("toast.titles.success"));
       } else {
-        showToast("error", res.error || "Failed to publish indicator.", "Publish Failed");
+        showToast("error", res.error || t("toast.messages.indicatorPublish.failed"), t("toast.titles.error"));
       }
     } catch (e) {
       console.error("Indicator publish error:", e);
-      showToast("error", "Unexpected error while publishing indicator.", "Publish Error");
+      showToast("error", t("toast.messages.indicatorPublish.unexpected"), t("toast.titles.error"));
     } finally {
       setShowIndicatorModal(false);
       setSelectedIndicatorId(null);
@@ -310,11 +325,11 @@ export default function StrategyIndicatorCard() {
             <div className="flex items-center gap-2 mb-1">
               <div className="font-medium text-white text-sm">{selected?.name || group.latest?.name}</div>
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/30 text-blue-100 border border-blue-300/30">
-                v{selected?.version ?? "-"}
+                {t("release.versionPrefix")}{selected?.version ?? "-"}
               </span>
               {group.versions.length > 1 && (
                 <span className="text-[10px] px-1 py-0.5 rounded bg-zinc-700/60 text-zinc-200 border border-zinc-500/50">
-                  {group.versions.length} versiyon
+                  {t("badges.versions", { count: group.versions.length })}
                 </span>
               )}
             </div>
@@ -327,14 +342,14 @@ export default function StrategyIndicatorCard() {
               >
                 {group.versions.map((v) => (
                   <option key={v.id} value={v.id}>
-                    v{v.version ?? "-"} • {v.created_at ? new Date(v.created_at).toLocaleDateString() : "—"}
+                    {t("release.versionPrefix")}{v.version ?? "-"} • {v.created_at ? new Date(v.created_at).toLocaleDateString(locale) : "—"}
                   </option>
                 ))}
               </select>
             )}
 
-            <ReleaseStrip title="Approved" color="blue"  release={approved} />
-            <ReleaseStrip title="Pending"  color="amber" release={pending} />
+            <ReleaseStrip titleKey="approved" color="blue"  release={approved} />
+            <ReleaseStrip titleKey="pending"  color="amber" release={pending} />
 
             {selected?.description && (
               <div className="text-xs text-gray-300/90 line-clamp-2 mt-2">{selected.description}</div>
@@ -345,7 +360,7 @@ export default function StrategyIndicatorCard() {
             <button
               onClick={() => setMenuOpenKey(menuOpenKey === menuKey ? null : menuKey)}
               className="p-1.5 rounded-full hover:bg-zinc-700 transition-colors"
-              title="Actions"
+              title={t("menu.actions")}
             >
               <BsThreeDotsVertical className="text-gray-200" size={14} />
             </button>
@@ -356,7 +371,7 @@ export default function StrategyIndicatorCard() {
                   onClick={() => handleInspect(selected)} // 👈 sadece modal
                   className="flex items-center gap-2 w-full px-3 py-2 text-xs text-yellow-300 hover:bg-gray-800/80 transition-colors"
                 >
-                  <IoSearch size={14} /> Inspect (v{selected.version ?? "-"})
+                  <IoSearch size={14} /> {t("menu.inspect")} ({t("release.versionPrefix")}{selected.version ?? "-"})
                 </button>
                 <button
                   onClick={() => {
@@ -366,7 +381,7 @@ export default function StrategyIndicatorCard() {
                   }}
                   className="flex items-center gap-2 w-full px-3 py-2 text-xs text-blue-300 hover:bg-gray-800/80 transition-colors border-t border-gray-700"
                 >
-                  <FiUpload size={14} /> Publish
+                  <FiUpload size={14} /> {t("menu.publish")}
                 </button>
               </div>
             )}
@@ -398,11 +413,11 @@ export default function StrategyIndicatorCard() {
             <div className="flex items-center gap-2 mb-1">
               <div className="font-medium text-white text-sm">{selected?.name || group.latest?.name}</div>
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/30 text-purple-100 border border-purple-300/30">
-                v{selected?.version ?? "-"}
+                {t("release.versionPrefix")}{selected?.version ?? "-"}
               </span>
               {group.versions.length > 1 && (
                 <span className="text-[10px] px-1 py-0.5 rounded bg-zinc-700/60 text-zinc-200 border border-zinc-500/50">
-                  {group.versions.length} versiyon
+                  {t("badges.versions", { count: group.versions.length })}
                 </span>
               )}
             </div>
@@ -415,14 +430,14 @@ export default function StrategyIndicatorCard() {
               >
                 {group.versions.map((v) => (
                   <option key={v.id} value={v.id}>
-                    v{v.version ?? "-"} • {v.created_at ? new Date(v.created_at).toLocaleDateString() : "—"}
+                    {t("release.versionPrefix")}{v.version ?? "-"} • {v.created_at ? new Date(v.created_at).toLocaleDateString(locale) : "—"}
                   </option>
                 ))}
               </select>
             )}
 
-            <ReleaseStrip title="Approved" color="blue"  release={approved} />
-            <ReleaseStrip title="Pending"  color="amber" release={pending} />
+            <ReleaseStrip titleKey="approved" color="blue"  release={approved} />
+            <ReleaseStrip titleKey="pending"  color="amber" release={pending} />
 
             {selected?.description && (
               <div className="text-xs text-gray-300/90 line-clamp-2 mt-2">{selected.description}</div>
@@ -433,7 +448,7 @@ export default function StrategyIndicatorCard() {
             <button
               onClick={() => setMenuOpenKey(menuOpenKey === menuKey ? null : menuKey)}
               className="p-1.5 rounded-full hover:bg-zinc-700 transition-colors"
-              title="Actions"
+              title={t("menu.actions")}
             >
               <BsThreeDotsVertical className="text-gray-200" size={14} />
             </button>
@@ -444,7 +459,7 @@ export default function StrategyIndicatorCard() {
                   onClick={() => handleInspect(selected)} // 👈 sadece modal
                   className="flex items-center gap-2 w-full px-3 py-2 text-xs text-yellow-300 hover:bg-gray-800/80 transition-colors"
                 >
-                  <IoSearch size={14} /> Inspect (v{selected.version ?? "-"})
+                  <IoSearch size={14} /> {t("menu.inspect")} ({t("release.versionPrefix")}{selected.version ?? "-"})
                 </button>
                 <button
                   onClick={() => {
@@ -454,7 +469,7 @@ export default function StrategyIndicatorCard() {
                   }}
                   className="flex items-center gap-2 w-full px-3 py-2 text-xs text-blue-300 hover:bg-gray-800/80 transition-colors border-t border-gray-700"
                 >
-                  <FiUpload size={14} /> Publish
+                  <FiUpload size={14} /> {t("menu.publish")}
                 </button>
               </div>
             )}
@@ -472,7 +487,7 @@ export default function StrategyIndicatorCard() {
         <div className="px-4 py-3 border-b border-zinc-700 bg-gradient-to-r from-blue-900/20 to-blue-800/10">
           <div className="flex items-center gap-3">
             <div className="w-4 h-4 bg-blue-400 rounded-full"></div>
-            <h3 className="text-sm mt-[6px] font-semibold text-blue-200">My Strategies</h3>
+            <h3 className="text-sm mt-[6px] font-semibold text-blue-200">{t("headers.strategies")}</h3>
             <span className="bg-blue-500/20 text-blue-200 text-xs px-2 py-0.5 rounded-full font-medium border border-blue-400/20">
               {strategyGroups.length}
             </span>
@@ -485,7 +500,7 @@ export default function StrategyIndicatorCard() {
                 <StrategyGroupItem key={group.groupId} group={group} index={idx} />
               ))
             ) : (
-              <EmptyState color="blue" text="No strategies added yet" />
+              <EmptyState color="blue" text={t("empty.strategies")} />
             )}
           </div>
         </div>
@@ -496,7 +511,7 @@ export default function StrategyIndicatorCard() {
         <div className="px-4 py-3 border-b border-zinc-700 bg-gradient-to-r from-purple-900/20 to-purple-800/10">
           <div className="flex items-center gap-3">
             <div className="w-4 h-4 bg-purple-400 rounded-full"></div>
-            <h3 className="text-sm mt-[6px] font-semibold text-purple-200">My Indicators</h3>
+            <h3 className="text-sm mt-[6px] font-semibold text-purple-200">{t("headers.indicators")}</h3>
             <span className="bg-purple-500/20 text-purple-200 text-xs px-2 py-0.5 rounded-full font-medium border border-purple-400/20">
               {indicatorGroups.length}
             </span>
@@ -509,7 +524,7 @@ export default function StrategyIndicatorCard() {
                 <IndicatorGroupItem key={group.groupId} group={group} index={idx} />
               ))
             ) : (
-              <EmptyState color="purple" text="No indicators added yet" />
+              <EmptyState color="purple" text={t("empty.indicators")} />
             )}
           </div>
         </div>

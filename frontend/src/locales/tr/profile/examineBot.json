@@ -33,5 +33,33 @@
     "empty": "Herhangi bir spot varlık bulunamadı.",
     "amount": "Miktar",
       "profit": "Kâr"
+  },
+  "tabs": {
+    "trades": "İşlemler",
+    "logs": "Loglar"
+  },
+  "logs": {
+    "empty": "Herhangi bir log bulunamadı.",
+    "columns": {
+      "id": "ID",
+      "date": "Tarih",
+      "level": "Seviye",
+      "symbol": "Sembol",
+      "message": "Mesaj",
+      "usdValue": "USD Değeri",
+      "details": "Detay"
+    },
+    "showDetails": "Göster",
+    "hideDetails": "Gizle",
+    "detailTitle": "Log Ayrıntıları",
+    "detailRaw": "Ham JSON",
+    "fields": {
+      "side": "Yön",
+      "tradeType": "İşlem Türü",
+      "orderType": "Emir Türü",
+      "status": "Durum",
+      "stopLoss": "Zarar Durdur",
+      "takeProfit": "Kâr Al"
+    }
   }
 }

@@ -189,7 +189,7 @@ export default function ChartComponent() {
             if (typeof ts === 'number') {
               ms = ts > 1e12 ? ts : ts * 1000; // saniye ise ms'e çevir
             } else {
-              const iso = /Z$/.test(ts) ? ts : ts + 'Z';
+              const iso = /Z$|[+-]\d\d:\d\d$/.test(ts) ? ts : ts + 'Z';
               ms = Date.parse(iso);
             }
             return {
@@ -352,7 +352,7 @@ export default function ChartComponent() {
         const result = sub?.strategy_result?.[0];
         if (!result?.data) return;
         result.data.forEach(([time, signal, _value, note = ""]) => {
-          const unixTime = Math.floor(new Date(time).getTime() / 1000);
+          const unixTime = toUnixSecUTC(time);
           const m = { time: unixTime, position: "aboveBar", color: "", shape: "", text: note || "" };
           switch (signal) {
             case "Long Open": m.shape = "arrowUp"; m.color = "green"; m.position = "belowBar"; break;
@@ -391,7 +391,7 @@ export default function ChartComponent() {
             return;
         }
         const formattedData = graph.data
-          .map(([time, value]) => (typeof time === "string" && value !== undefined ? { time: Math.floor(new Date(time).getTime() / 1000), value } : null))
+          .map(([time, value]) => { const t = toUnixSecUTC(time); return (t !== undefined && value !== undefined) ? { time: t, value } : null;})
           .filter(Boolean)
           .sort((a, b) => a.time - b.time);
         series.setData(formattedData);

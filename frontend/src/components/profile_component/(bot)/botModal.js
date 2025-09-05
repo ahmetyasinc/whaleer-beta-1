@@ -38,6 +38,10 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
   const acquisitionType = (bot?.acquisition_type || '').toUpperCase();
   const isAcquiredLocked = isEdit && (acquisitionType === 'PURCHASED' || acquisitionType === 'RENTED');
 
+  const isStrategyLocked = isEdit || isAcquiredLocked;
+
+  const displayStrategyName = bot?.strategy || selectedStrategy?.name || '';
+
   const availableCoins = [
     'BTCUSDT','ETHUSDT','BNBUSDT','SOLUSDT','ADAUSDT','XRPUSDT','DOGEUSDT',
     'TONUSDT','TRXUSDT','LINKUSDT','MATICUSDT','DOTUSDT','LTCUSDT','SHIBUSDT','AVAXUSDT',
@@ -131,6 +135,9 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
     if (!isAcquiredLocked) {
       if (!selectedStrategy || !selectedStrategy.name) errors.push(t('errors.strategyRequired'));
     }
+    if (!isStrategyLocked) {
+      if (!selectedStrategy || !selectedStrategy.name) errors.push(t('errors.strategyRequired'));
+    }
     if (!period) errors.push(t('errors.periodRequired'));
     if (!candleCount || candleCount <= 0) errors.push(t('errors.candleInvalid'));
     if (days.length === 0) errors.push(t('errors.dayRequired'));
@@ -161,7 +168,7 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
       name: botName,
       api,
       // Satın alınan/kiralanan botta strateji gönderilmez (backend'de saklı)
-      ...(isAcquiredLocked ? {} : { strategy: selectedStrategy?.name }),
+      ...(isStrategyLocked ? {} : { strategy: selectedStrategy?.name }),
       period,
       isActive: false,
       days,
@@ -245,16 +252,22 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
 
             <div>
               <label className="block mb-1 text-gray-300">{t('labels.strategy')}</label>
-              {!isAcquiredLocked ? (
-                <StrategyButton onSelect={(selected) => setStrategy(selected)} />
-              ) : (
-                <div className="w-full p-2 bg-gray-800 text-gray-300 rounded flex items-center gap-2">
-                  <FiLock className="shrink-0" />
-                  <span className="text-sm">
-                    {t('labels.hidden')}
-                  </span>
-                </div>
-              )}
+              {!isStrategyLocked ? (
+                  // Oluşturma modunda veya tamamen serbestse: buton aktif
+                  <StrategyButton onSelect={(selected) => setStrategy(selected)} />
+                ) : isAcquiredLocked ? (
+                  // Satın alınan/kiralanan bottaysa: strateji gizli
+                  <div className="w-full p-2 bg-gray-800 text-gray-300 rounded flex items-center gap-2">
+                    <FiLock className="shrink-0" />
+                    <span className="text-sm">{t('labels.hidden')}</span>
+                  </div>
+                ) : (
+                  // Edit modunda (normal bot): strateji adı kilitli/readonly göster
+                  <div className="w-full p-2 bg-gray-800 text-gray-300 rounded flex items-center gap-2 opacity-70 cursor-not-allowed">
+                    <FiLock className="shrink-0" />
+                    <span className="text-sm">{displayStrategyName || t('labels.hidden')}</span>
+                  </div>
+                )}
             </div>
 
             <div>

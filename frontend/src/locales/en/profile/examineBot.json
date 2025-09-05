@@ -33,5 +33,33 @@
     "empty": "No spot holdings found.",
     "amount": "Amount",
     "profit": "Profit"
+  },
+  "tabs": {
+    "trades": "İşlemler",
+    "logs": "Loglar"
+  },
+  "logs": {
+    "empty": "No logs found.",
+    "columns": {
+      "id": "ID",
+      "date": "Date",
+      "level": "Level",
+      "symbol": "Symbol",
+      "message": "Message",
+      "usdValue": "USD Value",
+      "details": "Details"
+    },
+    "showDetails": "Show",
+    "hideDetails": "Hide",
+    "detailTitle": "Log Details",
+    "detailRaw": "Raw JSON",
+    "fields": {
+      "side": "Side",
+      "tradeType": "Trade Type",
+      "orderType": "Order Type",
+      "status": "Status",
+      "stopLoss": "Stop Loss",
+      "takeProfit": "Take Profit"
+    }
   }
 }

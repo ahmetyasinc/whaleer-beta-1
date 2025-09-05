@@ -1,7 +1,8 @@
 from collections import defaultdict
 from backend.trade_engine.data.bot_features import load_bot_context
+from backend.trade_engine.log import log_info, log_warning, log_error
 
-def control_the_results(bot_id, results, min_usd=10.0, ctx=None):
+def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
     """
     Spot bot:
       - SADECE spot (holdings) dikkate alınır.
@@ -60,13 +61,13 @@ def control_the_results(bot_id, results, min_usd=10.0, ctx=None):
     # ---------- mevcutı haritalama ----------
     holding_map = {
         h["symbol"]: {
-            "spot_pct": clamp_pct((h.get("percentage") or 0.0)),
+            "spot_pct": clamp_pct(((h.get("percentage")/100) or 0.0)),
             "spot_amount": float(h.get("amount") or 0.0),
         }
         for h in holdings
     }
 
-    pos_map = {}  # {sym: {"long_pct":..,"long_amount":..,"long_lev":..,"short_pct":..,"short_amount":..,"short_lev":..}}
+    pos_map = {}  # {sym: {...}}
     for p in positions:
         sym = p["symbol"]
         side = (p.get("position_side") or "").lower()
@@ -88,7 +89,7 @@ def control_the_results(bot_id, results, min_usd=10.0, ctx=None):
             entry["short_lev"] = lev
 
     # ---------- hedef kurulumu ----------
-    targets = {}  # {symbol: {"spot": pct, "long": {"pct":..,"lev":..}, "short": {"pct":..,"lev":..}, "meta": {...}}}
+    targets = {}
 
     for res in (results or []):
         lp = res.get("last_positions")
@@ -128,16 +129,29 @@ def control_the_results(bot_id, results, min_usd=10.0, ctx=None):
     blocked_open = defaultdict(lambda: {"long": False, "short": False})
 
     def maybe_append(act, frac):
-        """Emri uygunsa ekle ve True döndür; değilse False."""
+        """Emri uygunsa ekle; değilse logla."""
         if frac <= 0:
             return False
         if frac < min_frac:
-            # print("Minimum şartı sağlanmadı:", act, "frac=", frac)
+            log_warning(
+                bot_id=bot_id,
+                message="Minimum USD altı işlem engellendi",
+                symbol=act.get("coin_id"),
+                details={"frac": frac, "min_frac": min_frac, "action": act}
+            )
             return False
         usd = current_value * frac
         a = act.copy()
         a["value"] = usd
+        a["status"] = "success"
         actions.append(a)
+        # 🔹 Başarılı eklenen işlemleri de logla
+        log_info(
+            bot_id=bot_id,
+            message="İşlem eklendi",
+            symbol=act.get("coin_id"),
+            details={"frac": frac, "usd_value": usd, "action": act}
+        )
         return True
 
     # ---------- 1) REDUCE/CLOSE ----------
@@ -145,17 +159,15 @@ def control_the_results(bot_id, results, min_usd=10.0, ctx=None):
         for sym, tgt in targets.items():
             meta = tgt["meta"]
             cur = holding_map.get(sym, {"spot_pct": 0.0, "spot_amount": 0.0})
+            delta_spot = (tgt["spot"] - cur["spot_pct"])
 
-            delta_spot = (tgt["spot"] - cur["spot_pct"]) / 100.0
             if delta_spot < 0:
                 reduce_frac = -delta_spot
                 act = {"coin_id": sym, "trade_type": "spot", "side": "sell", **meta}
-                if cur["spot_amount"] > 0:
-                    act["amount"] = (cur["spot_amount"] * reduce_frac /
-                                     (cur["spot_pct"] / 100.0)) if cur["spot_pct"] else cur["spot_amount"]
+                #if cur["spot_amount"] > 0:
+                #    act["amount"] = (cur["spot_amount"] * reduce_frac / (cur["spot_pct"] / 100.0)) if cur["spot_pct"] else cur["spot_amount"]
                 ok = maybe_append(act, reduce_frac)
                 if ok:
-                    # Kapama gerçekleştiyse fulness ve mevcut yüzdeleri güncelle
                     fulness = max(0.0, fulness - reduce_frac)
                     cur["spot_pct"] = max(0.0, cur["spot_pct"] - reduce_frac * 100.0)
 
@@ -173,31 +185,25 @@ def control_the_results(bot_id, results, min_usd=10.0, ctx=None):
             cur_pct = cur["long_pct"]
             cur_lev = cur["long_lev"]
 
-            # Leverage mismatch → önce FULL CLOSE dene
             if cur_pct > 0 and target_pct > 0 and (cur_lev is not None and target_lev is not None) and (cur_lev != target_lev):
                 reduce_frac = cur_pct / 100.0
                 act = {"coin_id": sym, "trade_type": "futures", "positionside": "long", "side": "sell", "reduceOnly": True, **meta}
-                if cur["long_amount"] > 0:
-                    act["amount"] = cur["long_amount"]  # tam kapat
+                #if cur["long_amount"] > 0:
+                #    act["amount"] = cur["long_amount"]
                 ok = maybe_append(act, reduce_frac)
                 if ok:
                     fulness = max(0.0, fulness - reduce_frac)
                     cur["long_pct"] = 0.0
                     cur["long_lev"] = None
-                    cur_pct = 0.0
-                    cur_lev = None
                 else:
-                    # Kapatma olmadı → bu bacağı açmayı blokla (lev karışmasın)
                     blocked_open[sym]["long"] = True
 
-            # Normal delta azaltma
             delta_long = (target_pct - cur_pct) / 100.0
             if delta_long < 0:
                 reduce_frac = -delta_long
                 act = {"coin_id": sym, "trade_type": "futures", "positionside": "long", "side": "sell", "reduceOnly": True, **meta}
-                if cur["long_amount"] > 0:
-                    act["amount"] = (cur["long_amount"] * reduce_frac /
-                                     (cur_pct / 100.0)) if cur_pct else cur["long_amount"]
+                #if cur["long_amount"] > 0:
+                #    act["amount"] = (cur["long_amount"] * reduce_frac / (cur_pct / 100.0)) if cur_pct else cur["long_amount"]
                 ok = maybe_append(act, reduce_frac)
                 if ok:
                     fulness = max(0.0, fulness - reduce_frac)
@@ -212,15 +218,13 @@ def control_the_results(bot_id, results, min_usd=10.0, ctx=None):
             if cur_pct > 0 and target_pct > 0 and (cur_lev is not None and target_lev is not None) and (cur_lev != target_lev):
                 reduce_frac = cur_pct / 100.0
                 act = {"coin_id": sym, "trade_type": "futures", "positionside": "short", "side": "buy", "reduceOnly": True, **meta}
-                if cur["short_amount"] > 0:
-                    act["amount"] = cur["short_amount"]
+                #if cur["short_amount"] > 0:
+                #    act["amount"] = cur["short_amount"]
                 ok = maybe_append(act, reduce_frac)
                 if ok:
                     fulness = max(0.0, fulness - reduce_frac)
                     cur["short_pct"] = 0.0
                     cur["short_lev"] = None
-                    cur_pct = 0.0
-                    cur_lev = None
                 else:
                     blocked_open[sym]["short"] = True
 
@@ -228,9 +232,8 @@ def control_the_results(bot_id, results, min_usd=10.0, ctx=None):
             if delta_short < 0:
                 reduce_frac = -delta_short
                 act = {"coin_id": sym, "trade_type": "futures", "positionside": "short", "side": "buy", "reduceOnly": True, **meta}
-                if cur["short_amount"] > 0:
-                    act["amount"] = (cur["short_amount"] * reduce_frac /
-                                     (cur_pct / 100.0)) if cur_pct else cur["short_amount"]
+                #if cur["short_amount"] > 0:
+                #    act["amount"] = (cur["short_amount"] * reduce_frac / (cur_pct / 100.0)) if cur_pct else cur["short_amount"]
                 ok = maybe_append(act, reduce_frac)
                 if ok:
                     fulness = max(0.0, fulness - reduce_frac)
@@ -241,16 +244,14 @@ def control_the_results(bot_id, results, min_usd=10.0, ctx=None):
         for sym, tgt in targets.items():
             meta = tgt["meta"]
             cur = holding_map.get(sym, {"spot_pct": 0.0, "spot_amount": 0.0})
-
-            delta_spot = (tgt["spot"] - cur["spot_pct"]) / 100.0
+            delta_spot = (tgt["spot"] - cur["spot_pct"])
             if delta_spot > 0:
                 add_frac = min(delta_spot, max(0.0, 1.0 - fulness))
-                if add_frac >= min_frac:
-                    act = {"coin_id": sym, "trade_type": "spot", "side": "buy", **meta}
-                    ok = maybe_append(act, add_frac)
-                    if ok:
-                        fulness = min(1.0, fulness + add_frac)
-                        cur["spot_pct"] = min(100.0, cur["spot_pct"] + add_frac * 100.0)
+                act = {"coin_id": sym, "trade_type": "spot", "side": "buy", **meta}
+                ok = maybe_append(act, add_frac)
+                if ok:
+                    fulness = min(1.0, fulness + add_frac)
+                    cur["spot_pct"] = min(100.0, cur["spot_pct"] + add_frac * 100.0)
 
     else:
         for sym, tgt in targets.items():
@@ -260,7 +261,7 @@ def control_the_results(bot_id, results, min_usd=10.0, ctx=None):
                 "short_pct": 0.0, "short_amount": 0.0, "short_lev": None
             })
 
-            # LONG open (leverage bloğu yoksa)
+            # LONG open
             if not blocked_open[sym]["long"]:
                 target_pct = tgt["long"]["pct"]
                 target_lev = tgt["long"]["lev"]
@@ -268,17 +269,16 @@ def control_the_results(bot_id, results, min_usd=10.0, ctx=None):
                 delta_long = (target_pct - cur_pct) / 100.0
                 if delta_long > 0:
                     add_frac = min(delta_long, max(0.0, 1.0 - fulness))
-                    if add_frac >= min_frac:
-                        act = {"coin_id": sym, "trade_type": "futures", "positionside": "long", "side": "buy", **meta}
-                        if target_lev is not None:
-                            act["leverage"] = target_lev
-                        ok = maybe_append(act, add_frac)
-                        if ok:
-                            fulness = min(1.0, fulness + add_frac)
-                            cur["long_pct"] = min(100.0, cur["long_pct"] + add_frac * 100.0)
-                            cur["long_lev"] = target_lev if target_lev is not None else cur["long_lev"]
+                    act = {"coin_id": sym, "trade_type": "futures", "positionside": "long", "side": "buy", **meta}
+                    if target_lev is not None:
+                        act["leverage"] = target_lev
+                    ok = maybe_append(act, add_frac)
+                    if ok:
+                        fulness = min(1.0, fulness + add_frac)
+                        cur["long_pct"] = min(100.0, cur["long_pct"] + add_frac * 100.0)
+                        cur["long_lev"] = target_lev if target_lev is not None else cur["long_lev"]
 
-            # SHORT open (leverage bloğu yoksa)
+            # SHORT open
             if not blocked_open[sym]["short"]:
                 target_pct = tgt["short"]["pct"]
                 target_lev = tgt["short"]["lev"]
@@ -286,14 +286,13 @@ def control_the_results(bot_id, results, min_usd=10.0, ctx=None):
                 delta_short = (target_pct - cur_pct) / 100.0
                 if delta_short > 0:
                     add_frac = min(delta_short, max(0.0, 1.0 - fulness))
-                    if add_frac >= min_frac:
-                        act = {"coin_id": sym, "trade_type": "futures", "positionside": "short", "side": "sell", **meta}
-                        if target_lev is not None:
-                            act["leverage"] = target_lev
-                        ok = maybe_append(act, add_frac)
-                        if ok:
-                            fulness = min(1.0, fulness + add_frac)
-                            cur["short_pct"] = min(100.0, cur["short_pct"] + add_frac * 100.0)
-                            cur["short_lev"] = target_lev if target_lev is not None else cur["short_lev"]
+                    act = {"coin_id": sym, "trade_type": "futures", "positionside": "short", "side": "sell", **meta}
+                    if target_lev is not None:
+                        act["leverage"] = target_lev
+                    ok = maybe_append(act, add_frac)
+                    if ok:
+                        fulness = min(1.0, fulness + add_frac)
+                        cur["short_pct"] = min(100.0, cur["short_pct"] + add_frac * 100.0)
+                        cur["short_lev"] = target_lev if target_lev is not None else cur["short_lev"]
 
     return actions

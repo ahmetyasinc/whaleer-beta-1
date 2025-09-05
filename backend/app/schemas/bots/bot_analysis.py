@@ -1,5 +1,6 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional, Dict, Any
+from datetime import datetime
 
 class TradeOut(BaseModel):
     date: str
@@ -31,6 +32,15 @@ class PnLPoint(BaseModel):
     date: str
     pnl: float
 
+class BotLogOut(BaseModel):
+    id: int
+    level: str                  # "info" | "warning" | "error"
+    message: str
+    details: Optional[Dict[str, Any]] = None
+    symbol: Optional[str] = None
+    period: Optional[str] = None
+    created_at: datetime
+
 class BotAnalysisOut(BaseModel):
     bot_id: int
     bot_name: str
@@ -40,3 +50,4 @@ class BotAnalysisOut(BaseModel):
     open_positions: List[OpenPositionOut]
     holdings: List[HoldingsOut]
     pnl_data: List[PnLPoint]
+    logs: List[BotLogOut]

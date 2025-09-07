@@ -18,6 +18,7 @@ import { IoMdWarning } from "react-icons/io";
 import { MdOutlineNumbers } from "react-icons/md";
 import { LiaChargingStationSolid } from "react-icons/lia";
 import { useSiwsStore } from "@/store/auth/siwsStore";
+import { useTranslation } from "react-i18next";
 
 import BuyModal from "@/components/profile_component/(showcase)/(checkout)/BuyModal";
 import RentModal from "@/components/profile_component/(showcase)/(checkout)/RentModal";
@@ -25,19 +26,20 @@ import RentModal from "@/components/profile_component/(showcase)/(checkout)/Rent
 const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
   if (!botData) return null;
 
+  const { t } = useTranslation('showcaseBotCard');
   const { walletLinked } = useSiwsStore();
   const [buyOpen, setBuyOpen] = useState(false);
   const [rentOpen, setRentOpen] = useState(false);
 
   const formatRunningTime = (hours) => {
-    if (hours < 1) return 'Started today';
+    if (hours < 1) return t('runtime.startedToday');
     const days = Math.floor(hours / 24);
     const remainingHours = hours % 24;
     return days === 0
-      ? `${hours} hours`
+      ? t('runtime.hoursOnly', { hours })
       : remainingHours === 0
-      ? `${days} days`
-      : `${days} days ${remainingHours} hours`;
+        ? t('runtime.daysOnly', { days })
+        : t('runtime.daysHours', { days, hours: remainingHours });
   };
 
   const coins = useMemo(() => {
@@ -69,14 +71,14 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
                 <h2 className="text-lg sm:text-xl font-bold text-white">{botData.name}</h2>
                 <div className="flex items-center gap-2 text-gray-300 text-xs">
                   <FaUser className="w-3 h-3 flex-shrink-0" />
-                  <span>by {botData.creator}</span>
+                  <span>{t('labels.by', { creator: botData.creator })}</span>
                 </div>
               </div>
             </div>
 
             <div className="text-xs text-gray-400 space-y-1">
-              <p>Purchased {botData.soldCount} times</p>
-              <p>Rented {botData.rentedCount} times</p>
+              <p>{t('meta.purchasedTimes', { count: botData.soldCount })}</p>
+              <p>{t('meta.rentedTimes', { count: botData.rentedCount })}</p>
             </div>
 
             <div className="flex items-center gap-2 mt-3">
@@ -100,12 +102,12 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
                 {isFollowed ? (
                   <>
                     <FiCheck className="w-4 h-4" />
-                    Following
+                    {t('actions.following')}
                   </>
                 ) : (
                   <>
                     <FiUserPlus className="w-4 h-4" />
-                    Follow
+                    {t('actions.follow')}
                   </>
                 )}
               </button>
@@ -118,40 +120,40 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
               enabledFlag={Boolean(botData.for_sale)}
               walletLinked={walletLinked}
               price={botData.sell_price}
-              label="Buy"
+              label={t('purchase.buy')}
               bg="bg-green-600"
               hover="hover:bg-green-500"
-              lockedMessage="You must connect your wallet first"
+              lockedMessage={t('purchase.locked')}
               onClick={() => setBuyOpen(true)}
             />
             <PurchaseButton
               enabledFlag={Boolean(botData.for_rent)}
               walletLinked={walletLinked}
               price={botData.rent_price}
-              label="Rent Daily"
+              label={t('purchase.rentDaily')}
               bg="bg-orange-600"
               hover="hover:bg-orange-500"
-              lockedMessage="You must connect your wallet first"
+              lockedMessage={t('purchase.locked')}
               onClick={() => setRentOpen(true)}
             />
           </div>
 
           {/* Stats */}
           <div className="flex flex-col space-y-2 mb-6">
-            <StatBox icon={<FiCalendar />} title="Created on" value={botData.startDate} />
-            <StatBox icon={<FiClock />} title="Uptime" value={formatRunningTime(botData.runningTime)} />
-            <StatBox icon={<FiTrendingUp />} title="Win Rate" value={`${botData.winRate}%`} />
-            <StatBox icon={<LuChartNoAxesCombined />} title="Total Margin" value={`${botData.totalMargin}%`} />
-            <StatBox icon={<GiCharging />} title="Profit Factor" value={botData.profitFactor} />
-            <StatBox icon={<IoMdWarning />} title="Risk Factor" value={botData.riskFactor} />
-            <StatBox icon={<LiaChargingStationSolid />} title="Avg. Fullness" value={`${botData.avg_fullness}%`} />
-            <StatBox icon={<MdOutlineNumbers />} title="Trades (D/W/M)" value={`${botData.dayTrades} / ${botData.weekTrades} / ${botData.monthTrades}`} />
-            <StatBoxTrades icon={<FiBarChart />} title="P/L (D/W/M)" value={`${botData.dayMargin}% / ${botData.weekMargin}% / ${botData.monthMargin}%`} />
+            <StatBox icon={<FiCalendar />} title={t('stats.createdOn')} value={botData.startDate} />
+            <StatBox icon={<FiClock />} title={t('stats.uptime')} value={formatRunningTime(botData.runningTime)} />
+            <StatBox icon={<FiTrendingUp />} title={t('stats.winRate')} value={`${botData.winRate}%`} />
+            <StatBox icon={<LuChartNoAxesCombined />} title={t('stats.totalMargin')} value={`${botData.totalMargin}%`} />
+            <StatBox icon={<GiCharging />} title={t('stats.profitFactor')} value={botData.profitFactor} />
+            <StatBox icon={<IoMdWarning />} title={t('stats.riskFactor')} value={botData.riskFactor} />
+            <StatBox icon={<LiaChargingStationSolid />} title={t('stats.avgFullness')} value={`${botData.avg_fullness}%`} />
+            <StatBox icon={<MdOutlineNumbers />} title={t('stats.tradesDWM')} value={`${botData.dayTrades} / ${botData.weekTrades} / ${botData.monthTrades}`} />
+            <StatBoxTrades icon={<FiBarChart />} title={t('stats.plDWM')} value={`${botData.dayMargin}% / ${botData.weekMargin}% / ${botData.monthMargin}%`} />
           </div>
 
           {/* Strategy */}
           <div className="mb-6">
-            <h3 className="text-sm font-semibold text-white mb-3">Strategy Used</h3>
+            <h3 className="text-sm font-semibold text-white mb-3">{t('strategy.title')}</h3>
             <span className="px-2 py-1 bg-gradient-to-r from-blue-900 to-green-800 text-blue-200 rounded-lg text-xs font-medium">
               {botData.strategy}
             </span>
@@ -159,7 +161,7 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
 
           {/* Coins */}
           <div className="mb-4">
-            <h3 className="text-sm font-semibold text-white mb-3">Supported Coins</h3>
+            <h3 className="text-sm font-semibold text-white mb-3">{t('coins.title')}</h3>
             <div className="flex flex-wrap gap-2">
               {coins.map((coin, index) => (
                 <span
@@ -204,12 +206,13 @@ const PurchaseButton = ({
   lockedMessage = "You must connect your wallet first",
   onClick,
 }) => {
+  const { t } = useTranslation('showcaseBotCard');
   const isAvailable = Boolean(enabledFlag);
   const isConnected = Boolean(walletLinked);
   const disabled = !isAvailable || !isConnected;
 
   const wrapperTitle = !isAvailable
-    ? "Not available"
+    ? t('purchase.notAvailable')
     : (!isConnected ? lockedMessage : undefined);
 
   const buttonClass = !isAvailable

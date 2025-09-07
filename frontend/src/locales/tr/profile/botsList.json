@@ -1,0 +1,21 @@
+{
+  "title": "Botlarım",
+  "status": {
+    "active": "Aktif",
+    "inactive": "Pasif"
+  },
+  "fields": {
+    "currentValue": "Güncel Değer",
+    "margin": "Marj",
+    "totalPl": "Toplam K/Z"
+  },
+  "menu": {
+    "examine": "İncele",
+    "preview": "Önizleme",
+    "loading": "Yükleniyor..."
+  },
+  "empty": {
+    "title": "Henüz Bot Yok",
+    "desc": "Yeni bir al-sat botu oluşturmak için otomatik botlar sayfasına gidip \"Yeni Bot Ekle\" butonuna tıklayın."
+  }
+}

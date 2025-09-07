@@ -1,0 +1,28 @@
+{
+  "titles": {
+    "deleteConfirm": "Silme Onayı"
+  },
+  "messages": {
+    "deleteConfirmQuestion": "{{name}} stratejisini silmek istediğinize emin misiniz?"
+  },
+  "buttons": {
+    "openEdit": "Düzenle / Aç",
+    "newStrategy": "Yeni strateji",
+    "no": "Hayır",
+    "yesDelete": "Sil"
+  },
+  "tooltips": {
+    "favorite": "Favori",
+    "versionSelect": "Versiyon seç",
+    "delete": "Sil",
+    "lockedVersion": "Bu sürüm kilitli (aktif bir bot tarafından kullanılıyor)"
+  },
+  "labels": {
+    "locked": "kilitli"
+  },
+  "errors": {
+    "compileDefault": "Derleme Hatası!",
+    "favoriteAction": "Favori durumu güncellenirken hata oluştu",
+    "deleteAction": "Strateji silinirken hata oluştu"
+  }
+}

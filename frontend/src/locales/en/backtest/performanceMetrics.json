@@ -1,0 +1,28 @@
+{
+  "titles": {
+    "performanceMetrics": "Performance Metrics"
+  },
+  "labels": {
+    "returnRate": "Return Rate",
+    "totalPnL": "Total Profit/Loss",
+    "buyHoldReturn": "Buy-and-Hold Return",
+    "totalTrades": "Total Trades",
+    "winningTrades": "Winning Trades",
+    "losingTrades": "Losing Trades",
+    "initialBalance": "Initial Balance",
+    "finalBalance": "Final Balance",
+    "winRate": "Win Rate",
+    "sharpeRatio": "Sharpe Ratio",
+    "sortinoRatio": "Sortino Ratio",
+    "profitFactor": "Profit Factor",
+    "maxDrawdown": "Max Drawdown",
+    "mostProfitableTrade": "Most Profitable Trade",
+    "mostLosingTrade": "Most Losing Trade",
+    "tradeDurationRatio": "Trade Duration Ratio",
+    "commissionCost": "Commission Cost",
+    "tradeVolume": "Trade Volume"
+  },
+  "values": {
+    "na": "N/A"
+  }
+}

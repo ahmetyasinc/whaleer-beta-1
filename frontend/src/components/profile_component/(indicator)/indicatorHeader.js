@@ -12,26 +12,32 @@ import useMagnetStore from "@/store/indicator/magnetStore";
 import useRulerStore from "@/store/indicator/rulerStore";
 import useCodePanelStore from "@/store/indicator/indicatorCodePanelStore";
 import useStrategyCodePanelStore from "@/store/indicator/strategyCodePanelStore";
-import usePanelStore from "@/store/indicator/panelStore"; // ← EKLENDİ
+import usePanelStore from "@/store/indicator/panelStore";
 import i18n from "@/i18n";
+import { useTranslation } from "react-i18next";
 
 const IndicatorHeader = ({ locale }) => {
+  const { t } = useTranslation("strategiesHeader");
+
   const { openPanel: openIndicatorPanel } = useCodePanelStore();
   const { openPanel: openStrategyPanel } = useStrategyCodePanelStore();
 
-  const [selectedOption, setSelectedOption] = useState("Periyot");
+  // Not: Başlangıç değeri çeviriden geliyor; dil değişirse bu state’i
+  // otomatik değiştirmiyoruz (kullanıcı seçimi korunur).
+  const [selectedOption, setSelectedOption] = useState(t("period.default"));
   const [selectedCrypto, setSelectedCrypto] = useState("");
 
   const { isMagnetMode, toggleMagnetMode } = useMagnetStore();
   const { isRulerMode, toggleRulerMode } = useRulerStore();
 
-  const { setEnd } = usePanelStore(); // ← EKLENDİ
-  const [isRefreshing, setIsRefreshing] = useState(false); // ← YÜKLEME DURUMU
+  const { setEnd } = usePanelStore();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     if (locale && i18n.language !== locale) {
       i18n.changeLanguage(locale);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locale]);
 
   // Refresh handler: end’i güncelle → StockChart yeniden fetch edecek
@@ -73,8 +79,8 @@ const IndicatorHeader = ({ locale }) => {
           <button
             onClick={() => openIndicatorPanel()}
             className="flex items-center justify-center w-[40px] h-[40px] rounded-md bg-black border border-gray-800 hover:border-gray-600 transition duration-100 text-gray-200 text-xl"
-            aria-label="Yeni indikatör ekle"
-            title="Yeni indikatör ekle"
+            aria-label={t("buttons.addIndicator")}
+            title={t("buttons.addIndicator")}
           >
             +
           </button>
@@ -87,8 +93,8 @@ const IndicatorHeader = ({ locale }) => {
           <button
             onClick={() => openStrategyPanel()}
             className="flex items-center justify-center w-[40px] h-[40px] rounded-md bg-black border border-gray-800 hover:border-gray-600 transition duration-100 text-gray-200 text-xl"
-            aria-label="Yeni strateji ekle"
-            title="Yeni strateji ekle"
+            aria-label={t("buttons.addStrategy")}
+            title={t("buttons.addStrategy")}
           >
             +
           </button>
@@ -100,8 +106,8 @@ const IndicatorHeader = ({ locale }) => {
           onClick={toggleMagnetMode}
           className={`mr-[2px] flex items-center justify-center w-[50px] h-[40px] rounded-md transition-all duration-200 text-[22px] 
             ${isMagnetMode ? "scale-95 border bg-black " : "bg-black border border-gray-800 hover:border-gray-600 transition duration-100 text-gray-200"}`}
-          aria-label="Mıknatıs modu"
-          title="Mıknatıs modu"
+          aria-label={t("labels.magnetMode")}
+          title={t("labels.magnetMode")}
         >
           <BiSolidMagnet
             className={`transition-all duration-150 ${isMagnetMode ? "text-blue-300 text-[20px]" : "text-white"}`}
@@ -114,8 +120,8 @@ const IndicatorHeader = ({ locale }) => {
           onClick={toggleRulerMode}
           className={`flex items-center justify-center w-[50px] h-[40px] rounded-md transition-all duration-200 
             ${isRulerMode ? "bg-gray-950 border-2 border-cyan-700 text-white" : "bg-black border border-gray-800 hover:border-gray-600 transition duration-100 text-gray-200"} text-[23px]`}
-          aria-label="Cetvel"
-          title="Cetvel"
+          aria-label={t("labels.ruler")}
+          title={t("labels.ruler")}
         >
           <LuRuler />
         </button>
@@ -130,8 +136,8 @@ const IndicatorHeader = ({ locale }) => {
             ${isRefreshing
               ? "bg-gray-900 border-gray-700 opacity-80 cursor-not-allowed"
               : "bg-black border-gray-800 hover:border-gray-600"}`}
-          aria-label="Refresh"
-          title={isRefreshing ? "Loading..." : "Refresh"}
+          aria-label={t("buttons.refresh")}
+          title={isRefreshing ? t("loading") : t("buttons.refresh")}
         >
           <IoMdRefresh
             className={`text-white ${isRefreshing ? "animate-spin" : ""}`}
@@ -144,8 +150,8 @@ const IndicatorHeader = ({ locale }) => {
           {/* Ayarlar Butonu */}
           <button
             className="mr-2 flex items-center justify-center w-[50px] h-[40px] rounded-md transition-all duration-200 bg-gray-950 hover:bg-gray-900 text-[24px]"
-            aria-label="Ayarlar"
-            title="Ayarlar"
+            aria-label={t("buttons.settings")}
+            title={t("buttons.settings")}
           >
             <IoMdSettings className="text-white" />
           </button>

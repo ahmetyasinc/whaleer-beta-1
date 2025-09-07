@@ -1,0 +1,27 @@
+{
+  "titles": {
+    "createBacktest": "Backtest Oluştur"
+  },
+  "buttons": {
+    "runBacktest": "Backtest’i Çalıştır",
+    "close": "Kapat"
+  },
+  "periods": {
+    "select": "Periyot Seç",
+    "m1": "1 dk",
+    "m3": "3 dk",
+    "m5": "5 dk",
+    "m15": "15 dk",
+    "m30": "30 dk",
+    "h1": "1 saat",
+    "h2": "2 saat",
+    "h4": "4 saat",
+    "d1": "1 gün",
+    "w1": "1 hafta"
+  },
+  "inputs": {
+    "initialBalancePlaceholder": "Başlangıç Bakiyesi (USD)",
+    "initialBalanceHelp": "Başlangıç bakiyesini boş bırakırsanız ilk kapanış fiyatı başlangıç değeri olarak kullanılır.",
+    "initialBalanceInvalid": "Lütfen pozitif bir sayı girin."
+  }
+}

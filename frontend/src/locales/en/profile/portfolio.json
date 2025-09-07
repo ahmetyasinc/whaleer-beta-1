@@ -1,0 +1,35 @@
+{
+  "header": {
+    "portfolio": "My Portfolio",
+    "transactions": "Transaction List"
+  },
+  "tabs": {
+    "portfolio": "Portfolio",
+    "transactions": "Transactions"
+  },
+  "portfolio": {
+    "empty": "You don't have any cryptocurrencies in your portfolio yet.",
+    "columns": {
+      "crypto": "Cryptocurrency",
+      "leverage": "Leverage",
+      "side": "Side",
+      "cost": "Cost",
+      "amount": "Amount",
+      "profitLoss": "Profit/Loss",
+      "margin": "Margin"
+    }
+  },
+  "transactions": {
+    "empty": "You don't have any transaction history yet.",
+    "columns": {
+      "crypto": "Cryptocurrency",
+      "type": "Type",
+      "direction": "Direction",
+      "datetime": "Date/Time",
+      "price": "Price",
+      "amount": "Amount"
+    },
+    "open": "Open",
+    "close": "Close"
+  }
+}

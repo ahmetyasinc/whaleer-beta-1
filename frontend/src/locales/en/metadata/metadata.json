@@ -7,6 +7,10 @@
     "title": "Login to Whaleer",
     "description": "Access your dashboard to build and manage your trading algorithms."
   },
+  "register": {
+    "title": "Register to Whaleer",
+    "description": "Register to Whaleer Platform."
+  },
   "profile": {
     "title": "My Profile",
     "description": "User profile page."

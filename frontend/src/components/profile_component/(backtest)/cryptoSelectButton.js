@@ -5,10 +5,13 @@ import axios from 'axios';
 import { BsPinAngle, BsPinAngleFill } from 'react-icons/bs';
 import useBacktestStore from '@/store/backtest/backtestStore';
 import useCryptoStore from '@/store/indicator/cryptoPinStore';
+import { useTranslation } from 'react-i18next';
 
 axios.defaults.withCredentials = true;
 
 const CryptoSelectButton = () => {
+  const { t } = useTranslation('backtestCryptoSelectButton');
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [cryptosList, setCryptosList] = useState([]);
@@ -67,9 +70,11 @@ const CryptoSelectButton = () => {
       <button
         className="bg-gray-800 px-4 py-2 rounded hover:bg-gray-700 transition"
         onClick={() => setIsModalOpen(true)}
+        aria-label={t('buttons.selectCrypto')}
+        title={t('buttons.selectCrypto')}
       >
         <span className="ml-3">
-          {selectedCrypto ? `${selectedCrypto.name} (${selectedCrypto.symbol})` : 'Select Crypto'}
+          {selectedCrypto ? `${selectedCrypto.name} (${selectedCrypto.symbol})` : t('buttons.selectCrypto')}
         </span>
       </button>
 
@@ -81,23 +86,28 @@ const CryptoSelectButton = () => {
             <button
               className="absolute top-2 right-4 text-gray-400 hover:text-white text-3xl"
               onClick={() => setIsModalOpen(false)}
+              aria-label={t('buttons.close')}
+              title={t('buttons.close')}
             >
               &times;
             </button>
 
-            <h2 className="text-lg font-bold mb-4">Select Cryptocurrency</h2>
+            <h2 className="text-lg font-bold mb-4">{t('titles.selectCryptocurrency')}</h2>
 
             {/* Search */}
             <input
               type="text"
-              placeholder="Search crypto..."
+              placeholder={t('placeholders.searchCrypto')}
               className="w-full px-3 py-2 rounded bg-gray-800 text-white mb-3 focus:outline-none"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              aria-label={t('placeholders.searchCrypto')}
             />
 
             {/* Crypto List */}
-            <div className="flex-grow overflow-y-auto pl-0 ml-0">
+            <div className="flex-grow overflow-y-auto pl-0 ml-0"
+                 role="listbox"
+                 aria-label={t('titles.selectCryptocurrency')}>
               {filteredCryptos.length > 0 ? (
                 <ul className="pl-0 ml-0">
                   {filteredCryptos.map((crypto) => (
@@ -108,6 +118,8 @@ const CryptoSelectButton = () => {
                         setSelectedCrypto(crypto);
                         setIsModalOpen(false);
                       }}
+                      role="option"
+                      aria-selected={selectedCrypto?.id === crypto.id}
                     >
                       {`${crypto.name} (${crypto.symbol})`}
                       <div>
@@ -121,7 +133,7 @@ const CryptoSelectButton = () => {
                   ))}
                 </ul>
               ) : (
-                <p className="text-center text-gray-400">No matching items</p>
+                <p className="text-center text-gray-400">{t('empty.noMatches')}</p>
               )}
             </div>
           </div>

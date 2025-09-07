@@ -1,0 +1,66 @@
+{
+  "titles": {
+    "rename": "Rename API",
+    "addNew": "Add New API"
+  },
+  "steps": {
+    "step1": "Step 1/2 — Verify with ED Key (direct to Binance)",
+    "step2": "Step 2/2 — Verify HMAC Keys (direct to Binance)"
+  },
+  "fields": {
+    "apiName": "API Name",
+    "edKey": "ED Key",
+    "edPublicPem": "ED Public PEM",
+    "apiKey": "API Key",
+    "secret": "Secret API Key"
+  },
+  "placeholders": {
+    "apiName": "Enter API name",
+    "edKey": "Enter your ED Key (from Binance)",
+    "apiKey": "Paste your API key",
+    "secret": "Paste your Secret"
+  },
+  "buttons": {
+    "copy": "Copy",
+    "cancel": "Cancel",
+    "save": "Save",
+    "verifying": "Verifying…",
+    "next": "Next",
+    "back": "Back",
+    "verifyNext": "Verify & Next"
+  },
+  "confirmEd": {
+    "title": "ED Balance (Spot)",
+    "estimated": "Estimated USD:",
+    "reenter": "Re-enter ED Key",
+    "continue": "Continue"
+  },
+  "confirmHmac": {
+    "title": "Confirm Balance (Spot + Futures)",
+    "total": "Total USD:",
+    "spot": "Spot:",
+    "futures": "Futures:"
+  },
+  "warning": {
+    "title": "Warning:",
+    "desc": "There is a {{diff}}% difference between ED (Spot) and HMAC (Spot) balances. Make sure your API credentials belong to the same Binance account. Otherwise, the user is solely responsible for operations and results."
+  },
+  "labels": {
+    "fetchingEdPair": "fetching ED pair…"
+  },
+  "toasts": {
+    "edStockEmpty": "ED key stock empty.",
+    "edFetchFailed": "Could not fetch balance via ED. Please check your ED Key.",
+    "hmacFetchFailed": "Could not fetch balance via HMAC. Please check your credentials.",
+    "copied": "Copied!",
+    "copyFailed": "Copy failed"
+  },
+  "errors": {
+    "enterApiName": "Please enter an API name",
+    "edKeyEmpty": "ED Key cannot be empty",
+    "edPublicMissing": "ED Public PEM missing",
+    "edPrivateMissing": "ED Private PEM missing",
+    "apiKeyEmpty": "API key cannot be empty",
+    "secretEmpty": "Secret cannot be empty"
+  }
+}

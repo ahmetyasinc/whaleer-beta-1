@@ -1,0 +1,26 @@
+{
+  "tabs": {
+    "new": "New Listing",
+    "update": "Update Existing"
+  },
+  "aria": {
+    "close": "Close"
+  },
+  "search": {
+    "placeholder": "Search by bot name",
+    "aria": "Search by bot name"
+  },
+  "list": {
+    "empty": "No bots found.",
+    "noPnl": "No P&L data"
+  },
+  "badges": {
+    "forSale": "For Sale: {{price}}",
+    "forRentPerDay": "For Rent: {{price}}/day"
+  },
+  "actions": {
+    "select": "Select",
+    "selectNew": "Select to create a new listing",
+    "selectUpdate": "Select to update listing"
+  }
+}

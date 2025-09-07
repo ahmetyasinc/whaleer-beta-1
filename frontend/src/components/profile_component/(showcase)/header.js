@@ -10,11 +10,13 @@ import useBotDropdownSearchStore from '@/store/showcase/botDropdownSearchStore';
 import { useSiwsStore } from "@/store/auth/siwsStore";
 import useSiwsAuth from "@/hooks/useSiwsAuth";
 import useBotDataStore from '@/store/showcase/botDataStore';
+import { useTranslation } from "react-i18next";
 
 export default function Header() {
+  const { t } = useTranslation('showcaseHeader');
   const pathname = usePathname();
   const [modalOpen, setModalOpen] = useState(false);
-  
+
   const { fetchBots, hasLoadedOnce, loading } = useBotDropdownSearchStore();
   useEffect(() => { if (!hasLoadedOnce && !loading) fetchBots(); }, [fetchBots, hasLoadedOnce, loading]);
 
@@ -24,9 +26,12 @@ export default function Header() {
   // Vitrine gelindiğinde cookie’den wallet oturumunu hydrate et
   useEffect(() => { hydrateSession(); }, [hydrateSession]);
 
+  // 🔒 Featured sayfasında mı?
+  const isFeatured = pathname?.includes("/profile/showcase/featured");
+  
   const navItems = [
-    { name: "Explore", href: "/profile/showcase" },
-    { name: "Featured", href: "/profile/showcase/featured" }
+    { name: t("nav.explore"), href: "/profile/showcase" },
+    { name: t("nav.featured"), href: "/profile/showcase/featured" }
   ];
 
   const viewMode = useBotDataStore(s => s.viewMode);
@@ -34,6 +39,7 @@ export default function Header() {
   const initializeBots = useBotDataStore(s => s.initializeBots);
 
   const onChangeMode = async (mode) => {
+    if (isFeatured) return; // 🔒 Featured'da toggle kapalı
     setViewMode(mode);
     await initializeBots(); // modu değiştirince listeyi yenile
   };
@@ -42,34 +48,49 @@ export default function Header() {
     <>
       <header className="fixed top-0 left-0 w-full bg-black text-white h-[60px] shadow-md z-50 px-6">
         <div className="relative h-full flex items-center justify-between">
-          {/* Sell / Rent */}
+          {/* Sell / Rent & Toggle */}
           <div className="absolute left-[45px] top-1/2 -translate-y-1/2 flex items-center gap-3 z-50">
+            {/* 🔒 Featured'da her zaman disabled */}
             <button
-              className="bg-black hover:border-stone-400 transition px-6 py-[6px] rounded-xl font-semibold shadow-lg text-white border border-stone-600 disabled:opacity-50"
-              onClick={() => setModalOpen(true)}
-              disabled={!walletLinked}
+              className={`bg-black transition px-6 py-[6px] rounded-xl font-semibold shadow-lg text-white border border-stone-600 disabled:opacity-50 hover:border-stone-400 ${
+                isFeatured ? "cursor-not-allowed" : ""
+              }`}
+              onClick={() => {
+                if (isFeatured) return; // güvenlik
+                setModalOpen(true);
+              }}
+              disabled={isFeatured || !walletLinked}
               type="button"
+              title={isFeatured ? t("titles.disabledOnFeatured") : undefined}
             >
-              Sell / Rent
+              {t("buttons.sellRent")}
             </button>
 
-            {/* ✅ All / My toggle */}
-            <div className="flex items-center rounded-xl border border-stone-600 overflow-hidden">
+            {/* ✅ All / My toggle — Featured'da tamamen pasif */}
+            <div
+              className={`flex items-center rounded-xl border border-stone-600 overflow-hidden ${
+                isFeatured ? "opacity-50 pointer-events-none select-none" : ""
+              }`}
+              aria-disabled={isFeatured ? "true" : "false"}
+              title={isFeatured ? t("titles.disabledOnFeatured") : t("titles.toggleView")}
+            >
               <button
-                className={`px-3 py-[6px] text-sm ${viewMode === 'all' ? 'bg-stone-700' : 'bg-black hover:bg-stone-800'}`}
+                className={`px-3 py-[6px] text-sm ${
+                  viewMode === 'all' ? 'bg-stone-700' : 'bg-black hover:bg-stone-800'
+                }`}
                 onClick={() => onChangeMode('all')}
                 type="button"
-                title="Show all listings"
               >
-                All Listings
+                {t("buttons.allListings")}
               </button>
               <button
-                className={`px-3 py-[6px] text-sm border-l border-stone-600 ${viewMode === 'mine' ? 'bg-stone-700' : 'bg-black hover:bg-stone-800'}`}
+                className={`px-3 py-[6px] text-sm border-l border-stone-600 ${
+                  viewMode === 'mine' ? 'bg-stone-700' : 'bg-black hover:bg-stone-800'
+                }`}
                 onClick={() => onChangeMode('mine')}
                 type="button"
-                title="Show only my listings"
               >
-                My Listings
+                {t("buttons.myListings")}
               </button>
             </div>
           </div>
@@ -95,32 +116,35 @@ export default function Header() {
               ))}
             </nav>
 
-              {!walletLinked ? (
-                !isPhantomInstalled && readyState !== "Installed" ? (
-                  <a
-                    href="https://phantom.app/download"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-[6px] rounded-xl border border-stone-600 hover:border-stone-400"
-                  >
-                    Install Phantom
-                  </a>
-                ) : (
-                  <button
-                    onClick={connectWalletAndSignIn}
-                    disabled={authLoading}
-                    className="px-4 py-[6px] rounded-xl border border-stone-600 hover:border-stone-400"
-                  >
-                    {authLoading ? "Connecting..." : "Connect Wallet"}
-                  </button>
-                )
+            {!walletLinked ? (
+              !isPhantomInstalled && readyState !== "Installed" ? (
+                <a
+                  href="https://phantom.app/download"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-[6px] rounded-xl border border-stone-600 hover:border-stone-400"
+                >
+                  {t("buttons.installPhantom")}
+                </a>
               ) : (
+                <button
+                  onClick={connectWalletAndSignIn}
+                  disabled={authLoading}
+                  className="px-4 py-[6px] rounded-xl border border-stone-600 hover:border-stone-400"
+                >
+                  {authLoading ? t("buttons.connecting") : t("buttons.connectWallet")}
+                </button>
+              )
+            ) : (
               <div className="flex items-center gap-2">
                 <span className="text-sm opacity-80">
-                  {wallet?.address ? `${wallet.address.slice(0,4)}...${wallet.address.slice(-4)}` : "Connected"}
+                  {wallet?.address ? `${wallet.address.slice(0,4)}...${wallet.address.slice(-4)}` : t("labels.connected")}
                 </span>
-                <button onClick={signOutWallet} className="px-3 py-[6px] rounded-xl border border-stone-600 hover:border-stone-400">
-                  Sign Out
+                <button
+                  onClick={signOutWallet}
+                  className="px-3 py-[6px] rounded-xl border border-stone-600 hover:border-stone-400"
+                >
+                  {t("buttons.signOut")}
                 </button>
               </div>
             )}

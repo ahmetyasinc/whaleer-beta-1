@@ -1,0 +1,25 @@
+{
+  "title": "Takip Edilen Botlar",
+  "counts": {
+    "followed": "{{count}} bot takip ediliyor"
+  },
+  "empty": {
+    "primary": "Henüz hiç bot takip etmediniz",
+    "hint": "Kartlarındaki \"Takip Et\" butonuna tıklayarak botları takip edebilirsiniz"
+  },
+  "actions": {
+    "unfollow": "Takibi Bırak",
+    "inspect": "İncele"
+  },
+  "labels": {
+    "uptime": "Çalışma Süresi",
+    "creator": "Oluşturan",
+    "status": "Durum"
+  },
+  "runtime": {
+    "startedToday": "Bugün başladı",
+    "hoursOnly": "{{hours}} saat",
+    "daysOnly": "{{days}} gün",
+    "daysHours": "{{days}} gün {{hours}} saat"
+  }
+}

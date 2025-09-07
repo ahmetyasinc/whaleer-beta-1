@@ -1,0 +1,71 @@
+{
+  "titles": {
+    "create": "Create New Bot",
+    "edit": "Edit Bot"
+  },
+  "labels": {
+    "botName": "Bot Name",
+    "enterBotName": "Enter bot name",
+    "type": "Type",
+    "api": "API",
+    "strategy": "Strategy",
+    "hidden": "Hidden.",
+    "period": "Period",
+    "select": "Select",
+    "candleCount": "Candle Count",
+    "candleCountPlaceholder": "Exp: 100",
+    "workingDays": "Working Days",
+    "allocateBalance": "Allocate Balance for Bot",
+    "totalBalance": "Total Balance",
+    "botWorkingHours": "Bot Working Hours",
+    "startEndAllDay": "Run All Day",
+    "addCryptocurrency": "Add Cryptocurrency",
+    "searchPlaceholder": "Exp: BTCUSDT",
+    "noMatchingCrypto": "No matching crypto found",
+    "remove": "Remove",
+    "add": "Add",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "types": {
+    "spot": "Spot",
+    "futures": "Futures"
+  },
+  "periods": {
+    "1m": "1 min",
+    "5m": "5 min",
+    "15m": "15 min",
+    "30m": "30 min",
+    "1h": "1 hour",
+    "2h": "2 hours",
+    "4h": "4 hours",
+    "1d": "1 day",
+    "1w": "1 week"
+  },
+  "days": {
+    "Mon": "Mon",
+    "Tue": "Tue",
+    "Wed": "Wed",
+    "Thu": "Thu",
+    "Fri": "Fri",
+    "Sat": "Sat",
+    "Sun": "Sun"
+  },
+  "errors": {
+    "nameRequired": "Bot name is required.",
+    "apiRequired": "API selection is required.",
+    "strategyRequired": "Strategy must be selected.",
+    "periodRequired": "Period must be selected.",
+    "candleInvalid": "Invalid candle count.",
+    "dayRequired": "At least one day must be selected.",
+    "hoursRequired": "Working hours must be provided.",
+    "amountMin": "Amount must be greater than $10.",
+    "cryptoRequired": "At least one crypto must be selected.",
+    "endAfterStart": "End time must be at least 1 hour after start time.",
+    "amountGtBalance": "Allocated amount cannot be greater than total balance."
+  },
+  "toast": {
+    "created": "Bot created!",
+    "updated": "Bot updated!"
+  }
+}

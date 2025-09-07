@@ -2,35 +2,34 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import {
-  FiMail,
-  FiInstagram
-} from 'react-icons/fi';
+import { FiMail, FiInstagram } from 'react-icons/fi';
 import { FaRobot, FaUser } from 'react-icons/fa';
-import { FaLinkedin, FaPhoneFlip, FaGithub } from "react-icons/fa6";
+import { FaLinkedin, FaPhoneFlip, FaGithub } from 'react-icons/fa6';
+import { useTranslation } from 'react-i18next';
 
 const UserProfileCard = ({ userData, isAnimating = false, onUserClick }) => {
+  const { t } = useTranslation('userProfileCard');
   if (!userData) return null;
 
   const formatRunningTime = (hours) => {
-    if (hours < 1) return 'Started today';
+    if (hours < 1) return t('runtime.startedToday');
     const days = Math.floor(hours / 24);
     const remainingHours = hours % 24;
     return days === 0
-      ? `${hours} hours`
+      ? t('runtime.hoursOnly', { hours })
       : remainingHours === 0
-      ? `${days} days`
-      : `${days} days ${remainingHours} hours`;
+      ? t('runtime.daysOnly', { days })
+      : t('runtime.daysHours', { days, hours: remainingHours });
   };
 
-  const activeBots = userData.bots?.filter(bot => bot.isActive).length || 0;
+  const activeBots = userData.bots?.filter((bot) => bot.isActive).length || 0;
 
   return (
     <motion.div
       className="bg-gray-800 rounded-2xl shadow-2xl p-6 border border-gray-700"
       initial={{ y: -50, opacity: 0 }}
       animate={{ y: isAnimating ? -20 : 0, opacity: isAnimating ? 0.8 : 1 }}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
+      transition={{ duration: 0.3, ease: 'easeInOut' }}
     >
       {/* User header */}
       <div className="text-center mb-6">
@@ -42,24 +41,32 @@ const UserProfileCard = ({ userData, isAnimating = false, onUserClick }) => {
         </div>
         <h2 className="text-xl font-bold text-white mb-1">{userData.display_name}</h2>
         <div className="flex items-center justify-center gap-4 mt-3 text-xs text-gray-400">
-          <span>Joined: {userData.join_date}</span>
+          <span>{t('header.joined', { date: userData.join_date })}</span>
           <span>📍 {userData.location}</span>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6 text-center text-gray-300">
-        <StatBox title="Total Bots" value={userData.allbots} />
-        <StatBox title="Active Bots" value={activeBots} />
-        <StatBox title="Sold / Rented" value={`${userData.totalSold}/${userData.totalRented}`} />
-        <StatBox title="Success Rate" value={`${userData.bots_winRate_LifeTime.toFixed(1)}%`} color={getRateColor(userData.bots_winRate_LifeTime)} />
-        <StatBox title="Avg. Margin" value={`${userData.avg_bots_profit_lifetime}%`} color={userData.avg_bots_profit_lifetime >= 0 ? 'text-green-400' : 'text-red-400'} />
-        <StatBox title="Followers" value={userData.totalFollowers} color="text-blue-500" />
+        <StatBox title={t('stats.totalBots')} value={userData.allbots} />
+        <StatBox title={t('stats.activeBots')} value={activeBots} />
+        <StatBox title={t('stats.soldRented')} value={`${userData.totalSold}/${userData.totalRented}`} />
+        <StatBox
+          title={t('stats.successRate')}
+          value={`${userData.bots_winRate_LifeTime.toFixed(1)}%`}
+          color={getRateColor(userData.bots_winRate_LifeTime)}
+        />
+        <StatBox
+          title={t('stats.avgMargin')}
+          value={`${userData.avg_bots_profit_lifetime}%`}
+          color={userData.avg_bots_profit_lifetime >= 0 ? 'text-green-400' : 'text-red-400'}
+        />
+        <StatBox title={t('stats.followers')} value={userData.totalFollowers} color="text-blue-500" />
       </div>
 
       {/* Contact Info */}
       <div className="mb-6">
-        <h3 className="text-sm font-semibold text-white mb-3">Contact</h3>
+        <h3 className="text-sm font-semibold text-white mb-3">{t('contact.title')}</h3>
         <div className="space-y-2 text-xs text-gray-300">
           <ContactRow icon={<FiMail />} value={userData.email} color="text-blue-400" />
           <ContactRow icon={<FiInstagram />} value={userData.instagram} color="text-green-400" />
@@ -71,33 +78,41 @@ const UserProfileCard = ({ userData, isAnimating = false, onUserClick }) => {
 
       {/* Created Bots */}
       <div>
-        <h3 className="text-sm font-semibold text-white mb-3">Created Bots</h3>
+        <h3 className="text-sm font-semibold text-white mb-3">{t('bots.title')}</h3>
         <div className="space-y-2 max-h-[450px] overflow-y-auto">
-          {userData.bots?.map(bot => (
+          {userData.bots?.map((bot) => (
             <div key={bot.id} className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-lg p-3 hover:bg-gray-600 transition-colors">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <FaRobot className="w-4 h-4 text-blue-400" />
                   <span className="text-sm font-medium text-white">{bot.name}</span>
-                  <span className="w-2 h-2 rounded-full block" title={bot.isActive ? 'Active' : 'Inactive'}
-                    style={{ backgroundColor: bot.isActive ? '#4ade80' : '#f87171' }} />
+                  <span
+                    className="w-2 h-2 rounded-full block"
+                    title={bot.isActive ? t('bots.active') : t('bots.inactive')}
+                    style={{ backgroundColor: bot.isActive ? '#4ade80' : '#f87171' }}
+                  />
                 </div>
-                <span className={`text-xs font-medium ${parseFloat(bot.profitRate || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {parseFloat(bot.profitRate || 0) > 0 ? '+' : ''}{bot.profitRate || 0}%
+                <span
+                  className={`text-xs font-medium ${
+                    parseFloat(bot.profitRate || 0) > 0 ? 'text-green-400' : 'text-red-400'
+                  }`}
+                >
+                  {parseFloat(bot.profitRate || 0) > 0 ? '+' : ''}
+                  {bot.profitRate || 0}%
                 </span>
               </div>
 
               <div className="flex items-center justify-between text-xs text-gray-400">
                 <span className="flex flex-col items-start">
-                  <span>Uptime:</span>
+                  <span>{t('bots.uptime')}</span>
                   <span className="text-gray-300">{formatRunningTime(bot.runningTime || 0)}</span>
                 </span>
                 <span className="flex flex-col items-start">
-                  <span>Trades</span>
+                  <span>{t('bots.trades')}</span>
                   <span className="text-gray-300">{bot.totalTrades || 0}</span>
                 </span>
                 <span className="flex flex-col items-start">
-                  <span>Win Rate</span>
+                  <span>{t('bots.winRate')}</span>
                   <span className="text-gray-300">%{bot.winRate || 0}</span>
                 </span>
               </div>
@@ -110,7 +125,7 @@ const UserProfileCard = ({ userData, isAnimating = false, onUserClick }) => {
                 ))}
                 {bot.coins?.length > 3 && (
                   <span className="px-2 py-1 bg-gray-600 text-gray-300 rounded text-xs">
-                    +{bot.coins.length - 3}
+                    {t('bots.moreCoins', { count: bot.coins.length - 3 })}
                   </span>
                 )}
               </div>

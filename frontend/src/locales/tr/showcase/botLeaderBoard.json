@@ -1,0 +1,21 @@
+{
+  "title": "Bot Liderlik Tablosu",
+  "sort": {
+    "byProfit": "Kâr'a Göre",
+    "bySuccessRate": "Başarı Oranı'na Göre",
+    "byProfitFactor": "Kâr Faktörü'ne Göre",
+    "byWeeklyTrades": "Haftalık İşlem'e Göre",
+    "byPrice": "Fiyat'a Göre"
+  },
+  "sortOrder": {
+    "desc": "Azalan",
+    "asc": "Artan"
+  },
+  "cards": {
+    "profit": "Kâr",
+    "success": "Başarı",
+    "profitFactor": "Kâr Faktörü",
+    "weeklyTrades": "Haftalık İşlem",
+    "price": "Fiyat"
+  }
+}

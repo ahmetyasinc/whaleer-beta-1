@@ -1,7 +1,11 @@
+"use client";
+
 import useStrategyStore from "@/store/indicator/strategyStore";
 import { IoMdStar, IoIosStarOutline } from "react-icons/io";
+import { useTranslation } from "react-i18next";
 
 const PersonalStrategies = ({ onSelect }) => {
+  const { t } = useTranslation("personalStrategies");
   const { favorites, strategies } = useStrategyStore();
 
   return (
@@ -11,7 +15,10 @@ const PersonalStrategies = ({ onSelect }) => {
           <></>
         ) : (
           strategies.map((strategy) => (
-            <div key={strategy.id} className="bg-gray-900 hover:bg-gray-800 flex items-center justify-between w-full h-[40px] mb-2">
+            <div
+              key={strategy.id}
+              className="bg-gray-900 hover:bg-gray-800 flex items-center justify-between w-full h-[40px] mb-2"
+            >
               <div className="flex items-center pl-2">
                 <div className="bg-transparent p-2 rounded-md hover:bg-gray-800">
                   {favorites.some((fav) => fav.id === strategy.id) ? (
@@ -27,8 +34,9 @@ const PersonalStrategies = ({ onSelect }) => {
                 <button
                   className="bg-blue-600 px-2 rounded-md py-[1px] h-[26px] mr-3 hover:bg-blue-800 text-white text-xs"
                   onClick={() => onSelect(strategy)}
+                  aria-label={t("select")}
                 >
-                  Select
+                  {t("select")}
                 </button>
               </div>
             </div>

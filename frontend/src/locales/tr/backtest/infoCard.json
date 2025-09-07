@@ -1,0 +1,32 @@
+{
+  "labels": {
+    "strategy": "Strateji",
+    "crypto": "Kripto",
+    "period": "Periyot"
+  },
+  "buttons": {
+    "archive": "Arşivle",
+    "clear": "Temizle"
+  },
+  "defaults": {
+    "notSelected": "Seçilmedi"
+  },
+  "stats": {
+    "testDate": "Test Tarihi",
+    "totalTrades": "Toplam İşlem",
+    "status": "Durum",
+    "completed": "Tamamlandı"
+  },
+  "periods": {
+    "1m": "1 Dakika",
+    "3m": "3 Dakika",
+    "5m": "5 Dakika",
+    "15m": "15 Dakika",
+    "30m": "30 Dakika",
+    "1h": "1 Saat",
+    "2h": "2 Saat",
+    "4h": "4 Saat",
+    "1d": "1 Gün",
+    "1w": "1 Hafta"
+  }
+}

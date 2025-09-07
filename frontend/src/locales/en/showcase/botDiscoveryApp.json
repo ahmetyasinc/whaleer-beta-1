@@ -1,0 +1,13 @@
+{
+  "empty": {
+    "title": "No bots found matching your criteria.",
+    "desc": "Please adjust your filters and try again."
+  },
+  "chart": {
+    "profitPctTitle": "Profit Chart (%)"
+  },
+  "nav": {
+    "prevTooltip": "Previous bot/user",
+    "nextTooltip": "Next bot/user"
+  }
+}

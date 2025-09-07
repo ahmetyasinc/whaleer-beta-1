@@ -1,0 +1,9 @@
+{
+  "title": "Botu silmek istediğinize emin misiniz?",
+  "warning": "Halihazırda açık işlemleriniz kapatılmayacaktır. Açık işlemlerinizin kontrolünü sağlayın.",
+  "irreversible": "Bu işlem geri alınamaz.",
+  "actions": {
+    "cancel": "Vazgeç",
+    "delete": "Sil"
+  }
+}

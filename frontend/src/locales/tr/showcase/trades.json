@@ -1,0 +1,10 @@
+{
+  "titles": {
+    "tradeHistory": "İşlem Geçmişi",
+    "openPositions": "Açık Pozisyonlar"
+  },
+  "counts": {
+    "trades": "({{count}} işlem)",
+    "positions": "({{count}} pozisyon)"
+  }
+}

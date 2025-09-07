@@ -1,0 +1,9 @@
+{
+  "title": "Botu kapatmak istediğinize emin misiniz?",
+  "warning": "Botunuz silinecek ve tüm açık pozisyonlar kapatılacaktır. Lütfen hesap cüzdanınızı kontrol edin.",
+  "irreversible": "Bu işlem geri alınamaz.",
+  "actions": {
+    "cancel": "Vazgeç",
+    "shutdown": "Kapat"
+  }
+}

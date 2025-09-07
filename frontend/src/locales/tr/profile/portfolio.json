@@ -1,0 +1,35 @@
+{
+  "header": {
+    "portfolio": "Portföyüm",
+    "transactions": "İşlem Geçmişi"
+  },
+  "tabs": {
+    "portfolio": "Portföy",
+    "transactions": "İşlemler"
+  },
+  "portfolio": {
+    "empty": "Portföyünüzde henüz kripto para yok.",
+    "columns": {
+      "crypto": "Kripto Para",
+      "leverage": "Kaldıraç",
+      "side": "Yön",
+      "cost": "Maliyet",
+      "amount": "Miktar",
+      "profitLoss": "Kâr/Zarar",
+      "margin": "Marjin"
+    }
+  },
+  "transactions": {
+    "empty": "Henüz işlem geçmişiniz yok.",
+    "columns": {
+      "crypto": "Kripto Para",
+      "type": "Tür",
+      "direction": "Yön",
+      "datetime": "Tarih/Saat",
+      "price": "Fiyat",
+      "amount": "Miktar"
+    },
+    "open": "Açık",
+    "close": "Kapalı"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "titles": {
+    "valueDistribution": "Bot Değer Dağılımı",
+    "pnlDistribution": "Bot Kar/Zarar Dağılımı"
+  },
+  "buttons": {
+    "value": "Değer",
+    "pnl": "Kar/Zarar"
+  },
+  "descriptions": {
+    "value": "Mevcut bot değerlerinin dağılımı",
+    "pnl": "Kar (dış halka) ve Zarar (iç halka) dağılımı"
+  },
+  "empty": {
+    "noData": "Bot verisi bulunamadı"
+  },
+  "footer": {
+    "totalValue": "Toplam Değer",
+    "totalPnl": "Toplam Kar/Zarar"
+  }
+}

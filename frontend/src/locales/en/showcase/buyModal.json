@@ -1,0 +1,34 @@
+{
+  "title": "Confirm Purchase",
+  "rows": {
+    "action": "Action",
+    "botName": "Bot Name",
+    "sellerName": "Seller Name",
+    "priceUsd": "Price (USD)",
+    "approxSol": "Approx. Price (SOL)",
+    "revenueWallet": "Revenue Wallet"
+  },
+  "actionNames": {
+    "buy": "Buy"
+  },
+  "buttons": {
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "processing": "Processing..."
+  },
+  "toasts": {
+    "preparing": "Preparing payment...",
+    "signWallet": "Sign the transaction in your wallet...",
+    "confirmOnchain": "Confirming on-chain payment...",
+    "activatingLicense": "Activating your license..."
+  },
+  "errors": {
+    "connectWallet": "Please connect your wallet.",
+    "invalidCheckout": "Invalid checkout data.",
+    "nonJson": "Non-JSON response received from server.",
+    "prepareFailed": "Failed to preparation.",
+    "invalidIntent": "Invalid intent from server.",
+    "notConfirmed": "Payment could not be confirmed.",
+    "operationFailed": "Operation failed."
+  }
+}

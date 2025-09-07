@@ -1,0 +1,15 @@
+{
+  "titles": {
+    "selectCryptocurrency": "Select Cryptocurrency"
+  },
+  "buttons": {
+    "selectCrypto": "Select Crypto",
+    "close": "Close"
+  },
+  "placeholders": {
+    "searchCrypto": "Search crypto..."
+  },
+  "empty": {
+    "noMatches": "No matching items"
+  }
+}

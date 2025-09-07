@@ -1,0 +1,15 @@
+{
+  "titles": {
+    "selectCryptocurrency": "Kripto Para Seç"
+  },
+  "buttons": {
+    "selectCrypto": "Kripto Seç",
+    "close": "Kapat"
+  },
+  "placeholders": {
+    "searchCrypto": "Kripto ara..."
+  },
+  "empty": {
+    "noMatches": "Eşleşme yok"
+  }
+}

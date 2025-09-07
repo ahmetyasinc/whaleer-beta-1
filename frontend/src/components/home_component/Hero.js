@@ -1,38 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import i18n from "@/i18n";
 import { useTranslation } from "react-i18next";
-import { useEffect } from "react";
 import { FiPlayCircle, FiUsers, FiUserCheck, FiTrendingUp, FiBook } from "react-icons/fi";
 import { IoSettingsOutline } from "react-icons/io5";
 import { PiCursorClickFill } from "react-icons/pi";
 import TypewriterText from "./typeWriter";
 import { motion } from "framer-motion";
 
+export default function Hero({ userCount, traderCount, strategyCount, botCount }) {
+  const { t, i18n } = useTranslation("hero", { useSuspense: false });
 
-
-export default function Hero({ userCount, traderCount, strategyCount, botCount, locale }) {
-  const { t } = useTranslation("hero");
-
-  useEffect(() => {
-    if (locale && i18n.language !== locale) {
-      i18n.changeLanguage(locale);
-    }
-  }, [locale]);
+  // Aktif dil (LanguageProvider zaten eşitlemiş durumda)
+  const locale = i18n.resolvedLanguage || i18n.language || "en";
+  const withLocale = (path) => (path === "/" ? `/${locale}` : `/${locale}${path}`);
 
   return (
-    <section id="hero"   
-             className="
-               home-hard-gradient
-               py-20 md:px-28 lg:py-36
-               relative overflow-hidden
-               after:content-[''] after:absolute after:inset-0
-               after:bg-gradient-to-b after:from-transparent after:to-[rgb(0,0,4)]
-               after:opacity-100 after:pointer-events-none
-               after:z-10
-             "
-      >
+    <section
+      id="hero"
+      className="
+        home-hard-gradient
+        py-20 md:px-28 lg:py-36
+        relative overflow-hidden
+        after:content-[''] after:absolute after:inset-0
+        after:bg-gradient-to-b after:from-transparent after:to-[rgb(0,0,4)]
+        after:opacity-100 after:pointer-events-none
+        after:z-10
+      "
+    >
       <div className="container relative z-20 mx-auto px-4" data-aos="fade-up" data-aos-delay="100">
         <div className="flex flex-col lg:flex-row items-center gap-12">
           {/* Left content */}
@@ -45,23 +40,17 @@ export default function Hero({ userCount, traderCount, strategyCount, botCount, 
                 </div>
 
                 <h1 className="mb-6 text-left font-sans text-4xl lg:text-5xl xl:text-6xl font-bold text-white">
-
-                  <span className="mb-4">{t("heading1")}</span> <br/>
-                  <span className="mb-4">{t("heading2")}</span> <br/>
-
+                  <span className="mb-4">{t("heading1")}</span> <br />
+                  <span className="mb-4">{t("heading2")}</span> <br />
                   <motion.span
                     className="bg-clip-text text-transparent [will-change:background-image] mt-2"
                     style={{
-                      // Başlangıç açısı
-                      ['--angle']: '0deg',
-                      // Degradeyi CSS değişkeniyle tanımla (Tailwind'e dokunmadan)
-                      backgroundImage:
-                        'linear-gradient(var(--angle), #06b6d4, #60a5fa, #d946ef)', // cyan-500, blue-400, fuchsia-500
-                      backgroundSize: '100% 100%',
+                      ["--angle"]: "0deg",
+                      backgroundImage: "linear-gradient(var(--angle), #06b6d4, #60a5fa, #d946ef)",
+                      backgroundSize: "100% 100%",
                     }}
-                    // 0° → 180° → 360° döndür: 180°'de sol-sağ renkler swap olur
-                    animate={{ ['--angle']: ['0deg', '180deg', '360deg'] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                    animate={{ ["--angle"]: ["0deg", "180deg", "360deg"] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                   >
                     {t("heading3")}
                   </motion.span>
@@ -76,12 +65,13 @@ export default function Hero({ userCount, traderCount, strategyCount, botCount, 
 
               <div className="hero-buttons text-left flex flex-col sm:flex-row gap-4">
                 <Link
-                  href="/login"
+                  href={withLocale("/login")}
                   className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold rounded-xl shadow-md shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 transform glightbox group"
                 >
-                <PiCursorClickFill className="rotate-90 mr-4 text-[23px] group-hover:scale-125 transition-transform duration-200" />
+                  <PiCursorClickFill className="rotate-90 mr-4 text-[23px] group-hover:scale-125 transition-transform duration-200" />
                   {t("ctaStart")}
                 </Link>
+
                 <a
                   href="https://youtu.be/5F2xA1n4i08"
                   className="inline-flex items-center justify-center px-8 py-4 bg-fuchsia-700/5 backdrop-blur-sm hover:bg-fuchsia-600/10 text-white border border-white/10 hover:border-white/20 font-semibold rounded-xl shadow-md  hover:shadow-fuchsia-900/10 transition-all duration-300 glightbox group"
@@ -93,25 +83,24 @@ export default function Hero({ userCount, traderCount, strategyCount, botCount, 
             </div>
           </div>
 
-        {/* Right image */}
-        <div className="w-full lg:w-1/2 hidden md:block">
-          <div
-            className="hero-image rotating-container"
-            data-aos="zoom-out"
-            data-aos-delay="300"
-          >
-            <img
-              src="/img/logo5.png"
-              alt="Hero Image"
-              className="w-full max-w-xl md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto rotating-img mb-10"
-            />
+          {/* Right image */}
+          <div className="w-full lg:w-1/2 hidden md:block">
+            <div className="hero-image rotating-container" data-aos="zoom-out" data-aos-delay="300">
+              <img
+                src="/img/logo5.png"
+                alt="Hero Image"
+                className="w-full max-w-xl md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto rotating-img mb-10"
+              />
+            </div>
           </div>
         </div>
 
-        </div>
-
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-16 lg:mt-20" data-aos="fade-up" data-aos-delay="500">
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-16 lg:mt-20"
+          data-aos="fade-up"
+          data-aos-delay="500"
+        >
           {/* Users */}
           <div className="group bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 transform hover:scale-105">
             <div className="flex items-center space-x-4">
@@ -168,4 +157,3 @@ export default function Hero({ userCount, traderCount, strategyCount, botCount, 
     </section>
   );
 }
-

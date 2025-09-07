@@ -1,0 +1,21 @@
+{
+  "titles": {
+    "valueDistribution": "Bot Value Distribution",
+    "pnlDistribution": "Bot P&L Distribution"
+  },
+  "buttons": {
+    "value": "Value",
+    "pnl": "P&L"
+  },
+  "descriptions": {
+    "value": "Distribution of current bot values",
+    "pnl": "Profit (outer ring) and Loss (inner ring) distribution"
+  },
+  "empty": {
+    "noData": "No bot data available"
+  },
+  "footer": {
+    "totalValue": "Total Value",
+    "totalPnl": "Total P&L"
+  }
+}

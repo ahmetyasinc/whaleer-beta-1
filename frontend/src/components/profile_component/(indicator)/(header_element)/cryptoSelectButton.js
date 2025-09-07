@@ -92,7 +92,6 @@ const CryptoSelectButton = ({locale}) => {
       const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/unpin-binance-coin/`, {
         data: { coin_id: crypto.id }, // DELETE isteği için `data` içinde gönderiyoruz
       });
-      console.log("Pin kaldırma işlemi başarılı:", response.data);
     } catch (error) {
       console.error("Pin kaldırma işlemi sırasında hata oluştu:", error);
     }

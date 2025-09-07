@@ -1,0 +1,24 @@
+{
+  "placeholder": {
+    "search": "Bot veya geliştirici ara..."
+  },
+  "aria": {
+    "searchInput": "Bot veya geliştirici ara",
+    "toggleDropdown": "Arama sonuçlarını aç/kapat",
+    "searchResults": "Arama sonuçları"
+  },
+  "info": {
+    "loading": "Yükleniyor…",
+    "error": "Bir hata oluştu: {{message}}",
+    "empty": "Sonuç bulunamadı"
+  },
+  "type": {
+    "spot": "Spot",
+    "futures": "Vadeli"
+  },
+  "labels": {
+    "totalProfit": "Toplam Kâr:",
+    "forSale": "Satış: {{price}}",
+    "forRent": "Kiralama: {{price}}"
+  }
+}

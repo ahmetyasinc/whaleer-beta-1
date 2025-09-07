@@ -1,0 +1,37 @@
+{
+  "title": "Confirm Rental",
+  "rows": {
+    "action": "Action",
+    "botName": "Bot Name",
+    "owner": "Owner",
+    "durationTitle": "Rental Duration (days)",
+    "minDaysHint": "(min {{minDays}} day)",
+    "dailyUsd": "Daily Price (USD)",
+    "totalUsd": "Total Price (USD)",
+    "totalSol": "Approx. Total (SOL)",
+    "revenueWallet": "Revenue Wallet"
+  },
+  "actionNames": {
+    "rent": "Rent"
+  },
+  "buttons": {
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "processing": "Processing..."
+  },
+  "toasts": {
+    "preparing": "Preparing payment...",
+    "signWallet": "Sign the transaction in your wallet...",
+    "confirmOnchain": "Confirming on-chain payment...",
+    "activatingRental": "Activating your rental..."
+  },
+  "errors": {
+    "connectWallet": "Please connect your wallet.",
+    "invalidCheckout": "Invalid checkout data.",
+    "nonJson": "Non-JSON response received from server.",
+    "prepareFailed": "Failed to preparation.",
+    "invalidIntent": "Invalid intent from server.",
+    "notConfirmed": "Payment could not be confirmed.",
+    "operationFailed": "Operation failed."
+  }
+}

@@ -5,7 +5,6 @@ const useRulerStore = create((set) => ({
   toggleRulerMode: () =>
   set((state) => {
     const next = !state.isRulerMode;
-    console.log("[RULER] toggleRulerMode ->", next);
     return { isRulerMode: next };
   }),
 

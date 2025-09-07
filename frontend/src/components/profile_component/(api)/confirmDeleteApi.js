@@ -4,6 +4,7 @@
 import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { FiAlertTriangle, FiTrash2, FiActivity, FiPauseCircle } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 
 export default function ConfirmDeleteModal({
   isOpen,
@@ -13,6 +14,8 @@ export default function ConfirmDeleteModal({
   loading = false,
   apiName = '',
 }) {
+  const { t } = useTranslation('confirmDelete');
+
   useEffect(() => {
     const onEsc = (e) => e.key === 'Escape' && onCancel?.();
     if (isOpen) window.addEventListener('keydown', onEsc);
@@ -45,14 +48,16 @@ export default function ConfirmDeleteModal({
                 <FiTrash2 className="text-red-300" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold leading-tight">API Anahtarını Sil</h2>
+                <h2 className="text-lg font-semibold leading-tight">
+                  {t('title')}
+                </h2>
                 <p className="mt-0.5 text-sm text-slate-300">
                   {apiName ? (
                     <>
-                      <b>{apiName}</b> adlı API anahtarını siliyorsunuz.
+                      <b>{apiName}</b> {t('subtitle.withNameSuffix')}
                     </>
                   ) : (
-                    'Bu API anahtarını siliyorsunuz.'
+                    t('subtitle.noName')
                   )}
                 </p>
               </div>
@@ -60,7 +65,7 @@ export default function ConfirmDeleteModal({
 
             {/* Bot listesi */}
             <div className="mt-4">
-              <p className="text-sm font-medium text-slate-200">Bu API’yi kullanan botlar:</p>
+              <p className="text-sm font-medium text-slate-200">{t('botsHeader')}</p>
 
               {/* Loading skeleton */}
               {loading && (
@@ -79,7 +84,7 @@ export default function ConfirmDeleteModal({
               {/* Empty */}
               {!loading && bots.length === 0 && (
                 <div className="mt-3 rounded-xl border border-white/5 bg-slate-800/40 p-3 text-sm text-slate-400">
-                  Bu API’ye bağlı bot bulunmuyor.
+                  {t('empty')}
                 </div>
               )}
 
@@ -88,10 +93,9 @@ export default function ConfirmDeleteModal({
                 <ul className="mt-3 grid max-h-56 grid-cols-1 gap-2 overflow-auto pr-1">
                   {bots.map((b) => {
                     const active = !!b.active;
-                    const card =
-                      active
-                        ? 'bg-emerald-900/25 border-emerald-700/40 ring-1 ring-emerald-500/20 hover:ring-emerald-400/40'
-                        : 'bg-slate-800/40 border-slate-700/60 ring-1 ring-white/5 opacity-90 hover:opacity-100';
+                    const card = active
+                      ? 'bg-emerald-900/25 border-emerald-700/40 ring-1 ring-emerald-500/20 hover:ring-emerald-400/40'
+                      : 'bg-slate-800/40 border-slate-700/60 ring-1 ring-white/5 opacity-90 hover:opacity-100';
                     const dot = active ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500';
                     const badge =
                       active
@@ -112,10 +116,10 @@ export default function ConfirmDeleteModal({
 
                         <span
                           className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs ${badge}`}
-                          title={active ? 'Aktif bot' : 'Pasif bot'}
+                          title={active ? t('badge.titleActive') : t('badge.titleInactive')}
                         >
                           {active ? <FiActivity /> : <FiPauseCircle />}
-                          {active ? 'Active' : 'Inactive'}
+                          {active ? t('badge.labelActive') : t('badge.labelInactive')}
                         </span>
                       </li>
                     );
@@ -128,8 +132,7 @@ export default function ConfirmDeleteModal({
             <div className="mt-4 flex items-start gap-2 rounded-xl border border-amber-600/40 bg-amber-500/15 p-3 text-amber-200">
               <FiAlertTriangle className="mt-0.5 shrink-0" />
               <p className="text-xs leading-relaxed">
-                Onaylarsanız önce listelenen botlar <b>devre dışı bırakılıp silinecek</b>, ardından
-                API anahtarı silinecektir. Bu işlem geri alınamaz.
+                {t('warning.part1')} <b>{t('warning.bold')}</b>, {t('warning.part2')}
               </p>
             </div>
 
@@ -139,13 +142,13 @@ export default function ConfirmDeleteModal({
                 onClick={onCancel}
                 className="rounded-lg border border-white/10 bg-slate-700/60 px-4 py-2 text-sm text-slate-100 transition hover:bg-slate-600/70"
               >
-                Vazgeç
+                {t('buttons.cancel')}
               </button>
               <button
                 onClick={onConfirm}
                 className="rounded-lg border border-red-500/30 bg-gradient-to-r from-red-600 to-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:from-red-500 hover:to-red-400"
               >
-                Evet, Sil
+                {t('buttons.confirm')}
               </button>
             </div>
           </motion.div>

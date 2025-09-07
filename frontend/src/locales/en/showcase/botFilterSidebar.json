@@ -1,0 +1,37 @@
+{
+  "title": "Filters",
+  "fields": {
+    "botType": "Bot Type",
+    "priceRangeSale": "Price Range ($) (Sale)",
+    "priceRangeRent": "Price Range ($) (Rent)",
+    "onlyActive": "Only Active Bots",
+    "profitFactor": "Profit Factor (min): {{value}}",
+    "riskFactor": "Risk Factor (max): {{value}}",
+    "creationTime": "Creation Time",
+    "profitMargin": "Profit Margin (min)",
+    "transactionFrequency": "Average Transaction Frequency (min)",
+    "usageTime": "Usage Time (hours) (min)",
+    "demand": "Demand Level: {{value}}"
+  },
+  "options": {
+    "all": "All",
+    "spot": "Spot",
+    "futures": "Futures"
+  },
+  "units": {
+    "day": "Day",
+    "week": "Week",
+    "month": "Month",
+    "all": "All Time"
+  },
+  "actions": {
+    "apply": "Apply Filter",
+    "clear": "Clear Filter"
+  },
+  "placeholders": {
+    "min": "Min",
+    "max": "Max",
+    "value": "Value",
+    "exampleHours": "e.g. 525"
+  }
+}

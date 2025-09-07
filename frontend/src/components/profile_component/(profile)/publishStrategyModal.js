@@ -1,47 +1,77 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import React from 'react';
 import { IoClose, IoHelpCircleOutline, IoCheckboxOutline, IoCheckbox } from 'react-icons/io5';
+import { useTranslation } from 'react-i18next';
+
+const INITIAL_PERMS = {
+  codeView: false,
+  chartView: false,
+  scan: false,
+  backtest: false,
+  botRun: false,
+};
 
 export const PublishStrategyModal = ({ isOpen, onClose, onPublish }) => {
-  const [permissions, setPermissions] = useState({
-    codeView: false,
-    chartView: false,
-    scan: false,
-    backtest: false,
-    botRun: false
-  });
-
+  const { t, i18n } = useTranslation('publishStrategyModal');
+  const [permissions, setPermissions] = useState(INITIAL_PERMS);
   const [description, setDescription] = useState('');
   const [showInfo, setShowInfo] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const resetForm = useCallback(() => {
+    setPermissions(INITIAL_PERMS);
+    setDescription('');
+    setShowInfo(false);
+    setLoading(false);
+  }, []);
 
   const handleToggle = (key) => {
     setPermissions(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleConfirm = () => {
-    onPublish({ permissions, description });
-    onClose();
+  const handleClose = useCallback(() => {
+    resetForm();
+    onClose && onClose();
+  }, [onClose, resetForm]);
+
+  const handleConfirm = async () => {
+    if (loading) return;
+    try {
+      setLoading(true);
+      await Promise.resolve(onPublish?.({ permissions, description }));
+    } finally {
+      resetForm();
+      onClose && onClose();
+    }
   };
 
+  // ESC ile kapama
   useEffect(() => {
+    if (!isOpen) return;
     const handleEsc = (e) => {
       if (e.key === 'Escape') {
         if (showInfo) setShowInfo(false);
-        else onClose();
+        else handleClose();
       }
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [showInfo, onClose]);
+  }, [isOpen, showInfo, handleClose]);
+
+  // Modal açıldığında temiz başlasın (isteğe bağlı)
+  useEffect(() => {
+    if (isOpen) resetForm();
+  }, [isOpen, resetForm]);
 
   if (!isOpen) return null;
 
+  // İzin kartları (metinler i18n'den)
   const permissionItems = [
-    ['codeView', 'Allow code viewing', 'Users can view the source code of your strategy'],
-    ['chartView', 'Allow chart viewing', 'Visual analysis can be performed on asset charts'],
-    ['scan', 'Allow scanning', 'Can be used in market scanning tools'],
-    ['backtest', 'Allow backtesting', 'Can be tested with historical data'],
-    ['botRun', 'Allow bot execution', 'Can be used in automated trading bots']
+    ['codeView',  t('perms.items.codeView.label'),  t('perms.items.codeView.desc')],
+    ['chartView', t('perms.items.chartView.label'), t('perms.items.chartView.desc')],
+    ['scan',      t('perms.items.scan.label'),      t('perms.items.scan.desc')],
+    ['backtest',  t('perms.items.backtest.label'),  t('perms.items.backtest.desc')],
+    ['botRun',    t('perms.items.botRun.label'),    t('perms.items.botRun.desc')],
   ];
 
   return (
@@ -56,26 +86,28 @@ export const PublishStrategyModal = ({ isOpen, onClose, onPublish }) => {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
-                Publish Strategy
+                {t('title')}
               </h2>
-              <p className="text-slate-400 text-sm mt-1">Share your strategy with the community</p>
+              <p className="text-slate-400 text-sm mt-1">{t('subtitle')}</p>
             </div>
             
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowInfo(true)}
                 className="group relative p-2 text-slate-400 hover:text-white transition-all duration-200 hover:bg-slate-700/50 rounded-full"
-                aria-label="Help"
+                aria-label={t('aria.help')}
+                title={t('help')}
               >
                 <IoHelpCircleOutline className="text-xl" />
                 <div className="absolute -bottom-8 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-xs text-slate-300 whitespace-nowrap">
-                  Help
+                  {t('help')}
                 </div>
               </button>
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="group relative p-2 text-slate-400 hover:text-white transition-all duration-200 hover:bg-red-500/20 rounded-full"
-                aria-label="Close"
+                aria-label={t('aria.close')}
+                title={t('aria.close')}
               >
                 <IoClose className="text-xl" />
               </button>
@@ -85,13 +117,13 @@ export const PublishStrategyModal = ({ isOpen, onClose, onPublish }) => {
 
         {/* Content */}
         <div className="relative p-6 overflow-y-auto flex-1">
-          {/* Permissions Section */}
+          {/* Permissions */}
           <div className="grid mb-4 gap-2">
             <h3 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
               <div className="w-2 h-6 bg-gradient-to-b from-violet-500 to-cyan-500 rounded-full"></div>
-              Permissions
+              {t('headers.permissions')}
             </h3>
-            {permissionItems.map(([key, label, description]) => (
+            {permissionItems.map(([key, label, desc]) => (
               <div 
                 key={key} 
                 className="group relative p-2 rounded-lg bg-slate-800/50 border border-slate-700/50 transition-all duration-200 cursor-pointer"
@@ -110,7 +142,7 @@ export const PublishStrategyModal = ({ isOpen, onClose, onPublish }) => {
                       {label}
                     </span>
                     <p className="text-xs text-slate-400 leading-relaxed">
-                      {description}
+                      {desc}
                     </p>
                   </div>
                 </div>
@@ -119,18 +151,18 @@ export const PublishStrategyModal = ({ isOpen, onClose, onPublish }) => {
             ))}
           </div>
 
-          {/* Description Section */}
+          {/* Description */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
               <div className="w-2 h-6 bg-gradient-to-b from-yellow-300 to-amber-700 rounded-full"></div>
-              Description
+              {t('headers.description')}
             </h3>
             <div className="relative">
               <textarea
                 className="w-full h-[140px] p-4 rounded-lg bg-slate-800/50 text-white placeholder-slate-400 resize-none border border-slate-700/50 focus:border-blue-500/50 focus:bg-slate-800/70 transition-all duration-200 backdrop-blur-sm"
-                placeholder="What does this strategy do, what was it designed for, under what market conditions does it perform best..."
+                placeholder={t('placeholders.description')}
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => setDescription(e.target.value.slice(0, 500))}
               />
               <div className="absolute bottom-3 right-3 text-xs text-slate-500">
                 {description.length}/500
@@ -143,16 +175,18 @@ export const PublishStrategyModal = ({ isOpen, onClose, onPublish }) => {
         <div className="relative p-3 pt-3 border-t border-slate-700/50 bg-slate-900/30">
           <div className="flex justify-end gap-3">
             <button 
-              onClick={onClose} 
+              onClick={handleClose} 
               className="px-6 py-2.5 bg-slate-700/50 hover:bg-slate-600/50 text-slate-200 rounded-xl transition-all duration-200 border border-slate-600/50 hover:border-slate-500/50 font-medium"
+              disabled={loading}
             >
-              Cancel
+              {t('buttons.cancel')}
             </button>
             <button 
-              onClick={handleConfirm} 
-              className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-blue-500/25 font-medium relative overflow-hidden group"
+              onClick={handleConfirm}
+              disabled={loading}
+              className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-blue-500/25 font-medium relative overflow-hidden group"
             >
-              <span className="relative z-10">Publish</span>
+              <span className="relative z-10">{loading ? t('buttons.publishing') : t('buttons.publish')}</span>
               <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
             </button>
           </div>
@@ -170,20 +204,14 @@ export const PublishStrategyModal = ({ isOpen, onClose, onPublish }) => {
                   <IoHelpCircleOutline className="text-blue-400 text-xl" />
                 </div>
                 <h3 className="text-xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
-                  About Publishing
+                  {t('headers.aboutPublishing')}
                 </h3>
               </div>
               <div className="space-y-4 text-slate-300 leading-relaxed">
-                <p>
-                  From here, you can determine which features of your strategy are accessible to users.
-                </p>
-                <p>
-                  Each permission affects how your strategy will appear and what actions can be taken with it.
-                </p>
+                <p>{t('info.p1')}</p>
+                <p>{t('info.p2')}</p>
                 <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                  <p className="text-blue-300 text-sm">
-                    💡 <strong>Tip:</strong> Granting more permissions can help your strategy reach a broader audience.
-                  </p>
+                  <p className="text-blue-300 text-sm">💡 <strong>{t('info.tip')}</strong> {t('info.tipText')}</p>
                 </div>
               </div>
               <div className="flex justify-end mt-6">
@@ -191,7 +219,7 @@ export const PublishStrategyModal = ({ isOpen, onClose, onPublish }) => {
                   onClick={() => setShowInfo(false)}
                   className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 rounded-xl transition-all duration-200 shadow-lg hover:shadow-blue-500/25 font-medium relative overflow-hidden group"
                 >
-                  <span className="relative z-10">Got it</span>
+                  <span className="relative z-10">{t('buttons.gotIt')}</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
                 </button>
               </div>

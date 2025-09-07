@@ -1,0 +1,53 @@
+{
+  "title": "Publish Strategy",
+  "subtitle": "Share your strategy with the community",
+  "help": "Help",
+  "aria": {
+    "help": "Help",
+    "close": "Close"
+  },
+  "headers": {
+    "permissions": "Permissions",
+    "description": "Description",
+    "aboutPublishing": "About Publishing"
+  },
+  "perms": {
+    "items": {
+      "codeView": {
+        "label": "Allow code viewing",
+        "desc": "Users can view the source code of your strategy"
+      },
+      "chartView": {
+        "label": "Allow chart viewing",
+        "desc": "Visual analysis can be performed on asset charts"
+      },
+      "scan": {
+        "label": "Allow scanning",
+        "desc": "Can be used in market scanning tools"
+      },
+      "backtest": {
+        "label": "Allow backtesting",
+        "desc": "Can be tested with historical data"
+      },
+      "botRun": {
+        "label": "Allow bot execution",
+        "desc": "Can be used in automated trading bots"
+      }
+    }
+  },
+  "placeholders": {
+    "description": "What does this strategy do, what was it designed for, under what market conditions does it perform best..."
+  },
+  "buttons": {
+    "cancel": "Cancel",
+    "publish": "Publish",
+    "publishing": "Publishing…",
+    "gotIt": "Got it"
+  },
+  "info": {
+    "p1": "From here, you can determine which features of your strategy are accessible to users.",
+    "p2": "Each permission affects how your strategy will appear and what actions can be taken with it.",
+    "tip": "Tip:",
+    "tipText": "Granting more permissions can help your strategy reach a broader audience."
+  }
+}

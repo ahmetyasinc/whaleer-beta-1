@@ -8,11 +8,13 @@ from app.routes.mobile.bots.bots import protected_router as bot_router_mobile
 from app.routes.mobile.showcase.showcase import protected_router as showcase_router_mobile
 from app.routes.profile.indicator.indicator_data import protected_router as indicator_data_router
 from app.routes.profile.indicator.indicator import protected_router as indicator_router
+from app.routes.profile.indicator.indicator_release import protected_router as indicator_release
 from app.routes.profile.indicator.indicator_run import protected_router as indicator_run_router
 from app.routes.profile.indicator.indicator_adjustment import protected_router as indicator_adjustment_router
 from app.routes.profile.indicator.websocket_binance import websocket_router as websocket_binance_router
 from app.routes.profile.binance_coins.binance_coins import protected_router as binance_coins_router
 from app.routes.profile.strategy.strategy import protected_router as strategy_router
+from app.routes.profile.strategy.strategy_release import protected_router as strategy_release
 from app.routes.profile.strategy.strategy_adjustment import protected_router as strategy_adjustment_router
 from app.routes.profile.strategy.strategy_run import protected_router as strategy_run_router
 from app.routes.profile.strategy.strategy_imports import protected_router as strategy_imports_router
@@ -44,10 +46,12 @@ app.include_router(binance_coins_router)
 app.include_router(websocket_binance_router)
 app.include_router(indicator_data_router)
 app.include_router(indicator_router) 
+app.include_router(indicator_release) 
 app.include_router(indicator_run_router) 
 app.include_router(indicator_adjustment_router) 
 # STRATEGY ROUTES
 app.include_router(strategy_router)
+app.include_router(strategy_release)
 app.include_router(strategy_adjustment_router)
 app.include_router(strategy_run_router)
 app.include_router(strategy_imports_router)

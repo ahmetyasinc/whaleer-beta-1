@@ -7,7 +7,6 @@ axios.defaults.withCredentials = true;
 export const getBots = async () => {
   try {
     const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/get-bots`);
-    console.log("Botlar başarıyla alındı:", response.data);
 
     const { apiList } = useApiStore.getState();
     const { all_strategies } = useStrategyStore.getState();
@@ -85,14 +84,10 @@ export const createBot = async (botData) => {
       bot_type: botData.type || {},  // Yeni alan
     };
 
-    console.log("Sunucuya gönderilen veri:", payload);
-
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/api/create-bots`,
       payload
     );
-
-    console.log("Bot başarıyla oluşturuldu:", response.data);
     return response.data;
 
   } catch (error) {

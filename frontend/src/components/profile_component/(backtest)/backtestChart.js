@@ -3,8 +3,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { createChart } from 'lightweight-charts';
 import useBacktestStore from '@/store/backtest/backtestStore';
+import { useTranslation } from 'react-i18next';
 
 export default function BacktestChart() {
+  const { t } = useTranslation('backtestChart');
+
   const mainChartContainerRef = useRef(null);
   const mainChartRef = useRef(null);
   const candlestickSeriesRef = useRef(null);
@@ -209,7 +212,7 @@ export default function BacktestChart() {
           case 'position':
             return item.length >= 3 ? 2 : null;
           case 'percentage':
-            return item.length >= 4 ? 3 : (item.length >= 2 ? 1 : null); 
+            return item.length >= 4 ? 3 : (item.length >= 2 ? 1 : null);
           default:
             return item.length >= 2 ? 1 : null;
         }
@@ -277,7 +280,6 @@ export default function BacktestChart() {
       }
     } catch (error) {
       console.error('Bottom series formatting error:', error);
-      console.log('Raw returns payload:', returns);
     }
 
     if (returnsChartRef.current) {
@@ -294,7 +296,7 @@ export default function BacktestChart() {
       <div className="flex-1 relative">
         <div ref={mainChartContainerRef} className="w-full h-78" />
         <div className="absolute top-2 left-2 flex items-center gap-4 text-sm font-light pointer-events-auto z-10">
-          <span className="text-gray-400">Price Chart</span>
+          <span className="text-gray-400">{t('titles.priceChart')}</span>
           <div className="flex gap-2">
             <button
               onClick={toggleCandlestick}
@@ -308,8 +310,10 @@ export default function BacktestChart() {
                   ? 'opacity-50 cursor-not-allowed'
                   : 'hover:bg-opacity-80 cursor-pointer'
               }`}
+              aria-label={t('buttons.candles')}
+              title={t('buttons.candles')}
             >
-              Candles
+              {t('buttons.candles')}
             </button>
             <button
               onClick={toggleLine}
@@ -323,8 +327,10 @@ export default function BacktestChart() {
                   ? 'opacity-50 cursor-not-allowed'
                   : 'hover:bg-opacity-80 cursor-pointer'
               }`}
+              aria-label={t('buttons.line')}
+              title={t('buttons.line')}
             >
-              Line
+              {t('buttons.line')}
             </button>
           </div>
         </div>
@@ -333,13 +339,9 @@ export default function BacktestChart() {
       <div className="flex-shrink-0 relative">
         <div ref={returnsChartContainerRef} className="w-full h-36" />
         {/* NEW: metric switcher */}
-        <div className="absolute top-2 left-2 flex items-center gap-2 text-sm font-light z-10 pointer-events-auto">
+        <div className="absolute top-2 left-2 flex itemsellers gap-2 text-sm font-light z-10 pointer-events-auto">
           <span className="text-gray-400">
-            {bottomMetric === 'returns'
-              ? 'Returns'
-              : bottomMetric === 'position'
-              ? 'Position'
-              : 'Percentage'}
+            {t(`metrics.${bottomMetric}`)}
           </span>
           <div className="flex gap-2">
             <button
@@ -349,8 +351,10 @@ export default function BacktestChart() {
                   ? 'bg-emerald-700 border-emerald-600 text-white'
                   : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-opacity-80'
               }`}
+              aria-label={t('metrics.returns')}
+              title={t('metrics.returns')}
             >
-              Returns
+              {t('metrics.returns')}
             </button>
             <button
               onClick={() => setBottomMetric('position')}
@@ -359,8 +363,10 @@ export default function BacktestChart() {
                   ? 'bg-indigo-700 border-indigo-600 text-white'
                   : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-opacity-80'
               }`}
+              aria-label={t('metrics.position')}
+              title={t('metrics.position')}
             >
-              Position
+              {t('metrics.position')}
             </button>
             <button
               onClick={() => setBottomMetric('percentage')}
@@ -369,8 +375,10 @@ export default function BacktestChart() {
                   ? 'bg-cyan-700 border-cyan-600 text-white'
                   : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-opacity-80'
               }`}
+              aria-label={t('metrics.percentage')}
+              title={t('metrics.percentage')}
             >
-              Percentage
+              {t('metrics.percentage')}
             </button>
           </div>
         </div>

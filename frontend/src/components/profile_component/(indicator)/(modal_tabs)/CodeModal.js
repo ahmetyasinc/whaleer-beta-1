@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { IoMdClose } from "react-icons/io";
 import dynamic from "next/dynamic";
 
@@ -8,14 +9,30 @@ import dynamic from "next/dynamic";
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
 const CodeModal = ({ isOpen, onClose, indicator }) => {
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState("");
   const monacoRef = useRef(null);
+  const [mounted, setMounted] = useState(false); // portal için
+
+  // Portal güvenliği (SSR → CSR)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Body scroll kilidi (opsiyonel ama iyi deneyim)
+  useEffect(() => {
+    if (!mounted) return;
+    if (isOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [isOpen, mounted]);
 
   // Kod değişince local state'e al
   useEffect(() => {
-    if (indicator?.code) {
-      setCode(indicator.code);
-    }
+    setCode(indicator?.code || "");
   }, [indicator]);
 
   // Monaco tanımlamaları sadece ilk yüklemede yapılır
@@ -48,19 +65,24 @@ const CodeModal = ({ isOpen, onClose, indicator }) => {
     });
   }
 
-  if (!isOpen || !indicator) return null;
+  if (!mounted || !isOpen || !indicator) return null;
 
-  return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-gray-900 text-white rounded-md w-[900px] h-[600px] p-6 shadow-lg relative">
+  const modalUI = (
+    <div
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50"
+      // overlay tıklayınca kapatmak istersen:
+      // onClick={(e) => { if (e.target === e.currentTarget) onClose?.(); }}
+    >
+      <div className="bg-gray-900 text-white rounded-md w-[900px] h-[600px] p-6 shadow-2xl relative">
         <button
           className="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl"
           onClick={onClose}
+          aria-label="Close"
         >
           <IoMdClose />
         </button>
 
-        <h2 className="text-lg font-bold mb-4">{indicator.name}</h2>
+        <h2 className="text-lg font-bold mb-4 pr-10 truncate">{indicator.name}</h2>
 
         <div className="h-[500px] rounded-md overflow-hidden">
           <MonacoEditor
@@ -81,6 +103,9 @@ const CodeModal = ({ isOpen, onClose, indicator }) => {
       </div>
     </div>
   );
+
+  // 🔑 Kritik kısım: modal'ı BODY'ye portal ile basıyoruz → viewport merkezinde
+  return createPortal(modalUI, document.body);
 };
 
 export default CodeModal;

@@ -1,0 +1,17 @@
+{
+  "titles": {
+    "strategies": "Strategies"
+  },
+  "buttons": {
+    "chooseStrategy": "Choose Strategy",
+    "close": "Close"
+  },
+  "tabs": {
+    "technicals": "Technicals",
+    "my": "My Strategies",
+    "community": "Community"
+  },
+  "misc": {
+    "noContent": "No content found."
+  }
+}

@@ -6,8 +6,10 @@ import CryptoSelectButton from './cryptoSelectButton';
 import useCryptoStore from '@/store/indicator/cryptoPinStore';
 import useBacktestStore from '@/store/backtest/backtestStore';
 import { FaPlus } from "react-icons/fa";
+import { useTranslation } from 'react-i18next';
 
 export default function BacktestHeader() {
+  const { t } = useTranslation('backtestHeader');
   const [isOpen, setIsOpen] = useState(false);
 
   const { selectedCrypto } = useCryptoStore();
@@ -18,8 +20,8 @@ export default function BacktestHeader() {
     setSelectedPeriod,
     runBacktest,
     isBacktestLoading,
-    initialBalanceInput,           // NEW
-    setInitialBalanceInput,        // NEW
+    initialBalanceInput,
+    setInitialBalanceInput,
   } = useBacktestStore();
 
   const isReady = selectedStrategy && selectedCrypto && selectedPeriod !== '';
@@ -47,9 +49,11 @@ export default function BacktestHeader() {
           <button
             className="bg-black border border-gray-800 text-white px-4 h-[35px] rounded-lg hover:border-gray-600 transition flex items-center gap-2"
             onClick={() => setIsOpen(true)}
+            aria-label={t('buttons.runBacktest')}
+            title={t('buttons.runBacktest')}
           >
             <FaPlus className="w-3 h-3 mt-[2px]" />
-            Run Backtest
+            {t('buttons.runBacktest')}
           </button>
         </div>
       </header>
@@ -57,7 +61,7 @@ export default function BacktestHeader() {
       {isOpen && (
         <div className="absolute right-0 top-[60px] h-[calc(100vh-60px)] w-1/4 max-w-md bg-gray-900 text-white shadow-lg flex flex-col justify-between p-0 z-50 rounded-l-xl">
           <div className="p-6 overflow-y-auto flex-1">
-            <h2 className="text-xl font-bold mb-4">Create Backtest</h2>
+            <h2 className="text-xl font-bold mb-4">{t('titles.createBacktest')}</h2>
 
             <div className="flex flex-col gap-4">
               <ChooseStrategy />
@@ -68,24 +72,24 @@ export default function BacktestHeader() {
                 value={selectedPeriod}
                 onChange={(e) => setSelectedPeriod(e.target.value)}
               >
-                <option value="">Select Period</option>
-                <option value="1m">1 min</option>
-                <option value="3m">3 min</option>
-                <option value="5m">5 min</option>
-                <option value="15m">15 min</option>
-                <option value="30m">30 min</option>
-                <option value="1h">1 hour</option>
-                <option value="2h">2 hours</option>
-                <option value="4h">4 hours</option>
-                <option value="1d">1 day</option>
-                <option value="1w">1 week</option>
+                <option value="">{t('periods.select')}</option>
+                <option value="1m">{t('periods.m1')}</option>
+                <option value="3m">{t('periods.m3')}</option>
+                <option value="5m">{t('periods.m5')}</option>
+                <option value="15m">{t('periods.m15')}</option>
+                <option value="30m">{t('periods.m30')}</option>
+                <option value="1h">{t('periods.h1')}</option>
+                <option value="2h">{t('periods.h2')}</option>
+                <option value="4h">{t('periods.h4')}</option>
+                <option value="1d">{t('periods.d1')}</option>
+                <option value="1w">{t('periods.w1')}</option>
               </select>
 
-              {/* NEW: Optional Initial Balance */}
+              {/* Optional Initial Balance */}
               <div className="flex flex-col gap-1">
                 <input
                   inputMode="decimal"
-                  placeholder="Initial Balance (USD)"
+                  placeholder={t('inputs.initialBalancePlaceholder')}
                   className={`bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded outline-none border ${
                     isInitialBalanceValid ? 'border-transparent' : 'border-red-500'
                   } ${!initialBalanceInput?.trim() ? 'text-center' : 'text-left'}`}
@@ -93,10 +97,10 @@ export default function BacktestHeader() {
                   onChange={(e) => setInitialBalanceInput(e.target.value)}
                 />
                 <p className="text-xs text-gray-400">
-                  Leave empty to use the first close price as the starting balance.
+                  {t('inputs.initialBalanceHelp')}
                 </p>
                 {!isInitialBalanceValid && (
-                  <p className="text-xs text-red-400">Please enter a positive number.</p>
+                  <p className="text-xs text-red-400">{t('inputs.initialBalanceInvalid')}</p>
                 )}
               </div>
             </div>
@@ -111,14 +115,18 @@ export default function BacktestHeader() {
                   ? 'bg-blue-600 text-white hover:bg-blue-500 cursor-pointer'
                   : 'bg-gray-500 text-white cursor-not-allowed'
               }`}
+              aria-label={t('buttons.runBacktest')}
+              title={t('buttons.runBacktest')}
             >
-              Run Backtest
+              {t('buttons.runBacktest')}
             </button>
           </div>
 
           <button
             onClick={() => setIsOpen(false)}
             className="absolute top-2 right-4 text-gray-400 hover:text-white text-2xl font-bold"
+            aria-label={t('buttons.close')}
+            title={t('buttons.close')}
           >
             ×
           </button>

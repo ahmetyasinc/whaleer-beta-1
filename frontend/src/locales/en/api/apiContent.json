@@ -1,0 +1,33 @@
+{
+  "title": "My API Keys",
+  "buttons": {
+    "addNew": "Add New API"
+  },
+  "info": {
+    "line1": "On this page, you can view and manage all your saved API keys.",
+    "line2": "Never share your API keys on any public platform or browser.",
+    "line3": "Make sure to enable read and trade permissions on your API key to verify and run bots on your crypto account.",
+    "line4": "Ensure your API key is active and valid for your bot to function correctly.",
+    "line5": "Check your exchange API limits — too many requests may result in restrictions."
+  },
+  "empty": "No API keys have been added yet.",
+  "table": {
+    "name": "Name",
+    "exchange": "Exchange",
+    "balance": "Balance (USD)",
+    "added": "Added",
+    "actions": "Actions",
+    "spot": "spot",
+    "futures": "futures",
+    "default": "Default",
+    "never": "Never"
+  },
+  "tooltips": {
+    "setDefault": "Set as Default",
+    "edit": "Edit name",
+    "delete": "Delete"
+  },
+  "errors": {
+    "saveFailed": "Failed to save API key."
+  }
+}

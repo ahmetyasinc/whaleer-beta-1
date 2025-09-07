@@ -1,0 +1,40 @@
+{
+  "typeBadgeTitle": "Bot type: {{type}}",
+  "rental": {
+    "ended": "Rental period ended",
+    "timeLeft": "Time left on rental",
+    "label": "Rental time left :"
+  },
+  "menu": {
+    "moreActions": "More actions",
+    "edit": "Edit",
+    "deleteDev": "Delete (Dev)",
+    "examine": "Examine",
+    "shutdown": "Shutdown",
+    "shutdownTitle": "Shuts down the bot and all open trades"
+  },
+  "fields": {
+    "api": "API:",
+    "strategy": "Strategy:",
+    "period": "Period:",
+    "days": "Days:",
+    "hours": "Hours:",
+    "status": "Status:",
+    "cryptocurrencies": "Cryptocurrencies"
+  },
+  "daysUndefined": "Undefined",
+  "status": {
+    "active": "Bot Active",
+    "inactive": "Bot Inactive"
+  },
+  "coins": {
+    "none": "No selected coins"
+  },
+  "toggle": {
+    "blocked": "Cannot activate: missing values (initial/current) or API undefined",
+    "expired": "Rental expired – cannot activate"
+  },
+  "examine": {
+    "disabledTitle": "Examine disabled: missing values or API undefined"
+  }
+}

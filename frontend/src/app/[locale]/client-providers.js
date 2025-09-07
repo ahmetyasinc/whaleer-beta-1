@@ -1,8 +1,10 @@
 "use client";
+import "@/i18n";
 import { useEffect } from "react";
 import WalletProviders from "@/context/WalletProviders";
 import { AuthProvider } from "@/context/AuthContext";
 import { ToastContainer } from "react-toastify";
+import LanguageProvider from "@/context/LanguageProvider"; // ✅ eklendi
 
 function isBenignUserRejectMessage(maybe) {
   const m = String(maybe || "").toLowerCase();
@@ -20,7 +22,7 @@ function isBenignUserRejectMessage(maybe) {
   );
 }
 
-export default function ClientProviders({ children }) {
+export default function ClientProviders({ children, locale }) { // ✅ locale prop
   useEffect(() => {
     if (process.env.NODE_ENV !== "development") return;
 
@@ -54,19 +56,21 @@ export default function ClientProviders({ children }) {
   }, []);
 
   return (
-    <AuthProvider>
-      <WalletProviders>{children}</WalletProviders>
+    <LanguageProvider locale={locale}>
+      <AuthProvider>
+        <WalletProviders>{children}</WalletProviders>
 
-      {/* 🔔 Tek ve global Toast container */}
-      <ToastContainer
-        position="top-right"
-        newestOnTop
-        closeOnClick
-        pauseOnFocusLoss={false}
-        theme="dark"
-        limit={4}
-        style={{ zIndex: 2147483647 }}
-      />
-    </AuthProvider>
+        {/* 🔔 Tek ve global Toast container */}
+        <ToastContainer
+          position="top-right"
+          newestOnTop
+          closeOnClick
+          pauseOnFocusLoss={false}
+          theme="dark"
+          limit={4}
+          style={{ zIndex: 2147483647 }}
+        />
+      </AuthProvider>
+    </LanguageProvider>
   );
 }

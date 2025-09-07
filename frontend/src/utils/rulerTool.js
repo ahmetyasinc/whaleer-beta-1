@@ -1,10 +1,15 @@
 // utils/rulerTool.js
 // Ruler: SVG overlay (line + translucent rectangle + guides + arrowheads)
 // - Clears on zoom/scroll pan and when ruler mode turns OFF
-// - Result card in English, green/red change color
+// - Result card i18n destekli, yeşil/kırmızı değişim rengi korunur
+
+import i18n from "@/i18n";
 
 export function installRulerTool({ chart, series, container, isRulerModeRef }) {
   if (!chart || !series || !container) return () => {};
+
+  // i18n helper
+  const tr = (k, o) => i18n.t(`ruler:${k}`, o);
 
   // Ensure container is positioned
   try {
@@ -93,41 +98,38 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
       container.appendChild(svg);
 
       // Arrowheads (reversed direction + smaller)
-    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+      const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
 
-    // Start marker → ileri doğru (segmentin içine doğru baksın)
-    const mkStart = document.createElementNS("http://www.w3.org/2000/svg", "marker");
-    mkStart.setAttribute("id", "rulerArrowStart");
-    mkStart.setAttribute("viewBox", "0 0 10 10");
-    mkStart.setAttribute("refX", "3");          // ucu start noktasının önüne gelsin
-    mkStart.setAttribute("refY", "5");
-    mkStart.setAttribute("markerWidth", "4");   // daha küçük
-    mkStart.setAttribute("markerHeight", "4");
-    mkStart.setAttribute("orient", "auto");     // ileri yön
-    const startPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    // sağa bakan ok (uç 10,5): "M0 0 L10 5 L0 10 Z"
-    startPath.setAttribute("d", "M0 0 L10 5 L0 10 Z");
-    startPath.setAttribute("fill", LINE_COLOR);
-    mkStart.appendChild(startPath);
+      // Start marker
+      const mkStart = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+      mkStart.setAttribute("id", "rulerArrowStart");
+      mkStart.setAttribute("viewBox", "0 0 10 10");
+      mkStart.setAttribute("refX", "3");
+      mkStart.setAttribute("refY", "5");
+      mkStart.setAttribute("markerWidth", "4");
+      mkStart.setAttribute("markerHeight", "4");
+      mkStart.setAttribute("orient", "auto");
+      const startPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      startPath.setAttribute("d", "M0 0 L10 5 L0 10 Z");
+      startPath.setAttribute("fill", LINE_COLOR);
+      mkStart.appendChild(startPath);
 
-    // End marker → geriye doğru (segmentin içine doğru baksın)
-    const mkEnd = document.createElementNS("http://www.w3.org/2000/svg", "marker");
-    mkEnd.setAttribute("id", "rulerArrowEnd");
-    mkEnd.setAttribute("viewBox", "0 0 10 10");
-    mkEnd.setAttribute("refX", "7");            // ucu end noktasına yakın
-    mkEnd.setAttribute("refY", "5");
-    mkEnd.setAttribute("markerWidth", "4");     // daha küçük
-    mkEnd.setAttribute("markerHeight", "4");
-    mkEnd.setAttribute("orient", "auto-start-reverse"); // geriye çevir
-    const endPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    // ayni üçgen; orient ters çevirecek
-    endPath.setAttribute("d", "M0 0 L10 5 L0 10 Z");
-    endPath.setAttribute("fill", LINE_COLOR);
-    mkEnd.appendChild(endPath);
+      // End marker
+      const mkEnd = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+      mkEnd.setAttribute("id", "rulerArrowEnd");
+      mkEnd.setAttribute("viewBox", "0 0 10 10");
+      mkEnd.setAttribute("refX", "7");
+      mkEnd.setAttribute("refY", "5");
+      mkEnd.setAttribute("markerWidth", "4");
+      mkEnd.setAttribute("markerHeight", "4");
+      mkEnd.setAttribute("orient", "auto-start-reverse");
+      const endPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      endPath.setAttribute("d", "M0 0 L10 5 L0 10 Z");
+      endPath.setAttribute("fill", LINE_COLOR);
+      mkEnd.appendChild(endPath);
 
-    defs.appendChild(mkStart); defs.appendChild(mkEnd);
-    svg.appendChild(defs);
-
+      defs.appendChild(mkStart); defs.appendChild(mkEnd);
+      svg.appendChild(defs);
     }
     if (!rect) {
       rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -205,9 +207,10 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
   function fmtDuration(sec) {
     const s = Math.max(0, Math.floor(sec));
     const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
-    if (h) return `${h}h ${m}m ${r}s`;
-    if (m) return `${m}m ${r}s`;
-    return `${r}s`;
+    const uh = tr("units.h"), um = tr("units.m"), us = tr("units.s");
+    if (h) return `${h}${uh} ${m}${um} ${r}${us}`;
+    if (m) return `${m}${um} ${r}${us}`;
+    return `${r}${us}`;
   }
   function compute(param) {
     if (!param || !param.point) return null;
@@ -236,19 +239,20 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
     if (x == null || y == null) return null;
     return { x, y };
   }
-  function measureHTML(a, b) {
+  function measureHTML(a, b, { live = false } = {}) {
     const dPrice = b.price - a.price;
     const pct = (dPrice / a.price) * 100;
     const dSec = Math.abs(b.time - a.time);
     const positive = pct >= 0;
     const pctColor = positive ? "#18b26b" : "#e74c3c";
+    const title = live ? tr("titleLive") : tr("title");
     return `
       <div style="min-width:220px;display:grid;gap:6px;">
-        <div style="font-weight:700;letter-spacing:.3px;">Ruler</div>
-        <div>Start: <b>${a.price.toFixed(4)}</b></div>
-        <div>End: <b>${b.price.toFixed(4)}</b></div>
-        <div>Change: <b style="color:${pctColor}">${positive ? "▲" : "▼"} ${pct.toFixed(2)}%</b> (${dPrice.toFixed(4)})</div>
-        <div>Duration: <b>${fmtDuration(dSec)}</b></div>
+        <div style="font-weight:700;letter-spacing:.3px;">${title}</div>
+        <div>${tr("fields.start")}: <b>${a.price.toFixed(4)}</b></div>
+        <div>${tr("fields.end")}: <b>${b.price.toFixed(4)}</b></div>
+        <div>${tr("fields.change")}: <b style="color:${pctColor}">${positive ? "▲" : "▼"} ${pct.toFixed(2)}%</b> (${dPrice.toFixed(4)})</div>
+        <div>${tr("fields.duration")}: <b>${fmtDuration(dSec)}</b></div>
       </div>`;
   }
 
@@ -305,7 +309,7 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
       start = cur;
       clearShapes();
       setOverlayHtml(
-        `<div style="font-weight:700;margin-bottom:4px;">Ruler</div><div>Start: <b>${start.price.toFixed(4)}</b></div>`,
+        `<div style="font-weight:700;margin-bottom:4px;">${tr("title")}</div><div>${tr("fields.start")}: <b>${start.price.toFixed(4)}</b></div>`,
         start.point.x, start.point.y
       );
       lockInteractions();
@@ -319,7 +323,7 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
       drawAllPx(p1, p2);
       hasFinalShape = true;
     }
-    setOverlayHtml(measureHTML(start, end), end.point.x, end.point.y);
+    setOverlayHtml(measureHTML(start, end, { live: false }), end.point.x, end.point.y);
     unlockInteractions();
     start = null;
   }
@@ -331,7 +335,7 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
     const p1 = toPx(start), p2 = toPx(cur);
     if (p1 && p2) { drawAllPx(p1, p2); hasFinalShape = false; }
     setOverlayHtml(
-      measureHTML(start, cur).replace("Ruler", "Ruler (live)"),
+      measureHTML(start, cur, { live: true }),
       cur.point.x, cur.point.y
     );
   }

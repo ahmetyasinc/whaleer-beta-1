@@ -10,6 +10,7 @@ import useStrategyStore from "@/store/indicator/strategyStore";
 import useCodePanelStore from "@/store/indicator/strategyCodePanelStore";
 import useStrategyDataStore from "@/store/indicator/strategyDataStore";
 import { RiErrorWarningFill, RiLockFill } from "react-icons/ri";
+import { useTranslation } from "react-i18next";
 
 axios.defaults.withCredentials = true;
 
@@ -20,6 +21,8 @@ const PersonalStrategies = () => {
   const { favorites, toggleFavorite, strategies, setPersonalStrategies } = useStrategyStore();
   const { openPanel, closePanelIfMatches } = useCodePanelStore();
   const { strategyData } = useStrategyDataStore();
+
+  const { t } = useTranslation("personalStrategies");
 
   // --- Gruplama: groupId = parent_strategy_id || id
   const groups = useMemo(() => {
@@ -65,7 +68,7 @@ const PersonalStrategies = () => {
         );
       }
     } catch (error) {
-      console.error("Favori işlemi sırasında hata:", error);
+      console.error(t("errors.favoriteAction"), error);
     }
   };
 
@@ -86,7 +89,7 @@ const PersonalStrategies = () => {
       setPersonalStrategies(currentList.filter((s) => s.id !== toDelete.id));
       closePanelIfMatches(toDelete.id);
     } catch (error) {
-      console.error("Silme işlemi sırasında hata:", error);
+      console.error(t("errors.deleteAction"), error);
     } finally {
       setShowDeleteModal(false);
       setToDelete(null);
@@ -107,7 +110,7 @@ const PersonalStrategies = () => {
             const subItems = strategyData?.[selected.id]?.subItems;
             const lastSub = subItems && Object.values(subItems)[Object.values(subItems).length - 1];
             const hasError = lastSub?.result?.status === "error";
-            const errorMessage = lastSub?.result?.message || "Derleme Hatası !";
+            const errorMessage = lastSub?.result?.message || t("errors.compileDefault");
 
             // Kilit durumu — sadece SEÇİLİ versiyon için (versiyon bağımsızlığı)
             const isLocked = !!selected.locked;
@@ -123,7 +126,7 @@ const PersonalStrategies = () => {
                   <button
                     className="bg-transparent p-2 rounded-md hover:bg-gray-800"
                     onClick={() => handleToggleFavorite(selected)}
-                    title="Favori"
+                    title={t("tooltips.favorite")}
                   >
                     {favorites.some((fav) => fav.id === selected.id) ? (
                       <IoMdStar className="text-lg text-yellow-500" />
@@ -143,11 +146,11 @@ const PersonalStrategies = () => {
                       onChange={(e) =>
                         setSelectedByGroup((s) => ({ ...s, [groupId]: Number(e.target.value) }))
                       }
-                      title="Versiyon seç"
+                      title={t("tooltips.versionSelect")}
                     >
                       {versions.map(v => (
                         <option key={v.id} value={v.id}>
-                          {`v${v.version}${v.locked ? " (locked)" : ""}`}
+                          {`v${v.version}${v.locked ? ` (${t("labels.locked")})` : ""}`}
                         </option>
                       ))}
                     </select>
@@ -155,7 +158,7 @@ const PersonalStrategies = () => {
 
                   {/* Hata rozeti — SEÇİLİ versiyon */}
                   {hasError && (
-                    <div className="group relative p-2 rounded-full z-50">
+                    <div className="group relative p-2 rounded-full z-50" title={errorMessage}>
                       <RiErrorWarningFill className="text-red-600" />
                       <div className="bg-[#cc4242] p-1 rounded-sm group-hover:flex hidden absolute top-1/2 -translate-y-1/2 -right-2 translate-x-full">
                         <span className="whitespace-nowrap text-sm">
@@ -171,7 +174,7 @@ const PersonalStrategies = () => {
                 <div className="flex items-center gap-2">
                   {/* Kilit ikonu — SEÇİLİ versiyon özelinde */}
                   {isLocked && (
-                    <div className="group relative" title="This version is locked (used by an active bot)">
+                    <div className="group relative" title={t("tooltips.lockedVersion")}>
                       <RiLockFill className="text-amber-400 text-[18px]" />
                     </div>
                   )}
@@ -189,7 +192,7 @@ const PersonalStrategies = () => {
                         initialSelectedId: selected.id,
                       })
                     }
-                    title="Düzenle / Aç"
+                    title={t("buttons.openEdit")}
                   >
                     <SiRobinhood className="text-blue-400 hover:text-blue-700 text-lg cursor-pointer" />
                   </button>
@@ -198,7 +201,7 @@ const PersonalStrategies = () => {
                   <button
                     className="bg-transparent pr-4 pl-2 rounded-md hover:bg-gray-800"
                     onClick={() => askDelete(selected)}
-                    title="Sil"
+                    title={t("tooltips.delete")}
                   >
                     <HiOutlineTrash className="text-red-700 hover:text-red-900 text-[19.5px] cursor-pointer" />
                   </button>
@@ -213,7 +216,7 @@ const PersonalStrategies = () => {
       <button
         className="mt-1 p-3 bg-green-500 hover:bg-green-600 text-white rounded-sm flex items-center justify-center h-3 w-16"
         onClick={() => openPanel({ groupId: null, versions: [], initialSelectedId: null })}
-        title="Yeni strateji"
+        title={t("buttons.newStrategy")}
       >
         <IoMdAdd className="text-lg" />
       </button>
@@ -222,20 +225,20 @@ const PersonalStrategies = () => {
       {showDeleteModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/10">
           <div className="bg-gray-900 text-white rounded-md w-[400px] p-6 shadow-lg relative">
-            <h2 className="text-lg font-bold mb-4">Silme Onayı</h2>
-            <p>{toDelete?.name} stratejisini silmek istediğinize emin misiniz?</p>
+            <h2 className="text-lg font-bold mb-4">{t("titles.deleteConfirm")}</h2>
+            <p>{t("messages.deleteConfirmQuestion", { name: toDelete?.name })}</p>
             <div className="flex justify-end mt-4 gap-2">
               <button
                 className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded"
                 onClick={() => { setShowDeleteModal(false); setToDelete(null); }}
               >
-                Hayır
+                {t("buttons.no")}
               </button>
               <button
                 className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded"
                 onClick={confirmDelete}
               >
-                Sil
+                {t("buttons.yesDelete")}
               </button>
             </div>
           </div>

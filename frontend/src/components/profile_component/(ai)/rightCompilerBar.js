@@ -52,8 +52,7 @@ const RightCompilerBar = ({
     
     navigator.clipboard.writeText(code);
     // Burada toast notification gösterebilirsiniz
-    console.log('Kod kopyalandı!');
-
+    
     // 3 saniye sonra eski haline dön
     setCopied(true); // <-- BU SATIRI EKLEMEN GEREKİYOR
     setTimeout(() => {

@@ -3,21 +3,23 @@
 import React, { useMemo, useState } from "react";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import { useTranslation } from "react-i18next";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-/**
- * Not:
- * - Listeyi page.js zaten props olarak iletiyor: <BotPieChart bots={bots} />
- * - Examine/analiz fetch burada yapılmaz. Sadece gösterim.
- */
 export default function BotPieChart({ bots = [] }) {
   const [activeChart, setActiveChart] = useState("amount"); // "amount" | "pnl"
+  const { t, i18n } = useTranslation("botPieChart");
+  const locale = i18n.language || "en";
 
   // ------- Helpers -------
   const trimName = (name = "") => (name.length > 15 ? name.slice(0, 15) + "..." : name);
   const formatUsd = (v) =>
-    `$${Number(v || 0).toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+    new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 2,
+    }).format(Number(v || 0));
 
   // ------- Stabilize input -------
   const list = useMemo(() => (Array.isArray(bots) ? bots : []), [bots]);
@@ -26,7 +28,6 @@ export default function BotPieChart({ bots = [] }) {
   const amountData = useMemo(() => {
     const labels = list.map((b) => trimName(b.name));
     const data = list.map((b) =>
-      // current_usd_value varsa onu, yoksa initial_usd_value
       Number(b.current_usd_value ?? b.initial_usd_value ?? 0)
     );
 
@@ -72,7 +73,10 @@ export default function BotPieChart({ bots = [] }) {
             label: (context) => {
               const value = Number(context.raw || 0);
               const total =
-                (context.dataset?.data || []).reduce((a, b) => Number(a || 0) + Number(b || 0), 0) || 0;
+                (context.dataset?.data || []).reduce(
+                  (a, b) => Number(a || 0) + Number(b || 0),
+                  0
+                ) || 0;
               const pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
               return `${context.label}: ${formatUsd(value)} (${pct}%)`;
             },
@@ -80,10 +84,10 @@ export default function BotPieChart({ bots = [] }) {
         },
       },
     }),
-    []
+    [locale]
   );
 
-  // ------- PnL chart data (profit vs loss as two rings/datasets) -------
+  // ------- PnL chart data -------
   const pnlData = useMemo(() => {
     const profitable = list.filter((b) => Number(b.profit_usd || 0) > 0);
     const losing = list.filter((b) => Number(b.profit_usd || 0) < 0);
@@ -168,13 +172,13 @@ export default function BotPieChart({ bots = [] }) {
               const value = Number(context.raw || 0);
               const isProfit = context.datasetIndex === 0;
               const prefix = isProfit ? "+" : "-";
-              return `${context.label}: ${prefix}${formatUsd(value).replace("$", "$")}`;
+              return `${context.label}: ${prefix}${formatUsd(value)}`;
             },
           },
         },
       },
     }),
-    []
+    [locale]
   );
 
   // ------- Footer totals -------
@@ -192,7 +196,9 @@ export default function BotPieChart({ bots = [] }) {
       <div className="pb-3 mb-4 border-b border-zinc-700">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold">
-            {activeChart === "amount" ? "Bot Value Distribution" : "Bot P&L Distribution"}
+            {activeChart === "amount"
+              ? t("titles.valueDistribution")
+              : t("titles.pnlDistribution")}
           </h3>
           <div className="flex bg-slate-800 rounded-lg p-1">
             <button
@@ -203,7 +209,7 @@ export default function BotPieChart({ bots = [] }) {
                   : "text-gray-400 hover:text-white hover:bg-slate-700"
               }`}
             >
-              Value
+              {t("buttons.value")}
             </button>
             <button
               onClick={() => setActiveChart("pnl")}
@@ -213,14 +219,12 @@ export default function BotPieChart({ bots = [] }) {
                   : "text-gray-400 hover:text-white hover:bg-slate-700"
               }`}
             >
-              P&L
+              {t("buttons.pnl")}
             </button>
           </div>
         </div>
         <p className="text-xs text-gray-400">
-          {activeChart === "amount"
-            ? "Distribution of current bot values"
-            : "Profit (outer ring) and Loss (inner ring) distribution"}
+          {activeChart === "amount" ? t("descriptions.value") : t("descriptions.pnl")}
         </p>
       </div>
 
@@ -235,7 +239,7 @@ export default function BotPieChart({ bots = [] }) {
         ) : (
           <div className="flex flex-col items-center justify-center text-gray-400">
             <div className="w-16 h-16 border-4 border-gray-600 border-dashed rounded-full mb-4"></div>
-            <p className="text-sm">No bot data available</p>
+            <p className="text-sm">{t("empty.noData")}</p>
           </div>
         )}
       </div>
@@ -244,19 +248,21 @@ export default function BotPieChart({ bots = [] }) {
         <div className="mt-4 pt-4 border-t border-zinc-700">
           <div className="grid grid-cols-2 gap-4 text-center">
             <div>
-              <p className="text-xs text-gray-400 mb-1">Total Value</p>
+              <p className="text-xs text-gray-400 mb-1">{t("footer.totalValue")}</p>
               <p className="text-sm font-bold text-blue-400">
                 {formatUsd(totals.totalValue)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-400 mb-1">Total P&L</p>
+              <p className="text-xs text-gray-400 mb-1">{t("footer.totalPnl")}</p>
               <p
                 className={`text-sm font-bold ${
                   totals.totalPnl >= 0 ? "text-emerald-400" : "text-red-400"
                 }`}
               >
-                {`${totals.totalPnl >= 0 ? "+" : ""}${formatUsd(Math.abs(totals.totalPnl))}`}
+                {`${totals.totalPnl >= 0 ? "+" : ""}${formatUsd(
+                  Math.abs(totals.totalPnl)
+                )}`}
               </p>
             </div>
           </div>

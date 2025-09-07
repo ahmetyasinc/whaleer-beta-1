@@ -1,0 +1,21 @@
+{
+  "title": "My Bots",
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "fields": {
+    "currentValue": "Current Value",
+    "margin": "Margin",
+    "totalPl": "Total P&L"
+  },
+  "menu": {
+    "examine": "Examine",
+    "preview": "Preview",
+    "loading": "Loading..."
+  },
+  "empty": {
+    "title": "No Bots Yet",
+    "desc": "To create your trading bot, go to the automated bots page and click the \"Add New Bot\" button."
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "labels": {
+    "by": "{{creator}} tarafından"
+  },
+  "meta": {
+    "purchasedTimes": "{{count}} kez satın alındı",
+    "rentedTimes": "{{count}} kez kiralandı"
+  },
+  "actions": {
+    "follow": "Takip Et",
+    "following": "Takip Ediliyor"
+  },
+  "purchase": {
+    "buy": "Satın Al",
+    "rentDaily": "Günlük Kirala",
+    "locked": "Önce cüzdanınızı bağlamanız gerekiyor",
+    "notAvailable": "Mevcut değil"
+  },
+  "runtime": {
+    "startedToday": "Bugün başladı",
+    "hoursOnly": "{{hours}} saat",
+    "daysOnly": "{{days}} gün",
+    "daysHours": "{{days}} gün {{hours}} saat"
+  },
+  "stats": {
+    "createdOn": "Oluşturulma",
+    "uptime": "Çalışma Süresi",
+    "winRate": "Kazanma Oranı",
+    "totalMargin": "Toplam Marj",
+    "profitFactor": "Profit Factor",
+    "riskFactor": "Risk Factor",
+    "avgFullness": "Ort. Dolu Luk",
+    "tradesDWM": "İşlem (G/H/A)",
+    "plDWM": "K/Z (G/H/A)"
+  },
+  "strategy": {
+    "title": "Kullanılan Strateji"
+  },
+  "coins": {
+    "title": "Desteklenen Coinler"
+  }
+}

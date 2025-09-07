@@ -12,6 +12,7 @@ import { toast } from "react-toastify";
 import { createPurchaseIntent, confirmPayment } from "@/api/payments"; // tek tip intent
 import { acquireBot } from "@/api/bots";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 const API = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
 const RPC_URL = "https://api.mainnet-beta.solana.com";
@@ -51,6 +52,8 @@ async function fetchSolUsdtPrice(signal) {
 }
 
 export default function RentModal({ botId, onClose, minDays = 1 }) {
+  const { t } = useTranslation("rentModal");
+
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState(null);
@@ -79,17 +82,17 @@ export default function RentModal({ botId, onClose, minDays = 1 }) {
           { params: { action: "rent" }, withCredentials: true }
         );
         const data = res?.data;
-        if (typeof data === "string") throw new Error("Non-JSON response received from server.");
+        if (typeof data === "string") throw new Error(t("errors.nonJson"));
         if (data?.detail) throw new Error(data.detail);
         if (alive) setSummary(data);
       } catch (e) {
-        if (alive) setError(e?.response?.data?.detail || "Failed to preparation.");
+        if (alive) setError(e?.response?.data?.detail || t("errors.prepareFailed"));
       } finally {
         if (alive) setLoading(false);
       }
     })();
     return () => { alive = false; };
-  }, [botId]);
+  }, [botId, t]);
 
   // SOL/USDT periyodik fiyat
   useEffect(() => {
@@ -116,16 +119,16 @@ export default function RentModal({ botId, onClose, minDays = 1 }) {
     setError(null);
 
     if (!connected || !publicKey) {
-      setError("Please connect your wallet.");
+      setError(t("errors.connectWallet"));
       return;
     }
     if (!summary?.revenue_wallet || !(dailyUsd > 0) || !(days >= minDays)) {
-      setError("Invalid checkout data.");
+      setError(t("errors.invalidCheckout"));
       return;
     }
 
     const price_usd = Number(totalUsd);
-    const toastId = toast.loading("Preparing payment...");
+    const toastId = toast.loading(t("toasts.preparing"));
     setSubmitting(true);
 
     try {
@@ -135,24 +138,24 @@ export default function RentModal({ botId, onClose, minDays = 1 }) {
         seller_wallet: summary.revenue_wallet,
         price_usd
       });
-      if (!intent?.message_b64 || !intent?.intent_id) throw new Error("Invalid intent from server.");
+      if (!intent?.message_b64 || !intent?.intent_id) throw new Error(t("errors.invalidIntent"));
 
       // 2) Cüzdan işlemi
       const msgBytes = b64ToUint8Array(intent.message_b64);
       const message = VersionedMessage.deserialize(msgBytes);
       const tx = new VersionedTransaction(message);
 
-      toast.update(toastId, { render: "Sign the transaction in your wallet...", isLoading: true });
+      toast.update(toastId, { render: t("toasts.signWallet"), isLoading: true });
       const connection = new Connection(RPC_URL, "confirmed");
       const signature = await sendTransaction(tx, connection, { skipPreflight: false });
 
       // 3) Sunucu onayı
-      toast.update(toastId, { render: "Confirming on-chain payment...", isLoading: true });
+      toast.update(toastId, { render: t("toasts.confirmOnchain"), isLoading: true });
       const confirmation = await confirmPayment(intent.intent_id, signature);
-      if (!confirmation?.ok) throw new Error("Payment could not be confirmed.");
+      if (!confirmation?.ok) throw new Error(t("errors.notConfirmed"));
 
       // 4) Lisansı/kopyayı oluştur (rent)
-      toast.update(toastId, { render: "Activating your rental...", isLoading: true });
+      toast.update(toastId, { render: t("toasts.activatingRental"), isLoading: true });
       await acquireBot(botId, {
         action: "rent",
         price_paid: price_usd,
@@ -173,25 +176,25 @@ export default function RentModal({ botId, onClose, minDays = 1 }) {
 
     } catch (e) {
       console.error(e);
-      toast.update(toastId, { render: e?.response?.data?.detail || e?.message || "Operation failed.", type: "error", isLoading: false, autoClose: 3000 });
-      setError(e?.response?.data?.detail || e?.message || "Operation failed.");
+      toast.update(toastId, { render: e?.response?.data?.detail || e?.message || t("errors.operationFailed"), type: "error", isLoading: false, autoClose: 3000 });
+      setError(e?.response?.data?.detail || e?.message || t("errors.operationFailed"));
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <ModalFrame title="Confirm Rental" onClose={onClose}>
+    <ModalFrame title={t("title")} onClose={onClose}>
       {loading && <SkeletonLines />}
       {!loading && error && <ErrorBar message={error} />}
       {!loading && !error && summary && (
         <div className="space-y-4 relative">
-          <InfoRow label="Action" value="Rent" />
-          <InfoRow label="Bot Name" value={summary.bot_name} />
-          <InfoRow label="Owner" value={summary.owner_username} />
+          <InfoRow label={t("rows.action")} value={t("actionNames.rent")} />
+          <InfoRow label={t("rows.botName")} value={summary.bot_name} />
+          <InfoRow label={t("rows.owner")} value={summary.owner_username} />
 
           <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
-            <div className="text-xs text-gray-300 mb-2">Rental Duration (days)</div>
+            <div className="text-xs text-gray-300 mb-2">{t("rows.durationTitle")}</div>
             <div className="flex gap-2 items-center">
               <input
                 type="number"
@@ -200,25 +203,25 @@ export default function RentModal({ botId, onClose, minDays = 1 }) {
                 onChange={(e) => setDays(Math.max(minDays, Number(e.target.value)))}
                 className="w-24 px-2 py-2 rounded-md bg-gray-800 text-white border border-gray-700 focus:outline-none"
               />
-              <span className="text-xs text-gray-400">(min {minDays} day)</span>
+              <span className="text-xs text-gray-400">{t("rows.minDaysHint", { minDays })}</span>
             </div>
           </div>
 
-          <InfoRow label="Daily Price (USD)" value={dailyUsd !== null ? `${dailyUsd.toFixed(2)} $` : "-"} />
-          <InfoRow label="Total Price (USD)" value={totalUsd !== null ? `${totalUsd.toFixed(2)} $` : "-"} />
-          {totalSol !== null && <InfoRow label="Approx. Total (SOL)" value={`${totalSol.toFixed(4)} SOL`} />}
-          <InfoRow label="Revenue Wallet" value={summary.revenue_wallet} mono />
+          <InfoRow label={t("rows.dailyUsd")} value={dailyUsd !== null ? `${dailyUsd.toFixed(2)} $` : "-"} />
+          <InfoRow label={t("rows.totalUsd")} value={totalUsd !== null ? `${totalUsd.toFixed(2)} $` : "-"} />
+          {totalSol !== null && <InfoRow label={t("rows.totalSol")} value={`${totalSol.toFixed(4)} SOL`} />}
+          <InfoRow label={t("rows.revenueWallet")} value={summary.revenue_wallet} mono />
 
           <div className="mt-6 flex gap-2">
             <button className="px-4 py-2 rounded-lg bg-gray-700 text-gray-100 hover:bg-gray-600" onClick={onClose}>
-              Cancel
+              {t("buttons.cancel")}
             </button>
             <button
               className="px-4 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-500 disabled:opacity-60"
               onClick={handleContinue}
               disabled={submitting}
             >
-              {submitting ? "Processing..." : "Continue"}
+              {submitting ? t("buttons.processing") : t("buttons.continue")}
             </button>
           </div>
 

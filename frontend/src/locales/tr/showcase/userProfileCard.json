@@ -1,0 +1,31 @@
+{
+  "header": {
+    "joined": "Katıldı: {{date}}"
+  },
+  "stats": {
+    "totalBots": "Toplam Bot",
+    "activeBots": "Aktif Bot",
+    "soldRented": "Satıldı / Kiralandı",
+    "successRate": "Başarı Oranı",
+    "avgMargin": "Ort. Marj",
+    "followers": "Takipçi"
+  },
+  "contact": {
+    "title": "İletişim"
+  },
+  "bots": {
+    "title": "Oluşturulan Botlar",
+    "active": "Aktif",
+    "inactive": "Pasif",
+    "uptime": "Çalışma Süresi",
+    "trades": "İşlem",
+    "winRate": "Kazanma Oranı",
+    "moreCoins": "+{{count}}"
+  },
+  "runtime": {
+    "startedToday": "Bugün başladı",
+    "hoursOnly": "{{hours}} saat",
+    "daysOnly": "{{days}} gün",
+    "daysHours": "{{days}} gün {{hours}} saat"
+  }
+}

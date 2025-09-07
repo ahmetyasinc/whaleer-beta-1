@@ -30,6 +30,66 @@ import {
 
 
 export default function ChartComponent() {
+
+  // -- UTC tabanlı tarih üretici ve interval'e göre formatter --
+  const PERIOD_GROUPS = {
+    mins: ['1m','3m','5m','15m','30m'],
+    hours: ['1h','2h','4h'],
+    days: ['1d'],
+    weeks: ['1w'],
+  };
+
+  const pad = (n) => String(n).padStart(2, '0');
+
+  // lightweight-charts tickMarkFormatter/timeFormatter hem UNIX (saniye) hem de business day objesi ( {year, month, day} ) gönderebilir.
+  // Bunu normalize edip UTC Date üretelim.
+  function timeToUTCDate(t) {
+    if (t && typeof t === 'object' && 'year' in t && 'month' in t && 'day' in t) {
+      // Business day -> UTC midnight
+      return new Date(Date.UTC(t.year, t.month - 1, t.day, 0, 0, 0));
+    }
+    // UNIX seconds
+    return new Date((typeof t === 'number' ? t : 0) * 1000);
+  }
+
+  function makeUTCFormatter(period) {
+    const isMins  = ['1m','3m','5m','15m','30m'].includes(period);
+    const isHours = ['1h','2h','4h'].includes(period);
+    const isDays  = ['1d'].includes(period);
+    const isWeeks = ['1w'].includes(period);
+
+    return (t) => {
+      const d = timeToUTCDate(t);
+      const Y = d.getUTCFullYear();
+      const M = pad(d.getUTCMonth() + 1);
+      const D = pad(d.getUTCDate());
+      const h = pad(d.getUTCHours());
+      const m = pad(d.getUTCMinutes());
+
+      if (isMins)  return `${D}.${M} ${h}:${m}`;  // 1–30m → DD.MM HH:mm
+      if (isHours) return `${D}.${M} ${h}:00`;       // 1h–4h → DD.MM HH
+      if (isDays)  return `${D}.${M}.${Y}`;       // 1d
+      if (isWeeks) return `${D}.${M}.${Y}`;       // 1w
+
+      return `${D}.${M} ${h}:${m}`;
+    };
+  }
+
+  function toUnixSecUTC(t) {
+    if (t == null) return undefined;
+    if (typeof t === 'number') {
+      // saniye mi milisaniye mi?
+      return t > 1e12 ? Math.floor(t / 1000) : Math.floor(t);
+    }
+    if (typeof t === 'string') {
+      // ISO ama Z yoksa UTC olarak işaretle
+      const iso = /Z$|[+-]\d\d:\d\d$/.test(t) ? t : t + 'Z';
+      const ms = Date.parse(iso);
+      return Number.isFinite(ms) ? Math.floor(ms / 1000) : undefined;
+    }
+    return undefined;
+  }
+
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
   const [chartData, setChartData] = useState([]);
@@ -122,13 +182,24 @@ export default function ChartComponent() {
         }
         const data = await response.json();
         if (data.status === "success" && data.data) {
-          const formattedData = data.data.map((candle) => ({
-            time: Math.floor(new Date(candle.timestamp).getTime() / 1000),
-            open: candle.open,
-            high: candle.high,
-            low: candle.low,
-            close: candle.close,
-          }));
+          const formattedData = data.data.map((candle) => {
+            const ts = candle.timestamp;
+            // number (ms veya s) / ISO string / Z'siz string hepsini güvenle UTC'ye çevir
+            let ms;
+            if (typeof ts === 'number') {
+              ms = ts > 1e12 ? ts : ts * 1000; // saniye ise ms'e çevir
+            } else {
+              const iso = /Z$|[+-]\d\d:\d\d$/.test(ts) ? ts : ts + 'Z';
+              ms = Date.parse(iso);
+            }
+            return {
+              time: Math.floor(ms / 1000),
+              open: candle.open,
+              high: candle.high,
+              low: candle.low,
+              close: candle.close,
+            };
+          });
           setChartData(formattedData);
         }
       } catch (error) {
@@ -137,6 +208,21 @@ export default function ChartComponent() {
     }
     fetchData();
   }, [selectedCrypto, selectedPeriod, end]);
+
+  useEffect(() => {
+    if (!chartRef.current) return;
+    const chart = chartRef.current;
+    const timeVisible = !['1d','1w'].includes(selectedPeriod);
+
+    chart.applyOptions({
+      localization: { timeFormatter: makeUTCFormatter(selectedPeriod) },
+      timeScale: {
+        timeVisible,
+        secondsVisible: false,
+        tickMarkFormatter: makeUTCFormatter(selectedPeriod),
+      },
+    });
+  }, [selectedPeriod]);
 
   // ===== Chart oluştur =====
   useEffect(() => {
@@ -157,15 +243,13 @@ export default function ChartComponent() {
       crosshair: {
         mode: isMagnetMode ? CrosshairMode.Magnet : CrosshairMode.Normal,
       },
+      localization: {
+        timeFormatter: makeUTCFormatter(selectedPeriod),
+      },
       timeScale: {
-        timeVisible: true,
+        timeVisible: !['1d','1w'].includes(selectedPeriod),
         secondsVisible: false,
-        tickMarkFormatter: (time) => {
-          const date = new Date(time * 1000);
-          const hours = String(date.getHours()).padStart(2, "0");
-          const minutes = String(date.getMinutes()).padStart(2, "0");
-          return `${hours}:${minutes}`;
-        },
+        tickMarkFormatter: makeUTCFormatter(selectedPeriod),
         rightBarStaysOnScroll: true,
         shiftVisibleRangeOnNewBar: false,
       },
@@ -220,11 +304,6 @@ export default function ChartComponent() {
     });
     candleSeries.setData(chartData);
 
-    console.log("[RULER] installing ruler tool…", {
-      hasChart: !!chart,
-      hasSeries: !!candleSeries,
-      hasContainer: !!chartContainerRef.current,
-    });
     const removeRuler = installRulerTool({
       chart,
       series: candleSeries,
@@ -232,7 +311,6 @@ export default function ChartComponent() {
       isRulerModeRef: rulerModeRef,
     });
     cleanupFns.push(() => {
-      console.log("[RULER] cleanup ruler tool");
       try { removeRuler?.(); } catch {}
     });
 
@@ -274,7 +352,7 @@ export default function ChartComponent() {
         const result = sub?.strategy_result?.[0];
         if (!result?.data) return;
         result.data.forEach(([time, signal, _value, note = ""]) => {
-          const unixTime = Math.floor(new Date(time).getTime() / 1000);
+          const unixTime = toUnixSecUTC(time);
           const m = { time: unixTime, position: "aboveBar", color: "", shape: "", text: note || "" };
           switch (signal) {
             case "Long Open": m.shape = "arrowUp"; m.color = "green"; m.position = "belowBar"; break;
@@ -313,7 +391,7 @@ export default function ChartComponent() {
             return;
         }
         const formattedData = graph.data
-          .map(([time, value]) => (typeof time === "string" && value !== undefined ? { time: Math.floor(new Date(time).getTime() / 1000), value } : null))
+          .map(([time, value]) => { const t = toUnixSecUTC(time); return (t !== undefined && value !== undefined) ? { time: t, value } : null;})
           .filter(Boolean)
           .sort((a, b) => a.time - b.time);
         series.setData(formattedData);
@@ -376,10 +454,9 @@ export default function ChartComponent() {
             }
             const timeValueMap = new Map();
             data.forEach(([time, value]) => {
-              if (typeof time === "string" && value !== undefined) {
-                const unixTime = Math.floor(new Date(time).getTime() / 1000);
-                timeValueMap.set(unixTime, value);
-              }
+              if (value === undefined) return;
+              const unixTime = toUnixSecUTC(time);
+              if (unixTime !== undefined) timeValueMap.set(unixTime, value);
             });
             const formattedData = Array.from(timeValueMap.entries())
               .sort(([a], [b]) => a - b)

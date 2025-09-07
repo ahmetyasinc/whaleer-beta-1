@@ -159,10 +159,6 @@ const useIndicatorDataStore = create((set, get) => ({
         end: end,
       });
 
-      console.log("== İndicator ==")
-      console.log("== RESPONSE ==")
-      console.log(response)
-  
       return {
         result: response.data.indicator_result,
         prints: response.data.prints,

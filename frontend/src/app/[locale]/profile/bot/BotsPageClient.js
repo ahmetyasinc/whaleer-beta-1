@@ -10,20 +10,21 @@ import { HiPlusSmall } from 'react-icons/hi2';
 import { ToastContainer } from 'react-toastify';
 import SwitchConfirmModal from "@/components/profile_component/(bot)/switchConfirmModal";
 import 'react-toastify/dist/ReactToastify.css';
+import { useTranslation } from 'react-i18next';
 
 const TABS = [
-  { key: 'ORIGINAL',  label: 'My Bots' },
-  { key: 'PURCHASED', label: 'Purchased' },
-  { key: 'RENTED',    label: 'Rented' },
+  { key: 'ORIGINAL' },
+  { key: 'PURCHASED' },
+  { key: 'RENTED' },
 ];
 
-function TabButton({ active, disabled, label, count, onClick }) {
+function TabButton({ active, disabled, label, disabledTitle, count, onClick }) {
   return (
     <button
       type="button"
       onClick={disabled ? undefined : onClick}
       aria-disabled={disabled}
-      title={disabled ? `No ${label.toLowerCase()} yet` : label}
+      title={disabled ? disabledTitle : label}
       className={[
         "px-3 h-9 rounded-md text-sm font-medium transition-all",
         "border",
@@ -42,12 +43,15 @@ function TabButton({ active, disabled, label, count, onClick }) {
 }
 
 export default function BotsPageClient() {
+  const { t } = useTranslation('botPage');
+
   const [modalOpen, setModalOpen] = useState(false);
   const bots = useBotStore((state) => state.bots);
   const loadBots = useBotStore((state) => state.loadBots);
   const loadApiKeys = useApiStore((state) => state.loadApiKeys);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const { deactivateAllBots } = useBotStore();
+
   // --- Gruplar
   const originals  = useMemo(() => (bots || []).filter(b => b?.acquisition_type === 'ORIGINAL'),  [bots]);
   const purchased  = useMemo(() => (bots || []).filter(b => b?.acquisition_type === 'PURCHASED'), [bots]);
@@ -104,22 +108,34 @@ export default function BotsPageClient() {
     }
   }, [activeTab, originals, purchased, rented]);
 
+  // --- Sekme etiketleri (i18n)
+  const tabLabels = {
+    ORIGINAL: t('tabs.myBots'),
+    PURCHASED: t('tabs.purchased'),
+    RENTED: t('tabs.rented'),
+  };
+
   return (
     <div className="h-screen flex flex-col">
       {/* Sticky Header */}
       <header className="h-[60px] bg-black/95 backdrop-blur flex items-center px-4 sticky top-0 z-50 border-b border-white/10">
         {/* Left: Tabs */}
         <div className="flex items-center gap-2 ml-6 md:ml-12">
-          {TABS.map(t => (
-            <TabButton
-              key={t.key}
-              label={t.label}
-              count={counts[t.key]}
-              active={activeTab === t.key}
-              disabled={!has[t.key]}
-              onClick={() => setActiveTab(t.key)}
-            />
-          ))}
+          {TABS.map(tab => {
+            const label = tabLabels[tab.key];
+            const disabledTitle = t('tabs.noTabYet', { tab: label });
+            return (
+              <TabButton
+                key={tab.key}
+                label={label}
+                disabledTitle={disabledTitle}
+                count={counts[tab.key]}
+                active={activeTab === tab.key}
+                disabled={!has[tab.key]}
+                onClick={() => setActiveTab(tab.key)}
+              />
+            );
+          })}
         </div>
 
         {/* Right actions */}
@@ -127,7 +143,7 @@ export default function BotsPageClient() {
           {/* Panic Button */}
           <button
             className="relative inline-flex items-center justify-center px-8 py-1 overflow-hidden tracking-tighter text-white bg-[#661b1b9c] rounded-md group"
-            title="Stop All Bots and Close Positions"
+            title={t('actions.panicButtonTitle')}
             onClick={() => setConfirmModalOpen(true)}
           >
             <span className="absolute w-0 h-0 transition-all duration-500 ease-out bg-red-600 rounded-full group-hover:w-56 group-hover:h-56"></span>
@@ -142,7 +158,7 @@ export default function BotsPageClient() {
               </svg>
             </span>
             <span className="absolute inset-0 w-full h-full -mt-1 rounded-lg opacity-30 bg-gradient-to-b from-transparent via-transparent to-gray-200"></span>
-            <span className="relative text-base font-semibold">Panic Button!</span>
+            <span className="relative text-base font-semibold">{t('actions.panicButton')}</span>
           </button>
 
           <SwitchConfirmModal
@@ -151,7 +167,6 @@ export default function BotsPageClient() {
             onConfirm={() => {
               deactivateAllBots();
               setConfirmModalOpen(false);
-              console.log("All bots deactivated, positions closed.");
             }}
           />
 
@@ -159,8 +174,9 @@ export default function BotsPageClient() {
           <button
             onClick={() => setModalOpen(true)}
             className="group/button relative inline-flex items-center justify-center overflow-hidden rounded-md bg-gray-800/90 backdrop-blur-lg px-6 py-1 text-sm font-semibold text-white transition-all duration-300 ease-in-out hover:shadow-md hover:shadow-gray-600/50"
+            title={t('actions.createNewBot')}
           >
-            <span className="text-[13px]">Create New Bot</span>
+            <span className="text-[13px]">{t('actions.createNewBot')}</span>
             <HiPlusSmall className="text-2xl relative font-semibold" />
             <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-13deg)_translateX(-100%)] group-hover/button:duration-1000 group-hover/button:[transform:skew(-13deg)_translateX(100%)]">
               <div className="relative h-full w-10 bg-white/20"></div>
@@ -177,9 +193,9 @@ export default function BotsPageClient() {
         {/* Liste alanı */}
         {visibleBots.length === 0 ? (
           <div className="px-6 text-white/70">
-            {activeTab === 'ORIGINAL' && "You don't have any original bots yet."}
-            {activeTab === 'PURCHASED' && "You haven't purchased any bots yet."}
-            {activeTab === 'RENTED' && "You haven't rented any bots yet."}
+            {activeTab === 'ORIGINAL'  && t("empty.original")}
+            {activeTab === 'PURCHASED' && t("empty.purchased")}
+            {activeTab === 'RENTED'    && t("empty.rented")}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 px-4">

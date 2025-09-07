@@ -33,7 +33,6 @@ const TechnicalIndicators = ({locale}) => {
         const fetchIndicators = async () => {
             try {
                 const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/all-indicators/`);
-                console.log(response.data)
                 
                 const tecnic_indicators = response.data.tecnic_indicators || [];
                 setTecnicIndicators(tecnic_indicators);

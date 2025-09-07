@@ -44,7 +44,6 @@ export const useBotStore = create((set) => ({
         current_usd_value: createdBot.current_usd_value,
       };
 
-      console.log("New Bot oluşturuldu:", newBot);
       // local cache
       set((state) => ({ bots: [...state.bots, newBot] }));
 

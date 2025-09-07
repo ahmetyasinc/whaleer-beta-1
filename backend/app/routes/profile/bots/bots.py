@@ -13,11 +13,13 @@ from app.routes.profile.bots.fetchs.fetch_holdings import fetch_holdings_for_bot
 from app.routes.profile.bots.fetchs.fetch_pnl import generate_pnl_from_snapshots
 from app.routes.profile.bots.fetchs.fetch_positions import fetch_positions_for_bot
 from app.routes.profile.bots.fetchs.fetch_trades import fetch_trades_for_bot
+from app.routes.profile.bots.fetchs.fetch_logs import fetch_logs_for_bot
 from app.schemas.bots.bot_analysis import BotAnalysisOut
 from app.models.profile.bots.bot_snapshots import BotSnapshots
 from app.models.profile.bots.bot_trades import BotTrades
 from app.models.profile.bots.bot_positions import BotPositions
 from app.models.profile.bots.bot_holdings import BotHoldings
+from typing import Optional
 
 from app.models.user import User
 from app.models.profile.bots.bot_follow import BotFollow
@@ -156,10 +158,18 @@ async def deactivate_bot(bot_id: int, db: AsyncSession = Depends(get_db), user_i
 async def get_bot_analysis(
     bot_id: int,
     db: AsyncSession = Depends(get_db),
-    user_id: dict = Depends(verify_token)
+    user_id: dict = Depends(verify_token),
+    # Opsiyonel log filtreleri:
+    log_level: Optional[str] = Query(None, description="info|warning|error"),
+    log_limit: int = Query(200, ge=1, le=1000),
+    log_since: Optional[datetime] = Query(None, description="ISO8601 datetime")
 ):
     result = await db.execute(
-        select(Bots).where(Bots.id == bot_id, Bots.user_id == int(user_id),Bots.deleted.is_(False))
+        select(Bots).where(
+            Bots.id == bot_id,
+            Bots.user_id == int(user_id),
+            Bots.deleted.is_(False)
+        )
     )
     bot = result.scalar_one_or_none()
 
@@ -170,17 +180,28 @@ async def get_bot_analysis(
     open_positions = await fetch_positions_for_bot(bot_id, db)
     holdings = await fetch_holdings_for_bot(bot_id, db)
     pnl_data = await generate_pnl_from_snapshots(bot_id, db)
-    profit = bot.current_usd_value - bot.initial_usd_value
+
+    # Loglar
+    logs = await fetch_logs_for_bot(
+        bot_id=bot_id,
+        db=db,
+        level=log_level,
+        since=log_since,
+        limit=log_limit
+    )
+
+    profit = float((bot.current_usd_value or 0) - (bot.initial_usd_value or 0))
 
     return BotAnalysisOut(
         bot_id=bot.id,
         bot_name=bot.name,
-        bot_current_value=bot.current_usd_value,
+        bot_current_value=float(bot.current_usd_value or 0),
         bot_profit=profit,
         trades=trades,
         open_positions=open_positions,
         holdings=holdings,
-        pnl_data=pnl_data
+        pnl_data=pnl_data,
+        logs=logs
     )
 
 @protected_router.post("/bot/follow")

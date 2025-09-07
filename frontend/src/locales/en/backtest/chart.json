@@ -1,0 +1,14 @@
+{
+  "titles": {
+    "priceChart": "Price Chart"
+  },
+  "buttons": {
+    "candles": "Candles",
+    "line": "Line"
+  },
+  "metrics": {
+    "returns": "Returns",
+    "position": "Position",
+    "percentage": "Percentage"
+  }
+}

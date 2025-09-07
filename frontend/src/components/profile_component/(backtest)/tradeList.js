@@ -1,8 +1,10 @@
 'use client';
 
 import useBacktestStore from '@/store/backtest/backtestStore';
+import { useTranslation } from 'react-i18next';
 
 export default function TradesList({ trades }) {
+  const { t } = useTranslation('backtestTradesList');
   const { selectedCrypto } = useBacktestStore();
 
   const formatCurrency = (value) =>
@@ -26,13 +28,13 @@ export default function TradesList({ trades }) {
   const formatTypeLabel = (type) => {
     switch (type) {
       case 'LONG_OPEN':
-        return 'OPEN LONG';
+        return t('types.longOpen');
       case 'LONG_CLOSE':
-        return 'CLOSE LONG';
+        return t('types.longClose');
       case 'SHORT_OPEN':
-        return 'OPEN SHORT';
+        return t('types.shortOpen');
       case 'SHORT_CLOSE':
-        return 'CLOSE SHORT';
+        return t('types.shortClose');
       default:
         return type;
     }
@@ -46,10 +48,10 @@ export default function TradesList({ trades }) {
     <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-white text-lg font-semibold flex items-center gap-2">
-          Trade History
+          {t('titles.tradeHistory')}
         </h3>
         <div className="text-gray-400 text-sm">
-          Total {trades.length} trades
+          {t('headers.totalTrades', { count: trades.length })}
         </div>
       </div>
 
@@ -57,16 +59,16 @@ export default function TradesList({ trades }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-700">
-              <th className="text-left text-gray-400 font-medium py-2">Date</th>
-              <th className="text-left text-gray-400 font-medium py-2">Type</th>
-              <th className="text-left text-gray-400 font-medium py-2">Leverage</th>
-              <th className="text-center text-gray-400 font-medium py-2">Used %</th>
-              <th className="text-right text-gray-400 font-medium py-2">Amount</th>
-              <th className="text-right text-gray-400 font-medium py-2">Value</th>
-              <th className="text-right text-gray-400 font-medium py-2">Commission</th>
-              <th className="text-right text-gray-400 font-medium py-2">P/L ($)</th>
-              <th className="text-right text-gray-400 font-medium py-2">P/L (%)</th>
-              <th className="text-right text-gray-400 font-medium py-2">Price (Close)</th>
+              <th className="text-left text-gray-400 font-medium py-2">{t('table.date')}</th>
+              <th className="text-left text-gray-400 font-medium py-2">{t('table.type')}</th>
+              <th className="text-left text-gray-400 font-medium py-2">{t('table.leverage')}</th>
+              <th className="text-center text-gray-400 font-medium py-2">{t('table.usedPct')}</th>
+              <th className="text-right text-gray-400 font-medium py-2">{t('table.amount')}</th>
+              <th className="text-right text-gray-400 font-medium py-2">{t('table.value')}</th>
+              <th className="text-right text-gray-400 font-medium py-2">{t('table.commission')}</th>
+              <th className="text-right text-gray-400 font-medium py-2">{t('table.plDollar')}</th>
+              <th className="text-right text-gray-400 font-medium py-2">{t('table.plPercent')}</th>
+              <th className="text-right text-gray-400 font-medium py-2">{t('table.priceClose')}</th>
             </tr>
           </thead>
           <tbody>
@@ -112,27 +114,24 @@ export default function TradesList({ trades }) {
                   <td className="py-3 text-right text-orange-400">
                     {formatCurrency(commission)}
                   </td>
-                    <td className="py-3 text-right font-medium">
-                      {isClose ? (
-                        <span
-                          className={
-                            pnlPercentage >= 0 ? 'text-green-400' : 'text-red-400'
-                          }
-                        >
-                          {pnlPercentage >= 0 ? '+' : ''}
-                          {formatCurrency(pnlAmount)}
-                        </span>
-                      ) : (
-                        <span className="text-gray-500">–</span>
-                      )}
-                    </td>
 
                   <td className="py-3 text-right font-medium">
                     {isClose ? (
                       <span
-                        className={
-                          pnlPercentage >= 0 ? 'text-green-400' : 'text-red-400'
-                        }
+                        className={pnlPercentage >= 0 ? 'text-green-400' : 'text-red-400'}
+                      >
+                        {pnlPercentage >= 0 ? '+' : ''}
+                        {formatCurrency(pnlAmount)}
+                      </span>
+                    ) : (
+                      <span className="text-gray-500">–</span>
+                    )}
+                  </td>
+
+                  <td className="py-3 text-right font-medium">
+                    {isClose ? (
+                      <span
+                        className={pnlPercentage >= 0 ? 'text-green-400' : 'text-red-400'}
                       >
                         {pnlPercentage >= 0 ? '+' : ''}
                         {formatPercentage(pnlPercentage)}
@@ -141,7 +140,6 @@ export default function TradesList({ trades }) {
                       <span className="text-gray-500">–</span>
                     )}
                   </td>
-
 
                   <td className="py-3 text-right text-gray-300">
                     {formatCurrency(trade.price)}

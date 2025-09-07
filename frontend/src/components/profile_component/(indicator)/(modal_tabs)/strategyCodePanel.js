@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { IoMdClose } from "react-icons/io";
 import { FaRegSave } from "react-icons/fa";
-import { RiLockFill } from "react-icons/ri";
+import { MdOpenInFull } from "react-icons/md";
 import CodeEditor from "../../CodeEditor";
 import usePanelStore from "@/store/indicator/panelStore";
 import useCodePanelStore from "@/store/indicator/strategyCodePanelStore"; // versiyonlu store
@@ -11,7 +11,9 @@ import useStrategyStore from "@/store/indicator/strategyStore";
 import RunButton from "./run_button_str";
 import TerminalStrategy from "./terminalStrategy";
 import VersionSelect from "./versionSelect";
+import CodeModal from "./fullScreenStrategyCodeModal"; // 👈 YENİ modal
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 
 axios.defaults.withCredentials = true;
 
@@ -39,8 +41,13 @@ const CodePanel = () => {
   const [localName, setLocalName] = useState("");
   const [localCode, setLocalCode] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-
   const terminalRef = useRef(null);
+
+  // Tam ekran modal state
+  const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
+  const [codeModalStrategy, setCodeModalStrategy] = useState(null);
+
+  const { t } = useTranslation("strategyCodePanel");
 
   useEffect(() => {
     setLocalName(strategyName);
@@ -129,7 +136,7 @@ const CodePanel = () => {
         setStrategyCode(newStrategy.code);
       }
     } catch (error) {
-      console.error("Strategy save error:", error);
+      console.error(t("errors.save"), error);
     }
 
     setIsSaving(false);
@@ -140,19 +147,48 @@ const CodePanel = () => {
     removeCustomPanel("panel-strategy-editor");
   };
 
+  // Tam ekran modal aç (Run'ın solundaki ikon)
+  const openFullscreenModal = () => {
+    setCodeModalStrategy({
+      id: selected?.id ?? null,
+      name: (localName ?? "").trim() || t("labels.untitled"),
+      code: localCode ?? "",
+      locked: !!selected?.locked,
+    });
+    setIsCodeModalOpen(true);
+  };
+
   if (!isOpen) return null;
 
   return (
     <div className="bg-black text-white rounded-md w-full h-full p-2 shadow-lg relative flex flex-col">
       <div className="flex justify-start drag-handle cursor-grab mt-0 mr-8 h-5">
         <h2 className="flex justify-start drag-handle text-xs font-bold mb-2">
-          {isNewVersion ? "Add New Version" : selected ? "Edit Strategy" : "Add New Strategy"}
+          {isNewVersion
+            ? t("titles.addNewVersion")
+            : selected
+            ? t("titles.editStrategy")
+            : t("titles.addNewStrategy")}
         </h2>
       </div>
 
-      {/* Run only when editing an existing, unlocked version */}
+      {/* Sağ üst aksiyon çubuğu: [Tam ekran] [Run] [Save] [Close] */}
       {selected && !isNewVersion && (
-        <RunButton strategyId={selected.id} onBeforeRun={handleSaveStrategy} />
+        <div className="absolute top-10 right-[10px] flex items-center gap-2">
+          {/* Tam ekran ikonu — Run'ın SOLUNDA */}
+          <button
+            onClick={openFullscreenModal}
+            className={`p-[1px] ${isLockedActive ? "opacity-60 cursor-not-allowed" : ""}`}
+            title={isLockedActive ? t("tooltips.fullscreenLocked") : t("tooltips.fullscreen")}
+            disabled={isLockedActive}
+          >
+            <MdOpenInFull size={16} />
+          </button>
+        </div>
+      )}
+
+      {!isLockedActive && (
+        <RunButton strategyId={selected?.id} onBeforeRun={handleSaveStrategy} />
       )}
 
       {/* Save */}
@@ -162,7 +198,7 @@ const CodePanel = () => {
             ? "bg-gray-700 cursor-not-allowed opacity-60"
             : "bg-[rgb(16,45,100)] hover:bg-[rgb(27,114,121)]"
         }`}
-        title={isLockedActive ? "Locked versions cannot be modified" : "Save"}
+        title={isLockedActive ? t("tooltips.saveLocked") : t("buttons.save")}
         onClick={handleSaveStrategy}
         disabled={isLockedActive || isSaving}
         aria-disabled={isLockedActive || isSaving}
@@ -178,6 +214,7 @@ const CodePanel = () => {
       <button
         className="absolute top-2 right-1 gap-1 px-[9px] py-[5px] mr-1 bg-[rgb(100,16,16)] hover:bg-[rgb(189,49,49)] rounded text-sm font-medium"
         onClick={handleClose}
+        title={t("buttons.close")}
       >
         <IoMdClose />
       </button>
@@ -189,7 +226,7 @@ const CodePanel = () => {
           className={`w-64 h-[32px] p-2 bg-[#232323] text-white focus:outline-none rounded-sm ${
             isLockedActive ? "opacity-60 cursor-not-allowed" : ""
           }`}
-          placeholder="Strategy name..."
+          placeholder={t("inputs.namePlaceholder")}
           value={localName}
           onChange={(e) => {
             if (!isLockedActive) setLocalName(e.target.value);
@@ -211,22 +248,19 @@ const CodePanel = () => {
       {/* Locked uyarısı */}
       {isLockedActive && (
         <div className="mb-2 px-2 py-1 bg-amber-900/30 border border-amber-700/40 rounded flex items-center gap-2 text-[12px]">
-          <RiLockFill className="text-amber-400" />
-          <span>
-            This version is <b>locked</b> (used by an active bot). Create a new version to edit.
-          </span>
+          <svg width="16" height="16" viewBox="0 0 24 24" className="text-amber-400"><path fill="currentColor" d="M12 17q.425 0 .713-.288T13 16q0-.425-.288-.713T12 15q-.425 0-.713.288T11 16q0 .425.288.713T12 17Zm-1-4h2V7h-2v6Zm1 9q-2.075 0-3.9-.788t-3.2-2.137t-2.137-3.2T2 12t.788-3.9t2.137-3.2t3.2-2.137T12 2t3.9.788t3.2 2.137t2.137 3.2T22 12t-.788 3.9t-2.137 3.2t-3.2 2.137T12 22Z"/></svg>
+          <span>{t("banners.locked")}</span>
           <button
             className="ml-auto px-2 py-1 text-[12px] rounded bg-amber-700 hover:bg-amber-600"
             onClick={startNewVersion}
           >
-            New Version
+            {t("buttons.newVersion")}
           </button>
         </div>
       )}
 
       {/* Editor */}
       <div className="flex-1 overflow-hidden rounded-t-[4px] relative">
-        {/* CodeEditor readOnly desteği varsa kullanalım; yoksa setCode guard’ı zaten var */}
         <CodeEditor
           code={localCode}
           setCode={(val) => {
@@ -235,8 +269,6 @@ const CodePanel = () => {
           language="python"
           readOnly={isLockedActive}
         />
-
-        {/* İsteğe bağlı görsel kilit overlay’i */}
         {isLockedActive && (
           <div className="pointer-events-none absolute inset-0 border-2 border-amber-600/50 rounded-sm"></div>
         )}
@@ -246,7 +278,17 @@ const CodePanel = () => {
       <TerminalStrategy
         {...(selected ? { id: selected.id } : {})}
         ref={terminalRef}
-        initialOutput="🚀 Terminal ready..."
+        initialOutput={t("terminalReady")}
+      />
+
+      {/* Tam ekran modal */}
+      <CodeModal
+        isOpen={isCodeModalOpen}
+        onClose={() => setIsCodeModalOpen(false)}
+        strategy={codeModalStrategy}
+        onSave={handleSaveStrategy}               // Kaydet işlevi panelden
+        runStrategyId={selected?.id || null}      // RunButton için id
+        locked={isLockedActive}                   // Kilit kontrolü
       />
     </div>
   );

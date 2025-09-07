@@ -9,6 +9,7 @@ import ChooseBotModal from "./chooseBotModal";
 import { useSiwsStore } from "@/store/auth/siwsStore";
 import { createListingIntent, confirmPayment } from "@/api/payments";
 import { patchBotListing } from "@/api/bots";
+import { useTranslation } from "react-i18next";
 
 const RPC_URL = "https://api.mainnet-beta.solana.com";
 const DEFAULT_PAYOUT = "AkmufZViBgt9mwuLPhFM8qyS1SjWNbMRBK8FySHajvUA";
@@ -30,6 +31,8 @@ function calcPnlPct(initial, current) {
 }
 
 export default function SellRentModal({ open, onClose }) {
+  const { t } = useTranslation('sellRentModal');
+
   const [sellChecked, setSellChecked] = useState(false);
   const [rentChecked, setRentChecked] = useState(false);
   const [sellPrice, setSellPrice] = useState("");
@@ -152,32 +155,32 @@ export default function SellRentModal({ open, onClose }) {
   async function payListingFeeIfNeeded() {
     if (!isNewListing) return { paid: false };
 
-    if (!walletLinked) throw new Error("Please connect your wallet first.");
-    if (!publicKey) throw new Error("Wallet not ready.");
+    if (!walletLinked) throw new Error(t("errors.connectWalletFirst"));
+    if (!publicKey) throw new Error(t("errors.walletNotReady"));
 
     setPayLoading(true);
-    const toastId = toast.loading("Preparing payment...");
+    const toastId = toast.loading(t("toasts.preparingPayment"));
     try {
       const intent = await createListingIntent(selectedBot.id);
       if (!intent?.message_b64 || !intent?.intent_id) {
-        throw new Error("Invalid intent from server.");
+        throw new Error(t("errors.invalidIntent"));
       }
 
       const msgBytes = b64ToUint8Array(intent.message_b64);
       const message = VersionedMessage.deserialize(msgBytes);
       const tx = new VersionedTransaction(message);
 
-      toast.update(toastId, { render: "Sign the transaction in your wallet...", isLoading: true });
+      toast.update(toastId, { render: t("toasts.signInWallet"), isLoading: true });
       const connection = new Connection(RPC_URL, "confirmed");
       const signature = await sendTransaction(tx, connection, { skipPreflight: false });
 
-      toast.update(toastId, { render: "Confirming on-chain payment...", isLoading: true });
+      toast.update(toastId, { render: t("toasts.confirmOnchain"), isLoading: true });
       const confirmation = await confirmPayment(intent.intent_id, signature);
       if (!confirmation?.ok) {
-        throw new Error("Payment could not be confirmed.");
+        throw new Error(t("errors.paymentNotConfirmed"));
       }
 
-      toast.update(toastId, { render: "Payment confirmed!", type: "success", isLoading: false, autoClose: 1500 });
+      toast.update(toastId, { render: t("toasts.paymentConfirmed"), type: "success", isLoading: false, autoClose: 1500 });
       setShowSuccessAnim(true);
       await new Promise((r) => setTimeout(r, 900));
       setShowSuccessAnim(false);
@@ -192,37 +195,37 @@ export default function SellRentModal({ open, onClose }) {
     setError(null);
 
     if (!selectedBot) {
-      toast.error("Please select a bot.");
-      setError("Please select a bot.");
+      toast.error(t("errors.selectBot"));
+      setError(t("errors.selectBot"));
       return;
     }
     if (!hasAnyChoice) {
-      toast.error("Please choose at least one: Sell or Rent.");
-      setError("Please choose at least one: Sell or Rent.");
+      toast.error(t("errors.chooseOne"));
+      setError(t("errors.chooseOne"));
       return;
     }
     if (!priceValid) {
-      toast.error("Please enter valid non-negative prices.");
-      setError("Please enter valid non-negative prices.");
+      toast.error(t("errors.invalidPrices"));
+      setError(t("errors.invalidPrices"));
       return;
     }
     if (!walletValid) {
-      toast.error("Please enter a valid wallet address.");
-      setError("Please enter a valid wallet address.");
+      toast.error(t("errors.invalidWallet"));
+      setError(t("errors.invalidWallet"));
       return;
     }
     if (isNewListing && !disclaimerAccepted) {
-      toast.error("Please accept the listing fee disclaimer.");
-      setError("Please accept the listing fee disclaimer.");
+      toast.error(t("errors.acceptDisclaimer"));
+      setError(t("errors.acceptDisclaimer"));
       return;
     }
     if (!isNewListing && !hasDiff) {
-      toast.info("No changes to update.");
+      toast.info(t("toasts.noChanges"));
       return;
     }
 
     setLoading(true);
-    const toastId = toast.loading(isNewListing ? "Creating listing..." : "Updating listing...");
+    const toastId = toast.loading(isNewListing ? t("toasts.creating") : t("toasts.updating"));
     try {
       if (isNewListing) {
         await payListingFeeIfNeeded();
@@ -231,7 +234,7 @@ export default function SellRentModal({ open, onClose }) {
       await patchBotListing(selectedBot.id, diffPayload);
 
       toast.update(toastId, {
-        render: isNewListing ? "Listing created successfully." : "Listing updated successfully.",
+        render: isNewListing ? t("toasts.createSuccess") : t("toasts.updateSuccess"),
         type: "success",
         isLoading: false,
         autoClose: 1800
@@ -242,12 +245,12 @@ export default function SellRentModal({ open, onClose }) {
     } catch (e) {
       console.error(e);
       toast.update(toastId, {
-        render: e?.message || "Operation failed.",
+        render: e?.message || t("toasts.operationFailed"),
         type: "error",
         isLoading: false,
         autoClose: 3000
       });
-      setError(e?.message || "Operation failed.");
+      setError(e?.message || t("toasts.operationFailed"));
     } finally {
       setLoading(false);
     }
@@ -260,11 +263,11 @@ export default function SellRentModal({ open, onClose }) {
     const isListed = Boolean(selectedBot?.for_sale) || Boolean(selectedBot?.for_rent);
     if (!isListed) return;
 
-    const sure = confirm("This will remove your bot from listings. Continue?");
+    const sure = confirm(t("confirm.remove"));
     if (!sure) return;
 
     setLoading(true);
-    const toastId = toast.loading("Removing from listings...");
+    const toastId = toast.loading(t("toasts.removing"));
     try {
       const payload = {
         for_sale: false,
@@ -274,7 +277,7 @@ export default function SellRentModal({ open, onClose }) {
       await patchBotListing(selectedBot.id, payload);
 
       toast.update(toastId, {
-        render: "Listing removed successfully.",
+        render: t("toasts.removeSuccess"),
         type: "success",
         isLoading: false,
         autoClose: 1600
@@ -285,7 +288,7 @@ export default function SellRentModal({ open, onClose }) {
     } catch (e) {
       console.error(e);
       toast.update(toastId, {
-        render: e?.message || "Failed to remove listing.",
+        render: e?.message || t("toasts.removeFailed"),
         type: "error",
         isLoading: false,
         autoClose: 3000
@@ -308,12 +311,14 @@ export default function SellRentModal({ open, onClose }) {
               onClose?.();
             }}
             className="absolute top-6 right-6 text-2xl font-bold hover:text-red-400 transition-colors duration-200 w-8 h-8 flex items-center justify-center hover:bg-red-500/10 rounded-full"
+            aria-label={t("aria.close")}
+            title={t("aria.close")}
           >
             ×
           </button>
 
           <h2 className="text-xl font-bold mb-6 text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-            {isNewListing ? "Create a New Listing" : "Update Your Listing"}
+            {isNewListing ? t("titles.create") : t("titles.update")}
           </h2>
 
           {/* Error bar */}
@@ -325,7 +330,7 @@ export default function SellRentModal({ open, onClose }) {
 
           {/* Bot Selection */}
           <div className="mb-6">
-            <label className="block text-base font-medium mb-3 text-gray-300">Choose a Bot</label>
+            <label className="block text-base font-medium mb-3 text-gray-300">{t("labels.chooseBot")}</label>
             <div className="flex gap-3">
               <div className="flex-1">
                 {selectedBot ? (
@@ -335,7 +340,7 @@ export default function SellRentModal({ open, onClose }) {
                       <div className="text-sm">
                         {(() => {
                           const pnl = calcPnlPct(selectedBot.initial_usd_value, selectedBot.current_usd_value);
-                          if (pnl === null) return <span className="text-gray-400">No P&L data</span>;
+                          if (pnl === null) return <span className="text-gray-400">{t("labels.noPnlData")}</span>;
                           const pnlClass = pnl > 0 ? "text-emerald-400" : pnl < 0 ? "text-rose-400" : "text-gray-400";
                           return <span className={pnlClass}>{pnl.toFixed(2)}%</span>;
                         })()}
@@ -343,20 +348,22 @@ export default function SellRentModal({ open, onClose }) {
                     </div>
                     <div
                       className={`w-3 h-3 rounded-full ${isCurrentlyListed ? "bg-amber-400" : "bg-gray-400"}`}
-                      title={isCurrentlyListed ? "Listed" : "Not Listed"}
+                      title={isCurrentlyListed ? t("labels.listed") : t("labels.notListed")}
                     />
                   </div>
                 ) : (
                   <div className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-3 text-gray-400 text-center">
-                    No bot selected yet
+                    {t("labels.noBotSelected")}
                   </div>
                 )}
               </div>
               <button
                 onClick={() => setChooseBotModalOpen(true)}
                 className="px-4 h-10 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-purple-400/25"
+                type="button"
+                title={t("buttons.select")}
               >
-                Select
+                {t("buttons.select")}
               </button>
             </div>
           </div>
@@ -374,7 +381,7 @@ export default function SellRentModal({ open, onClose }) {
                     }`}
                   >
                     {sellChecked && (
-                      <svg className="w-3 h-3 text-black absolute top-0.5 left-0.5" viewBox="0 0 20 20" fill="currentColor">
+                      <svg className="w-3 h-3 text-black absolute top-0.5 left-0.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path
                           fillRule="evenodd"
                           d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -384,7 +391,7 @@ export default function SellRentModal({ open, onClose }) {
                     )}
                   </div>
                 </div>
-                <span className="text-base font-medium group-hover:text-cyan-400 transition-colors">I Want to Sell</span>
+                <span className="text-base font-medium group-hover:text-cyan-400 transition-colors">{t("labels.wantSell")}</span>
               </label>
 
               {sellChecked && (
@@ -393,12 +400,12 @@ export default function SellRentModal({ open, onClose }) {
                     <input
                       type="number"
                       min={0}
-                      placeholder="Enter selling price (USD)"
+                      placeholder={t("placeholders.sellPrice")}
                       className="w-full p-2.5 rounded-lg bg-zinc-800/50 border border-gray-700 hover:border-cyan-400 focus:border-cyan-400 focus:outline-none transition-all duration-200 text-sm placeholder-gray-400 pr-16"
                       value={sellPrice}
                       onChange={(e) => setSellPrice(e.target.value)}
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">USD</span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">{t("units.usd")}</span>
                   </div>
                 </div>
               )}
@@ -415,7 +422,7 @@ export default function SellRentModal({ open, onClose }) {
                     }`}
                   >
                     {rentChecked && (
-                      <svg className="w-3 h-3 text-black absolute top-0.5 left-0.5" viewBox="0 0 20 20" fill="currentColor">
+                      <svg className="w-3 h-3 text-black absolute top-0.5 left-0.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path
                           fillRule="evenodd"
                           d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -425,7 +432,7 @@ export default function SellRentModal({ open, onClose }) {
                     )}
                   </div>
                 </div>
-                <span className="text-base font-medium group-hover:text-emerald-400 transition-colors">I Want to Rent</span>
+                <span className="text-base font-medium group-hover:text-emerald-400 transition-colors">{t("labels.wantRent")}</span>
               </label>
 
               {rentChecked && (
@@ -434,14 +441,14 @@ export default function SellRentModal({ open, onClose }) {
                     <input
                       type="number"
                       min={0}
-                      placeholder="Enter rental price (USD / day)"
+                      placeholder={t("placeholders.rentPrice")}
                       className="w-full p-2.5 rounded-lg bg-zinc-800/50 border border-gray-700 hover:border-emerald-400 focus:border-emerald-400 focus:outline-none transition-all duration-200 text-sm placeholder-gray-400 pr-24"
                       value={rentPrice}
                       onChange={(e) => setRentPrice(e.target.value)}
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">USD / day</span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">{t("units.usdPerDay")}</span>
                   </div>
-                  <div className="text-xs text-gray-400 mt-1">Daily payment</div>
+                  <div className="text-xs text-gray-400 mt-1">{t("hints.dailyPayment")}</div>
                 </div>
               )}
             </div>
@@ -450,32 +457,32 @@ export default function SellRentModal({ open, onClose }) {
           {/* Wallet Address */}
           <div className="mb-6">
             <label className="block text-base font-medium mb-2 text-gray-300">
-              Revenue Wallet Address <span className="text-red-400">*</span>
+              {t("labels.revenueWallet")} <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
-              placeholder="Enter Solana wallet address"
+              placeholder={t("placeholders.wallet")}
               className="w-full p-2.5 rounded-lg bg-zinc-800/50 border border-gray-700 hover:border-cyan-400 focus:border-cyan-400 focus:outline-none transition-all duration-200 text-sm placeholder-gray-400"
               value={walletAddress}
               onChange={(e) => setWalletAddress(e.target.value)}
             />
             <p className="text-xs text-gray-400 mt-1">
-              ⚠️ Please make sure you enter the correct wallet address. The responsibility is entirely yours.
+              {t("hints.walletWarning")}
             </p>
           </div>
 
           {/* Description (opsiyonel) */}
           <div className="mb-6">
-            <label className="block text-base font-medium mb-2 text-gray-300">Listing Description (optional)</label>
+            <label className="block text-base font-medium mb-2 text-gray-300">{t("labels.description")}</label>
             <textarea
-              className="w-full min-h-[160px] max-h-[200px] bg-stone-900 border border-gray-700 rounded-md p-3 text-sm resize-none placeholder-gray-400"
-              placeholder="Describe your bot’s features, use cases, and other important details..."
+              className="w-full min-h=[160px] max-h-[200px] bg-stone-900 border border-gray-700 rounded-md p-3 text-sm resize-none placeholder-gray-400"
+              placeholder={t("placeholders.description")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               maxLength={1000}
             />
             <div className="text-xs text-gray-400 mt-1.5 flex justify-between">
-              <span>Detailed descriptions attract more attention</span>
+              <span>{t("hints.detailedAttracts")}</span>
               <span>{description.length}/1000</span>
             </div>
           </div>
@@ -483,10 +490,9 @@ export default function SellRentModal({ open, onClose }) {
           {/* New listing fee banner */}
           {isNewListing && (
             <div className="mb-6 rounded-lg border border-cyan-500/30 bg-cyan-500/10 p-3 text-sm">
-              <div className="font-semibold text-cyan-300">One-time Listing Fee</div>
+              <div className="font-semibold text-cyan-300">{t("banners.feeTitle")}</div>
               <div className="text-gray-200">
-                A one-time fee of <span className="font-medium">1 USD</span> will be charged via Solana when creating a new listing.
-                Your wallet will display the exact SOL amount.
+                {t("banners.feeBody")}
               </div>
               <label className="mt-3 flex items-start gap-2">
                 <input
@@ -496,7 +502,7 @@ export default function SellRentModal({ open, onClose }) {
                   className="mt-[2px]"
                 />
                 <span className="text-gray-300">
-                  I confirm that I’m paying a <strong>1 USD</strong> listing fee via Solana and agree that this fee is non-refundable.
+                  {t("banners.feeConfirm")}
                 </span>
               </label>
             </div>
@@ -509,22 +515,26 @@ export default function SellRentModal({ open, onClose }) {
               disabled={!canSubmit}
               onClick={handleSubmit}
               type="button"
+              title={isNewListing ? t("buttons.createTitle") : t("buttons.updateTitle")}
+              aria-label={isNewListing ? t("buttons.createTitle") : t("buttons.updateTitle")}
             >
               <span className="flex items-center justify-center gap-2">
                 {(loading || payLoading) ? (
                   <>
-                    <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                     </svg>
-                    {isNewListing ? (payLoading ? "Processing Payment..." : "Creating Listing...") : "Updating Listing..."}
+                    {isNewListing
+                      ? (payLoading ? t("buttons.processingPayment") : t("buttons.creating"))
+                      : t("buttons.updating")}
                   </>
                 ) : (
                   <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    {isNewListing ? "Create Listing" : "Update Listing"}
+                    {isNewListing ? t("buttons.create") : t("buttons.update")}
                   </>
                 )}
               </span>
@@ -537,23 +547,24 @@ export default function SellRentModal({ open, onClose }) {
                 onClick={handleUnlist}
                 disabled={loading || payLoading}
                 type="button"
-                title="Remove from marketplace"
+                title={t("buttons.removeTitle")}
+                aria-label={t("buttons.removeTitle")}
               >
-                Remove Listing
+                {t("buttons.remove")}
               </button>
             )}
           </div>
 
           {/* T&C note */}
           <p className="text-[12px] text-gray-400 mt-3">
-            By continuing, you agree to our Terms and acknowledge that crypto transactions are irreversible.
+            {t("hints.terms")}
           </p>
 
           {/* Success animation overlay */}
           {showSuccessAnim && (
-            <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-xl">
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-xl" aria-live="polite">
               <div className="flex items-center justify-center w-24 h-24 rounded-full bg-emerald-500/20 border border-emerald-400 animate-scale-in">
-                <svg className="w-12 h-12 text-emerald-400 animate-draw-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <svg className="w-12 h-12 text-emerald-400 animate-draw-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                   <path d="M20 6L9 17L4 12" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>

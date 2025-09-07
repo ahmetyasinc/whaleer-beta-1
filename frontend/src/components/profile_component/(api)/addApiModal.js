@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { FaKey } from "react-icons/fa6";
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -40,6 +41,9 @@ const verifyEdOnServer = async (edKey, edPrivatePem) => {
 };
 
 export default function AddApiModal({ isOpen, onClose, onSave, editMode = false, initialData = null }) {
+  const { t, i18n } = useTranslation("addApi");
+  const locale = i18n.language || "en";
+
   const [spotUsd, setSpotUsd] = useState(0);
   const [futuresUsd, setFuturesUsd] = useState(0);
 
@@ -71,28 +75,28 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
 
   useEffect(() => {
     if (!isOpen) return;
-   setErrors({});
-   setEdBalance(null);
-   setHmacBalance(null);
-   setShowEdConfirm(false);
-   setShowHmacConfirm(false);
-   if (editMode && initialData) {
-     // EDIT: sadece isim alanını doldur; diğer hiçbir veriyi UI/state’e alma
-     setFormData({ name: initialData.name || '' });
-   } else {
-     setStep("ed");
-     setFormData({
-       exchange: 'Binance',
-       name: '',
-       edKey: '',
-       edPublicPem: '',
-       edPrivatePem: '',
-       key: '',
-       secretkey: ''
-     });
-     // sadece yeni eklemede ED çifti çek
-     claimEdPair();
-   }
+    setErrors({});
+    setEdBalance(null);
+    setHmacBalance(null);
+    setShowEdConfirm(false);
+    setShowHmacConfirm(false);
+    if (editMode && initialData) {
+      // EDIT: sadece isim alanını doldur; diğer hiçbir veriyi UI/state’e alma
+      setFormData({ name: initialData.name || '' });
+    } else {
+      setStep("ed");
+      setFormData({
+        exchange: 'Binance',
+        name: '',
+        edKey: '',
+        edPublicPem: '',
+        edPrivatePem: '',
+        key: '',
+        secretkey: ''
+      });
+      // sadece yeni eklemede ED çifti çek
+      claimEdPair();
+    }
   }, [isOpen, editMode, initialData]);
 
   // ED Stoğundan bir çift çek (private PEM'i UI'da göstermeyeceğiz)
@@ -105,7 +109,7 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
       setFormData(prev => ({ ...prev, edPublicPem: public_key, edPrivatePem: private_key }));
     } catch (e) {
       console.error(e);
-      toast.error(e?.response?.data?.detail || "ED key stock empty.", { position: "top-center" });
+      toast.error(e?.response?.data?.detail || t("toasts.edStockEmpty"), { position: "top-center" });
     } finally {
       setLoadingEDPair(false);
     }
@@ -142,10 +146,10 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
   /** ===== Step: ED → Next ===== */
   const onNextFromED = async () => {
     const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = 'Please enter an API name';
-    if (!formData.edKey.trim()) newErrors.edKey = 'ED Key cannot be empty';
-    if (!formData.edPublicPem.trim()) newErrors.edPublicPem = 'ED Public PEM missing';
-    if (!formData.edPrivatePem.trim()) newErrors.edPrivatePem = 'ED Private PEM missing';
+    if (!formData.name.trim()) newErrors.name = t('errors.enterApiName');
+    if (!formData.edKey.trim()) newErrors.edKey = t('errors.edKeyEmpty');
+    if (!formData.edPublicPem.trim()) newErrors.edPublicPem = t('errors.edPublicMissing');
+    if (!formData.edPrivatePem.trim()) newErrors.edPrivatePem = t('errors.edPrivateMissing');
     if (Object.keys(newErrors).length) { setErrors(newErrors); return; }
 
     try {
@@ -155,7 +159,7 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
       setShowEdConfirm(true);
     } catch (e) {
       console.error(e);
-      toast.error("ED ile doğrudan bakiye alınamadı. Lütfen ED Key’i kontrol edin.", { position: "top-center" });
+      toast.error(t("toasts.edFetchFailed"), { position: "top-center" });
       setShowEdConfirm(false);
       setStep("ed");
       setTimeout(() => edKeyRef.current?.focus(), 100);
@@ -177,8 +181,8 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
   /** ===== Step: HMAC → Verify & Next ===== */
   const onVerifyHmac = async () => {
     const newErrors = {};
-    if (!formData.key.trim()) newErrors.key = 'API key cannot be empty';
-    if (!formData.secretkey.trim()) newErrors.secretkey = 'Secret cannot be empty';
+    if (!formData.key.trim()) newErrors.key = t('errors.apiKeyEmpty');
+    if (!formData.secretkey.trim()) newErrors.secretkey = t('errors.secretEmpty');
     if (Object.keys(newErrors).length) { setErrors(newErrors); return; }
 
     try {
@@ -190,7 +194,7 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
       setShowHmacConfirm(true);
     } catch (e) {
       console.error(e);
-      toast.error("HMAC ile bakiye alınamadı. Bilgileri kontrol edin.", { position: "top-center" });
+      toast.error(t("toasts.hmacFetchFailed"), { position: "top-center" });
       setShowHmacConfirm(false);
     } finally {
       setVerifying(false);
@@ -224,9 +228,9 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
   const copy = async (text) => {
     try {
       await navigator.clipboard.writeText(text || "");
-      toast.success("Copied!", { position: "top-center", autoClose: 1200 });
+      toast.success(t("toasts.copied"), { position: "top-center", autoClose: 1200 });
     } catch {
-      toast.error("Copy failed", { position: "top-center", autoClose: 1200 });
+      toast.error(t("toasts.copyFailed"), { position: "top-center", autoClose: 1200 });
     }
   };
 
@@ -237,7 +241,7 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
       : 0;
   const showMismatch = diffPct > 1; // %1'den büyükse uyar
 
-  const fmt = (n) => Number(n ?? 0).toLocaleString('en-US', { maximumFractionDigits: 2 });
+  const fmt = (n) => Number(n ?? 0).toLocaleString(locale, { maximumFractionDigits: 2 });
 
   return (
     <AnimatePresence>
@@ -253,23 +257,28 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
             transition={{ duration: 0.25, ease: 'easeOut' }}
             className="bg-[rgb(0,3,15)] rounded p-6 w-full max-w-lg shadow-lg text-white relative"
           >
-           <h2 className="text-lg font-bold mb-1">{editMode ? 'Rename API' : 'Add New API'}</h2>
-           {!editMode && (
-             <p className="text-xs text-gray-400 mb-4">
-               {step === "ed" ? "Step 1/2 — Verify with ED Key (direct to Binance)" : "Step 2/2 — Verify HMAC Keys (direct to Binance)"}
-             </p>
-           )}
+            <h2 className="text-lg font-bold mb-1">
+              {editMode ? t("titles.rename") : t("titles.addNew")}
+            </h2>
+
+            {!editMode && (
+              <p className="text-xs text-gray-400 mb-4">
+                {step === "ed" ? t("steps.step1") : t("steps.step2")}
+              </p>
+            )}
 
             <div className="space-y-4">
               {/* API Name */}
               <div>
-                <label className="block font-medium">API Name <span className="text-red-500">*</span></label>
+                <label className="block font-medium">
+                  {t("fields.apiName")} <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="Enter API name"
+                  placeholder={t("placeholders.apiName")}
                   className={`w-full mt-1 rounded-sm px-3 py-2 bg-gray-900 text-white ${errors.name ? 'border border-red-500' : ''}`}
                 />
                 {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
@@ -282,14 +291,16 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
                   <>
                     {/* ED Key */}
                     <div>
-                      <label className="block font-medium">ED Key <span className="text-red-500">*</span></label>
+                      <label className="block font-medium">
+                        {t("fields.edKey")} <span className="text-red-500">*</span>
+                      </label>
                       <input
                         type="text"
                         name="edKey"
                         ref={edKeyRef}
                         value={formData.edKey}
                         onChange={handleChange}
-                        placeholder="Enter your ED Key (from Binance)"
+                        placeholder={t("placeholders.edKey")}
                         className={`w-full mt-1 rounded-sm px-3 py-2 bg-gray-900 text-white ${errors.edKey ? 'border border-red-500' : ''}`}
                       />
                       {errors.edKey && <p className="text-red-500 text-sm mt-1">{errors.edKey}</p>}
@@ -297,7 +308,7 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
 
                     {/* ED Public PEM (gösteriyoruz) */}
                     <div>
-                      <label className="block font-medium">ED Public PEM</label>
+                      <label className="block font-medium">{t("fields.edPublicPem")}</label>
                       <div className="relative">
                         <textarea
                           name="edPublicPem"
@@ -310,14 +321,13 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
                           onClick={() => copy(formData.edPublicPem)}
                           className="absolute top-1 right-1 text-xs bg-gray-700 hover:bg-gray-600 rounded px-2 py-1"
                         >
-                          Copy
+                          {t("buttons.copy")}
                         </button>
                       </div>
                       {errors.edPublicPem && <p className="text-red-500 text-sm mt-1">{errors.edPublicPem}</p>}
                     </div>
 
-                    {/* ED Private PEM — UI'DA GÖSTERİLMİYOR */}
-                    {/* (işlevsel olarak state'te duruyor ve verifyEdOnServer'da kullanılıyor) */}
+                    {/* ED Private PEM — UI'da gösterilmiyor */}
                   </>
                 )}
 
@@ -325,7 +335,9 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
                 {step === "hmac" && (
                   <>
                     <div>
-                      <label className="block font-medium">API Key <span className="text-red-500">*</span></label>
+                      <label className="block font-medium">
+                        {t("fields.apiKey")} <span className="text-red-500">*</span>
+                      </label>
                       <div className="relative w-full">
                         <input
                           type="text"
@@ -336,7 +348,7 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
                           onKeyDown={handleKeyInput}
                           onPaste={(e) => handlePaste(e, 'key')}
                           className={`w-full mt-1 rounded-sm px-3 py-2 bg-gray-900 text-white ${errors.key ? 'border border-red-500' : ''}`}
-                          placeholder="Paste your API key"
+                          placeholder={t("placeholders.apiKey")}
                         />
                         <span className="absolute inset-y-0 right-2 flex items-center text-gray-600 pointer-events-none text-base">
                           <FaKey />
@@ -346,7 +358,9 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
                     </div>
 
                     <div>
-                      <label className="block font-medium">Secret API Key <span className="text-red-500">*</span></label>
+                      <label className="block font-medium">
+                        {t("fields.secret")} <span className="text-red-500">*</span>
+                      </label>
                       <div className="relative w-full">
                         <input
                           type="text"
@@ -357,7 +371,7 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
                           onKeyDown={handleKeyInput}
                           onPaste={(e) => handlePaste(e, 'secretkey')}
                           className={`w-full mt-1 rounded-sm px-3 py-2 bg-gray-900 text-white ${errors.secretkey ? 'border border-red-500' : ''}`}
-                          placeholder="Paste your Secret"
+                          placeholder={t("placeholders.secret")}
                         />
                         <span className="absolute inset-y-0 right-2 flex items-center text-gray-600 pointer-events-none text-base">
                           <FaKey />
@@ -371,104 +385,118 @@ export default function AddApiModal({ isOpen, onClose, onSave, editMode = false,
               )}
               {/* Buttons */}
               <div className="flex justify-between items-center mt-4">
-                <button onClick={closeAll} className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">Cancel</button>
+                <button onClick={closeAll} className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">
+                  {t("buttons.cancel")}
+                </button>
 
-              {editMode ? (
-                 <button
-                   onClick={() => {
-                     if (!formData.name?.trim()) {
-                       setErrors({ name: "Please enter an API name" }); return;
-                     }
-                     // Sadece id + yeni isim gönder
-                     onSave({ id: initialData?.id, name: formData.name.trim() }, true);
-                   }}
-                   className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white"
-                 >
-                   Save
-                 </button>
-               ) : (
-                 step === "ed" ? (
-                   <button onClick={onNextFromED} disabled={verifying || loadingEDPair}
-                     className={`px-4 py-2 rounded ${verifying || loadingEDPair ? 'bg-gray-700' : 'bg-blue-600 hover:bg-blue-700'} text-white`}>
-                     {verifying || loadingEDPair ? 'Verifying…' : 'Next'}
-                   </button>
-                 ) : (
-                   <div className="flex gap-2">
-                     <button onClick={() => setStep("ed")} className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded">Back</button>
-                     <button onClick={onVerifyHmac} disabled={verifying}
-                       className={`px-4 py-2 rounded ${verifying ? 'bg-gray-700' : 'bg-blue-600 hover:bg-blue-700'} text-white`}>
-                       {verifying ? 'Verifying…' : 'Verify & Next'}
-                     </button>
-                   </div>
-                 )
-               )}
+                {editMode ? (
+                  <button
+                    onClick={() => {
+                      if (!formData.name?.trim()) {
+                        setErrors({ name: t("errors.enterApiName") }); return;
+                      }
+                      // Sadece id + yeni isim gönder
+                      onSave({ id: initialData?.id, name: formData.name.trim() }, true);
+                    }}
+                    className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {t("buttons.save")}
+                  </button>
+                ) : (
+                  step === "ed" ? (
+                    <button onClick={onNextFromED} disabled={verifying || loadingEDPair}
+                      className={`px-4 py-2 rounded ${verifying || loadingEDPair ? 'bg-gray-700' : 'bg-blue-600 hover:bg-blue-700'} text-white`}>
+                      {verifying || loadingEDPair ? t("buttons.verifying") : t("buttons.next")}
+                    </button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <button onClick={() => setStep("ed")} className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                        {t("buttons.back")}
+                      </button>
+                      <button onClick={onVerifyHmac} disabled={verifying}
+                        className={`px-4 py-2 rounded ${verifying ? 'bg-gray-700' : 'bg-blue-600 hover:bg-blue-700'} text-white`}>
+                        {verifying ? t("buttons.verifying") : t("buttons.verifyNext")}
+                      </button>
+                    </div>
+                  )
+                )}
               </div>
             </div>
-           {!editMode && (
-             <>
-            {/* ED Confirm */}
-            <AnimatePresence>
-              {showEdConfirm && (
-                <motion.div
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  className="absolute inset-0 bg-black/60 flex items-center justify-center rounded"
-                >
+
+            {!editMode && (
+              <>
+              {/* ED Confirm */}
+              <AnimatePresence>
+                {showEdConfirm && (
                   <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-                    className="bg-gray-900 rounded p-5 w-full max-w-sm text-sm"
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="absolute inset-0 bg-black/60 flex items-center justify-center rounded"
                   >
-                    <h3 className="text-white font-semibold mb-2">ED Balance (Spot)</h3>
-                    <p className="text-gray-300 mb-4">
-                      Estimated USD: <b className="text-white">{fmt(edBalance)}</b>
-                    </p>
-                    <div className="flex justify-end gap-2">
-                      <button onClick={onBackToED} className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-white">Re-enter ED Key</button>
-                      <button onClick={onConfirmED} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded text-white">Continue</button>
-                    </div>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* HMAC Confirm */}
-            <AnimatePresence>
-              {showHmacConfirm && (
-                <motion.div
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  className="absolute inset-0 bg-black/60 flex items-center justify-center rounded"
-                >
-                  <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-                    className="bg-gray-900 rounded p-5 w-full max-w-sm text-sm"
-                  >
-                    <h3 className="text-white font-semibold mb-2">Confirm Balance (Spot + Futures)</h3>
-
-                    <div className="text-gray-300 mb-2">
-                      <div>Total USD: <b className="text-white">{fmt(hmacBalance)}</b></div>
-                      <div className="text-xs mt-1">Spot: <b className="text-white">{fmt(spotUsd)}</b> • Futures: <b className="text-white">{fmt(futuresUsd)}</b></div>
-                    </div>
-
-                    {/* >>> UYARI BLOĞU: fark %1'den büyükse */}
-                    {showMismatch && (
-                      <div className="mb-3 text-yellow-300 bg-yellow-900/30 border border-yellow-700 rounded px-3 py-2">
-                        <b>Uyarı:</b> ED (Spot) ile HMAC (Spot) bakiyeleri arasında % {diffPct.toFixed(2)} fark var.
-                        API bilgilerinizin <b>aynı Binance hesabına</b> ait olduğundan emin olun.
-                        Aksi durumda işlemler ve sonuçlardan doğan sorumluluk tamamen kullanıcıya aittir.
+                    <motion.div
+                      initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+                      className="bg-gray-900 rounded p-5 w-full max-w-sm text-sm"
+                    >
+                      <h3 className="text-white font-semibold mb-2">{t("confirmEd.title")}</h3>
+                      <p className="text-gray-300 mb-4">
+                        {t("confirmEd.estimated")} <b className="text-white">{fmt(edBalance)}</b>
+                      </p>
+                      <div className="flex justify-end gap-2">
+                        <button onClick={onBackToED} className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-white">
+                          {t("confirmEd.reenter")}
+                        </button>
+                        <button onClick={onConfirmED} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded text-white">
+                          {t("confirmEd.continue")}
+                        </button>
                       </div>
-                    )}
-
-                    <div className="flex justify-end gap-2">
-                      <button onClick={() => setShowHmacConfirm(false)} className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-white">Back</button>
-                      <button onClick={onConfirmHmac} className="px-3 py-1.5 bg-green-600 hover:bg-green-700 rounded text-white">Save</button>
-                    </div>
+                    </motion.div>
                   </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-            </>
+                )}
+              </AnimatePresence>
+
+              {/* HMAC Confirm */}
+              <AnimatePresence>
+                {showHmacConfirm && (
+                  <motion.div
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="absolute inset-0 bg-black/60 flex items-center justify-center rounded"
+                  >
+                    <motion.div
+                      initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+                      className="bg-gray-900 rounded p-5 w-full max-w-sm text-sm"
+                    >
+                      <h3 className="text-white font-semibold mb-2">{t("confirmHmac.title")}</h3>
+
+                      <div className="text-gray-300 mb-2">
+                        <div>{t("confirmHmac.total")} <b className="text-white">{fmt(hmacBalance)}</b></div>
+                        <div className="text-xs mt-1">
+                          {t("confirmHmac.spot")} <b className="text-white">{fmt(spotUsd)}</b> • {t("confirmHmac.futures")} <b className="text-white">{fmt(futuresUsd)}</b>
+                        </div>
+                      </div>
+
+                      {/* >>> UYARI BLOĞU: fark %1'den büyükse */}
+                      {showMismatch && (
+                        <div className="mb-3 text-yellow-300 bg-yellow-900/30 border border-yellow-700 rounded px-3 py-2">
+                          <b>{t("warning.title")}</b> {t("warning.desc", { diff: diffPct.toFixed(2) })}
+                        </div>
+                      )}
+
+                      <div className="flex justify-end gap-2">
+                        <button onClick={() => setShowHmacConfirm(false)} className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-white">
+                          {t("buttons.back")}
+                        </button>
+                        <button onClick={onConfirmHmac} className="px-3 py-1.5 bg-green-600 hover:bg-green-700 rounded text-white">
+                          {t("buttons.save")}
+                        </button>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              </>
             )}
+
             {loadingEDPair && (
-              <div className="absolute top-2 right-3 text-xs text-gray-400">fetching ED pair…</div>
+              <div className="absolute top-2 right-3 text-xs text-gray-400">{t("labels.fetchingEdPair")}</div>
             )}
           </motion.div>
         </motion.div>

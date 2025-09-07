@@ -84,22 +84,23 @@ class SpotWsApiManager:
 
 
     async def _initialize_from_db(self):
-        """Başlangıçta DB'deki aktif spot anahtarlarını okur ve abone olur."""
-        logging.info("🚀 Başlangıç: DB'den mevcut Spot abonelikleri okunuyor...")
-        active_spot_keys = await stream_key_db.get_keys_by_type(self.pool, 'spot')
-        
-        for key_info in active_spot_keys:
-            # sub_id (artık BIGINT/INTEGER) veritabanından okunur
-            sub_id = key_info.get('sub_id')
-            if sub_id:
-                 self.subscriptions[sub_id] = {
-                     'api_id': key_info['api_id'], 
-                     'user_id': key_info['user_id']
-                 }
-        logging.info(f"✅ {len(self.subscriptions)} adet mevcut abonelik hafızaya yüklendi.")
+        """Başlangıçta sadece new, active ve expired olan Spot anahtarlarını abone eder."""
+        logging.info("🚀 Başlangıç: DB'den Spot anahtarları kontrol ediliyor...")
+        all_spot_keys = await stream_key_db.get_keys_by_type(self.pool, 'spot')
 
+        for key_info in all_spot_keys:
+            api_id = key_info["api_id"]
+            user_id = key_info["user_id"]
+            status = key_info.get("status")
 
-    # spot_ws_service.py içindeki bu fonksiyonu güncelleyin
+            if status in ("new", "active", "expired"):
+                logging.info(f"➕ [api_id={api_id}, user_id={user_id}] status={status} → ilk abonelik başlatılıyor.")
+                asyncio.create_task(self._handle_subscribe(api_id))
+            else:
+                logging.info(f"⏭️ [api_id={api_id}, user_id={user_id}] status={status} → ilk başlangıçta atlandı.")
+
+        logging.info("✅ Başlangıç abonelik işlemleri tamamlandı.")
+
 
     async def _listen_for_db_events(self):
         """Veritabanındaki 'streamkey_events' kanalını dinler ve değişiklikleri işler."""

@@ -92,7 +92,6 @@ const CryptoSelectButton = ({locale}) => {
       const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/unpin-binance-coin/`, {
         data: { coin_id: crypto.id }, // DELETE isteği için `data` içinde gönderiyoruz
       });
-      console.log("Pin kaldırma işlemi başarılı:", response.data);
     } catch (error) {
       console.error("Pin kaldırma işlemi sırasında hata oluştu:", error);
     }
@@ -117,7 +116,7 @@ const CryptoSelectButton = ({locale}) => {
     <>
       {/* Kripto Seçim Butonu */}
       <button
-        className="pl-4 ml-2 flex items-center w-[200px] h-[40px] rounded bg-black border border-gray-800 hover:border-gray-600 transition duration-100 text-gray-200 overflow-hidden text-ellipsis whitespace-nowrap"
+        className="pl-4 ml-2 flex items-center w-[230px] h-[40px] rounded bg-black border border-gray-800 hover:border-gray-600 transition duration-100 text-gray-200 overflow-hidden text-ellipsis whitespace-nowrap"
         onClick={() => setIsModalOpen(true)}
       >
         <IoMdSearch className="text-[19px] mr-2" />

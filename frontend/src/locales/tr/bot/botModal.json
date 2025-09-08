@@ -1,0 +1,71 @@
+{
+  "titles": {
+    "create": "Yeni Bot Oluştur",
+    "edit": "Botu Düzenle"
+  },
+  "labels": {
+    "botName": "Bot Adı",
+    "enterBotName": "Bot adı girin",
+    "type": "Tür",
+    "api": "API",
+    "strategy": "Strateji",
+    "hidden": "Gizli.",
+    "period": "Periyot",
+    "select": "Seçin",
+    "candleCount": "Mum Sayısı",
+    "candleCountPlaceholder": "Örn: 100",
+    "workingDays": "Çalışma Günleri",
+    "allocateBalance": "Bota Ayrılacak Bakiye",
+    "totalBalance": "Toplam Bakiye",
+    "botWorkingHours": "Bot Çalışma Saatleri",
+    "startEndAllDay": "Tüm Gün Çalışsın",
+    "addCryptocurrency": "Kripto Ekle",
+    "searchPlaceholder": "Örn: BTCUSDT",
+    "noMatchingCrypto": "Eşleşen kripto bulunamadı",
+    "remove": "Kaldır",
+    "add": "Ekle",
+    "cancel": "İptal",
+    "save": "Kaydet"
+  },
+  "types": {
+    "spot": "Spot",
+    "futures": "Vadeli"
+  },
+  "periods": {
+    "1m": "1 dk",
+    "5m": "5 dk",
+    "15m": "15 dk",
+    "30m": "30 dk",
+    "1h": "1 saat",
+    "2h": "2 saat",
+    "4h": "4 saat",
+    "1d": "1 gün",
+    "1w": "1 hafta"
+  },
+  "days": {
+    "Mon": "Pzt",
+    "Tue": "Sal",
+    "Wed": "Çar",
+    "Thu": "Per",
+    "Fri": "Cum",
+    "Sat": "Cmt",
+    "Sun": "Paz"
+  },
+  "errors": {
+    "nameRequired": "Bot adı zorunludur.",
+    "apiRequired": "API seçimi zorunludur.",
+    "strategyRequired": "Strateji seçilmelidir.",
+    "periodRequired": "Periyot seçilmelidir.",
+    "candleInvalid": "Geçersiz mum sayısı.",
+    "dayRequired": "En az bir gün seçilmelidir.",
+    "hoursRequired": "Çalışma saatleri girilmelidir.",
+    "amountMin": "Tutar 10$'dan büyük olmalıdır.",
+    "cryptoRequired": "En az bir kripto seçilmelidir.",
+    "endAfterStart": "Bitiş saati, başlangıç saatinden en az 1 saat sonra olmalıdır.",
+    "amountGtBalance": "Ayrılan tutar toplam bakiyeden büyük olamaz."
+  },
+  "toast": {
+    "created": "Bot oluşturuldu!",
+    "updated": "Bot güncellendi!"
+  }
+}

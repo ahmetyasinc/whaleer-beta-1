@@ -1,19 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useBotStore } from '@/store/bot/botStore';
 import useApiStore from '@/store/api/apiStore';
-import useStrategyStore from '@/store/indicator/strategyStore';
-import { FiSearch } from 'react-icons/fi';
+import { FiSearch, FiLock } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import StrategyButton from './chooseStrategy';
 import useBotChooseStrategyStore from '@/store/bot/botChooseStrategyStore';
+import { useTranslation } from 'react-i18next';
 
-export const BotModal = ({ onClose, mode = "create", bot = null }) => {
+export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
+  const { t } = useTranslation('botModal');
   const { selectedStrategy } = useBotChooseStrategyStore();
+
+  // ---- State ----
+  const [type, setType] = useState('spot'); // spot | futures
   const [balance, setBalance] = useState(0);
   const [allocatedAmount, setAllocatedAmount] = useState(0);
   const [percentage, setPercentage] = useState(0);
+
   const [botName, setBotName] = useState('');
   const [api, setApi] = useState('');
   const [strategy, setStrategy] = useState('');
@@ -22,25 +27,51 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
   const [days, setDays] = useState([]);
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
-  const [cryptoList, setCryptoList] = useState([]);  
+  const [cryptoList, setCryptoList] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [candleCount, setCandleCount] = useState(0);
 
   const apiList = useApiStore((state) => state.apiList);
-  const availableCoins = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "SUIUSDT", "MATICUSDT", "TRXUSDT", "LTCUSDT", "AVAXUSDT", "LINKUSDT", "DOTUSDT", "SHIBUSDT", "ADAUSDT", "XMRUSDT", "ETCUSDT", "FILUSDT", "ICPUSDT", "AAVEUSDT", "MANAUSDT", "SANDUSDT", "CHZUSDT"];
-  const filteredCoins = availableCoins.filter(
-    (coin) =>
-      coin.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      !cryptoList.includes(coin)
+
+  // --- Acquisition lock kontrolü ---
+  const isEdit = mode === 'edit' && !!bot;
+  const acquisitionType = (bot?.acquisition_type || '').toUpperCase();
+  const isAcquiredLocked = isEdit && (acquisitionType === 'PURCHASED' || acquisitionType === 'RENTED');
+
+  const isStrategyLocked = isEdit || isAcquiredLocked;
+
+  const displayStrategyName = bot?.strategy || selectedStrategy?.name || '';
+
+  const availableCoins = [
+    'BTCUSDT','ETHUSDT','BNBUSDT','SOLUSDT','ADAUSDT','XRPUSDT','DOGEUSDT',
+    'TONUSDT','TRXUSDT','LINKUSDT','MATICUSDT','DOTUSDT','LTCUSDT','SHIBUSDT','AVAXUSDT',
+  ];
+
+  const filteredCoins = useMemo(
+    () =>
+      availableCoins.filter(
+        (coin) =>
+          coin.toLowerCase().includes(searchQuery.toLowerCase()) &&
+          !cryptoList.includes(coin)
+      ),
+    [searchQuery, cryptoList]
   );
 
   const dayList = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+  // Seçili API nesnesi
+  const selectedApiObj = useMemo(
+    () => apiList.find((item) => item && item.name === api),
+    [apiList, api]
+  );
+
+  // Edit modunda başlangıç değerleri yükle
   useEffect(() => {
-    if (mode === 'edit' && bot) {
+    if (isEdit) {
       setBotName(bot.name || '');
       setApi(bot.api || '');
-      setStrategy(bot.strategy || '');
+      // Strateji adı satın alanda gösterilmeyecek → UI'da boş kalsın
+      setStrategy(isAcquiredLocked ? '' : (bot.strategy || ''));
       setPeriod(bot.period || '');
       setIsActive(bot.isActive ?? true);
       setDays(bot.days || []);
@@ -48,32 +79,48 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
       setEndTime(bot.endTime || '');
       setCryptoList(bot.cryptos || []);
       setCandleCount(bot.candleCount || 0);
-      setAllocatedAmount(bot.balance || 0);
-      setBalance(bot.total_balance || 0);
-      if (bot.balance && bot.total_balance) {
-        const calculatedPct = (bot.balance / bot.total_balance) * 100;
-        setPercentage(Math.min(100, Math.round(calculatedPct)));
-      }
+      setAllocatedAmount(
+        bot.initial_usd_value != null ? bot.initial_usd_value : (bot.balance || 0)
+      );
+      setType(bot.type === 'futures' ? 'futures' : 'spot');
     }
-  }, [mode, bot]);
+  }, [isEdit, bot, isAcquiredLocked]);
 
+  // API veya TIP değişince balance'ı güncelle
   useEffect(() => {
-    const selectedApi = apiList.find((item) => item.name === api);
-    if (selectedApi && selectedApi.balance !== undefined) {
-      setBalance(selectedApi.balance);
+    if (!selectedApiObj) {
+      setBalance(0);
+      return;
     }
-  }, [api, mode, apiList]);
+    const apiBalance =
+      type === 'futures'
+        ? Number(selectedApiObj.futures_balance ?? 0)
+        : Number(selectedApiObj.spot_balance ?? 0);
+
+    setBalance(apiBalance);
+
+    // Ayrılan tutarı ve yüzdeyi mevcut bakiyeye göre hizala
+    setAllocatedAmount((prev) => {
+      const safe = Math.min(apiBalance, Number(prev) || 0);
+      const pct = apiBalance > 0 ? Math.round((safe / apiBalance) * 100) : 0;
+      setPercentage(pct);
+      return safe;
+    });
+  }, [selectedApiObj, type]);
+
+  // Bakiye değişince yüzdeyi düzelt (ek güvence)
+  useEffect(() => {
+    const pct =
+      balance > 0 ? Math.round(((Number(allocatedAmount) || 0) / balance) * 100) : 0;
+    setPercentage(Math.max(0, Math.min(100, pct)));
+  }, [balance]); // eslint-disable-line
 
   const toggleDay = (day) => {
-    if (days.includes(day)) {
-      setDays(days.filter((d) => d !== day));
-    } else {
-      setDays([...days, day]);
-    }
+    setDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
   };
 
   const removeCrypto = (symbol) => {
-    setCryptoList(cryptoList.filter((c) => c !== symbol));
+    setCryptoList((prev) => prev.filter((c) => c !== symbol));
   };
 
   const addBot = useBotStore((state) => state.addBot);
@@ -82,20 +129,27 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
   const handleSave = () => {
     const errors = [];
 
-    if (!botName.trim()) errors.push("Bot name is required.");
-    if (!api) errors.push("API selection is required.");
-    if (!selectedStrategy || !selectedStrategy.name) errors.push("Strategy must be selected.");
-    if (!period) errors.push("Period must be selected.");
-    if (!candleCount || candleCount <= 0) errors.push("Invalid candle count.");
-    if (days.length === 0) errors.push("At least one day must be selected.");
-    if (!startTime || !endTime) errors.push("Working hours must be provided.");
-    if (!allocatedAmount || allocatedAmount <= 10) errors.push("Amount must be greater than $10.");
-    if (cryptoList.length === 0) errors.push("At least one crypto must be selected.");
+    if (!botName.trim()) errors.push(t('errors.nameRequired'));
+    if (!api) errors.push(t('errors.apiRequired'));
+    // Strateji seçme zorunluluğu sadece kilitli olmayanlarda
+    if (!isAcquiredLocked) {
+      if (!selectedStrategy || !selectedStrategy.name) errors.push(t('errors.strategyRequired'));
+    }
+    if (!isStrategyLocked) {
+      if (!selectedStrategy || !selectedStrategy.name) errors.push(t('errors.strategyRequired'));
+    }
+    if (!period) errors.push(t('errors.periodRequired'));
+    if (!candleCount || candleCount <= 0) errors.push(t('errors.candleInvalid'));
+    if (days.length === 0) errors.push(t('errors.dayRequired'));
+    if (!startTime || !endTime) errors.push(t('errors.hoursRequired'));
+    if (!allocatedAmount || Number(allocatedAmount) <= 10) errors.push(t('errors.amountMin'));
+    if (cryptoList.length === 0) errors.push(t('errors.cryptoRequired'));
 
-    const [startH, startM] = startTime.split(":").map(Number);
-    const [endH, endM] = endTime.split(":").map(Number);
-    if ((endH * 60 + endM) - (startH * 60 + startM) < 60) {
-      toast.error("End time must be at least 1 hour after start time.", { autoClose: 2000 });
+    // çalışma aralığı en az 1 saat
+    const [startH, startM] = (startTime || '0:0').split(':').map(Number);
+    const [endH, endM] = (endTime || '0:0').split(':').map(Number);
+    if (endH * 60 + endM - (startH * 60 + startM) < 60) {
+      toast.error(t('errors.endAfterStart'), { autoClose: 2000 });
       return;
     }
 
@@ -104,8 +158,8 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
       return;
     }
 
-    if (allocatedAmount > balance) {
-      toast.error("Allocated amount cannot be greater than total balance.", { autoClose: 2000 });
+    if (Number(allocatedAmount) > Number(balance)) {
+      toast.error(t('errors.amountGtBalance'), { autoClose: 2000 });
       return;
     }
 
@@ -113,7 +167,8 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
       id: bot?.id,
       name: botName,
       api,
-      strategy: selectedStrategy?.name,
+      // Satın alınan/kiralanan botta strateji gönderilmez (backend'de saklı)
+      ...(isStrategyLocked ? {} : { strategy: selectedStrategy?.name }),
       period,
       isActive: false,
       days,
@@ -121,16 +176,17 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
       endTime,
       cryptos: cryptoList,
       candleCount,
-      initial_usd_value: allocatedAmount,
-      balance: balance,
+      initial_usd_value: Number(allocatedAmount),
+      balance: Number(balance),
+      type, // spot | futures
     };
 
     if (mode === 'edit') {
       updateBot(botData);
-      toast.success("Bot updated!", { autoClose: 2000 });
+      toast.success(t('toast.updated'), { autoClose: 2000 });
     } else {
       addBot(botData);
-      toast.success("Bot created!", { autoClose: 2000 });
+      toast.success(t('toast.created'), { autoClose: 2000 });
     }
 
     onClose();
@@ -139,76 +195,119 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
   return (
     <div className="fixed inset-0 bg-black/50 bg-opacity-60 flex items-center justify-center z-50">
       <div className="bg-gray-900 p-6 rounded-xl w-full max-w-4xl shadow-2xl relative border-y border-x h-[85vh] overflow-y-auto border-gray-950 flex gap-6">
-        {/* Sol - Form Alanı */}
-        <div className="w-2/3 pr-4 ">
-          <h2 className="text-2xl font-bold text-white mb-6">{mode === 'edit' ? 'Edit Bot' : 'Create New Bot'}</h2>
-          <label className="block mb-2 text-gray-200 font-medium">Bot Name</label>
-          <input
-            type="text"
-            maxLength={15}
-            placeholder="Enter bot name"
-            className="w-60 mb-4 p-2 bg-gray-800 text-white rounded"
-            value={botName}
-            onChange={(e) => setBotName(e.target.value)}
-          />
-  
-          <div className="grid grid-cols-4 gap-4 mb-6 ">
+        {/* SOL - FORM */}
+        <div className="w-2/3 pr-4">
+          <h2 className="text-2xl font-bold text-white mb-6">
+            {mode === 'edit' ? t('titles.edit') : t('titles.create')}
+          </h2>
+
+          {/* Bot Name + Type yan yana */}
+          <div className="flex items-end gap-4 mb-4">
             <div>
-              <label className="block mb-1 text-gray-300">API</label>
+              <label className="block mb-2 text-gray-200 font-medium">{t('labels.botName')}</label>
+              <input
+                type="text"
+                maxLength={15}
+                placeholder={t('labels.enterBotName')}
+                className="w-60 p-2 bg-gray-800 text-white rounded"
+                value={botName}
+                onChange={(e) => setBotName(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block mb-2 text-gray-200 font-medium">{t('labels.type')}</label>
+              <div className="relative">
+                <select
+                  className={`w-40 p-2 bg-gray-800 text-white rounded ${isAcquiredLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  disabled={isAcquiredLocked}
+                >
+                  <option value="spot">{t('types.spot')}</option>
+                  <option value="futures">{t('types.futures')}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 gap-4 mb-6">
+            <div>
+              <label className="block mb-1 text-gray-300">{t('labels.api')}</label>
               <select
                 className="w-full p-2 bg-gray-800 text-white rounded"
                 value={api}
                 onChange={(e) => setApi(e.target.value)}
               >
-                <option value="" disabled hidden>Select</option>
-              
+                <option value="" disabled hidden>
+                  {t('labels.select')}
+                </option>
                 {apiList.map((item, i) => (
                   <option key={i} value={item.name}>
                     {item.name}
                   </option>
                 ))}
               </select>
-
             </div>
-            <div>
-              <label className="block mb-1 text-gray-300">Strategy</label>
-              <StrategyButton onSelect={(selected) => setStrategy(selected)}/>
 
-            </div>
             <div>
-              <label className="block mb-1 text-gray-300">Period</label>
+              <label className="block mb-1 text-gray-300">{t('labels.strategy')}</label>
+              {!isStrategyLocked ? (
+                  // Oluşturma modunda veya tamamen serbestse: buton aktif
+                  <StrategyButton onSelect={(selected) => setStrategy(selected)} />
+                ) : isAcquiredLocked ? (
+                  // Satın alınan/kiralanan bottaysa: strateji gizli
+                  <div className="w-full p-2 bg-gray-800 text-gray-300 rounded flex items-center gap-2">
+                    <FiLock className="shrink-0" />
+                    <span className="text-sm">{t('labels.hidden')}</span>
+                  </div>
+                ) : (
+                  // Edit modunda (normal bot): strateji adı kilitli/readonly göster
+                  <div className="w-full p-2 bg-gray-800 text-gray-300 rounded flex items-center gap-2 opacity-70 cursor-not-allowed">
+                    <FiLock className="shrink-0" />
+                    <span className="text-sm">{displayStrategyName || t('labels.hidden')}</span>
+                  </div>
+                )}
+            </div>
+
+            <div>
+              <label className="block mb-1 text-gray-300">{t('labels.period')}</label>
               <select
                 className="w-full p-2 bg-gray-800 text-white rounded"
                 value={period}
                 onChange={(e) => setPeriod(e.target.value)}
               >
-                <option value="" disabled hidden>Select</option>
-                <option value="1m">1 min</option>
-                <option value="5m">5 min</option>
-                <option value="15m">15 min</option>
-                <option value="30m">30 min</option>
-                <option value="1h">1 hour</option>
-                <option value="2h">2 hours</option>
-                <option value="4h">4 hours</option>
-                <option value="1d">1 day</option>
-                <option value="1w">1 week</option>
+                <option value="" disabled hidden>
+                  {t('labels.select')}
+                </option>
+                <option value="1m">{t('periods.1m')}</option>
+                <option value="5m">{t('periods.5m')}</option>
+                <option value="15m">{t('periods.15m')}</option>
+                <option value="30m">{t('periods.30m')}</option>
+                <option value="1h">{t('periods.1h')}</option>
+                <option value="2h">{t('periods.2h')}</option>
+                <option value="4h">{t('periods.4h')}</option>
+                <option value="1d">{t('periods.1d')}</option>
+                <option value="1w">{t('periods.1w')}</option>
               </select>
             </div>
-            <div className="mb-6">
-              <label className="block mb-1 text-gray-300">Candle Count</label>
+
+            <div>
+              <label className="block mb-1 text-gray-300">{t('labels.candleCount')}</label>
               <input
                 type="number"
                 min="1"
-                placeholder="Exp: 100"
-                className="w-full p-2 bg-gray-800 text-white rounded"
+                placeholder={t('labels.candleCountPlaceholder')}
+                className={`w-full p-2 bg-gray-800 text-white rounded ${isAcquiredLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
                 value={candleCount}
                 onChange={(e) => setCandleCount(Number(e.target.value))}
+                disabled={isAcquiredLocked}
               />
             </div>
           </div>
-  
+
           <div className="mb-6">
-            <label className="block mb-2 text-gray-200 font-medium">Working Days</label>
+            <label className="block mb-2 text-gray-200 font-medium">{t('labels.workingDays')}</label>
             <div className="grid grid-cols-4 gap-2 text-gray-300">
               {dayList.map((day) => (
                 <label key={day} className="flex items-center gap-2">
@@ -218,13 +317,14 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
                     onChange={() => toggleDay(day)}
                     className="accent-black h-3 w-3 border-gray-600 rounded-sm"
                   />
-                  <span>{day}</span>
+                  <span>{t(`days.${day}`)}</span>
                 </label>
               ))}
             </div>
           </div>
-            <div className="mb-6">
-            <label className="block mb-2 text-gray-200 font-medium">Allocate Balance for Bot</label>
+
+          <div className="mb-6">
+            <label className="block mb-2 text-gray-200 font-medium">{t('labels.allocateBalance')}</label>
 
             <div className="flex items-center gap-3 mb-2">
               <input
@@ -235,15 +335,16 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
                 onChange={(e) => {
                   const pct = Number(e.target.value);
                   setPercentage(pct);
-                  setAllocatedAmount(((balance * pct) / 100).toFixed(2));
+                  const next = Number(((balance * pct) / 100).toFixed(2));
+                  setAllocatedAmount(next);
                 }}
                 className="w-full accent-blue-500"
               />
               <span className="text-gray-300 text-sm w-12 text-right">{percentage}%</span>
             </div>
-              
+
             <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">Total Balance: ${balance}</span>
+              <span className="text-gray-400 text-sm">{t('labels.totalBalance')}: ${balance}</span>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -252,9 +353,10 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
                   step="0.01"
                   value={allocatedAmount}
                   onChange={(e) => {
-                    const value = Number(e.target.value);
+                    const value = Math.max(0, Math.min(Number(e.target.value), Number(balance)));
                     setAllocatedAmount(value);
-                    setPercentage(Math.min(100, ((value / balance) * 100).toFixed(0)));
+                    const pct = balance > 0 ? Math.round((value / Number(balance)) * 100) : 0;
+                    setPercentage(Math.min(100, pct));
                   }}
                   className="w-24 px-2 py-1 bg-gray-800 text-white rounded text-sm"
                 />
@@ -262,9 +364,9 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
               </div>
             </div>
           </div>
-          <div className="mb-6">
-            <label className="block mb-2 text-gray-200 font-medium">Bot Working Hours</label>
 
+          <div className="mb-6">
+            <label className="block mb-2 text-gray-200 font-medium">{t('labels.botWorkingHours')}</label>
             <div className="flex justify-start gap-2 mb-2">
               <input
                 type="time"
@@ -279,16 +381,14 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
                 onChange={(e) => setEndTime(e.target.value)}
               />
             </div>
-
-            {/* 🆕 TAM GÜN BUTONU */}
             <button
               onClick={() => {
-                setStartTime("00:00");
-                setEndTime("23:59");
+                setStartTime('00:00');
+                setEndTime('23:59');
               }}
               className="text-sm text-blue-400 hover:text-blue-300 underline"
             >
-              Run All Day
+              {t('labels.startEndAllDay')}
             </button>
           </div>
 
@@ -297,27 +397,26 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
               onClick={onClose}
               className="px-4 py-2 bg-gray-600 text-gray-200 rounded-lg hover:bg-gray-500"
             >
-              Cancel
+              {t('labels.cancel')}
             </button>
             <button
               onClick={handleSave}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Save
+              {t('labels.save')}
             </button>
           </div>
         </div>
-  
-        {/* Sağ - Kripto Paneli */}
+
+        {/* SAĞ - KRİPTO PANELİ */}
         <div className="w-1/3 flex flex-col bg-gray-950 p-3 rounded max-h-[500px]">
-          {/* Arama kutusu + filtrelenmiş sonuçlar */}
           <div className="mb-4">
-            <label className="block mb-1 text-gray-300">Add Cryptocurrency</label>
+            <label className="block mb-1 text-gray-300">{t('labels.addCryptocurrency')}</label>
             <div className="relative w-full">
               <input
                 type="text"
                 className="w-full p-2 pr-10 mb-2 bg-gray-900 text-white rounded-sm"
-                placeholder="Exp: BTCUSDT"
+                placeholder={t('labels.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -337,24 +436,20 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
                     >
                       <span>{coin}</span>
                       <button
-                        onClick={() => {
-                          setCryptoList([...cryptoList, coin]);
-                        }}
+                        onClick={() => setCryptoList((prev) => [...prev, coin])}
                         className="text-green-400 text-sm px-2 py-1 hover:text-green-500 rounded"
                       >
-                        Add
+                        {t('labels.add')}
                       </button>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-gray-400 px-3 py-2">No matching crypto found</p>
+                  <p className="text-sm text-gray-400 px-3 py-2">{t('labels.noMatchingCrypto')}</p>
                 )}
               </div>
             )}
-
           </div>
-        
-          {/* Eklenen Coinler - üstten başlar */}
+
           <div className="flex flex-col gap-2 max-h-[350px] overflow-y-auto scrollbar-hide">
             {cryptoList.map((crypto) => (
               <div key={crypto} className="flex justify-between items-center bg-gray-900 px-3 py-2 rounded">
@@ -363,7 +458,7 @@ export const BotModal = ({ onClose, mode = "create", bot = null }) => {
                   onClick={() => removeCrypto(crypto)}
                   className="text-red-500 hover:text-red-600 text-sm"
                 >
-                  Remove
+                  {t('labels.remove')}
                 </button>
               </div>
             ))}

@@ -7,8 +7,12 @@
     "title": "Whaleer Giriş",
     "description": "Al-sat algoritmalarınızı oluşturmak ve yönetmek için hesabınıza giriş yapın."
   },
+  "register": {
+    "title": "Whaleer | Kayıt Ol",
+    "description": "Whaleer platformuna kayıt ol."
+  },
   "profile": {
-    "title": "My Profile",
+    "title": "Profilim",
     "description": "Kullanıcı profili sayfası."
   },
   "strategies": {

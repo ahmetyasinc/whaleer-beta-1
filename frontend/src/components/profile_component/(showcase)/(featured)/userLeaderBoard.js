@@ -9,11 +9,14 @@ import {
   FiShoppingCart,
   FiActivity
 } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 
 const UserLeaderBoard = () => {
+  const { t } = useTranslation('userLeaderBoard');
+
   const [sortBy, setSortBy] = useState('monthlyProfit');
   const [sortOrder, setSortOrder] = useState('desc');
-  const [setUsers] = useState([]);
+  const [setUsers] = useState([]); // mevcut işlev korunuyor
   const [loading, setLoading] = useState(true);
 
   const users = [
@@ -42,20 +45,20 @@ const UserLeaderBoard = () => {
       }
     };
 
-    //fetchUsers();
-  }, [sortBy, sortOrder]);
+    // fetchUsers(); // mevcut davranış korunuyor (yorumlu)
+  }, [sortBy, sortOrder, setUsers]);
 
   const sortOptions = [
-    { value: 'monthlyProfit', label: 'By Monthly Profit', icon: FiTrendingUp },
-    { value: 'successRate', label: 'By Success Rate', icon: FiAward },
-    { value: 'totalBots', label: 'By Total Bots', icon: FiCpu },
-    { value: 'soldBots', label: 'By Sold Bots', icon: FiShoppingCart },
-    { value: 'monthlyTransactions', label: 'By Monthly Transactions', icon: FiActivity }
+    { value: 'monthlyProfit', label: t('sort.byMonthlyProfit'), icon: FiTrendingUp },
+    { value: 'successRate', label: t('sort.bySuccessRate'), icon: FiAward },
+    { value: 'totalBots', label: t('sort.byTotalBots'), icon: FiCpu },
+    { value: 'soldBots', label: t('sort.bySoldBots'), icon: FiShoppingCart },
+    { value: 'monthlyTransactions', label: t('sort.byMonthlyTransactions'), icon: FiActivity }
   ];
 
   const sortOrderOptions = [
-    { value: 'desc', label: 'Descending' },
-    { value: 'asc', label: 'Ascending' }
+    { value: 'desc', label: t('sortOrder.desc') },
+    { value: 'asc', label: t('sortOrder.asc') }
   ];
 
   const sortedUsers = [...users].sort((a, b) => {
@@ -88,7 +91,7 @@ const UserLeaderBoard = () => {
     <div className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-lg shadow-2xl p-6 h-[calc(100vh-140px)] border border-slate-700 overflow-hidden">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold text-white bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-          User Leaderboard
+          {t('title')}
         </h2>
 
         {/* Dropdowns */}
@@ -148,31 +151,31 @@ const UserLeaderBoard = () => {
                   <div className="font-bold text-green-400 text-base">
                     {formatValue(user.monthlyProfit, 'monthlyProfit')}
                   </div>
-                  <div className="text-xs text-slate-400">Monthly Profit</div>
+                  <div className="text-xs text-slate-400">{t('cards.monthlyProfit')}</div>
                 </div>
                 <div className="text-center">
                   <div className="font-bold text-blue-400 text-base">
                     {formatValue(user.successRate, 'successRate')}
                   </div>
-                  <div className="text-xs text-slate-400">Success</div>
+                  <div className="text-xs text-slate-400">{t('cards.success')}</div>
                 </div>
                 <div className="text-center">
                   <div className="font-bold text-purple-400 text-base">
                     {formatValue(user.totalBots)}
                   </div>
-                  <div className="text-xs text-slate-400">Bots</div>
+                  <div className="text-xs text-slate-400">{t('cards.bots')}</div>
                 </div>
                 <div className="text-center">
                   <div className="font-bold text-orange-400 text-base">
                     {formatValue(user.soldBots)}
                   </div>
-                  <div className="text-xs text-slate-400">Sales</div>
+                  <div className="text-xs text-slate-400">{t('cards.sales')}</div>
                 </div>
                 <div className="text-center">
                   <div className="font-bold text-cyan-400 text-base">
                     {formatValue(user.monthlyTransactions)}
                   </div>
-                  <div className="text-xs text-slate-400">Monthly Trades</div>
+                  <div className="text-xs text-slate-400">{t('cards.monthlyTrades')}</div>
                 </div>
               </div>
             </div>

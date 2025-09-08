@@ -114,7 +114,7 @@ const useBacktestStore = create((set, get) => ({
         date: new Date(item.created_at).toLocaleDateString('tr-TR'),
         strategy: {
           id: item.data?.strategy_id || null,
-          name: item.data?.strategy_name || 'Bilinmeyen Strateji'
+          name: item.data?.strategy_name || '--'
         },
         crypto: item.data?.crypto || null,
         period: item.data?.period || '',

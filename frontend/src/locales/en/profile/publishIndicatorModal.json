@@ -1,0 +1,41 @@
+{
+  "title": "Publish Indicator",
+  "subtitle": "Share your indicator with the community",
+  "help": "Help",
+  "aria": {
+    "help": "Help",
+    "close": "Close"
+  },
+  "headers": {
+    "permissions": "Permissions",
+    "description": "Description",
+    "aboutPublishing": "About Publishing"
+  },
+  "perms": {
+    "items": {
+      "codeView": {
+        "label": "Allow code viewing",
+        "desc": "Users can view the source code of your indicator"
+      },
+      "chartView": {
+        "label": "Allow chart viewing",
+        "desc": "Visual analysis can be performed on asset charts"
+      }
+    }
+  },
+  "placeholders": {
+    "description": "What does this indicator do, what was it built for, under which market conditions does it perform best..."
+  },
+  "buttons": {
+    "cancel": "Cancel",
+    "publish": "Publish",
+    "publishing": "Publishing…",
+    "gotIt": "Got it"
+  },
+  "info": {
+    "p1": "From this panel, you can define which features of your indicator will be accessible by users.",
+    "p2": "Each permission affects how your indicator is displayed and what actions users can take.",
+    "tip": "Tip:",
+    "tipText": "Allowing more permissions can help your indicator reach a wider audience."
+  }
+}

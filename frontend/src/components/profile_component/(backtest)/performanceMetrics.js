@@ -1,7 +1,12 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
+
 export default function PerformanceMetrics({ performance }) {
+  const { t } = useTranslation('backtestPerformanceMetrics');
+
   const formatCurrency = (value) => {
+    // Davranışı değiştirmemek için aynı locale/currency
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -19,92 +24,92 @@ export default function PerformanceMetrics({ performance }) {
 
   const metrics = [
     {
-      label: 'Return Rate',
+      label: t('labels.returnRate'),
       value: formatPercentage(performance.returnPercentage),
       color: performance.returnPercentage >= 0 ? 'text-green-400' : 'text-red-400',
     },
     {
-      label: 'Total Profit/Loss',
+      label: t('labels.totalPnL'),
       value: formatCurrency(performance.totalPnL),
       color: performance.totalPnL >= 0 ? 'text-green-400' : 'text-red-400',
     },
     {
-      label: 'Buy-and-Hold Return',
+      label: t('labels.buyHoldReturn'),
       value: formatPercentage(performance.buyHoldReturn),
       color: performance.sharpeRatio >= 1 ? 'text-green-400' : 'text-yellow-400',
     },
     {
-      label: 'Total Trades',
+      label: t('labels.totalTrades'),
       value: performance.totalTrades,
       color: 'text-blue-400',
     },
     {
-      label: 'Winning Trades',
+      label: t('labels.winningTrades'),
       value: performance.winningTrades,
       color: 'text-green-400',
     },
     {
-      label: 'Losing Trades',
+      label: t('labels.losingTrades'),
       value: performance.losingTrades,
       color: 'text-red-400',
     },
     {
-      label: 'Initial Balance',
+      label: t('labels.initialBalance'),
       value: formatCurrency(performance.initialBalance),
       color: 'text-gray-300',
     },
     {
-      label: 'Final Balance',
+      label: t('labels.finalBalance'),
       value: formatCurrency(performance.finalBalance),
       color: 'text-gray-300',
     },
     {
-      label: 'Win Rate',
+      label: t('labels.winRate'),
       value: formatPercentageRate(performance.winRate),
       color: performance.winRate >= 50 ? 'text-green-400' : 'text-red-400',
     },
     {
-      label: 'Sharpe Ratio',
+      label: t('labels.sharpeRatio'),
       value: performance.sharpeRatio.toFixed(3),
       color: performance.sharpeRatio >= 1 ? 'text-green-400' : 'text-yellow-400',
     },
     {
-      label: 'Sortino Ratio',
+      label: t('labels.sortinoRatio'),
       value: performance.sortinoRatio.toFixed(3),
       color: performance.sortinoRatio >= 1 ? 'text-green-400' : 'text-yellow-400',
     },
     {
-      label: 'Profit Factor',
-      value: performance.profitFactor != null ? performance.profitFactor.toFixed(3) : 'N/A',
+      label: t('labels.profitFactor'),
+      value: performance.profitFactor != null ? performance.profitFactor.toFixed(3) : t('values.na'),
       color: performance.profitFactor != null && performance.profitFactor >= 1 ? 'text-green-400' : 'text-yellow-400',
     },
     {
-      label: 'Max Drawdown',
+      label: t('labels.maxDrawdown'),
       value: formatCurrency(performance.maxDrawdown),
       color: 'text-red-400',
     },
     {
-      label: 'Most Profitable Trade',
+      label: t('labels.mostProfitableTrade'),
       value: formatPercentage(performance.mostProfitableTrade),
       color: 'text-green-400',
     },
     {
-      label: 'Most Losing Trade',
+      label: t('labels.mostLosingTrade'),
       value: formatPercentage(performance.mostLosingTrade),
       color: 'text-red-400',
     },
     {
-      label: 'Trade Duration Ratio',
+      label: t('labels.tradeDurationRatio'),
       value: performance.durationOftradeRatio,
       color: 'text-blue-500',
     },
     {
-      label: 'Commission Cost',
+      label: t('labels.commissionCost'),
       value: formatCurrency(performance.commissionCost),
       color: 'text-orange-400',
     },
     {
-      label: 'Trade Volume',
+      label: t('labels.tradeVolume'),
       value: formatCurrency(performance.volume),
       color: 'text-blue-500',
     }
@@ -113,7 +118,7 @@ export default function PerformanceMetrics({ performance }) {
   return (
     <div className="bg-gray-900 rounded-xl p-4 shadow-md border border-gray-800">
       <h3 className="text-white text-base font-semibold mb-4 flex items-center gap-2">
-        Performance Metrics
+        {t('titles.performanceMetrics')}
       </h3>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">

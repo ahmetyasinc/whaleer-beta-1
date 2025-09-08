@@ -14,6 +14,7 @@ export const useLogout = () => {
         // Çerezleri temizle
         Cookies.remove("access_token");
         Cookies.remove("refresh_token");
+        Cookies.remove("siws_session");
 
         // Auth durumunu güncelle
         setIsAuthenticated(false);

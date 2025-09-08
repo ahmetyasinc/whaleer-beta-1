@@ -1,64 +1,89 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { usePortfolioStore } from "@/store/profile/portfolioStore";
-import { AiOutlineClockCircle } from "react-icons/ai";
+import { useMemo, useState, useCallback } from "react";
+import { useProfileStore } from "@/store/profile/profileStore";
+import { useAccountDataStore } from "@/store/profile/accountDataStore";
+import { useTranslation } from "react-i18next";
 
 export default function Portfolio() {
-  const [activeTab, setActiveTab] = useState("portfolio"); // 'portfolio' or 'transactions'
-  const { portfolio, transactions, loadInitialData } = usePortfolioStore();
+  const { t, i18n } = useTranslation("portfolio");
+  const [activeTab, setActiveTab] = useState("portfolio");
 
-  useEffect(() => {
-    loadInitialData();
-  }, []);
+  const activeApiId = useProfileStore((s) => s.activeApiId);
+  const portfolioMap = useAccountDataStore((s) => s.portfolioByApiId);
+  const tradesMap = useAccountDataStore((s) => s.tradesByApiId);
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("tr-TR", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 6,
-    }).format(amount);
-  };
+  const portfolio = useMemo(
+    () => portfolioMap?.[activeApiId] || [],
+    [portfolioMap, activeApiId]
+  );
+  const transactions = useMemo(
+    () => tradesMap?.[activeApiId] || [],
+    [tradesMap, activeApiId]
+  );
 
-  const formatDate = (date) => {
-    return new Intl.DateTimeFormat("tr-TR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }).format(new Date(date));
-  };
+  // ---- Format helpers (locale-aware) ----
+  const locale = i18n.language || "en";
 
-  const formatTime = (date) => {
-    return new Intl.DateTimeFormat("tr-TR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(date));
-  };
+  const formatCurrency = useCallback(
+    (amount) =>
+      new Intl.NumberFormat(locale, {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 6,
+      }).format(Number(amount || 0)),
+    [locale]
+  );
+
+  const formatDate = useCallback(
+    (date) =>
+      new Intl.DateTimeFormat(locale, {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }).format(new Date(date)),
+    [locale]
+  );
+
+  const formatTime = useCallback(
+    (date) =>
+      new Intl.DateTimeFormat(locale, {
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date(date)),
+    [locale]
+  );
 
   const getTransactionLabel = (direction, type) => {
-    const dir = String(direction || '').toLowerCase(); // buy | sell
-    const t = String(type || '').toLowerCase();        // long | short | spot
-
+    const dir = String(direction || "").toLowerCase();
+    const ttype = String(type || "").toLowerCase();
     const isOpen =
-      (t === 'long'  && dir === 'buy')  ||
-      (t === 'short' && dir === 'sell') ||
-      (!['long','short'].includes(t) && dir === 'buy'); // spot/unknown fallback
+      (ttype === "long" && dir === "buy") ||
+      (ttype === "short" && dir === "sell") ||
+      (!["long", "short"].includes(ttype) && dir === "buy");
 
-    return isOpen
-      ? <span className="text-green-400 font-semibold">Open</span>
-      : <span className="text-red-400 font-semibold">Close</span>;
+    return isOpen ? (
+      <span className="text-green-400 font-semibold">
+        {t("transactions.open")}
+      </span>
+    ) : (
+      <span className="text-red-400 font-semibold">
+        {t("transactions.close")}
+      </span>
+    );
   };
 
-
   const getTransactionTypeColor = (type) => {
-    switch (type) {
+    switch (String(type).toLowerCase()) {
       case "long":
         return "bg-green-700/40 text-green-300";
       case "short":
         return "bg-red-700/40 text-red-300";
       case "spot":
         return "bg-orange-700/70 text-orange-300";
+      case "futures":
+        return "bg-purple-700/40 text-purple-300";
       default:
         return "bg-gray-700/30 text-gray-300";
     }
@@ -66,11 +91,13 @@ export default function Portfolio() {
 
   return (
     <div className="bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl shadow-lg border border-zinc-700 overflow-hidden text-white flex flex-col h-full">
-      {/* Header - Fixed */}
+      {/* Header */}
       <div className="bg-gradient-to-r from-cyan-800 to-purple-800 px-4 py-3 flex-shrink-0">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold">
-            {activeTab === "portfolio" ? "My Portfolio" : "Transaction List"}
+            {activeTab === "portfolio"
+              ? t("header.portfolio")
+              : t("header.transactions")}
           </h2>
           <div className="flex bg-black/30 rounded-lg p-1">
             <button
@@ -81,7 +108,7 @@ export default function Portfolio() {
                   : "text-white hover:bg-white/10"
               }`}
             >
-              Portfolio
+              {t("tabs.portfolio")}
             </button>
             <button
               onClick={() => setActiveTab("transactions")}
@@ -91,42 +118,57 @@ export default function Portfolio() {
                   : "text-white hover:bg-white/10"
               }`}
             >
-              Transactions
+              {t("tabs.transactions")}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Content - Scrollable */}
+      {/* Content */}
       <div className="flex-1 overflow-hidden">
         <div className="h-full overflow-y-auto px-3 py-4">
           {activeTab === "portfolio" ? (
             <div className="space-y-4">
               {portfolio.length > 0 ? (
                 <>
-                  {/* Portfolio Header - updated to 5 columns */}
-                  <div className="grid grid-cols-5 gap-2 text-xs sm:text-sm font-semibold text-gray-400 py-2 sticky top-0 bg-[rgb(0,0,0,0)] z-10 px-2">
-                    <div className="text-left">Cryptocurrency</div>
-                    <div className="text-right">Cost</div>
-                    <div className="text-right">Amount</div>
-                    <div className="text-right">Profit/Loss</div>
-                    <div className="text-right">Margin</div>
+                  <div className="grid grid-cols-7 gap-2 text-xs sm:text-sm font-semibold text-gray-400 py-2 sticky top-0 bg-[rgb(0,0,0,0)] z-10 px-2">
+                    <div className="text-left">
+                      {t("portfolio.columns.crypto")}
+                    </div>
+                    <div className="text-right">
+                      {t("portfolio.columns.leverage")}
+                    </div>
+                    <div className="text-right">
+                      {t("portfolio.columns.side")}
+                    </div>
+                    <div className="text-right">
+                      {t("portfolio.columns.cost")}
+                    </div>
+                    <div className="text-right">
+                      {t("portfolio.columns.amount")}
+                    </div>
+                    <div className="text-right">
+                      {t("portfolio.columns.profitLoss")}
+                    </div>
+                    <div className="text-right">
+                      {t("portfolio.columns.margin")}
+                    </div>
                   </div>
 
-                  {/* Portfolio Items */}
                   {portfolio.map((item, index) => {
-                    const profitLossPercent = (item.profitLoss / item.cost) * 100;
+                    const profitLossPercent = item.cost
+                      ? (item.profitLoss / item.cost) * 100
+                      : 0;
 
                     return (
                       <div
-                        key={index}
-                        className="grid grid-cols-5 gap-2 items-center py-3 rounded-lg px-2 bg-gradient-to-r from-slate-800/50 to-slate-900/50 hover:bg-zinc-900 hover:border-blue-500/70 transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/10"
+                        key={`${item.symbol}-${index}`}
+                        className="grid grid-cols-7 gap-2 items-center py-3 rounded-lg px-2 bg-gradient-to-r from-slate-800/50 to-slate-900/50 hover:bg-zinc-900 hover:border-blue-500/70 transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/10"
                         style={{
                           animationDelay: `${index * 200}ms`,
                           animation: "fadeInUp 1s ease-out forwards",
                         }}
                       >
-                        {/* Coin Info - Compact on mobile */}
                         <div className="flex items-center space-x-2 min-w-0">
                           <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-orange-500 to-yellow-600 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0">
                             {item.symbol.substring(0, 2).toUpperCase()}
@@ -141,26 +183,31 @@ export default function Portfolio() {
                           </div>
                         </div>
 
+                        <div className="text-right">
+                          {item.leverage ? `${item.leverage}x` : "-"}
+                        </div>
+                        <div className="text-right">
+                          {item.position_side
+                            ? item.position_side.toUpperCase()
+                            : "-"}
+                        </div>
 
-                        {/* Cost */}
                         <div className="text-right">
                           <div className="font-semibold text-white text-sm sm:text-base">
-                            {item.cost.toFixed(2)}
+                            {Number(item.cost || 0).toFixed(2)}
                           </div>
                         </div>
 
-                        {/* Amount */}
                         <div className="text-right">
                           <div className="font-semibold text-white text-sm sm:text-base">
-                            {(item.amount.toFixed(8))}
+                            {Number(item.amount || 0).toFixed(8)}
                           </div>
                         </div>
 
-                        {/* Profit/Loss */}
                         <div className="text-right">
                           <span
                             className={`font-semibold text-sm sm:text-base ${
-                              item.profitLoss >= 0
+                              (item.profitLoss || 0) >= 0
                                 ? "text-green-400"
                                 : "text-red-400"
                             }`}
@@ -169,7 +216,6 @@ export default function Portfolio() {
                           </span>
                         </div>
 
-                        {/* Profit/Loss % */}
                         <div className="text-right">
                           <span
                             className={`font-semibold text-sm sm:text-base ${
@@ -188,7 +234,7 @@ export default function Portfolio() {
                 </>
               ) : (
                 <div className="text-center py-12 text-gray-400">
-                  <p>You don't have any cryptocurrencies in your portfolio yet.</p>
+                  <p>{t("portfolio.empty")}</p>
                 </div>
               )}
             </div>
@@ -196,27 +242,34 @@ export default function Portfolio() {
             <div className="space-y-4">
               {transactions.length > 0 ? (
                 <>
-                  {/* Transactions Header - 5 columns */}
                   <div className="grid grid-cols-6 gap-3 text-xs sm:text-sm font-semibold text-gray-400 py-2 sticky top-0 bg-[rgb(0,0,0,0)] z-10 px-2">
-                    <div>Cryptocurrency</div>
-                    <div className="text-center">Type</div>
-                    <div className="text-center">Direction</div>
-                    <div className="text-center">Date/Time</div>
-                    <div className="text-center">Price</div>
-                    <div className="text-right">Amount</div>
+                    <div>{t("transactions.columns.crypto")}</div>
+                    <div className="text-center">
+                      {t("transactions.columns.type")}
+                    </div>
+                    <div className="text-center">
+                      {t("transactions.columns.direction")}
+                    </div>
+                    <div className="text-center">
+                      {t("transactions.columns.datetime")}
+                    </div>
+                    <div className="text-center">
+                      {t("transactions.columns.price")}
+                    </div>
+                    <div className="text-right">
+                      {t("transactions.columns.amount")}
+                    </div>
                   </div>
 
-                  {/* Transaction Items */}
                   {transactions.map((transaction, index) => (
                     <div
-                      key={index}
+                      key={`${transaction.symbol}-${transaction.date}-${index}`}
                       className="grid grid-cols-6 gap-3 items-center py-3 bg-gradient-to-r from-slate-800/50 to-slate-900/50 hover:bg-zinc-900 rounded-lg px-2 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10"
                       style={{
                         animationDelay: `${index * 200}ms`,
                         animation: "fadeInUp 1s ease-out forwards",
                       }}
                     >
-                      {/* Cryptocurrency */}
                       <div className="flex items-center space-x-2 min-w-0">
                         <div className="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-r from-sky-700 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
                           {transaction.symbol.substring(0, 2).toUpperCase()}
@@ -226,25 +279,25 @@ export default function Portfolio() {
                         </span>
                       </div>
 
-                      {/* Type */}
                       <div className="text-center">
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${getTransactionTypeColor(
                             transaction.type
                           )}`}
                         >
-                          {transaction.type.toUpperCase()}
+                          {String(transaction.type).toUpperCase()}
                         </span>
                       </div>
 
-                      {/* Direction */}
                       <div className="text-center">
                         <span className="text-sm sm:text-base font-medium text-white">
-                          {getTransactionLabel(transaction.direction, transaction.type.toUpperCase())}
+                          {getTransactionLabel(
+                            transaction.direction,
+                            String(transaction.type).toUpperCase()
+                          )}
                         </span>
                       </div>
 
-                      {/* Date/Time */}
                       <div className="text-center">
                         <div className="flex flex-col items-center justify-center">
                           <span className="text-xs sm:text-sm text-gray-400">
@@ -256,17 +309,17 @@ export default function Portfolio() {
                         </div>
                       </div>
 
-                      {/* Price */}
                       <div className="text-center">
                         <span className="font-semibold text-white text-sm sm:text-base">
-                          {formatCurrency(transaction.price.toFixed(4))}
+                          {formatCurrency(
+                            Number(transaction.price || 0).toFixed(4)
+                          )}
                         </span>
                       </div>
 
-                      {/* Amount */}
                       <div className="text-right">
                         <span className="font-semibold text-white text-sm sm:text-base">
-                          {(transaction.amount.toFixed(8))}
+                          {Number(transaction.amount || 0).toFixed(8)}
                         </span>
                       </div>
                     </div>
@@ -274,13 +327,14 @@ export default function Portfolio() {
                 </>
               ) : (
                 <div className="text-center py-12 text-gray-400">
-                  <p>You don't have any transaction history yet.</p>
+                  <p>{t("transactions.empty")}</p>
                 </div>
               )}
             </div>
           )}
         </div>
       </div>
+
       <style jsx>{`
         @keyframes fadeInUp {
           from {

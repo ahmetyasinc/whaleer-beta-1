@@ -22,12 +22,10 @@ export const fetch_bot_data = async (limit, filters = {}) => {
       limit: limit || 5,
       ...filters, // gelen filtreleri override et
     };
-    console.log('fetch_bot_data payload:', payload);
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/showcase/newdata`,
       payload
     );
-    console.log('fetch_bot_data response:', response.data);
     return response.data;
   } catch (error) {
     console.error('fetch_bot_data error:', error);

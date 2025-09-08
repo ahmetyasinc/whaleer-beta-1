@@ -7,19 +7,52 @@ from sqlalchemy.future import select
 from app.database import get_db
 from app.schemas.strategy.strategy import StrategyCreate, StrategyUpdate
 from fastapi import HTTPException
+from app.models.profile.strategy.strategy_releases import StrategyRelease, ReleaseStatus
+from typing import Dict, List, Any, DefaultDict, Tuple
 
 protected_router = APIRouter()
+
+from sqlalchemy import select, or_, and_, func
+from app.models.profile.bots.bots import Bots
+
+from sqlalchemy import select, and_, or_
+from app.models.profile.bots.bots import Bots
 
 @protected_router.get("/api/all-strategies/")
 async def get_all_strategies(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token)
 ):
-    """Tüm türdeki indikatörleri (kişisel, teknik, topluluk) tek API ile döner."""
-
+    """
+    Tüm stratejileri döner.
+    - personal, tecnic: önceki gibi (approved + pending metrikleri ekli).
+    - community (public): Strategy.code yerine son APPROVED release'in code_snapshot'ı 'code' olarak gelir,
+      ayrıca views_count ve permissions döner. PENDING release'ler dahil edilmez.
+    """
     user_id = int(user_id)
 
-    # 1. Kullanıcının kişisel indikatörleri
+    # 🔒 LOCKED kuralı
+    acq_col = getattr(Bots, "acquisition_type", None)
+    purchased_or_rented = and_(
+        Bots.strategy_id == Strategy.id,
+        Bots.deleted.is_(False),
+        acq_col.in_(("PURCHASED", "RENTED")),
+    )
+    original_and_active = and_(
+        Bots.strategy_id == Strategy.id,
+        Bots.deleted.is_(False),
+        acq_col == "ORIGINAL",
+        Bots.active.is_(True),
+    )
+    locked_expr = (
+        select(1)
+        .select_from(Bots)
+        .where(or_(purchased_or_rented, original_and_active))
+        .exists()
+        .label("locked")
+    )
+
+    # ── 1) Personal
     user_result = await db.execute(
         select(
             Strategy.id,
@@ -27,55 +60,272 @@ async def get_all_strategies(
             Strategy.code,
             Strategy.created_at,
             Strategy.public,
-            StrategiesFavorite.id.isnot(None).label("favorite")
+            Strategy.tecnic,
+            Strategy.parent_strategy_id,
+            Strategy.version,
+            StrategiesFavorite.id.isnot(None).label("favorite"),
+            locked_expr,
         )
-        .outerjoin(StrategiesFavorite,
-                   (StrategiesFavorite.strategy_id == Strategy.id) & 
-                   (StrategiesFavorite.user_id == user_id))
+        .outerjoin(
+            StrategiesFavorite,
+            (StrategiesFavorite.strategy_id == Strategy.id) &
+            (StrategiesFavorite.user_id == user_id),
+        )
         .where(Strategy.user_id == user_id)
     )
     personal = user_result.mappings().all()
 
-    # 2. Teknik (tecnic) indikatörler
+    # ── 2) Technic
     tecnic_result = await db.execute(
         select(
             Strategy.id,
             Strategy.name,
             Strategy.code,
+            Strategy.created_at,
             Strategy.public,
             Strategy.tecnic,
-            StrategiesFavorite.id.isnot(None).label("favorite")
+            Strategy.parent_strategy_id,
+            Strategy.version,
+            StrategiesFavorite.id.isnot(None).label("favorite"),
+            locked_expr,
         )
-        .outerjoin(StrategiesFavorite,
-                   (StrategiesFavorite.strategy_id == Strategy.id) & 
-                   (StrategiesFavorite.user_id == user_id))
-        .where(Strategy.tecnic == True)
+        .outerjoin(
+            StrategiesFavorite,
+            (StrategiesFavorite.strategy_id == Strategy.id) &
+            (StrategiesFavorite.user_id == user_id),
+        )
+        .where(Strategy.tecnic.is_(True))
     )
     tecnic = tecnic_result.mappings().all()
 
-    # 3. Topluluk (public) indikatörler
+    # ── 3) Community (Public) — YENİ YAPI
+    #    Sadece APPROVED release ve onun code_snapshot'ını 'code' olarak döneceğiz.
+    rn_approved = func.row_number().over(
+        partition_by=StrategyRelease.strategy_id,
+        order_by=StrategyRelease.release_no.desc(),
+    )
+    subq_latest_approved = (
+        select(
+            StrategyRelease.strategy_id.label("sid"),
+            StrategyRelease.id.label("rid"),
+            StrategyRelease.release_no.label("rno"),
+            StrategyRelease.views_count.label("views"),
+            StrategyRelease.allow_code_view,
+            StrategyRelease.allow_chart_view,
+            StrategyRelease.allow_scanning,
+            StrategyRelease.allow_backtesting,
+            StrategyRelease.allow_bot_execution,
+            StrategyRelease.code_snapshot.label("code_snapshot"),
+            rn_approved.label("rn"),
+        )
+        .where(StrategyRelease.status == ReleaseStatus.approved)
+        .subquery()
+    )
+
+    # Strategy + latest approved release join
     public_result = await db.execute(
         select(
-            Strategy.id,
-            Strategy.name,
-            Strategy.code,
-            Strategy.public,
-            Strategy.tecnic,
-            StrategiesFavorite.id.isnot(None).label("favorite")
+            Strategy.id.label("id"),
+            Strategy.name.label("name"),
+            Strategy.created_at.label("created_at"),
+            Strategy.public.label("public"),
+            Strategy.tecnic.label("tecnic"),
+            Strategy.parent_strategy_id.label("parent_strategy_id"),
+            Strategy.version.label("version"),
+            # codeSnapshot'ı 'code' adıyla döndürüyoruz
+            subq_latest_approved.c.code_snapshot.label("code"),
+            # release meta
+            subq_latest_approved.c.rid.label("release_id"),
+            subq_latest_approved.c.rno.label("release_no"),
+            subq_latest_approved.c.views.label("views_count"),
+            subq_latest_approved.c.allow_code_view,
+            subq_latest_approved.c.allow_chart_view,
+            subq_latest_approved.c.allow_scanning,
+            subq_latest_approved.c.allow_backtesting,
+            subq_latest_approved.c.allow_bot_execution,
+            StrategiesFavorite.id.isnot(None).label("favorite"),
+            locked_expr,
         )
-        .outerjoin(StrategiesFavorite,
-                   (StrategiesFavorite.strategy_id == Strategy.id) & 
-                   (StrategiesFavorite.user_id == user_id))
-        .where(Strategy.public == True)
+        .join(
+            subq_latest_approved,
+            subq_latest_approved.c.sid == Strategy.id
+        )
+        .outerjoin(
+            StrategiesFavorite,
+            (StrategiesFavorite.strategy_id == Strategy.id) &
+            (StrategiesFavorite.user_id == user_id),
+        )
+        .where(
+            Strategy.public.is_(True),
+            subq_latest_approved.c.rn == 1  # yalnızca SON approved
+        )
     )
-    public = public_result.mappings().all()
+    public_rows = public_result.mappings().all()
+
+    # ── personal + tecnic için approved/pending metriklerini ekleme (önceki mantık)
+    #   (İstersen bunları kaldırabiliriz; community talebin netti.)
+    all_rows_for_maps = personal + tecnic
+    strategy_ids_for_maps = list({int(r["id"]) for r in all_rows_for_maps}) or [-1]
+
+    # Son approved (map) – personal/tecnic için
+    if strategy_ids_for_maps != [-1]:
+        rn_approved_map = func.row_number().over(
+            partition_by=StrategyRelease.strategy_id,
+            order_by=StrategyRelease.release_no.desc()
+        )
+        subq_app_map = (
+            select(
+                StrategyRelease.strategy_id.label("sid"),
+                StrategyRelease.id.label("release_id"),
+                StrategyRelease.release_no,
+                StrategyRelease.views_count,
+                StrategyRelease.allow_code_view,
+                StrategyRelease.allow_chart_view,
+                StrategyRelease.allow_scanning,
+                StrategyRelease.allow_backtesting,
+                StrategyRelease.allow_bot_execution,
+                rn_approved_map.label("rn"),
+            )
+            .where(
+                StrategyRelease.strategy_id.in_(strategy_ids_for_maps),
+                StrategyRelease.status == ReleaseStatus.approved
+            )
+            .subquery()
+        )
+        latest_app_rows = await db.execute(
+            select(
+                subq_app_map.c.sid,
+                subq_app_map.c.release_id,
+                subq_app_map.c.release_no,
+                subq_app_map.c.views_count,
+                subq_app_map.c.allow_code_view,
+                subq_app_map.c.allow_chart_view,
+                subq_app_map.c.allow_scanning,
+                subq_app_map.c.allow_backtesting,
+                subq_app_map.c.allow_bot_execution,
+            ).where(subq_app_map.c.rn == 1)
+        )
+        approved_map: Dict[int, Dict[str, Any]] = {}
+        for sid, rid, rno, vcnt, a1, a2, a3, a4, a5 in latest_app_rows.all():
+            approved_map[int(sid)] = {
+                "id": int(rid),
+                "no": int(rno),
+                "status": "approved",
+                "views_count": int(vcnt or 0),
+                "permissions": {
+                    "allow_code_view": bool(a1),
+                    "allow_chart_view": bool(a2),
+                    "allow_scanning": bool(a3),
+                    "allow_backtesting": bool(a4),
+                    "allow_bot_execution": bool(a5),
+                },
+            }
+    else:
+        approved_map = {}
+
+    # Son pending (map) – personal/tecnic için
+    if strategy_ids_for_maps != [-1]:
+        rn_pending_map = func.row_number().over(
+            partition_by=StrategyRelease.strategy_id,
+            order_by=StrategyRelease.release_no.desc()
+        )
+        subq_pen_map = (
+            select(
+                StrategyRelease.strategy_id.label("sid"),
+                StrategyRelease.id.label("release_id"),
+                StrategyRelease.release_no,
+                StrategyRelease.allow_code_view,
+                StrategyRelease.allow_chart_view,
+                StrategyRelease.allow_scanning,
+                StrategyRelease.allow_backtesting,
+                StrategyRelease.allow_bot_execution,
+                rn_pending_map.label("rn"),
+            )
+            .where(
+                StrategyRelease.strategy_id.in_(strategy_ids_for_maps),
+                StrategyRelease.status == ReleaseStatus.pending
+            )
+            .subquery()
+        )
+        latest_pen_rows = await db.execute(
+            select(
+                subq_pen_map.c.sid,
+                subq_pen_map.c.release_id,
+                subq_pen_map.c.release_no,
+                subq_pen_map.c.allow_code_view,
+                subq_pen_map.c.allow_chart_view,
+                subq_pen_map.c.allow_scanning,
+                subq_pen_map.c.allow_backtesting,
+                subq_pen_map.c.allow_bot_execution,
+            ).where(subq_pen_map.c.rn == 1)
+        )
+        pending_map: Dict[int, Dict[str, Any]] = {}
+        for sid, rid, rno, a1, a2, a3, a4, a5 in latest_pen_rows.all():
+            pending_map[int(sid)] = {
+                "id": int(rid),
+                "no": int(rno),
+                "status": "pending",
+                "permissions": {
+                    "allow_code_view": bool(a1),
+                    "allow_chart_view": bool(a2),
+                    "allow_scanning": bool(a3),
+                    "allow_backtesting": bool(a4),
+                    "allow_bot_execution": bool(a5),
+                },
+            }
+    else:
+        pending_map = {}
+
+    def attach_release_metrics(rows):
+        out = []
+        for r in rows:
+            d = dict(r)
+            sid = int(d["id"])
+            d["approved_release"] = approved_map.get(sid)
+            d["pending_release"]  = pending_map.get(sid)
+            out.append(d)
+        return out
+
+    # community/public listesi için özel format
+    def shape_public(rows):
+        shaped = []
+        for r in rows:
+            d = dict(r)
+            shaped.append({
+                "id": d["id"],
+                "name": d["name"],
+                "created_at": d["created_at"],
+                "public": d["public"],
+                "tecnic": d["tecnic"],
+                "parent_strategy_id": d["parent_strategy_id"],
+                "version": d["version"],
+                "favorite": bool(d["favorite"]),
+                "locked": bool(d["locked"]),
+                # code -> release code_snapshot
+                "code": d["code"],
+                "release": {
+                    "id": d["release_id"],
+                    "no": d["release_no"],
+                    "status": "approved",
+                    "views_count": d["views_count"] or 0,
+                    "permissions": {
+                        "allow_code_view": bool(d["allow_code_view"]),
+                        "allow_chart_view": bool(d["allow_chart_view"]),
+                        "allow_scanning": bool(d["allow_scanning"]),
+                        "allow_backtesting": bool(d["allow_backtesting"]),
+                        "allow_bot_execution": bool(d["allow_bot_execution"]),
+                    }
+                }
+            })
+        return shaped
 
     return {
-        "personal_strategies": [dict(row) for row in personal],
-        "tecnic_strategies": [dict(row) for row in tecnic],
-        "public_strategies": [dict(row) for row in public],
+        # personal/tecnic: eski metriklerle devam
+        "personal_strategies": attach_release_metrics(personal),
+        "tecnic_strategies": attach_release_metrics(tecnic),
+        # community/public: YENİ yapı (code = code_snapshot, sadece approved)
+        "public_strategies": shape_public(public_rows),
     }
-
 
 @protected_router.get("/api/public-strategies/")
 async def get_public_strategies(
@@ -157,52 +407,167 @@ async def get_strategies(
 
 @protected_router.post("/api/add-strategy/")
 async def create_strategy(
-    strategy_data: StrategyCreate,
+    strategy_data: StrategyCreate,  # name, code, optional parent_strategy_id
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token)
 ):
-    """Kullanıcı için yeni bir strateji oluşturur. Eğer aynı isimde strateji varsa hata döner."""
-    
-    result = await db.execute(select(Strategy).where(Strategy.user_id == int(user_id), Strategy.name == strategy_data.name))
-    existing_strategy = result.scalars().first()
+    """
+    Yeni strateji veya bir stratejinin yeni versiyonunu oluşturur.
+    - parent_strategy_id yoksa: yeni kök strateji (version=1)
+    - parent_strategy_id varsa: aynı grupta max(version)+1 ile yeni versiyon
+    """
+    user_id_int = int(user_id)
 
-    if existing_strategy:
-        raise HTTPException(status_code=400, detail="Bu isimde bir strateji zaten mevcut!")
+    # --- YENİ KÖK STRATEJİ (parent yok) ---
+    if not getattr(strategy_data, "parent_strategy_id", None):
+        # Kullanıcı bazında, SADECE kök kayıtlar için aynı isim var mı?
+        dup_q = await db.execute(
+            select(Strategy).where(
+                Strategy.user_id == user_id_int,
+                Strategy.name == strategy_data.name,
+                Strategy.parent_strategy_id.is_(None),
+            ).limit(1)
+        )
+        existing = dup_q.scalars().first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Bu isimde bir strateji zaten mevcut!")
 
-    # Yeni strateji oluştur
-    new_strategy = Strategy(
-        user_id= int(user_id),
-        name=strategy_data.name,
-        code=strategy_data.code,
+        new_strategy = Strategy(
+            user_id=user_id_int,
+            name=strategy_data.name,
+            code=strategy_data.code,
+            version=1,
+            parent_strategy_id=None,
+        )
+        db.add(new_strategy)
+        await db.commit()
+        await db.refresh(new_strategy)
+
+        return {
+            "id": new_strategy.id,
+            "name": new_strategy.name,
+            "code": new_strategy.code,
+            "version": new_strategy.version,
+            "parent_strategy_id": new_strategy.parent_strategy_id,
+            "tecnic": new_strategy.tecnic,
+            "public": new_strategy.public,
+            "favorite": False,
+        }
+
+    # --- YENİ VERSİYON (parent var) ---
+    parent_id = int(strategy_data.parent_strategy_id)
+
+    # Parent mevcut mu ve aynı kullanıcıya mı ait?
+    parent_res = await db.execute(
+        select(Strategy).where(
+            Strategy.id == parent_id,
+            Strategy.user_id == user_id_int,
+        )
     )
-    db.add(new_strategy)
+    parent = parent_res.scalars().first()
+    if not parent:
+        raise HTTPException(status_code=404, detail="Parent strategy bulunamadı veya yetkisiz.")
+
+    # Grup kökünü normalize et (parent bir child ise köke çık)
+    group_root_id = parent.parent_strategy_id or parent.id
+
+    # Aynı GRUPTA (kök + tüm çocuklar) max(version) bul
+    max_ver_res = await db.execute(
+        select(func.max(Strategy.version)).where(
+            or_(
+                Strategy.id == group_root_id,
+                Strategy.parent_strategy_id == group_root_id,
+            ),
+            Strategy.user_id == user_id_int,
+        )
+    )
+    max_ver = max_ver_res.scalar() or 1
+    next_version = int(max_ver) + 1
+
+    new_version = Strategy(
+        user_id=user_id_int,
+        name=strategy_data.name,   # İstersen aynı ismi kullan, istersen versiyon adına özel isim
+        code=strategy_data.code,
+        version=next_version,
+        parent_strategy_id=group_root_id,
+    )
+    db.add(new_version)
     await db.commit()
-    await db.refresh(new_strategy)
+    await db.refresh(new_version)
 
     return {
-        "id": new_strategy.id,
-        "name": new_strategy.name,
-        "code": new_strategy.code,
-        "tecnic": new_strategy.tecnic,
-        "public": new_strategy.public,
-        "favorite": False
+        "id": new_version.id,
+        "name": new_version.name,
+        "code": new_version.code,
+        "version": new_version.version,
+        "parent_strategy_id": new_version.parent_strategy_id,
+        "tecnic": new_version.tecnic,
+        "public": new_version.public,
+        "favorite": False,
     }
 
 @protected_router.put("/api/edit-strategy/")
 async def update_strategy(
     strategy_data: StrategyUpdate,
     db: AsyncSession = Depends(get_db),
-    user_id: dict = Depends(verify_token)
+    user_id: dict = Depends(verify_token),
 ):
-    """Belirtilen strateji bilgilerini günceller. Eğer strateji bulunamazsa hata döner."""
-    
-    result = await db.execute(select(Strategy).where(Strategy.id == strategy_data.id, Strategy.user_id == int(user_id)))
-    strategy = result.scalars().first()
+    """
+    Belirtilen strateji bilgilerini günceller.
+    Locked kuralı:
+      - acquisition_type ∈ {PURCHASED, RENTED} ve deleted=false → her durumda kilit
+      - acquisition_type = ORIGINAL ve deleted=false ve active=true → kilit
+    Kolon yoksa: ORIGINAL + active=true kuralıyla geriye uyumlu kilit.
+    """
+    user_id = int(user_id)
 
+    # 1) Strateji kullanıcının mı?
+    result = await db.execute(
+        select(Strategy).where(
+            Strategy.id == strategy_data.id,
+            Strategy.user_id == user_id,
+        )
+    )
+    strategy = result.scalars().first()
     if not strategy:
         raise HTTPException(status_code=404, detail="Strategy not found!")
 
-    # Güncellenmesi gereken alanları değiştir
+    acq_col = getattr(Bots, "acquisition_type", None)
+
+    if acq_col is not None:
+        purchased_or_rented = and_(
+            Bots.strategy_id == strategy.id,
+            Bots.deleted.is_(False),
+            acq_col.in_(("PURCHASED", "RENTED")),
+        )
+        original_and_active = and_(
+            Bots.strategy_id == strategy.id,
+            Bots.deleted.is_(False),
+            acq_col == "ORIGINAL",
+            Bots.active.is_(True),
+        )
+        locked_clause = or_(purchased_or_rented, original_and_active)
+    else:
+        # Kolon yoksa: eski davranış (ORIGINAL kabulü) — active=true ve deleted=false ise kilit
+        locked_clause = and_(
+            Bots.strategy_id == strategy.id,
+            Bots.deleted.is_(False),
+            Bots.active.is_(True),
+        )
+
+    in_use_res = await db.execute(
+        select(Bots.id).where(locked_clause).limit(1)
+    )
+    if in_use_res.scalar_one_or_none() is not None:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "This strategy is locked because it is used by an active or acquired bot. "
+                "Please deactivate/detach bots or create a new version."
+            ),
+        )
+
+    # 3) Güncelle ve kaydet
     strategy.name = strategy_data.name
     strategy.code = strategy_data.code
 
@@ -217,14 +582,65 @@ async def delete_strategy(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token)
 ):
-    """Belirtilen strateji siler. Eğer strateji bulunamazsa hata döner."""
-    
-    result = await db.execute(select(Strategy).where(Strategy.id == strategy_id, Strategy.user_id == int(user_id)))
-    strategy = result.scalars().first()
+    """
+    Stratejiyi siler. Eğer strateji 'locked' ise silmez; Whaleer (user_id=8) hesabına devreder.
+    Locked kuralı:
+      - acquisition_type ∈ {PURCHASED, RENTED} ve deleted=false → her durumda kilit
+      - acquisition_type = ORIGINAL ve deleted=false ve active=true → kilit
+    Kolon yoksa: active=true ve deleted=false → kilit (geriye uyumlu).
+    """
 
+    user_id_int = int(user_id)
+
+    # 1) Strateji kullanıcının mı?
+    result = await db.execute(
+        select(Strategy).where(
+            Strategy.id == strategy_id,
+            Strategy.user_id == user_id_int
+        )
+    )
+    strategy = result.scalars().first()
     if not strategy:
         raise HTTPException(status_code=404, detail="Strategy not found!")
 
+    # 2) Locked kontrolü (diğer yerle aynı semantik)
+    acq_col = getattr(Bots, "acquisition_type", None)
+
+    if acq_col is not None:
+        purchased_or_rented = and_(
+            Bots.strategy_id == strategy.id,
+            Bots.deleted.is_(False),
+            acq_col.in_(("PURCHASED", "RENTED")),
+        )
+        original_and_active = and_(
+            Bots.strategy_id == strategy.id,
+            Bots.deleted.is_(False),
+            acq_col == "ORIGINAL",
+            Bots.active.is_(True),
+        )
+        locked_clause = or_(purchased_or_rented, original_and_active)
+    else:
+        # Kolon yoksa: aktif & silinmemiş bot varsa kilit
+        locked_clause = and_(
+            Bots.strategy_id == strategy.id,
+            Bots.deleted.is_(False),
+            Bots.active.is_(True),
+        )
+
+    in_use_res = await db.execute(
+        select(Bots.id).where(locked_clause).limit(1)
+    )
+    is_locked = in_use_res.scalar_one_or_none() is not None
+
+    # 3) Locked ise → silme, Whaleer'a devret
+    if is_locked:
+        strategy.user_id = 8  # Whaleer
+        await db.commit()
+        return {
+            "message": "Strategy is locked; transferred to Whaleer (user_id=8) instead of deleting."
+        }
+
+    # 4) Locked değilse → sil
     await db.delete(strategy)
     await db.commit()
 

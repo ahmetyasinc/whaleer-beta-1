@@ -1,0 +1,27 @@
+{
+  "titles": {
+    "archive": "My Backtest Archive",
+    "results": "Backtest Results"
+  },
+  "loading": {
+    "archiveTitle": "Loading archive...",
+    "archiveDesc": "Your backtest archive is being retrieved.",
+    "backtestTitle": "Backtest is running...",
+    "backtestDesc": "Please wait, your strategy is being tested."
+  },
+  "errors": {
+    "archiveTitle": "Error Loading Archive",
+    "backtestTitle": "An Error Occurred"
+  },
+  "buttons": {
+    "retry": "Try Again"
+  },
+  "empty": {
+    "archiveTitle": "Archive is Empty",
+    "archiveDesc": "Use the \"Archive\" button to archive your backtest results."
+  },
+  "awaiting": {
+    "title": "Awaiting Backtest Result",
+    "desc": "Use the \"Run Backtest\" button above to perform a backtest."
+  }
+}

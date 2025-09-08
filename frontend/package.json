@@ -14,8 +14,12 @@
     "@formatjs/intl-localematcher": "^0.6.1",
     "@monaco-editor/react": "^4.7.0",
     "@popperjs/core": "^2.11.8",
+    "@solana/wallet-adapter-phantom": "^0.9.28",
+    "@solana/wallet-adapter-react": "^0.15.39",
+    "@solana/wallet-adapter-react-ui": "^0.9.39",
     "apexcharts": "^5.3.1",
     "axios": "^1.7.9",
+    "bs58": "^6.0.0",
     "chart.js": "^4.5.0",
     "chartjs-adapter-date-fns": "^3.0.0",
     "framer-motion": "^12.6.3",
@@ -40,7 +44,7 @@
     "recharts": "^3.1.0",
     "styled-components": "^6.1.17",
     "tailwind-scrollbar-hide": "^2.0.0",
-    "zustand": "^5.0.3"
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

@@ -1,18 +1,10 @@
 "use client";
 
-import i18n from "@/i18n";
 import { useTranslation } from "react-i18next";
-import { useEffect } from "react";
 import { FiCheck, FiPhone } from "react-icons/fi";
 
-export default function About({ locale }) {
-  const { t } = useTranslation("about");
-
-  useEffect(() => {
-    if (locale && i18n.language !== locale) {
-      i18n.changeLanguage(locale);
-    }
-  }, [locale]);
+export default function About() {
+  const { t } = useTranslation("about", { useSuspense: false });
 
   return (
     <section

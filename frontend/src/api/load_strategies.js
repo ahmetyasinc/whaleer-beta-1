@@ -22,8 +22,6 @@ export const load_strategies = async () => {
       new Map(allCombined.map((item) => [item.id, item])).values()
     );
 
-    console.log("Stratejiler başarıyla çekildi:", uniqueById);
-
     useStrategyStore.setState({ all_strategies: uniqueById });
 
   } catch (error) {

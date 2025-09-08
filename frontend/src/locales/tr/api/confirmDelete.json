@@ -1,0 +1,24 @@
+{
+  "title": "API Anahtarını Sil",
+  "subtitle": {
+    "withNameSuffix": "adlı API anahtarı silinecek.",
+    "noName": "Bu API anahtarını silmek üzeresiniz."
+  },
+  "botsHeader": "Bu API’yi kullanan botlar:",
+  "empty": "Bu API’ye bağlı bot bulunmuyor.",
+  "badge": {
+    "titleActive": "Aktif bot",
+    "titleInactive": "Pasif bot",
+    "labelActive": "Aktif",
+    "labelInactive": "Pasif"
+  },
+  "warning": {
+    "part1": "Onaylarsanız listelenen botlar",
+    "bold": "devre dışı bırakılıp silinecek",
+    "part2": "ardından API anahtarı silinecektir. Bu işlem geri alınamaz."
+  },
+  "buttons": {
+    "cancel": "Vazgeç",
+    "confirm": "Evet, Sil"
+  }
+}

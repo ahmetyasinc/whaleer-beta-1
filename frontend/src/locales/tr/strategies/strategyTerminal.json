@@ -1,0 +1,45 @@
+{
+  "ready": "🌊 Hoş geldiniz, Terminal hazır...",
+  "placeholder": "Komut girin (liste için 'help' yazın)",
+  "alerts": {
+    "sessionExpired": "Oturum süresi doldu veya geçersiz token! Lütfen tekrar giriş yapın."
+  },
+  "errors": {
+    "requestFailed": "İstek başarısız",
+    "notFoundPrefix": "İndikatör bulunamadı:"
+  },
+  "load": {
+    "successCount": "✅ {{count}} indikatör yüklendi.",
+    "failed": "❌ İndikatörler yüklenemedi: {{message}}"
+  },
+  "import": {
+    "enterName": "⚠️ Lütfen bir indikatör adı girin. Örn: import rsi",
+    "already": "⚠️ {{indicator}} zaten içe aktarıldı.",
+    "success": "✅ {{indicator}} başarıyla içe aktarıldı."
+  },
+  "reset": {
+    "specify": "⚠️ Lütfen silinecek indikatörü belirtin. Örn: reset RSI",
+    "allDone": "♻️ Tüm içe aktarılan indikatörler sıfırlandı.",
+    "removed": "🗑️ {{indicator}} içe aktarılanlar listesinden kaldırıldı.",
+    "notFound": "⚠️ {{indicator}} içe aktarılanlar listesinde bulunamadı."
+  },
+  "help": {
+    "title": "Kullanılabilir komutlar:",
+    "cls": "cls - Terminali temizle",
+    "help": "help - Komutları listele",
+    "time": "time - Geçerli zamanı göster",
+    "uptime": "uptime - Sayfanın ne kadar süredir açık olduğunu göster",
+    "import": "import <indicator> - Bir indikatörü içe aktar",
+    "list": "list imports - İçe aktarılan indikatörleri listele",
+    "reset": "reset <indicator|imports> - Belirli veya tüm indikatörleri kaldır"
+  },
+  "uptimeFormat": "⏱️ Sayfa çalışma süresi: {{seconds}} saniye",
+  "errorSample": "Bu bir hata mesajıdır!",
+  "warningSample": "Bu bir uyarı mesajıdır!",
+  "successSample": "Bu bir başarı mesajıdır!",
+  "list": {
+    "none": "📭 Henüz hiç indikatör içe aktarılmadı.",
+    "title": "📦 İçe aktarılan indikatörler:"
+  },
+  "unknown": "Bilinmeyen komut: {{cmd}}"
+}

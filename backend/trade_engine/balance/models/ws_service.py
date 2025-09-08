@@ -1,9 +1,13 @@
-import asyncio, websockets,logging, json
-from backend.trade_engine.balance.db.stream_key_db import get_active_and_new_listenkeys
-from backend.trade_engine.balance.db import ws_db
+import asyncio
+import websockets
+import logging
+import json
 from backend.trade_engine import config
+from backend.trade_engine.balance.db.stream_key_db import attach_listenkeys_to_ws
+from backend.trade_engine.balance.db import ws_db
 
-logging.basicConfig(level=logging.INFO)
+# Logging ayarını daha bilgilendirici yapalım
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class Deduplicator:
@@ -13,260 +17,250 @@ class Deduplicator:
         self.max_size = max_size
 
     def is_duplicate(self, event: dict) -> bool:
-        uid = event.get("u") or event.get("E")  # Binance: updateId veya eventTime
-        if not uid:
-            return False
-        if uid in self.seen:
-            return True
+        uid = event.get("u") or event.get("E")
+        if not uid: return False
+        if uid in self.seen: return True
         self.seen.add(uid)
         if len(self.seen) > self.max_size:
-            # en eskileri at
             self.seen = set(list(self.seen)[-self.max_size:])
         return False
 
-
-class WebSocketSafeManager:
-    """
-    Tek listenKey için Safe Reconnect mantığı:
-    - Yeni listenKey geldiğinde yeni WS açılır.
-    - Eski WS ile kısa süreliğine paralel dinlenir (deduplication).
-    - Sonra eski WS kapatılır.
-    """
-
-    def __init__(self, pool, listenkeys: list, url: str, overlap_seconds: int = 3):
-        self.pool = pool
-        self.listenkeys = listenkeys
-        self.url = url
-        self.overlap_seconds = overlap_seconds
-        self.active_ws = None
-        self.backup_ws = None
-        self.ws_id = None
-        self.dedup = Deduplicator()
-
-    async def start(self):
-        """Başlangıçta ilk WS açılır."""
-        await self._open_new_ws(self.listenkeys)
-
-    async def _open_new_ws(self, listenkeys):
-        streams = "/".join(listenkeys)
-        url = f"{self.url}/stream?streams={streams}"
-        logging.info(f"🌐 Yeni WS açılıyor: {url}")
-
-        # DB'ye kayıt
-        self.ws_id = await ws_db.insert_ws(self.pool, name="safe-ws", exchange="binance", url=url)
-
-        # listenKey sayısını DB'ye güncelle
-        await ws_db.update_listenkey_count(self.pool, self.ws_id, len(listenkeys))
-
-        # yeni bağlantıyı aç
-        self.backup_ws = await websockets.connect(url, ping_interval=20, ping_timeout=10)
-        asyncio.create_task(self._listen(self.backup_ws, "backup"))
-
-        # overlap süresi
-        if self.active_ws:
-            await asyncio.sleep(self.overlap_seconds)
-            await self._close_ws(self.active_ws, "primary")
-
-        # backup → primary yap
-        self.active_ws = self.backup_ws
-        self.backup_ws = None
-        logging.info("✅ Safe Reconnect tamamlandı.")
-
-    async def _listen(self, ws, role: str):
-        try:
-            async for msg in ws:
-                try:
-                    data = json.loads(msg)
-                except Exception:
-                    data = {"raw": msg}
-
-                if self.dedup.is_duplicate(data):
-                    continue
-                logging.info(f"[{role}] {data}")
-        except Exception as e:
-            logging.error(f"[{role}] hata: {e}")
-
-    async def _close_ws(self, ws, role: str):
-        if ws:
-            await ws.close()
-            logging.info(f"❌ {role} WS kapatıldı.")
-
-
 class WebSocketRedundantManager:
-    """
-    Redundant Listening:
-    - Her listenKey seti için 2 WS açılır.
-    - max_per_ws değeri DynamicListenerManager'dan gelir.
-    """
-
-    def __init__(self, pool, listenkeys: list, url: str, max_per_ws: int):
+    """BELİRLİ BİR GRUP listenKey için yedekli (redundant) bağlantıları yönetir."""
+    def __init__(self, pool, initial_listenkeys: list, url: str):
         self.pool = pool
-        self.listenkeys = listenkeys
+        self.listenkeys = initial_listenkeys
         self.url = url
-        self.max_per_ws = max_per_ws
-        self.ws_groups = []
         self.dedup = Deduplicator()
+        self.active_connections = {}
+        self.base_ws_id = None
 
-    async def start(self):
-        total = len(self.listenkeys)
-        group_count = (total + self.max_per_ws - 1) // self.max_per_ws  # ceil(x/y)
+    async def start(self, existing_ws_id: int = None):
+        if not self.listenkeys:
+            logging.warning("Başlatılacak listenKey bulunmadığı için WebSocketRedundantManager başlatılmadı.")
+            return
+        await self._open_redundant_pair(self.listenkeys, existing_ws_id)
+        await attach_listenkeys_to_ws(self.pool, self.base_ws_id, self.listenkeys)
 
-        tasks = []
-        for group_index in range(group_count):
-            chunk = self.listenkeys[
-                group_index * self.max_per_ws : (group_index + 1) * self.max_per_ws
-            ]
-            tasks.append(self._open_redundant_pair(chunk, group_index))
+    async def update_and_restart(self, new_listenkeys: list):
+        logging.info(f"🔄 WS ID {self.base_ws_id} için overlap/restart süreci başlatılıyor. Yeni anahtar sayısı: {len(new_listenkeys)}")
+        if not new_listenkeys:
+            await self.shutdown()
+            return
+        old_connections = list(self.active_connections.values())
+        self.active_connections.clear()
+        self.listenkeys = new_listenkeys
+        await self._open_redundant_pair(self.listenkeys, self.base_ws_id)
+        await attach_listenkeys_to_ws(self.pool, self.base_ws_id, self.listenkeys)
+        await asyncio.sleep(5)
+        logging.info(f"⏳ Overlap süresi doldu. WS ID {self.base_ws_id} için eski bağlantılar kapatılıyor.")
+        for ws, task in old_connections:
+            if not task.done():
+                task.cancel()
+            await self._close_ws(ws)
+        logging.info(f"✅ WS ID {self.base_ws_id} için overlap/restart tamamlandı.")
 
-        await asyncio.gather(*tasks)
-
-    async def _open_redundant_pair(self, listenkeys: list, group_index: int):
+    async def shutdown(self):
+        logging.info(f"🗑️ WS ID {self.base_ws_id} için hiç anahtar kalmadı. Kapatılıyor.")
+        for ws, task in self.active_connections.values():
+            if not task.done():
+                task.cancel()
+            await self._close_ws(ws)
+        self.active_connections.clear()
+        if self.base_ws_id:
+            await ws_db.delete_ws(self.pool, self.base_ws_id)
+            logging.info(f"✅ WS ID {self.base_ws_id} DB'den başarıyla silindi.")
+            self.base_ws_id = None
+        
+    async def _open_redundant_pair(self, listenkeys: list, base_id: int = None):
         streams = "/".join(listenkeys)
         url = f"{self.url}/stream?streams={streams}"
-
-        base_id = None
-        for i in range(2):  # redundant = 2 socket
-            ws_id = await ws_db.insert_ws(self.pool, "temp", "binance", url)
-
-            if base_id is None:
-                base_id = ws_id  # ilk açılan primary olsun
-
-            name = f"ws_{base_id}_redundant-{i}"
-            await ws_db.update_ws_name(self.pool, ws_id, name)
-            await ws_db.update_listenkey_count(self.pool, ws_id, len(listenkeys))
-
-            # sadece primary ws_id’ye bağla
-            if i == 0:
-                from backend.trade_engine.balance.db.stream_key_db import attach_listenkeys_to_ws
-                await attach_listenkeys_to_ws(self.pool, base_id, listenkeys)
-
-            conn = await websockets.connect(url, ping_interval=20, ping_timeout=10)
-            self.ws_groups.append((ws_id, conn))
-            asyncio.create_task(self._listen(conn, name))
-
-        logging.info(
-            f"✅ Grup {group_index+1}: {len(listenkeys)} listenKey için redundant çift açıldı → {listenkeys}, base_id={base_id}"
-        )
+        if base_id is None:
+            self.base_ws_id = await ws_db.insert_ws(self.pool, "redundant-group", "binance", url)
+        else:
+            self.base_ws_id = base_id
+        await ws_db.update_ws_url_and_count(self.pool, self.base_ws_id, url, len(listenkeys))
+        for i in range(2):
+            name = f"ws_{self.base_ws_id}_redundant-{i}"
+            logging.info(f"🌐 [{name}] bağlantı açılıyor...")
+            try:
+                conn = await websockets.connect(url, ping_interval=20, ping_timeout=10)
+                task = asyncio.create_task(self._listen(conn, name))
+                self.active_connections[name] = (conn, task)
+            except Exception as e:
+                logging.error(f"❌ [{name}] bağlantı hatası: {e}")
 
     async def _listen(self, ws, role: str):
         try:
             async for msg in ws:
-                try:
-                    data = json.loads(msg)
-                except Exception:
-                    data = {"raw": msg}
-
-                if self.dedup.is_duplicate(data):
-                    continue
-                logging.info(f"[{role}] {data}")
+                data = json.loads(msg)
+                if not self.dedup.is_duplicate(data):
+                    logging.debug(f"[{role}] {data['stream']}: {data['data']['e']}")
+        except websockets.exceptions.ConnectionClosed:
+            logging.warning(f"🔌 [{role}] bağlantısı kapandı.")
         except Exception as e:
-            logging.error(f"[{role}] hata: {e}")
+            logging.error(f"[{role}] dinleme hatası: {e}")
+
+    async def _close_ws(self, ws):
+        if ws:
+            try:
+                await ws.close()
+            except Exception as e:
+                logging.warning(f"WebSocket kapatılırken bir istisna oluştu: {e}")
 
 class DynamicListenerManager:
     """
-    Dinamik olarak listenKey ekleyip yöneten yapı.
-    - Her 5 saniyede bir DB kontrol eder.
-    - Sadece status='new' ve status='remove' listenKey’lerle ilgilenir.
-    - max_per_ws burada merkezi olarak tanımlanır.
+    Tüm WebSocket yöneticilerini yönetir, DB olaylarına göre
+    ekleme/çıkarma işlemlerini AKILLICA GRUPLAYARAK organize eder.
     """
-
-    def __init__(self, pool, url="wss://fstream.binance.com", max_per_ws=50):
+    def __init__(self, pool, url="wss://fstream.binance.com", max_per_ws=100):
         self.pool = pool
         self.url = url
         self.max_per_ws = max_per_ws
-        self.ws_managers = {}  # ws_id -> manager
+        self.active_managers = {}
+        # YENİ: Gelen 'new' key'leri işlemek için bir kuyruk (queue/buffer)
+        self.new_key_queue = asyncio.Queue()
 
     async def run(self):
-        while True:
-            try:
-                await self._check_listenkeys()
-            except Exception as e:
-                logging.error(f"DynamicManager hata: {e}")
-            await asyncio.sleep(5)
+        await self._initialize_from_db()
+        # İki ana görevi paralel olarak başlatıyoruz:
+        # 1. Veritabanı olaylarını dinle ve kuyruğa at.
+        # 2. Kuyruktaki anahtarları toplu olarak işle.
+        await asyncio.gather(
+            self._listen_for_db_events(),
+            self._process_new_key_buffer()
+        )
 
-    async def _check_listenkeys(self):
-        from backend.trade_engine.balance.db.stream_key_db import get_listenkeys_by_status
+    async def _initialize_from_db(self):
+        logging.info("🚀 Sistem başlangıcı: Veritabanındaki mevcut durum okunuyor...")
+        active_ws_records = await ws_db.get_active_ws(self.pool)
+        for ws_record in active_ws_records:
+            ws_id = ws_record['id']
+            keys_records = await ws_db.get_streamkeys_by_ws(self.pool, ws_id)
+            listenkeys = [rec['stream_key'] for rec in keys_records]
+            if not listenkeys:
+                logging.warning(f"⚠️ WS ID {ws_id} DB'de aktif ama anahtarı yok. Siliniyor...")
+                await ws_db.delete_ws(self.pool, ws_id)
+                continue
+            logging.info(f"🚀 Başlangıç: WS ID {ws_id} için Redundant Manager başlatılıyor ({len(listenkeys)} anahtar).")
+            manager = WebSocketRedundantManager(self.pool, listenkeys, self.url)
+            await manager.start(existing_ws_id=ws_id)
+            self.active_managers[ws_id] = manager
+        logging.info("✅ Başlangıç senkronizasyonu tamamlandı.")
 
-        # Yeni listenKey'ler
-        new_keys = await get_listenkeys_by_status(self.pool, ["new"])
-        if new_keys:
-            keys = [r["stream_key"] for r in new_keys]
-            mgr = WebSocketRedundantManager(self.pool, keys, self.url, self.max_per_ws)
-            await mgr.start()
-            # status update işlemi attach_listenkeys_to_ws içinde yapılıyor
-
-        # TODO: remove olanları da kapatma eklenecek
-
-
-async def handle_ws_failure(pool, ws_id: int, url: str, mode: str = "safe"):
-    
-    logging.warning(f"⚠️ WS {ws_id} yanıt vermiyor, yeniden başlatılıyor...")
-
-    from backend.trade_engine.balance.db import ws_db
-    from backend.trade_engine.balance.models.listenkey_service import ListenKeyManager
-
-    # 1. ws_id altındaki listenkey kayıtlarını al
-    listenkeys = await ws_db.get_streamkeys_by_ws(pool, ws_id)
-    refreshed = []
-
-    for lk in listenkeys:
-        mgr = ListenKeyManager(pool, lk["api_id"], None, lk["user_id"], lk["connection_type"])
-        mgr.listen_key = lk["stream_key"]
-
+    async def _listen_for_db_events(self):
+        conn = await self.pool.acquire()
         try:
-            await mgr.refresh()
-            refreshed.append(mgr.listen_key)
-        except Exception:
-            await mgr.create()
-            if mgr.listen_key:
-                refreshed.append(mgr.listen_key)
+            await conn.add_listener("streamkey_events", self._db_event_callback)
+            logging.info("🔔 Veritabanı 'streamkey_events' kanalı dinleniyor...")
+            while True:
+                await asyncio.sleep(60)
+        finally:
+            await conn.remove_listener("streamkey_events", self._db_event_callback)
+            await self.pool.release(conn)
 
-    if not refreshed:
-        logging.error(f"❌ WS {ws_id} için listenKey yenilenemedi, WS kapalı bırakılıyor.")
-        await ws_db.mark_ws_status(pool, ws_id, False)
-        return
+    def _db_event_callback(self, conn, pid, channel, payload):
+        logging.info(f"📦 DB'den yeni olay alındı: {payload}")
+        event = json.loads(payload)
+        status = event.get("status")
+        
+        if status == 'new':
+            # 'new' key'i anında işlemek yerine kuyruğa atıyoruz.
+            self.new_key_queue.put_nowait(event)
+        elif status in ('remove', 'expired', 'error'):
+            # Kaldırma işlemleri hala anında işlenebilir.
+            asyncio.create_task(self._handle_remove_key(event))
 
-    # 2. Yeni WS aç
-    if mode == "safe":
-        new_mgr = WebSocketSafeManager(pool, refreshed, url)
-    else:
-        new_mgr = WebSocketRedundantManager(pool, refreshed, url)
-    await new_mgr.start()
+    async def _process_new_key_buffer(self):
+        """Kuyruktaki yeni anahtarları toplu halde ve akıllıca işler."""
+        while True:
+            # Kuyruktan ilk anahtarı bekle
+            first_event = await self.new_key_queue.get()
+            batch = [first_event['stream_key']]
+            
+            # Kuyrukta başka anahtar var mı diye hızlıca kontrol et ve toplu al
+            while not self.new_key_queue.empty():
+                event = self.new_key_queue.get_nowait()
+                batch.append(event['stream_key'])
+            
+            logging.info(f"➕ Toplu ekleme işlemi: {len(batch)} adet yeni anahtar işlenecek.")
+            await self._place_new_keys_intelligently(batch)
 
-    # 3. ws_db güncelle
-    await ws_db.mark_ws_status(pool, ws_id, True)
-    await ws_db.update_listenkey_count(pool, ws_id, len(refreshed))
+    async def _place_new_keys_intelligently(self, keys_to_add: list):
+        """Yeni anahtarları mevcut WS gruplarına doldurur veya yenisini açar."""
+        
+        # 1. Adım: Mevcut gruplardaki boşlukları doldur
+        for ws_id, manager in self.active_managers.items():
+            if not keys_to_add: break # Eklenecek anahtar kalmadıysa döngüden çık
+            
+            current_count = len(manager.listenkeys)
+            space_available = self.max_per_ws - current_count
+            
+            if space_available > 0:
+                keys_for_this_manager = keys_to_add[:space_available]
+                keys_to_add = keys_to_add[space_available:]
+                
+                logging.info(f"  -> {len(keys_for_this_manager)} anahtar mevcut WS ID {ws_id} grubuna ekleniyor.")
+                await attach_listenkeys_to_ws(self.pool, ws_id, keys_for_this_manager)
+                updated_keys_records = await ws_db.get_streamkeys_by_ws(self.pool, ws_id)
+                updated_keys = [rec['stream_key'] for rec in updated_keys_records]
+                await manager.update_and_restart(updated_keys)
 
-    logging.info(f"✅ WS {ws_id} yeniden açıldı ({len(refreshed)} listenKey ile).")
+        # 2. Adım: Hala eklenecek anahtar kaldıysa, yeni gruplar oluştur
+        while keys_to_add:
+            keys_for_new_manager = keys_to_add[:self.max_per_ws]
+            keys_to_add = keys_to_add[self.max_per_ws:]
 
+            logging.info(f"  -> Kapasitesi olan grup kalmadı. {len(keys_for_new_manager)} anahtar için yeni WS grubu oluşturuluyor.")
+            new_manager = WebSocketRedundantManager(self.pool, keys_for_new_manager, self.url)
+            await new_manager.start()
+            if new_manager.base_ws_id:
+                self.active_managers[new_manager.base_ws_id] = new_manager
+            logging.info(f"✅ Yeni WS grubu {new_manager.base_ws_id} oluşturuldu.")
 
-"""
-async def run_redundant_mode():
-    pool = await config.get_async_pool()
-    listenkeys = ["lk1", "lk2", "lk3", "lk4", "lk5", "lk6"]
-    manager = WebSocketRedundantManager(pool, listenkeys, "wss://fstream.binance.com", max_per_ws=3)
-    await manager.start()
+    async def _handle_remove_key(self, event: dict):
+        """Bir listenKey'i ait olduğu WS grubundan çıkarır ve DB durumunu günceller."""
+        ws_id = event.get("ws_id")
+        listen_key = event.get("stream_key")
+        logging.info(f"➖ Çıkarma işlemi başlatılıyor: {listen_key} (WS ID: {ws_id})")
+
+        if not ws_id:
+            logging.error(f"❌ Çıkarma hatası: {listen_key} için ws_id bilgisi olayda bulunamadı!")
+            return
+
+        manager = self.active_managers.get(ws_id)
+        if not manager:
+            logging.warning(f"⚠️ WS ID {ws_id} için aktif yönetici bulunamadı (belki zaten kapatılmış).")
+            # Yöneticisi olmayan bir anahtar için doğrudan DB güncellemesi yapmayı deneyebiliriz.
+            await ws_db.set_stream_key_closed_and_null_ws_id(self.pool, listen_key)
+            logging.info(f"✅ DB Güncellemesi (yönetici yok): {listen_key} durumu 'closed' ve ws_id NULL olarak ayarlandı.")
+            return
+
+        # Kalan anahtarları veritabanından al
+        updated_keys_records = await ws_db.get_streamkeys_by_ws(self.pool, ws_id)
+        updated_keys = [rec['stream_key'] for rec in updated_keys_records]
+        
+        # Yöneticiyi kalan anahtarlarla yeniden başlat
+        await manager.update_and_restart(updated_keys)
+
+        # ---- YENİ EKLENEN KISIM ----
+        # WS'ten başarıyla çıkarıldıktan sonra DB'de son durumu ('closed') ayarla
+        await ws_db.set_stream_key_closed_and_null_ws_id(self.pool, listen_key)
+        logging.info(f"✅ DB Güncellemesi: {listen_key} durumu 'closed' ve ws_id NULL olarak ayarlandı.")
+        # ---- YENİ EKLENEN KISIM SONU ----
+
+        # Eğer yöneticide hiç anahtar kalmadıysa, yöneticiler listesinden çıkar
+        if manager.base_ws_id is None:
+            self.active_managers.pop(ws_id, None)
 
 async def main():
-    await run_redundant_mode()
-"""
-
-async def main():
     pool = await config.get_async_pool()
-
-    # DB'den listenKey'leri al
-    listenkeys = await get_active_and_new_listenkeys(pool, connection_type="futures")
-
-    if not listenkeys:
-        logging.warning("⚠️ DB'de active/new listenKey bulunamadı.")
+    if not pool:
+        logging.error("❌ Veritabanı bağlantı havuzu oluşturulamadı. Çıkılıyor.")
         return
-
-    # Redundant manager ile başlat
-    manager = WebSocketRedundantManager(pool, listenkeys, "wss://fstream.binance.com", max_per_ws=1)
-    await manager.start()
-
-    while True:
-        await asyncio.sleep(60)
+    
+    manager = DynamicListenerManager(pool, max_per_ws=100)
+    await manager.run()
 
 if __name__ == "__main__":
     asyncio.run(main())

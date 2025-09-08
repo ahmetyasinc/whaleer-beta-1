@@ -1,0 +1,51 @@
+{
+  "headers": {
+    "strategies": "My Strategies",
+    "indicators": "My Indicators"
+  },
+  "badges": {
+    "versions_one": "{{count}} version",
+    "versions_other": "{{count}} versions",
+    "versions": "{{count}} versions"
+  },
+  "menu": {
+    "inspect": "Inspect",
+    "publish": "Publish",
+    "actions": "Actions"
+  },
+  "empty": {
+    "strategies": "No strategies added yet",
+    "indicators": "No indicators added yet"
+  },
+  "release": {
+    "approved": "Approved",
+    "pending": "Pending",
+    "versionPrefix": "v"
+  },
+  "permissions": {
+    "code": "Code",
+    "chart": "Chart",
+    "scan": "Scan",
+    "backtest": "Backtest",
+    "bot": "Bot"
+  },
+  "toast": {
+    "titles": {
+      "success": "Success",
+      "error": "Error",
+      "info": "Info"
+    },
+    "messages": {
+      "strategyPublish": {
+        "ok": "Strategy published successfully.",
+        "failed": "Failed to publish strategy.",
+        "unexpected": "Unexpected error while publishing strategy."
+      },
+      "indicatorPublish": {
+        "ok": "Indicator published successfully.",
+        "failed": "Failed to publish indicator.",
+        "unexpected": "Unexpected error while publishing indicator."
+      }
+    }
+  }
+}

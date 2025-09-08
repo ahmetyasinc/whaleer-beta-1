@@ -1,0 +1,33 @@
+{
+  "title": "Settings",
+  "saving": "Saving…",
+  "save": "Save",
+  "reset": "Reset to defaults",
+  "saved": "Saved",
+  "language": "Language",
+  "language_hint": "Your selection is applied immediately and stored in a cookie.",
+  "languages": {
+    "tr": "Turkish",
+    "en": "English"
+  },
+  "theme": "Theme",
+  "theme_system": "System",
+  "theme_light": "Light",
+  "theme_dark": "Dark",
+  "timezone": "Time Zone",
+  "current_timezone": "Current value:",
+  "timezone_search": "Search region… (e.g. Istanbul, Tokyo, New_York)",
+  "selected": "Selected",
+  "no_results": "No results found.",
+  "timezone_hint": "Only the GMT offset value is stored in the cookie (e.g. GMT+03:00).",
+  "notifications": "Notifications",
+  "email_reports": "Email reports",
+  "email_reports_hint": "Receive weekly performance reports via email.",
+  "on": "On",
+  "off": "Off",
+  "loading": "Loading…",
+  "errors": {
+    "load": "There was a problem while loading settings.",
+    "save": "An error occurred while saving."
+  }
+}

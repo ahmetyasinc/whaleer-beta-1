@@ -26,3 +26,65 @@ export const getStrategies = async () => {
     };
   }
 };
+
+
+export const publishStrategy = async ({ strategyId, permissions, description }) => {
+  try {
+    const payload = {
+      strategy_id: strategyId,
+      description: (description || "").slice(0, 500),
+
+      // UI anahtarlarını backend alanlarına map’liyoruz
+      allow_code_view: !!permissions?.codeView,
+      allow_chart_view: !!permissions?.chartView,
+      allow_scanning: !!permissions?.scan,
+      allow_backtesting: !!permissions?.backtest,
+      allow_bot_execution: !!permissions?.botRun,
+    };
+    const { data } = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/strategies/publish`,
+      payload
+    );
+
+    return { ok: true, data };
+  } catch (err) {
+    console.error("publishStrategy error:", err);
+    return {
+      ok: false,
+      error:
+        err?.response?.data?.detail ||
+        err?.message ||
+        "Publish sırasında bir hata oluştu",
+    };
+  }
+};
+
+
+
+export const publishIndicator = async ({ indicatorId, permissions, description }) => {
+  try {
+    const payload = {
+      indicator_id: indicatorId,
+      description: (description || "").slice(0, 500),
+      // yalnızca code & chart
+      allow_code_view: !!permissions?.codeView,
+      allow_chart_view: !!permissions?.chartView,
+    };
+
+    const { data } = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/indicators/publish`,
+      payload
+    );
+
+    return { ok: true, data };
+  } catch (err) {
+    console.error("publishIndicator error:", err);
+    return {
+      ok: false,
+      error:
+        err?.response?.data?.detail ||
+        err?.message ||
+        "Indicator publish sırasında bir hata oluştu",
+    };
+  }
+};

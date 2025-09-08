@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from sqlalchemy import func, select, or_
+from sqlalchemy import func, select, and_, or_
 
 from sqlalchemy.orm import Session
 from app.models.profile.bots.bots import Bots
@@ -25,13 +25,19 @@ class BotRepository:
 
     async def get_bot_by_id(self, bot_id: int):
         result = await self.db.execute(
-            select(Bots).where(Bots.id == bot_id)
+            select(Bots).where(Bots.id == bot_id,Bots.deleted.is_(False))
         )
         return result.scalar_one_or_none()
 
     async def get_filtered_bots(self, filters) -> list[Bots]:
-        stmt = select(Bots).where(
-            or_(Bots.for_sale == True, Bots.for_rent == True)
+        stmt = (
+            select(Bots)
+            .where(
+                and_(
+                    or_(Bots.for_sale.is_(True), Bots.for_rent.is_(True)),
+                    Bots.deleted.is_(False)
+                )
+            )
         )
 
         # For Sale / Sell Price
@@ -84,6 +90,8 @@ class BotRepository:
             #upper = unit * filters.demand
             #print(f"Demand filter: {filters.demand}, max_sold_count: {max_sold_count}, lower: {lower}, upper: {upper}")
             stmt = stmt.where(Bots.sold_count > lower)#, Bots.sold_count <= upper)
+
+        stmt = stmt.order_by(func.random()).limit(filters.limit or 5)
 
         # Execute filtered query
         result = await self.db.execute(stmt)
@@ -238,7 +246,19 @@ class BotRepository:
         week_ago = now - timedelta(days=7)
         month_ago = now - timedelta(days=30)
 
-        # Tüm snapshotları al (en eski → en yeni)
+        # --- TOTAL MARGIN: Bots tablosundan ---
+        bot_vals = await self.db.execute(
+            select(
+                Bots.current_usd_value.label("cur"),
+                Bots.initial_usd_value.label("init")
+            ).where(Bots.id == bot_id)
+        )
+        row = bot_vals.one_or_none()
+        cur = float(row.cur) if row and row.cur is not None else 0.0
+        init = float(row.init) if row and row.init is not None else 0.0
+        total_margin = round(((cur - init)/init)*100, 2)
+
+        # --- Gün/Hafta/Ay marjları: snapshot'tan ---
         result = await self.db.execute(
             select(
                 BotSnapshots.timestamp,
@@ -249,30 +269,26 @@ class BotRepository:
         )
         snapshots = result.all()
 
-        if len(snapshots) < 2:
-            return MarginSummary(
-                day_margin=0.0,
-                week_margin=0.0,
-                month_margin=0.0,
-                total_margin=0.0
-            )
+        if len(snapshots) >= 2:
+            def find_margin(since_time):
+                relevant = [s for s in snapshots if s.timestamp >= since_time]
+                if relevant:
+                    return float(snapshots[-1].balance_usdt) - float(relevant[0].balance_usdt)
+                else:
+                    # yeterli snapshot yoksa en eskiye göre
+                    return float(snapshots[-1].balance_usdt) - float(snapshots[0].balance_usdt)
 
-        def find_margin(since_time):
-            relevant = [s for s in snapshots if s.timestamp >= since_time]
-            if relevant:
-                return float(snapshots[-1].balance_usdt) - float(relevant[0].balance_usdt)
-            else:
-                # Eğer snapshot azsa: en eskiye göre kıyasla
-                return float(snapshots[-1].balance_usdt) - float(snapshots[0].balance_usdt)
+            day_margin = round(find_margin(day_ago), 2)
+            week_margin = round(find_margin(week_ago), 2)
+            month_margin = round(find_margin(month_ago), 2)
+        else:
+            day_margin = week_margin = month_margin = 0.0
 
         return MarginSummary(
-            day_margin=round(find_margin(day_ago), 2),
-            week_margin=round(find_margin(week_ago), 2),
-            month_margin=round(find_margin(month_ago), 2),
-            total_margin=round(
-                float(snapshots[-1].balance_usdt) - float(snapshots[0].balance_usdt),
-                2
-            )
+            day_margin=day_margin,
+            week_margin=week_margin,
+            month_margin=month_margin,
+            total_margin=total_margin
         )
 
     async def get_user_other_bots(self, user_id: int, exclude_id: int) -> list[OtherBotSummary]:
@@ -281,6 +297,7 @@ class BotRepository:
             select(Bots).where(
                 Bots.user_id == user_id,
                 Bots.id != exclude_id,
+                Bots.deleted.is_(False),
                 (Bots.for_sale == True) | (Bots.for_rent == True)
             )
         )
@@ -324,3 +341,21 @@ class BotRepository:
 
         return other_bots
 
+    async def get_bots_by_user(self, user_id: int) -> list[Bots]:
+        """
+        Verilen kullanıcıya ait yalnızca satışa (for_sale) veya kiralamaya (for_rent)
+        açık botları en yeni oluşturulandan eskiye doğru döndürür.
+        """
+        stmt = (
+            select(Bots)
+            .where(
+                Bots.user_id == user_id,
+                Bots.deleted.is_(False),
+                (Bots.for_sale == True) | (Bots.for_rent == True)
+            )
+            .order_by(Bots.created_at.desc())
+        )
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
+
+    

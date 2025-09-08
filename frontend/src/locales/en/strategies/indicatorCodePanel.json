@@ -1,0 +1,30 @@
+{
+  "titles": {
+    "addNewVersion": "Add New Version",
+    "editIndicator": "Edit Indicator",
+    "addNewIndicator": "Add New Indicator"
+  },
+  "buttons": {
+    "save": "Save",
+    "close": "Close"
+  },
+  "tooltips": {
+    "fullscreen": "Fullscreen"
+  },
+  "inputs": {
+    "namePlaceholder": "Indicator name..."
+  },
+  "terminal": {
+    "ready": "🚀 Terminal ready..."
+  },
+  "labels": {
+    "untitled": "Untitled Indicator"
+  },
+  "errors": {
+    "save": "Indicator save error"
+  },
+  "versionSelect": {
+    "title": "Select version",
+    "new": "New"
+  }
+}

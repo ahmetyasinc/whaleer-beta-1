@@ -1,31 +1,43 @@
 "use client";
 
-import { useEffect } from "react";
+import { useMemo } from "react";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   LineElement,
   PointElement,
   LinearScale,
-  TimeScale,           // <-- add
+  TimeScale,
   Tooltip,
   CategoryScale,
 } from "chart.js";
-import "chartjs-adapter-date-fns"; // <-- add adapter
-import useLineChartStore from "@/store/profile/lineChartStore";
+import "chartjs-adapter-date-fns";
+import { useProfileStore } from "@/store/profile/profileStore";
+import { useAccountDataStore } from "@/store/profile/accountDataStore";
 
 ChartJS.register(LineElement, PointElement, LinearScale, TimeScale, CategoryScale, Tooltip);
 
 export default function PortfolioLineChart() {
-  const { lineData, loading, error, fetchLineData } = useLineChartStore();
+  const activeApiId = useProfileStore(s => s.activeApiId);
+  const snapshotsMap = useAccountDataStore(s => s.snapshotsByApiId);
 
-  useEffect(() => { fetchLineData(); }, [fetchLineData]);
+  const raw = useMemo(() => snapshotsMap?.[activeApiId] || [], [snapshotsMap, activeApiId]);
 
-  if (loading) return <div className="flex items-center justify-center h-full text-white">Loading portfolio chart...</div>;
-  if (error)   return <div className="flex items-center justify-center h-full text-red-500">Error: {error}</div>;
+  const lineData = useMemo(() => {
+    if (!raw?.length) return [];
+    const pts = [...raw].sort((a, b) => a.x - b.x);
+    const out = [];
+    const seen = new Set();
+    for (const d of pts) {
+      const t = d.x.getTime();
+      if (!seen.has(t)) { seen.add(t); out.push(d); }
+      else out[out.length - 1] = d;
+    }
+    return out;
+  }, [raw]);
+
   if (!lineData.length) return <div className="flex items-center justify-center h-full text-zinc-400">No data</div>;
 
-  // Animation
   const totalDuration = 4000;
   const delayBetweenPoints = Math.max(1, Math.floor(totalDuration / lineData.length));
   const previousY = (ctx) =>
@@ -34,59 +46,21 @@ export default function PortfolioLineChart() {
       : ctx.chart.getDatasetMeta(ctx.datasetIndex).data[ctx.index - 1].getProps(["y"], true).y;
 
   const animation = {
-    x: {
-      type: "number",
-      easing: "linear",
-      duration: delayBetweenPoints,
-      from: NaN,
-      delay(ctx) {
-        if (ctx.type !== "data" || ctx.xStarted) return 0;
-        ctx.xStarted = true;
-        return ctx.index * delayBetweenPoints;
-      },
+    x: { type: "number", easing: "linear", duration: delayBetweenPoints, from: NaN,
+      delay(ctx) { if (ctx.type !== "data" || ctx.xStarted) return 0; ctx.xStarted = true; return ctx.index * delayBetweenPoints; },
     },
-    y: {
-      type: "number",
-      easing: "linear",
-      duration: delayBetweenPoints,
-      from: previousY,
-      delay(ctx) {
-        if (ctx.type !== "data" || ctx.yStarted) return 0;
-        ctx.yStarted = true;
-        return ctx.index * delayBetweenPoints;
-      },
+    y: { type: "number", easing: "linear", duration: delayBetweenPoints, from: previousY,
+      delay(ctx) { if (ctx.type !== "data" || ctx.yStarted) return 0; ctx.yStarted = true; return ctx.index * delayBetweenPoints; },
     },
   };
 
-  const data = {
-    datasets: [
-      {
-        data: lineData,        // [{ x: Date, y: number }]
-        borderColor: "purple",
-        borderWidth: 2,
-        radius: 0,
-        fill: false,
-      },
-    ],
-  };
-
+  const data = { datasets: [{ data: lineData, borderColor: "purple", borderWidth: 2, radius: 0, fill: false }] };
   const options = {
-    animation,
-    interaction: { intersect: false, mode: "index" },
-    plugins: { legend: false },
-    responsive: true,
-    maintainAspectRatio: false,
+    animation, interaction: { intersect: false, mode: "index" }, plugins: { legend: false },
+    responsive: true, maintainAspectRatio: false,
     scales: {
-      x: {
-        type: "time",                         // <-- time scale
-        time: { unit: "minute" },             // change to 'hour'/'day' as you like
-        ticks: { color: "#ccc", maxRotation: 0, autoSkip: true },
-        grid: { color: "#222" },
-      },
-      y: {
-        ticks: { color: "#ccc" },
-        grid: { color: "#222" },
-      },
+      x: { type: "time", time: { unit: "minute" }, ticks: { color: "#ccc", maxRotation: 0, autoSkip: true }, grid: { color: "#222" } },
+      y: { ticks: { color: "#ccc" }, grid: { color: "#222" } },
     },
   };
 

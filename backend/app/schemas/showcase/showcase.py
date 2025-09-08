@@ -70,6 +70,7 @@ class Position(BaseModel):
 class BotSummary(BaseModel):
     bot_id: int
     name: str
+    bot_type: str
     creator: str
     profitRate: float
     startDate: str

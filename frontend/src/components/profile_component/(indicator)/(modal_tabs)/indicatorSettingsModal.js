@@ -39,7 +39,6 @@ const IndicatorSettingsModal = ({ isOpen, onClose, indicatorId, subId }) => {
   };
 
   const handleSave = async () => {
-    console.log(indicatorId, subId, formState)
     await updateInputs(indicatorId, subId, formState);
     onClose();
   };

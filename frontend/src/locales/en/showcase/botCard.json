@@ -1,0 +1,42 @@
+{
+  "labels": {
+    "by": "by {{creator}}"
+  },
+  "meta": {
+    "purchasedTimes": "Purchased {{count}} times",
+    "rentedTimes": "Rented {{count}} times"
+  },
+  "actions": {
+    "follow": "Follow",
+    "following": "Following"
+  },
+  "purchase": {
+    "buy": "Buy",
+    "rentDaily": "Rent Daily",
+    "locked": "You must connect your wallet first",
+    "notAvailable": "Not available"
+  },
+  "runtime": {
+    "startedToday": "Started today",
+    "hoursOnly": "{{hours}} hours",
+    "daysOnly": "{{days}} days",
+    "daysHours": "{{days}} days {{hours}} hours"
+  },
+  "stats": {
+    "createdOn": "Created on",
+    "uptime": "Uptime",
+    "winRate": "Win Rate",
+    "totalMargin": "Total Margin",
+    "profitFactor": "Profit Factor",
+    "riskFactor": "Risk Factor",
+    "avgFullness": "Avg. Fullness",
+    "tradesDWM": "Trades (D/W/M)",
+    "plDWM": "P/L (D/W/M)"
+  },
+  "strategy": {
+    "title": "Strategy Used"
+  },
+  "coins": {
+    "title": "Supported Coins"
+  }
+}

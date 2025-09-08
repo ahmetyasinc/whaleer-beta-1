@@ -1,0 +1,11 @@
+{
+  "title": "Kritik Onay",
+  "subtitle": "Dikkatli olun, bu işlem geri alınamaz",
+  "message": "<strong>Tüm botlarınız durdurulacak</strong> ve <strong>aktif pozisyonlar kapatılacaktır</strong>. Bu işlem geri alınamaz. Devam etmek istediğinizden emin misiniz?",
+  "loading": "Lütfen bekleyin",
+  "actions": {
+    "confirm": "Onaylıyorum",
+    "confirmCountdown": "{{count}} saniye...",
+    "cancel": "İptal Et"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "header": {
+    "totalProfit": "Toplam Kâr",
+    "totalValue": "Toplam Değer"
+  },
+  "charts": {
+    "pnlTitle": "Kâr / Zarar Grafiği (%)"
+  },
+  "trades": {
+    "empty": "Herhangi bir işlem bulunamadı.",
+    "columns": {
+      "hash": "#",
+      "date": "Tarih",
+      "symbol": "Sembol",
+      "price": "Fiyat",
+      "side": "Yön",
+      "type": "Tür",
+      "position": "Pozisyon",
+      "leverage": "Kaldıraç",
+      "quantity": "Miktar",
+      "amount": "Tutar",
+      "fee": "Komisyon"
+    }
+  },
+  "positions": {
+    "title": "Açık Pozisyonlar",
+    "empty": "Herhangi bir pozisyon bulunamadı.",
+    "amount": "Miktar",
+    "profit": "Kâr"
+  },
+  "holdings": {
+    "title": "Spot Varlıklar",
+    "empty": "Herhangi bir spot varlık bulunamadı.",
+    "amount": "Miktar",
+      "profit": "Kâr"
+  },
+  "tabs": {
+    "trades": "İşlemler",
+    "logs": "Loglar"
+  },
+  "logs": {
+    "empty": "Herhangi bir log bulunamadı.",
+    "columns": {
+      "id": "ID",
+      "date": "Tarih",
+      "level": "Seviye",
+      "symbol": "Sembol",
+      "message": "Mesaj",
+      "usdValue": "USD Değeri",
+      "details": "Detay"
+    },
+    "showDetails": "Göster",
+    "hideDetails": "Gizle",
+    "detailTitle": "Log Ayrıntıları",
+    "detailRaw": "Ham JSON",
+    "fields": {
+      "side": "Yön",
+      "tradeType": "İşlem Türü",
+      "orderType": "Emir Türü",
+      "status": "Durum",
+      "stopLoss": "Zarar Durdur",
+      "takeProfit": "Kâr Al"
+    }
+  }
+}

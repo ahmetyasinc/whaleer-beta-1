@@ -1,0 +1,21 @@
+{
+  "title": "Kullanıcı Liderlik Tablosu",
+  "sort": {
+    "byMonthlyProfit": "Aylık Kâr'a Göre",
+    "bySuccessRate": "Başarı Oranı'na Göre",
+    "byTotalBots": "Toplam Bot'a Göre",
+    "bySoldBots": "Satılan Bot'a Göre",
+    "byMonthlyTransactions": "Aylık İşlem Sayısı'na Göre"
+  },
+  "sortOrder": {
+    "desc": "Azalan",
+    "asc": "Artan"
+  },
+  "cards": {
+    "monthlyProfit": "Aylık Kâr",
+    "success": "Başarı",
+    "bots": "Bot",
+    "sales": "Satış",
+    "monthlyTrades": "Aylık İşlem"
+  }
+}

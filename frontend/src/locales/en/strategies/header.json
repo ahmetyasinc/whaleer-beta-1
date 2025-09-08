@@ -1,0 +1,16 @@
+{
+  "buttons": {
+    "addIndicator": "Add indicator",
+    "addStrategy": "Add strategy",
+    "refresh": "Refresh",
+    "settings": "Settings"
+  },
+  "labels": {
+    "magnetMode": "Magnet mode",
+    "ruler": "Ruler"
+  },
+  "loading": "Loading...",
+  "period": {
+    "default": "Period"
+  }
+}

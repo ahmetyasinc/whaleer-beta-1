@@ -1,0 +1,12 @@
+{
+  "buttons": {
+    "add": "Add"
+  },
+  "errors": {
+    "title": "Error",
+    "fetch": "An error occurred while fetching strategy data"
+  },
+  "warnings": {
+    "missingData": "API call blocked due to missing data."
+  }
+}

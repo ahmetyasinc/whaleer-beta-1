@@ -1,0 +1,22 @@
+{
+  "buttons": {
+    "quickActions": "Hızlı İşlemler",
+    "publishedIndicators": "Yayınladığım Göstergeler",
+    "recycleBin": "Geri Dönüşüm Kutusu",
+    "purchaseHistory": "Alışveriş Geçmişim"
+  },
+  "stats": {
+    "numberOfIndicators": "Gösterge Sayısı",
+    "numberOfStrategies": "Strateji Sayısı",
+    "numberOfTotalBots": "Toplam Bot Sayısı",
+    "totalActiveBots": "Aktif Bot Sayısı"
+  },
+  "performance": {
+    "labels": {
+      "daily": "Günlük API Performansı",
+      "weekly": "Haftalık API Performansı",
+      "monthly": "Aylık API Performansı"
+    },
+    "trades": "{{count}} işlem"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "title": "User Leaderboard",
+  "sort": {
+    "byMonthlyProfit": "By Monthly Profit",
+    "bySuccessRate": "By Success Rate",
+    "byTotalBots": "By Total Bots",
+    "bySoldBots": "By Sold Bots",
+    "byMonthlyTransactions": "By Monthly Transactions"
+  },
+  "sortOrder": {
+    "desc": "Descending",
+    "asc": "Ascending"
+  },
+  "cards": {
+    "monthlyProfit": "Monthly Profit",
+    "success": "Success",
+    "bots": "Bots",
+    "sales": "Sales",
+    "monthlyTrades": "Monthly Trades"
+  }
+}

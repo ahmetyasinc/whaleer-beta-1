@@ -1,0 +1,12 @@
+{
+  "title": "Strategies",
+  "button": {
+    "select": "Select"
+  },
+  "tabs": {
+    "technicals": "Technicals",
+    "my": "My Strategies",
+    "community": "Community"
+  },
+  "fallback": "No content found."
+}

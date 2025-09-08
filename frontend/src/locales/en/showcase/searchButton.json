@@ -1,0 +1,24 @@
+{
+  "placeholder": {
+    "search": "Search bot or creator..."
+  },
+  "aria": {
+    "searchInput": "Search bot or creator",
+    "toggleDropdown": "Toggle search results",
+    "searchResults": "Search results"
+  },
+  "info": {
+    "loading": "Loading…",
+    "error": "An error occurred: {{message}}",
+    "empty": "No results found"
+  },
+  "type": {
+    "spot": "Spot",
+    "futures": "Futures"
+  },
+  "labels": {
+    "totalProfit": "Total Profit:",
+    "forSale": "For Sale: {{price}}",
+    "forRent": "For Rent: {{price}}"
+  }
+}

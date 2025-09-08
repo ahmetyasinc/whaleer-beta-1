@@ -30,6 +30,40 @@ function hexToRgba(hex, opacity) {
 }
 
 export default function PanelChart({ indicatorName, indicatorId, subId }) {
+  // UTC tabanlı tarih üretici
+  const pad = (n) => String(n).padStart(2, "0");
+
+  function timeToUTCDate(t) {
+    if (t && typeof t === "object" && "year" in t && "month" in t && "day" in t) {
+      return new Date(Date.UTC(t.year, t.month - 1, t.day, 0, 0, 0));
+    }
+    return new Date((typeof t === "number" ? t : 0) * 1000);
+  }
+
+  function makeUTCFormatter(period) {
+    const isMins  = ["1m","3m","5m","15m","30m"].includes(period);
+    const isHours = ["1h","2h","4h"].includes(period);
+    const isDays  = ["1d"].includes(period);
+    const isWeeks = ["1w"].includes(period);
+
+    return (t) => {
+      const d = timeToUTCDate(t);
+      const Y = d.getUTCFullYear();
+      const M = pad(d.getUTCMonth() + 1);
+      const D = pad(d.getUTCDate());
+      const h = pad(d.getUTCHours());
+      const m = pad(d.getUTCMinutes());
+
+      if (isMins)  return `${D}.${M} ${h}:${m}`; // 1–30m
+      if (isHours) return `${D}.${M} ${h}:00`;      // 1h–4h
+      if (isDays)  return `${D}.${M}.${Y}`;      // 1d
+      if (isWeeks) return `${D}.${M}.${Y}`;      // 1w
+
+      return `${D}.${M} ${h}:${m}`;
+    };
+  }
+
+
   const { selectedPeriod } = useCryptoStore();
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
@@ -57,7 +91,14 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       layout: { background: { color: "rgb(0, 0, 7)" }, textColor: "#FFF" },
       grid: { vertLines: { color: "#111" }, horzLines: { color: "#111" } },
       lastValueVisible: false,
-      timeScale: { rightBarStaysOnScroll: true, shiftVisibleRangeOnNewBar: false },
+      localization: { timeFormatter: makeUTCFormatter(selectedPeriod) },
+      timeScale: {
+        rightBarStaysOnScroll: true,
+        shiftVisibleRangeOnNewBar: false,
+        timeVisible: !["1d","1w"].includes(selectedPeriod),
+        secondsVisible: false,
+        tickMarkFormatter: makeUTCFormatter(selectedPeriod),
+      },
     });
 
     chartRef.current = chart;
@@ -111,10 +152,20 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
         }
         const timeValueMap = new Map();
         data.forEach(([time, value]) => {
-          if (typeof time === "string" && value !== undefined) {
-            const unixTime = Math.floor(new Date(time).getTime() / 1000);
-            timeValueMap.set(unixTime, value);
+          if (value === undefined) return;
+          let ms;
+          if (typeof time === "number") {
+            // saniye mi milisaniye mi?
+            ms = time > 1e12 ? time : time * 1000;
+          } else if (typeof time === "string") {
+            // ISO ise ve Z yoksa UTC olarak kabul etmesi için Z ekle
+            const iso = /Z$/.test(time) ? time : time + "Z";
+            ms = Date.parse(iso);
+          } else {
+            return;
           }
+          const unixTime = Math.floor(ms / 1000);
+          timeValueMap.set(unixTime, value);
         });
         const formattedData = Array.from(timeValueMap.entries())
           .sort(([a], [b]) => a - b)

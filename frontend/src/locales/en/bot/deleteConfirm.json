@@ -1,0 +1,9 @@
+{
+  "title": "Are you sure you want to delete the bot?",
+  "warning": "Open positions will not be closed automatically. Please make sure to manage your open positions.",
+  "irreversible": "This action cannot be undone.",
+  "actions": {
+    "cancel": "Cancel",
+    "delete": "Delete"
+  }
+}

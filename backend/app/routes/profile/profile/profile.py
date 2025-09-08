@@ -24,6 +24,8 @@ from app.models.profile.api_keys.api_snapshots import ApiSnapshot
 
 from app.models.profile.indicator.indicator import Indicator
 from app.models.profile.strategy.strategy import Strategy
+from app.models.profile.strategy.strategy_releases import StrategyRelease, ReleaseStatus
+from app.models.profile.indicator.indicator_releases import IndicatorRelease, IndicatorReleaseStatus
 
 
 protected_router = APIRouter()
@@ -105,6 +107,20 @@ def merge_by_symbol(
         merged.append(out)
     return merged
 
+def _pct_change(cur, init):
+    cur = _to_float(cur)
+    init = _to_float(init)
+    if init is None or init == 0:
+        return None
+    return (cur - init) / init * 100.0
+
+# ÜSTTEKİ İMPORTLARA EKLE
+from app.models.profile.indicator.indicator import Indicator
+from app.models.profile.indicator.indicator_releases import (
+    IndicatorRelease,
+    IndicatorReleaseStatus as IReleaseStatus,
+)
+
 @protected_router.get("/api/profile")
 async def get_profile_all_datas(
     db: AsyncSession = Depends(get_db),
@@ -146,10 +162,12 @@ async def get_profile_all_datas(
         snapshots_by_api[api_id].append({"timestamp": ts, "usd_value": _to_float(usd)})
 
     # 4) Botlar
-    bots = (await db.scalars(select(Bots).where(Bots.api_id.in_(api_ids)))).all()
+    bots = (await db.scalars(
+        select(Bots).where(Bots.api_id.in_(api_ids), Bots.deleted.is_(False))
+    )).all()
     bot_ids = [b.id for b in bots] or [-1]
 
-    # 5) Holdings / Positions / Trades (toplu)
+    # 5) Holdings / Positions / Trades
     holding_rows = (await db.scalars(
         select(BotHoldings).where(BotHoldings.bot_id.in_(bot_ids))
     )).all()
@@ -160,7 +178,6 @@ async def get_profile_all_datas(
         select(BotTrades).where(BotTrades.bot_id.in_(bot_ids)).order_by(BotTrades.created_at)
     )).all()
 
-    # Bot bazında grupla (ham satırlar)
     holdings_by_bot: DefaultDict[int, List[BotHoldings]] = defaultdict(list)
     for r in holding_rows:
         holdings_by_bot[r.bot_id].append(r)
@@ -181,24 +198,231 @@ async def get_profile_all_datas(
         select(Strategy).where(Strategy.user_id == int(user_id)).order_by(Strategy.created_at.desc())
     )).all()
 
-    # 7) Cevap
+    # --- YENİ: İndikatörler için son approved ve son pending release + izinler ---
+    indicator_ids = [it.id for it in indicators] or [-1]
+
+    # Son approved indicator release
+    rn_i_approved = func.row_number().over(
+        partition_by=IndicatorRelease.indicator_id,
+        order_by=IndicatorRelease.release_no.desc()
+    )
+    subq_i_approved = (
+        select(
+            IndicatorRelease.indicator_id.label("iid"),
+            IndicatorRelease.id.label("release_id"),
+            IndicatorRelease.release_no,
+            IndicatorRelease.views_count,
+            IndicatorRelease.allow_code_view,
+            IndicatorRelease.allow_chart_view,
+            rn_i_approved.label("rn"),
+        )
+        .where(
+            IndicatorRelease.indicator_id.in_(indicator_ids),
+            IndicatorRelease.status == IReleaseStatus.approved
+        )
+        .subquery()
+    )
+    latest_i_approved_rows = await db.execute(
+        select(
+            subq_i_approved.c.iid,
+            subq_i_approved.c.release_id,
+            subq_i_approved.c.release_no,
+            subq_i_approved.c.views_count,
+            subq_i_approved.c.allow_code_view,
+            subq_i_approved.c.allow_chart_view,
+        ).where(subq_i_approved.c.rn == 1)
+    )
+    i_approved_map: Dict[int, Dict[str, Any]] = {}
+    for row in latest_i_approved_rows.all():
+        iid, rid, rno, vcnt, a_code, a_chart = row
+        i_approved_map[int(iid)] = {
+            "id": int(rid),
+            "no": int(rno),
+            "status": "approved",
+            "views_count": int(vcnt or 0),
+            "permissions": {
+                "allow_code_view": bool(a_code),
+                "allow_chart_view": bool(a_chart),
+            },
+        }
+
+    # Son pending indicator release
+    rn_i_pending = func.row_number().over(
+        partition_by=IndicatorRelease.indicator_id,
+        order_by=IndicatorRelease.release_no.desc()
+    )
+    subq_i_pending = (
+        select(
+            IndicatorRelease.indicator_id.label("iid"),
+            IndicatorRelease.id.label("release_id"),
+            IndicatorRelease.release_no,
+            IndicatorRelease.allow_code_view,
+            IndicatorRelease.allow_chart_view,
+            rn_i_pending.label("rn"),
+        )
+        .where(
+            IndicatorRelease.indicator_id.in_(indicator_ids),
+            IndicatorRelease.status == IReleaseStatus.pending
+        )
+        .subquery()
+    )
+    latest_i_pending_rows = await db.execute(
+        select(
+            subq_i_pending.c.iid,
+            subq_i_pending.c.release_id,
+            subq_i_pending.c.release_no,
+            subq_i_pending.c.allow_code_view,
+            subq_i_pending.c.allow_chart_view,
+        ).where(subq_i_pending.c.rn == 1)
+    )
+    i_pending_map: Dict[int, Dict[str, Any]] = {}
+    for row in latest_i_pending_rows.all():
+        iid, rid, rno, a_code, a_chart = row
+        i_pending_map[int(iid)] = {
+            "id": int(rid),
+            "no": int(rno),
+            "status": "pending",
+            "permissions": {
+                "allow_code_view": bool(a_code),
+                "allow_chart_view": bool(a_chart),
+            },
+        }
+
+    # --- Stratejiler için son approved ve pending release (MEVCUT KODUN) ---
+    strategy_ids = [s.id for s in strategies] or [-1]
+
+    rn_approved = func.row_number().over(
+        partition_by=StrategyRelease.strategy_id,
+        order_by=StrategyRelease.release_no.desc()
+    )
+    subq_approved = (
+        select(
+            StrategyRelease.strategy_id.label("sid"),
+            StrategyRelease.id.label("release_id"),
+            StrategyRelease.release_no,
+            StrategyRelease.views_count,
+            StrategyRelease.allow_code_view,
+            StrategyRelease.allow_chart_view,
+            StrategyRelease.allow_scanning,
+            StrategyRelease.allow_backtesting,
+            StrategyRelease.allow_bot_execution,
+            rn_approved.label("rn"),
+        )
+        .where(
+            StrategyRelease.strategy_id.in_(strategy_ids),
+            StrategyRelease.status == ReleaseStatus.approved
+        )
+        .subquery()
+    )
+    latest_approved_rows = await db.execute(
+        select(
+            subq_approved.c.sid,
+            subq_approved.c.release_id,
+            subq_approved.c.release_no,
+            subq_approved.c.views_count,
+            subq_approved.c.allow_code_view,
+            subq_approved.c.allow_chart_view,
+            subq_approved.c.allow_scanning,
+            subq_approved.c.allow_backtesting,
+            subq_approved.c.allow_bot_execution,
+        ).where(subq_approved.c.rn == 1)
+    )
+    approved_map: Dict[int, Dict[str, Any]] = {}
+    for row in latest_approved_rows.all():
+        sid, rid, rno, vcnt, a1, a2, a3, a4, a5 = row
+        approved_map[int(sid)] = {
+            "id": int(rid),
+            "no": int(rno),
+            "status": "approved",
+            "views_count": int(vcnt or 0),
+            "permissions": {
+                "allow_code_view": bool(a1),
+                "allow_chart_view": bool(a2),
+                "allow_scanning": bool(a3),
+                "allow_backtesting": bool(a4),
+                "allow_bot_execution": bool(a5),
+            },
+        }
+
+    rn_pending = func.row_number().over(
+        partition_by=StrategyRelease.strategy_id,
+        order_by=StrategyRelease.release_no.desc()
+    )
+    subq_pending = (
+        select(
+            StrategyRelease.strategy_id.label("sid"),
+            StrategyRelease.id.label("release_id"),
+            StrategyRelease.release_no,
+            StrategyRelease.allow_code_view,
+            StrategyRelease.allow_chart_view,
+            StrategyRelease.allow_scanning,
+            StrategyRelease.allow_backtesting,
+            StrategyRelease.allow_bot_execution,
+            rn_pending.label("rn"),
+        )
+        .where(
+            StrategyRelease.strategy_id.in_(strategy_ids),
+            StrategyRelease.status == ReleaseStatus.pending
+        )
+        .subquery()
+    )
+    latest_pending_rows = await db.execute(
+        select(
+            subq_pending.c.sid,
+            subq_pending.c.release_id,
+            subq_pending.c.release_no,
+            subq_pending.c.allow_code_view,
+            subq_pending.c.allow_chart_view,
+            subq_pending.c.allow_scanning,
+            subq_pending.c.allow_backtesting,
+            subq_pending.c.allow_bot_execution,
+        ).where(subq_pending.c.rn == 1)
+    )
+    pending_map: Dict[int, Dict[str, Any]] = {}
+    for row in latest_pending_rows.all():
+        sid, rid, rno, a1, a2, a3, a4, a5 = row
+        pending_map[int(sid)] = {
+            "id": int(rid),
+            "no": int(rno),
+            "status": "pending",
+            "permissions": {
+                "allow_code_view": bool(a1),
+                "allow_chart_view": bool(a2),
+                "allow_scanning": bool(a3),
+                "allow_backtesting": bool(a4),
+                "allow_bot_execution": bool(a5),
+            },
+        }
+
+    # 7) API payload
     apis_payload = []
     for api in api_keys:
-        # Bu API altındaki botlar
         api_bots = [b for b in bots if b.api_id == api.id]
 
-        # --- sadece bot bilgileri ---
-        bots_payload = [{
-            "bot": {
-                "id": b.id,
-                "name": getattr(b, "name", None),
-                "api_id": b.api_id,
-                "created_at": getattr(b, "created_at", None),
-                "status": getattr(b, "status", None),
-            }
-        } for b in api_bots]
+        bots_payload = []
+        for b in api_bots:
+            cur = getattr(b, "current_usd_value", None)
+            init = getattr(b, "initial_usd_value", None)
+            active = getattr(b, "active", None)
+            profit_usd = None
+            if cur is not None and init is not None:
+                profit_usd = _to_float(cur) - _to_float(init)
+            profit_pct = _pct_change(cur, init)
 
-        # --- API seviyesinde birleştirilecek ham satırlar ---
+            bots_payload.append({
+                "bot": {
+                    "id": b.id,
+                    "name": getattr(b, "name", None),
+                    "api_id": b.api_id,
+                    "created_at": getattr(b, "created_at", None),
+                    "active": active,
+                    "initial_usd_value": _to_float(init),
+                    "current_usd_value": _to_float(cur),
+                    "profit_usd": _to_float(profit_usd) if profit_usd is not None else None,
+                    "profit_percent": _to_float(profit_pct) if profit_pct is not None else None,
+                }
+            })
+
         api_hold_rows: List[BotHoldings] = []
         api_pos_rows: List[BotPositions] = []
         api_trade_rows: List[BotTrades] = []
@@ -207,7 +431,6 @@ async def get_profile_all_datas(
             api_pos_rows.extend(positions_by_bot.get(b.id, []))
             api_trade_rows.extend(trades_by_bot.get(b.id, []))
 
-        # --- Merge (tek seferde, tüm botların toplamı) ---
         portfolio_holdings_merged = merge_by_symbol(
             api_hold_rows,
             symbol_attr="symbol",
@@ -227,10 +450,9 @@ async def get_profile_all_datas(
             leverage_attr="leverage"
         )
 
-        # --- Trades (API düzeyi: tüm botların birleşimi) ---
         api_trades = [{
             "id": t.id,
-            "bot_id": t.bot_id,   # <--- eklendi
+            "bot_id": t.bot_id,
             "created_at": t.created_at,
             "symbol": t.symbol,
             "side": t.side,
@@ -256,39 +478,47 @@ async def get_profile_all_datas(
                 "futures_balance": _to_float(getattr(api, "futures_balance", 0)),
             },
             "snapshots": snapshots_by_api.get(api.id, []),
-            "bots": bots_payload,  # sadece botlar
-            "portfolio": {         # tek obje altında iki merge listesi
+            "bots": bots_payload,
+            "portfolio": {
                 "holdings_merged": portfolio_holdings_merged,
                 "positions_merged": portfolio_positions_merged,
             },
-            "trades": api_trades,  # tüm botların birleşimi
+            "trades": api_trades,
         })
 
-    response = {
+    # 8) STRATEGY & INDICATOR payload’ları (release’lerle zenginleştirilmiş)
+    strategies_payload = [{
+        "id": s.id,
+        "name": getattr(s, "name", None),
+        "code": getattr(s, "code", None),
+        "version": getattr(s, "version", None),
+        "parent_strategy_id": getattr(s, "parent_strategy_id", None),
+        "created_at": getattr(s, "created_at", None),
+        "description": getattr(s, "description", None),
+        "approved_release": approved_map.get(s.id),  # 👈 son onaylı
+        "pending_release":  pending_map.get(s.id),   # 👈 son bekleyen
+    } for s in strategies]
+
+    indicators_payload = [{
+        "id": it.id,
+        "name": getattr(it, "name", None),
+        "code": getattr(it, "code", None),
+        "version": getattr(it, "version", None),
+        "parent_indicator_id": getattr(it, "parent_indicator_id", None),
+        "created_at": getattr(it, "created_at", None),
+        "description": getattr(it, "description", None),
+        "approved_release": i_approved_map.get(it.id),  # 👈 son onaylı
+        "pending_release":  i_pending_map.get(it.id),   # 👈 son bekleyen
+    } for it in indicators]
+
+    # 9) RESPONSE
+    return {
         "ok": True,
         "user": user_dict,
         "apis": apis_payload,
-        "indicators": [{
-            "id": i.id,
-            "name": i.name,
-            "public": i.public,
-            "tecnic": getattr(i, "tecnic", None),
-            "created_at": i.created_at,
-            "code": i.code,
-        } for i in indicators],
-        "strategies": [{
-            "id": s.id,
-            "name": s.name,
-            "public": s.public,
-            "tecnic": getattr(s, "tecnic", None),
-            "indicator_ids": getattr(s, "indicator_ids", None),
-            "created_at": s.created_at,
-            "code": s.code,
-        } for s in strategies],
+        "strategies": strategies_payload,
+        "indicators": indicators_payload,
     }
-    return response
-
-
 
 @protected_router.get("/api/profile_analysis")
 async def get_profile_analysis(

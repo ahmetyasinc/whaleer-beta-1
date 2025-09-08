@@ -1,9 +1,12 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react';
 import useStrategyDataStore from "@/store/indicator/strategyDataStore";
+import { useTranslation } from "react-i18next";
 
 const TerminalStrategy = ({ id }) => {
-  const [output, setOutput] = useState(["🌊 Welcome, Terminal is ready..."]);
+  const { t } = useTranslation("strategyTerminal");
+
+  const [output, setOutput] = useState([t("ready")]);
   const [input, setInput] = useState('');
   const [importedIndicators, setImportedIndicators] = useState([]);
   const { strategyData } = useStrategyDataStore();
@@ -14,13 +17,15 @@ const TerminalStrategy = ({ id }) => {
   useEffect(() => {
     const strategy = strategyData?.[id];
     const subItems = strategy?.subItems || {};
-    const maxSubId = Math.max(...Object.keys(subItems).map(Number));
+    const keys = Object.keys(subItems);
+    if (keys.length === 0) return;
+
+    const maxSubId = Math.max(...keys.map(Number));
     const currentSub = subItems?.[maxSubId];
 
     if (!currentSub) return;
 
     const { prints, strategy_result } = currentSub;
-    console.log(currentSub);
 
     if (strategy_result?.status === "error" && strategy_result?.message) {
       setOutput((prev) => [
@@ -51,94 +56,6 @@ const TerminalStrategy = ({ id }) => {
     lastPrintedRef.current = prints;
   }, [strategyData, id]);
 
-  const updateBackendIndicators = async (updatedList) => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/strategies/update`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          id,
-          indicator_names: updatedList,
-        }),
-      });
-
-      if (response.status === 401) {
-        const errorData = await response.json();
-        if (["Token expired", "Invalid token"].includes(errorData.detail)) {
-          alert("Session expired or invalid token! Please log in again.");
-          return false;
-        }
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || "Request failed");
-      }
-
-      const result = await response.json();
-      return true;
-    } catch (err) {
-      setOutput((prev) => [
-        ...prev,
-        <span key={prev.length} className="text-red-500">
-          ❌ Indicator not found: {err.message}
-        </span>,
-      ]);
-      return false;
-    }
-  };
-
-  useEffect(() => {
-    async function fetchIndicators() {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/strategies/${id}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        });
-
-        if (response.status === 401) {
-          const errorData = await response.json();
-          if (["Token expired", "Invalid token"].includes(errorData.detail)) {
-            alert("Session expired or invalid token! Please log in again.");
-            return;
-          }
-        }
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.detail || "Request failed");
-        }
-
-        const data = await response.json();
-        if (data.indicator_names) {
-          setImportedIndicators(data.indicator_names);
-          setOutput(prev => [
-            ...prev,
-            <span key={prev.length} className="text-green-500">
-              ✅ {data.indicator_names.length} indicators loaded.
-            </span>,
-          ]);
-        }
-      } catch (error) {
-        console.error("Fetch error:", error);
-        setOutput(prev => [
-          ...prev,
-          <span key={prev.length} className="text-red-500">
-            ❌ Failed to load indicators: {error.message}
-          </span>,
-        ]);
-      }
-    }
-
-    if (id) fetchIndicators();
-  }, [id]);
-
   const getMessageStyle = (type) => {
     switch (type) {
       case 'error': return 'text-red-500';
@@ -159,6 +76,87 @@ const TerminalStrategy = ({ id }) => {
 
   const clearOutput = () => setOutput([]);
 
+  const updateBackendIndicators = async (updatedList) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/strategies/update`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, indicator_names: updatedList }),
+      });
+
+      if (response.status === 401) {
+        const errorData = await response.json();
+        if (["Token expired", "Invalid token"].includes(errorData.detail)) {
+          alert(t("alerts.sessionExpired"));
+          return false;
+        }
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || t("errors.requestFailed"));
+      }
+
+      await response.json();
+      return true;
+    } catch (err) {
+      setOutput((prev) => [
+        ...prev,
+        <span key={prev.length} className="text-red-500">
+          ❌ {t("errors.notFoundPrefix")} {err.message}
+        </span>,
+      ]);
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    async function fetchIndicators() {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/strategies/${id}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+
+        if (response.status === 401) {
+          const errorData = await response.json();
+          if (["Token expired", "Invalid token"].includes(errorData.detail)) {
+            alert(t("alerts.sessionExpired"));
+            return;
+          }
+        }
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || t("errors.requestFailed"));
+        }
+
+        const data = await response.json();
+        if (data.indicator_names) {
+          setImportedIndicators(data.indicator_names);
+          setOutput(prev => [
+            ...prev,
+            <span key={prev.length} className="text-green-500">
+              {t("load.successCount", { count: data.indicator_names.length })}
+            </span>,
+          ]);
+        }
+      } catch (error) {
+        console.error("Fetch error:", error);
+        setOutput(prev => [
+          ...prev,
+          <span key={prev.length} className="text-red-500">
+            {t("load.failed", { message: error.message })}
+          </span>,
+        ]);
+      }
+    }
+
+    if (id) fetchIndicators();
+  }, [id, t]);
+
   const handleCommand = async (cmdRaw) => {
     const [command, ...args] = cmdRaw.trim().split(" ");
     const cmd = command.toLowerCase();
@@ -167,17 +165,17 @@ const TerminalStrategy = ({ id }) => {
     if (cmd === "import") {
       const indicator = argument;
       if (!indicator) {
-        addOutput("⚠️ Please enter an indicator name. E.g. import rsi", "warning");
+        addOutput(t("import.enterName"), "warning");
         return;
       }
       if (importedIndicators.includes(indicator)) {
-        addOutput(`⚠️ ${indicator} is already imported.`, "success");
+        addOutput(t("import.already", { indicator }), "success");
       } else {
         const updated = [...importedIndicators, indicator];
         const success = await updateBackendIndicators(updated);
         if (success) {
           setImportedIndicators(updated);
-          addOutput(`✅ ${indicator} successfully imported.`, "success");
+          addOutput(t("import.success", { indicator }), "success");
         }
       }
       return;
@@ -186,7 +184,7 @@ const TerminalStrategy = ({ id }) => {
     if (cmd === "reset") {
       const arg = argument;
       if (!arg) {
-        addOutput("⚠️ Please specify the indicator to delete. E.g. reset RSI", "warning");
+        addOutput(t("reset.specify"), "warning");
         return;
       }
 
@@ -194,7 +192,7 @@ const TerminalStrategy = ({ id }) => {
         const success = await updateBackendIndicators([]);
         if (success) {
           setImportedIndicators([]);
-          addOutput("♻️ All imported indicators have been reset.", "success");
+          addOutput(t("reset.allDone"), "success");
         }
       } else {
         if (importedIndicators.includes(arg)) {
@@ -202,10 +200,10 @@ const TerminalStrategy = ({ id }) => {
           const success = await updateBackendIndicators(updated);
           if (success) {
             setImportedIndicators(updated);
-            addOutput(`🗑️ ${arg} removed from import list.`, "success");
+            addOutput(t("reset.removed", { indicator: arg }), "success");
           }
         } else {
-          addOutput(`⚠️ ${arg} was not found in the import list.`, "warning");
+          addOutput(t("reset.notFound", { indicator: arg }), "warning");
         }
       }
       return;
@@ -214,53 +212,54 @@ const TerminalStrategy = ({ id }) => {
     switch (cmd) {
       case 'cls':
         clearOutput();
-        addOutput('🌊 Welcome, Terminal is ready...');
+        addOutput(t("ready"));
         break;
 
       case 'help':
-        addOutput('Available commands:', 'success');
-        addOutput('cls - Clear the terminal');
-        addOutput('help - List commands');
-        addOutput('time - Show current time');
-        addOutput('uptime - Show how long the page has been open');
-        addOutput('import <indicator> - Import an indicator');
-        addOutput('list imports - List imported indicators');
-        addOutput('reset <indicator|imports> - Remove specific or all indicators');
+        addOutput(t('help.title'), 'success');
+        addOutput(t('help.cls'));
+        addOutput(t('help.help'));
+        addOutput(t('help.time'));
+        addOutput(t('help.uptime'));
+        addOutput(t('help.import'));
+        addOutput(t('help.list'));
+        addOutput(t('help.reset'));
         break;
 
       case 'time':
         addOutput(new Date().toLocaleString(), 'success');
         break;
 
-      case 'uptime':
+      case 'uptime': {
         const seconds = Math.floor((Date.now() - startTime.current) / 1000);
-        addOutput(`⏱️ Page uptime: ${seconds} seconds`);
+        addOutput(t('uptimeFormat', { seconds }));
         break;
+      }
 
       case 'hata':
-        addOutput('This is an error message!', 'error');
+        addOutput(t('errorSample'), 'error');
         break;
 
       case 'uyari':
-        addOutput('This is a warning message!', 'warning');
+        addOutput(t('warningSample'), 'warning');
         break;
 
       case 'basari':
-        addOutput('This is a success message!', 'success');
+        addOutput(t('successSample'), 'success');
         break;
 
       case 'list':
         if (importedIndicators.length === 0) {
-          addOutput("📭 No indicators imported yet.", "warning");
+          addOutput(t("list.none"), "warning");
         } else {
-          addOutput("📦 Imported indicators:");
+          addOutput(t("list.title"));
           importedIndicators.forEach((ind) => addOutput(`- ${ind}`));
         }
         break;
 
       default:
         addOutput(`> ${cmdRaw}`);
-        addOutput(`Unknown command: ${cmdRaw}`, 'warning');
+        addOutput(t('unknown', { cmd: cmdRaw }), 'warning');
     }
   };
 
@@ -287,7 +286,7 @@ const TerminalStrategy = ({ id }) => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           className="bg-black text-white border-none outline-none w-full caret-[hsl(59,100%,60%)]"
-          placeholder="Enter command (type 'help' for list)"
+          placeholder={t("placeholder")}
           spellCheck={false}
         />
       </form>

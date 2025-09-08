@@ -11,19 +11,23 @@ export default function useProfile() {
 
   const [refreshing, setRefreshing] = useState(false);
 
+  // Mount olduğunda sadece veri YOKSA çek
   useEffect(() => {
-    (async () => {
+    if (!data && !loading && !error) {
       fetchProfile();
-    })();
-  }, [fetchProfile]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, loading, error, fetchProfile]);
 
+  // Pull-to-refresh: zorla yenile (keepSelection korunur)
   const refresh = useCallback(async () => {
-
     setRefreshing(true);
     try {
-
-      await fetchProfile({ keepSelection: true, currentSelectedId: selectedApiId });
-
+      await fetchProfile({
+        keepSelection: true,
+        currentSelectedId: selectedApiId,
+        force: true,               // store "force" destekliyorsa kullan, değilse yok sayılır
+      });
     } finally {
       setRefreshing(false);
     }

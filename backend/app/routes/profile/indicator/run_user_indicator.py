@@ -13,7 +13,8 @@ async def run_user_indicator(user_code: str, data: list[dict]):
     - `user_code`: Kullanıcının yazdığı Python kodu
     - `data`: 5000 mumluk veri (dict listesi)
     """
-
+    print_outputs = [] 
+    
     try:
         # Veriyi Pandas DataFrame'e çevir
         df = pd.DataFrame(data)
@@ -22,10 +23,8 @@ async def run_user_indicator(user_code: str, data: list[dict]):
         indicator_results = []
 
         # Kullanıcının `print()` çıktıları burada saklanacak
-        print_outputs = []  
-
-        sandbox = build_allowed_globals(df, print_outputs, indicator_results,
-                          updated=False, for_indicator=True)
+         
+        sandbox = build_allowed_globals(df, print_outputs, indicator_results,updated=False, for_indicator=True)
 
         # Kullanıcı kodunu çalıştır
         exec(user_code, sandbox, sandbox)

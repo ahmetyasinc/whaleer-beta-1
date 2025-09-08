@@ -1,0 +1,53 @@
+{
+  "title": "Stratejiyi Yayınla",
+  "subtitle": "Stratejini toplulukla paylaş",
+  "help": "Yardım",
+  "aria": {
+    "help": "Yardım",
+    "close": "Kapat"
+  },
+  "headers": {
+    "permissions": "İzinler",
+    "description": "Açıklama",
+    "aboutPublishing": "Yayınlama Hakkında"
+  },
+  "perms": {
+    "items": {
+      "codeView": {
+        "label": "Kod görüntülemeye izin ver",
+        "desc": "Kullanıcılar stratejinizin kaynak kodunu görebilir"
+      },
+      "chartView": {
+        "label": "Grafik görüntülemeye izin ver",
+        "desc": "Varlık grafiklerinde görsel analiz yapılabilir"
+      },
+      "scan": {
+        "label": "Taramaya izin ver",
+        "desc": "Piyasa tarama araçlarında kullanılabilir"
+      },
+      "backtest": {
+        "label": "Backtest'e izin ver",
+        "desc": "Geçmiş verilerle test edilebilir"
+      },
+      "botRun": {
+        "label": "Bot çalıştırmaya izin ver",
+        "desc": "Otomatik al-sat botlarında kullanılabilir"
+      }
+    }
+  },
+  "placeholders": {
+    "description": "Bu strateji ne yapar, hangi amaçla tasarlandı, hangi piyasa koşullarında en iyi performansı gösterir..."
+  },
+  "buttons": {
+    "cancel": "Vazgeç",
+    "publish": "Yayınla",
+    "publishing": "Yayınlanıyor…",
+    "gotIt": "Anladım"
+  },
+  "info": {
+    "p1": "Buradan stratejinizin hangi özelliklerinin kullanıcılara açık olacağını belirleyebilirsiniz.",
+    "p2": "Her izin, stratejinizin nasıl görüneceğini ve üzerinde hangi işlemlerin yapılabileceğini etkiler.",
+    "tip": "İpucu:",
+    "tipText": "Daha fazla izin vermek, stratejinizin daha geniş bir kitleye ulaşmasına yardımcı olabilir."
+  }
+}

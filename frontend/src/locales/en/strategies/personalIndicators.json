@@ -1,0 +1,17 @@
+{
+  "actions": {
+    "favorite": "Favorite",
+    "edit": "Edit / Open",
+    "delete": "Delete",
+    "new": "New Indicator"
+  },
+  "error": {
+    "compile": "Compile Error!"
+  },
+  "deleteModal": {
+    "title": "Delete Confirmation",
+    "confirm": "Are you sure you want to delete the indicator {{name}}?",
+    "no": "No",
+    "yes": "Delete"
+  }
+}

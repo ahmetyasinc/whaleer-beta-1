@@ -1,0 +1,12 @@
+{
+  "title": "Critical Confirmation",
+  "subtitle": "Be careful, this action cannot be undone",
+  "message": "<strong>All your bots will be stopped</strong> and <strong>active positions will be closed</strong>. This action cannot be undone. Are you sure you want to continue?",
+  "loading": "Please wait",
+  "actions": {
+    "confirm": "I Confirm",
+    "confirmCountdown_one": "{{count}} second...",
+    "confirmCountdown_other": "{{count}} seconds...",
+    "cancel": "Cancel"
+  }
+}

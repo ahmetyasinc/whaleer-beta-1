@@ -1,0 +1,32 @@
+{
+  "title": "Sign Up",
+  "subtitle": "Sign up to Whaleer",
+  "backHome": "Home",
+  "placeholders": {
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "username": "Username",
+    "email": "Email",
+    "password": "Password",
+    "passwordConfirm": "Confirm Password"
+  },
+  "submit": {
+    "label": "Sign Up",
+    "loading": "Submitting…"
+  },
+  "haveAccount": "Already have an account?",
+  "login": "Log In",
+  "beta": {
+    "title": "Beta Access Only",
+    "bodyLine1": "Thank you for your interest in Whaleer!",
+    "bodyLine2": "Registration is currently closed during our beta testing phase.",
+    "bodyLine3": "Please check back soon or contact us for early access."
+  },
+  "toast": {
+    "passwordMismatch": "Passwords do not match!",
+    "submitting": "Signing up…",
+    "success": "Registration successful! Redirecting to login…",
+    "unexpected": "Unexpected error occurred.",
+    "genericError": "An error occurred."
+  }
+}

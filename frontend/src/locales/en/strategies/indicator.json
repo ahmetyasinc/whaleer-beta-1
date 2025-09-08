@@ -1,0 +1,33 @@
+{
+  "titleCrypto": "Choose Crypto Currency",
+  "searchCrypto": "Search Crypto Currency",
+  "1m": "1 Min",
+  "3m": "3 Min",
+  "5m": "5 Min",
+  "15m": "15 Min",
+  "30m": "30 Min",
+  "1h": "1 Hour",
+  "2h": "2 Hour",
+  "4h": "4 Hour",
+  "1d": "1 Day",
+  "1w": "1 Week",
+  "Techniques": "Techniques",
+  "Personal": "Personal",
+  "Community": "Community",
+  "Favorites": "Favorites",
+  "NotFound": "Data not found.",
+  "indicators": "Indicators",
+  "strategies": "Strategies",
+  "search": "Search...",
+  "version": "Version {{version}}",
+  "views_one": "{{count}} view",
+  "views_other": "{{count}} views",
+  "tooltips": {
+    "add": "Add indicator",
+    "add_disabled": "No permission to add to chart (allow_chart_view=false)",
+    "code": "View code",
+    "code_disabled": "No permission to view code (allow_code_view=false)",
+    "fav_add": "Add to favorites",
+    "fav_remove": "Remove from favorites"
+  }
+}

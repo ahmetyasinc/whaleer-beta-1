@@ -11,12 +11,6 @@ const FeaturesTabs = ({ locale }) => {
   const [features, setFeatures] = useState([]);
 
   useEffect(() => {
-    if (locale && i18n.language !== locale) {
-      i18n.changeLanguage(locale);
-    }
-  }, [locale]);
-
-  useEffect(() => {
     let list = t("list", { returnObjects: true });
     if (!Array.isArray(list)) {
       const lang = locale || i18n.language;

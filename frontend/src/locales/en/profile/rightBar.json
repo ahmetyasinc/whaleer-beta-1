@@ -1,0 +1,23 @@
+{
+  "buttons": {
+    "quickActions": "Quick Actions",
+    "publishedIndicators": "My Published Indicators",
+    "recycleBin": "Recycle Bin",
+    "purchaseHistory": "Purchase History"
+  },
+  "stats": {
+    "numberOfIndicators": "Number of Indicators",
+    "numberOfStrategies": "Number of Strategies",
+    "numberOfTotalBots": "Number of Total Bots",
+    "totalActiveBots": "Total Active Bots"
+  },
+  "performance": {
+    "labels": {
+      "daily": "Daily API Performance",
+      "weekly": "Weekly API Performance",
+      "monthly": "Monthly API Performance"
+    },
+    "trades_one": "{{count}} trade",
+    "trades_other": "{{count}} trades"
+  }
+}

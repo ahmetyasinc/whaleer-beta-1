@@ -1,0 +1,82 @@
+{
+  "titles": {
+    "create": "Create a New Listing",
+    "update": "Update Your Listing"
+  },
+  "labels": {
+    "chooseBot": "Choose a Bot",
+    "noPnlData": "No P&L data",
+    "listed": "Listed",
+    "notListed": "Not Listed",
+    "noBotSelected": "No bot selected yet",
+    "wantSell": "I Want to Sell",
+    "wantRent": "I Want to Rent",
+    "revenueWallet": "Revenue Wallet Address",
+    "description": "Listing Description (optional)"
+  },
+  "placeholders": {
+    "sellPrice": "Enter selling price (USD)",
+    "rentPrice": "Enter rental price (USD / day)",
+    "wallet": "Enter Solana wallet address",
+    "description": "Describe your bot’s features, use cases, and other important details..."
+  },
+  "units": {
+    "usd": "USD",
+    "usdPerDay": "USD / day"
+  },
+  "hints": {
+    "dailyPayment": "Daily payment",
+    "walletWarning": "⚠️ Please make sure you enter the correct wallet address. The responsibility is entirely yours.",
+    "detailedAttracts": "Detailed descriptions attract more attention",
+    "terms": "By continuing, you agree to our Terms and acknowledge that crypto transactions are irreversible."
+  },
+  "banners": {
+    "feeTitle": "One-time Listing Fee",
+    "feeBody": "A one-time fee of 1 USD will be charged via Solana when creating a new listing. Your wallet will display the exact SOL amount.",
+    "feeConfirm": "I confirm that I’m paying a 1 USD listing fee via Solana and agree that this fee is non-refundable."
+  },
+  "buttons": {
+    "select": "Select",
+    "create": "Create Listing",
+    "update": "Update Listing",
+    "creating": "Creating Listing...",
+    "updating": "Updating Listing...",
+    "processingPayment": "Processing Payment...",
+    "createTitle": "Create Listing",
+    "updateTitle": "Update Listing",
+    "remove": "Remove Listing",
+    "removeTitle": "Remove from marketplace"
+  },
+  "toasts": {
+    "preparingPayment": "Preparing payment...",
+    "signInWallet": "Sign the transaction in your wallet...",
+    "confirmOnchain": "Confirming on-chain payment...",
+    "paymentConfirmed": "Payment confirmed!",
+    "noChanges": "No changes to update.",
+    "creating": "Creating listing...",
+    "updating": "Updating listing...",
+    "createSuccess": "Listing created successfully.",
+    "updateSuccess": "Listing updated successfully.",
+    "operationFailed": "Operation failed.",
+    "removing": "Removing from listings...",
+    "removeSuccess": "Listing removed successfully.",
+    "removeFailed": "Failed to remove listing."
+  },
+  "errors": {
+    "connectWalletFirst": "Please connect your wallet first.",
+    "walletNotReady": "Wallet not ready.",
+    "invalidIntent": "Invalid intent from server.",
+    "paymentNotConfirmed": "Payment could not be confirmed.",
+    "selectBot": "Please select a bot.",
+    "chooseOne": "Please choose at least one: Sell or Rent.",
+    "invalidPrices": "Please enter valid non-negative prices.",
+    "invalidWallet": "Please enter a valid wallet address.",
+    "acceptDisclaimer": "Please accept the listing fee disclaimer."
+  },
+  "confirm": {
+    "remove": "This will remove your bot from listings. Continue?"
+  },
+  "aria": {
+    "close": "Close"
+  }
+}

@@ -1,9 +1,6 @@
 // src/screens/Profile/ProfileScreen.js
 import React, { useContext, useMemo } from "react";
-import {
-  View, Text, ActivityIndicator, StyleSheet, SafeAreaView,
-  ScrollView, RefreshControl
-} from "react-native";
+import { View, Text, ActivityIndicator, StyleSheet, SafeAreaView, ScrollView, RefreshControl } from "react-native";
 import AuthGate from "../../components/auth/AuthGate";
 import { SettingsContext } from "../../context/SettingsContext";
 import { getTheme } from "../../theme";
@@ -38,75 +35,96 @@ export default function ProfileScreen() {
 
   const selectedApi = data?.apis?.find((a) => a.api.id === selectedApiId);
 
+  // Ortak header (ListHeaderComponent olarak verilecek)
+  const renderHeader = () => (
+    <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
+      <ProfileStats
+        strategies={stats.strategies}
+        indicators={stats.indicators}
+        bots={stats.bots}
+        colors={colors}
+        style={{ marginTop: 12 }}
+      />
+      <ApiSwitcher
+        apis={data?.apis}
+        selectedId={selectedApiId}
+        onSelect={setSelectedApiId}
+        colors={colors}
+      />
+      <SegmentTabs active={activeTab} onChange={setActiveTab} colors={colors} />
+      {loading && <ActivityIndicator style={{ marginTop: 16 }} color={colors.primary} />}
+      {error && <Text style={{ color: colors.danger, marginTop: 12 }}>{error}</Text>}
+    </View>
+  );
+
   return (
     <AuthGate>
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <Header />
-      <ScrollView
-        style={[styles.container, { backgroundColor: colors.background }]}
-        contentContainerStyle={{ paddingBottom: 24 }}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={refresh}
-            tintColor={colors.muted}              // iOS spinner rengi
-            colors={[colors.primary]}             // Android spinner rengi
-            progressBackgroundColor={colors.surface}
-          />
-        }
-      >
-        <ProfileStats
-          strategies={stats.strategies}
-          indicators={stats.indicators}
-          bots={stats.bots}
-          colors={colors}
-          style={{ marginTop: 12 }}
-        />
-
-        {/* API Switcher */}
-        <ApiSwitcher
-          apis={data?.apis}
-          selectedId={selectedApiId}
-          onSelect={setSelectedApiId}
-          colors={colors}
-        />
-
-        {/* Tabs */}
-        <SegmentTabs active={activeTab} onChange={setActiveTab} colors={colors} />
-
-        {/* Content */}
-        {loading && <ActivityIndicator style={{ marginTop: 24 }} color={colors.primary} />}
-        {error && <Text style={{ color: colors.danger, marginTop: 12 }}>{error}</Text>}
-
-        {!loading && selectedApi && (
+        <Header />
+        {/* Sekmeye göre tek bir scrollable göster */}
+        {!loading && selectedApi ? (
           <>
             {activeTab === "performance" && (
-              <PerformanceChart
-                snapshots={selectedApi.snapshots}
-                perfSummary={perfSummary}
-                colors={colors}
-              />
+              // Performance sadece içerik; burada ScrollView kullanabilirsiniz çünkü içinde FlatList yok
+              <ScrollView
+                style={[styles.container, { backgroundColor: colors.background }]}
+                contentContainerStyle={{ paddingBottom: 24 }}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={refresh}
+                    tintColor={colors.muted}
+                    colors={[colors.primary]}
+                    progressBackgroundColor={colors.surface}
+                  />
+                }
+              >
+                {renderHeader()}
+                <View style={{ paddingHorizontal: 16 }}>
+                  <PerformanceChart
+                    snapshots={selectedApi.snapshots}
+                    perfSummary={perfSummary}
+                    colors={colors}
+                  />
+                </View>
+              </ScrollView>
             )}
 
             {activeTab === "portfolio" && (
-              <PortfolioList portfolio={selectedApi.portfolio} colors={colors} />
+              <PortfolioList
+                portfolio={selectedApi.portfolio}
+                colors={colors}
+                ListHeaderComponent={renderHeader}
+                refreshing={refreshing}
+                onRefresh={refresh}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+                backgroundColor={colors.background}
+              />
             )}
 
             {activeTab === "transactions" && (
-              <TransactionsList trades={selectedApi.trades} colors={colors} />
+              <TransactionsList
+                trades={selectedApi.trades}
+                colors={colors}
+                ListHeaderComponent={renderHeader}
+                refreshing={refreshing}
+                onRefresh={refresh}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+                backgroundColor={colors.background}
+              />
             )}
           </>
+        ) : (
+          // İlk yükleme esnasında boş ekran yerine basit gösterim
+          <View style={[styles.container, { backgroundColor: colors.background, paddingTop: 16 }]}>
+            {renderHeader()}
+          </View>
         )}
-      </ScrollView>
       </SafeAreaView>
     </AuthGate>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 16 },
-  userBadge: {
-    marginTop: 8, padding: 12, borderRadius: 12,
-    flexDirection: "row", justifyContent: "space-between"
-  },
+  container: { flex: 1 },
 });

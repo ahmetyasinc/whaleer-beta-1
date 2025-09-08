@@ -1,0 +1,12 @@
+{
+  "title": "Stratejiler",
+  "button": {
+    "select": "Seç"
+  },
+  "tabs": {
+    "technicals": "Teknikler",
+    "my": "Stratejilerim",
+    "community": "Topluluk"
+  },
+  "fallback": "İçerik bulunamadı."
+}

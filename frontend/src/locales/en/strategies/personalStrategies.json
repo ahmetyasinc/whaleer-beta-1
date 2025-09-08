@@ -1,0 +1,28 @@
+{
+  "titles": {
+    "deleteConfirm": "Delete Confirmation"
+  },
+  "messages": {
+    "deleteConfirmQuestion": "Are you sure you want to delete the strategy {{name}}?"
+  },
+  "buttons": {
+    "openEdit": "Edit / Open",
+    "newStrategy": "New strategy",
+    "no": "No",
+    "yesDelete": "Delete"
+  },
+  "tooltips": {
+    "favorite": "Favorite",
+    "versionSelect": "Select version",
+    "delete": "Delete",
+    "lockedVersion": "This version is locked (used by an active bot)"
+  },
+  "labels": {
+    "locked": "locked"
+  },
+  "errors": {
+    "compileDefault": "Compile Error!",
+    "favoriteAction": "Error while updating favorite state",
+    "deleteAction": "Error while deleting strategy"
+  }
+}

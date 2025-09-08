@@ -1,0 +1,13 @@
+{
+  "loading": "Yükleniyor...",
+  "api": {
+    "select": "Aktif API Seç",
+    "noApi": "API Yok"
+  },
+  "nav": {
+    "portfolio": "Portföyüm",
+    "bots": "Botlarım",
+    "indicators": "İndikatör ve Stratejilerim"
+  },
+  "settings": "Ayarlar"
+}

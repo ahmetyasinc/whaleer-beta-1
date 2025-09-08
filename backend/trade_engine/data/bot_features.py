@@ -1,105 +1,102 @@
+# backend/trade_engine/data/bot_features.py
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from backend.trade_engine.config import DB_CONFIG
 
-def calculate_fullness_percentage(fullness_usdt, current_usd_value):
+def _safe_float(x, default=0.0):
     try:
-        if not current_usd_value or current_usd_value == 0:
-            return 100.0  # USD değeri yoksa %100 kabul edebilirsin
-        return round((float(fullness_usdt) / float(current_usd_value)), 2)
-    except Exception as e:
-        print(f"Hesaplama hatası: {e}")
-        return 0.0
+        return float(x)
+    except Exception:
+        return default
 
+def load_bot_context(bot_id: int):
+    """
+    Tek bağlantı / tek fonksiyon ile:
+      - bots: bot_type, current_usd_value, fullness (USDT)
+      - bot_holdings: (symbol, percentage, amount)
+      - bot_positions: (symbol, position_side, amount, percentage, leverage) [status='open']
+    döner.
 
-def get_bot_percentage(bot_id):
+    Dönüş:
+    {
+      "bot_type": "spot"|"futures",
+      "current_value": float,
+      "fulness": float (0..1),
+      "holdings": [ {symbol, percentage, amount}, ... ],
+      "positions": [ {symbol, position_side, amount, percentage, leverage}, ... ],
+    }
+    """
+    bot = {}
+    holdings = []
+    positions = []
+
     try:
-        conn = psycopg2.connect(**DB_CONFIG)
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        with psycopg2.connect(**DB_CONFIG) as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                # bots
+                cur.execute("""
+                    SELECT bot_type, current_usd_value, fullness
+                    FROM bots
+                    WHERE id = %s
+                    LIMIT 1;
+                """, (bot_id,))
+                bot = cur.fetchone() or {}
 
-        cursor.execute("""
-            SELECT fullness, current_usd_value
-            FROM bots
-            WHERE id = %s;
-        """, (bot_id,))
-        
-        bot = cursor.fetchone()
-        cursor.close()
-        conn.close()
+                # holdings (spot tarafı)
+                cur.execute("""
+                    SELECT symbol, percentage, amount
+                    FROM bot_holdings
+                    WHERE bot_id = %s;
+                """, (bot_id,))
+                holdings = cur.fetchall() or []
 
-        if not bot:
-            return 0.0
-        
-        return calculate_fullness_percentage(bot['fullness'], bot['current_usd_value'])
+                # positions (futures tarafı) – leverage varsa al, yoksa NULL
+                # NOT: leverage kolonu yoksa migration önerisi en altta.
+                cur.execute("""
+                    SELECT symbol, position_side, amount, percentage,
+                           CASE WHEN EXISTS (
+                             SELECT 1
+                             FROM information_schema.columns
+                             WHERE table_name = 'bot_positions' AND column_name = 'leverage'
+                           )
+                           THEN leverage
+                           ELSE NULL
+                           END AS leverage
+                    FROM bot_positions
+                    WHERE bot_id = %s AND status = 'filled';
+                """, (bot_id,))
+                positions = cur.fetchall() or []
 
     except Exception as e:
-        print(f"Veritabanı hatası: {e}")
-        return 0.0
+        print(f"[load_bot_context] Veritabanı hatası: {e}")
 
+    bot_type = (bot.get("bot_type") or "spot").lower()
+    current_value = _safe_float(bot.get("current_usd_value"))
+    fullness_usdt = _safe_float(bot.get("fullness"))
+    # fullness fraction (0..1):
+    fulness = (fullness_usdt / current_value) if current_value > 0 else 0.0
+    # clamp 0..1
+    fulness = max(0.0, min(1.0, fulness))
+
+    return {
+        "bot_type": bot_type,
+        "current_value": current_value,
+        "fulness": fulness,
+        "holdings": holdings,
+        "positions": positions,
+    }
+
+
+# ---- (Opsiyonel) Eski fonksiyonlar geriye dönük çalışsın diye thin-wrapper ----
 def load_bot_holding(bot_id):
-    try:
-        conn = psycopg2.connect(**DB_CONFIG)
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
-
-        cursor.execute("""
-            SELECT bot_id, symbol, percentage
-            FROM bot_holdings
-            WHERE bot_id = %s;
-        """, (bot_id,))
-
-        holdings = cursor.fetchall()
-
-        cursor.close()
-        conn.close()
-
-        return holdings
-
-    except Exception as e:
-        print(f"Veritabanı hatası (bot_holdings): {e}")
-        return []
+    return load_bot_context(bot_id).get("holdings", [])
 
 def load_bot_positions(bot_id):
-    try:
-        conn = psycopg2.connect(**DB_CONFIG)
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
+    return load_bot_context(bot_id).get("positions", [])
 
-        # Yeni tablo yapısına göre sorgu güncellendi
-        cursor.execute("""
-            SELECT symbol, position_side, amount, percentage
-            FROM bot_positions
-            WHERE bot_id = %s AND status = 'open';
-        """, (bot_id,))
-
-        positions = cursor.fetchall()
-        cursor.close()
-        conn.close()
-
-        return positions
-
-    except Exception as e:
-        print(f"Veritabanı hatası (bot_positions): {e}")
-        return []
-    
 def load_bot_value(bot_id):
-    try:
-        conn = psycopg2.connect(**DB_CONFIG)
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
+    return load_bot_context(bot_id).get("current_value", 0.0)
 
-        cursor.execute("""
-            SELECT current_usd_value
-            FROM bots
-            WHERE id = %s;
-        """, (bot_id,))
-
-        result = cursor.fetchone()
-        cursor.close()
-        conn.close()
-
-        if result:
-            return float(result['current_usd_value'])
-        else:
-            return 0.0  # veya None
-
-    except Exception as e:
-        print(f"Veritabanı hatası (bots): {e}")
-        return 0.0
+def get_bot_percentage(bot_id):
+    """ESKİ ANLAM KARMAŞASI: Artık 0..1 fraction döner."""
+    return load_bot_context(bot_id).get("fulness", 0.0)

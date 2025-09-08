@@ -1,0 +1,82 @@
+{
+  "titles": {
+    "create": "Yeni İlan Oluştur",
+    "update": "İlanını Güncelle"
+  },
+  "labels": {
+    "chooseBot": "Bir Bot Seç",
+    "noPnlData": "Kâr/Zarar verisi yok",
+    "listed": "Listede",
+    "notListed": "Listede değil",
+    "noBotSelected": "Henüz bot seçilmedi",
+    "wantSell": "Satmak İstiyorum",
+    "wantRent": "Kiralamak İstiyorum",
+    "revenueWallet": "Gelir Cüzdan Adresi",
+    "description": "İlan Açıklaması (opsiyonel)"
+  },
+  "placeholders": {
+    "sellPrice": "Satış fiyatını gir (USD)",
+    "rentPrice": "Kiralama fiyatını gir (USD / gün)",
+    "wallet": "Solana cüzdan adresi girin",
+    "description": "Botunuzun özelliklerini, kullanım senaryolarını ve önemli detayları açıklayın..."
+  },
+  "units": {
+    "usd": "USD",
+    "usdPerDay": "USD / gün"
+  },
+  "hints": {
+    "dailyPayment": "Günlük ödeme",
+    "walletWarning": "⚠️ Lütfen doğru cüzdan adresini girdiğinizden emin olun. Sorumluluk tamamen size aittir.",
+    "detailedAttracts": "Detaylı açıklamalar daha fazla dikkat çeker",
+    "terms": "Devam ederek Şartlar’ı kabul etmiş ve kripto işlemlerinin geri alınamaz olduğunu onaylamış olursunuz."
+  },
+  "banners": {
+    "feeTitle": "Tek Seferlik İlan Ücreti",
+    "feeBody": "Yeni ilan oluştururken Solana üzerinden tek seferlik 1 USD ücret alınacaktır. Cüzdanınızda tam SOL miktarı görünecektir.",
+    "feeConfirm": "Solana ile 1 USD ilan ücreti ödeyeceğimi ve bu ücretin iade edilemeyeceğini kabul ediyorum."
+  },
+  "buttons": {
+    "select": "Seç",
+    "create": "İlan Oluştur",
+    "update": "İlanı Güncelle",
+    "creating": "İlan oluşturuluyor...",
+    "updating": "İlan güncelleniyor...",
+    "processingPayment": "Ödeme işleniyor...",
+    "createTitle": "İlan Oluştur",
+    "updateTitle": "İlanı Güncelle",
+    "remove": "İlanı Kaldır",
+    "removeTitle": "Pazaryerinden kaldır"
+  },
+  "toasts": {
+    "preparingPayment": "Ödeme hazırlanıyor...",
+    "signInWallet": "Lütfen cüzdanınızda işlemi imzalayın...",
+    "confirmOnchain": "Zincir üstü ödeme doğrulanıyor...",
+    "paymentConfirmed": "Ödeme doğrulandı!",
+    "noChanges": "Güncellenecek değişiklik yok.",
+    "creating": "İlan oluşturuluyor...",
+    "updating": "İlan güncelleniyor...",
+    "createSuccess": "İlan başarıyla oluşturuldu.",
+    "updateSuccess": "İlan başarıyla güncellendi.",
+    "operationFailed": "İşlem başarısız.",
+    "removing": "Listelerden kaldırılıyor...",
+    "removeSuccess": "İlan başarıyla kaldırıldı.",
+    "removeFailed": "İlan kaldırılırken hata oluştu."
+  },
+  "errors": {
+    "connectWalletFirst": "Lütfen önce cüzdanınızı bağlayın.",
+    "walletNotReady": "Cüzdan hazır değil.",
+    "invalidIntent": "Sunucudan geçersiz intent geldi.",
+    "paymentNotConfirmed": "Ödeme doğrulanamadı.",
+    "selectBot": "Lütfen bir bot seçin.",
+    "chooseOne": "Lütfen en az birini seçin: Sat veya Kirala.",
+    "invalidPrices": "Lütfen geçerli (negatif olmayan) fiyatlar girin.",
+    "invalidWallet": "Lütfen geçerli bir cüzdan adresi girin.",
+    "acceptDisclaimer": "Lütfen ilan ücreti bilgilendirmesini kabul edin."
+  },
+  "confirm": {
+    "remove": "Bu işlem botunuzu listelerden kaldıracak. Devam edilsin mi?"
+  },
+  "aria": {
+    "close": "Kapat"
+  }
+}

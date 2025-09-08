@@ -88,106 +88,106 @@ ALL_STREAMS = [
         "xrpusdt@kline_1d",   # 1 gün
         "xrpusdt@kline_1w",   # 1 hafta
         
-        #"dogeusdt@kline_1m",   # 1 dakika
-        #"dogeusdt@kline_3m",   # 3 dakika
-        #"dogeusdt@kline_5m",   # 5 dakika
-        #"dogeusdt@kline_15m",  # 15 dakika
-        #"dogeusdt@kline_30m",  # 30 dakika
-        #"dogeusdt@kline_1h",   # 1 saat
-        #"dogeusdt@kline_2h",   # 2 saat
-        #"dogeusdt@kline_4h",   # 4 saat
-        #"dogeusdt@kline_1d",   # 1 gün
-        #"dogeusdt@kline_1w",   # 1 hafta
+        "dogeusdt@kline_1m",   # 1 dakika
+        "dogeusdt@kline_3m",   # 3 dakika
+        "dogeusdt@kline_5m",   # 5 dakika
+        "dogeusdt@kline_15m",  # 15 dakika
+        "dogeusdt@kline_30m",  # 30 dakika
+        "dogeusdt@kline_1h",   # 1 saat
+        "dogeusdt@kline_2h",   # 2 saat
+        "dogeusdt@kline_4h",   # 4 saat
+        "dogeusdt@kline_1d",   # 1 gün
+        "dogeusdt@kline_1w",   # 1 hafta
 #
 #
-        #"tonusdt@kline_1m",   # 1 dakika
-        #"tonusdt@kline_3m",   # 3 dakika
-        #"tonusdt@kline_5m",   # 5 dakika
-        #"tonusdt@kline_15m",  # 15 dakika
-        #"tonusdt@kline_30m",  # 30 dakika
-        #"tonusdt@kline_1h",   # 1 saat
-        #"tonusdt@kline_2h",   # 2 saat
-        #"tonusdt@kline_4h",   # 4 saat
-        #"tonusdt@kline_1d",   # 1 gün
-        #"tonusdt@kline_1w",   # 1 hafta
+        "tonusdt@kline_1m",   # 1 dakika
+        "tonusdt@kline_3m",   # 3 dakika
+        "tonusdt@kline_5m",   # 5 dakika
+        "tonusdt@kline_15m",  # 15 dakika
+        "tonusdt@kline_30m",  # 30 dakika
+        "tonusdt@kline_1h",   # 1 saat
+        "tonusdt@kline_2h",   # 2 saat
+        "tonusdt@kline_4h",   # 4 saat
+        "tonusdt@kline_1d",   # 1 gün
+        "tonusdt@kline_1w",   # 1 hafta
 #
-        #"trxusdt@kline_1m",   # 1 dakika
-        #"trxusdt@kline_3m",   # 3 dakika
-        #"trxusdt@kline_5m",   # 5 dakika
-        #"trxusdt@kline_15m",  # 15 dakika
-        #"trxusdt@kline_30m",  # 30 dakika
-        #"trxusdt@kline_1h",   # 1 saat
-        #"trxusdt@kline_2h",   # 2 saat
-        #"trxusdt@kline_4h",   # 4 saat
-        #"trxusdt@kline_1d",   # 1 gün
-        #"trxusdt@kline_1w",   # 1 hafta
-        #
-        #"linkusdt@kline_1m",   # 1 dakika
-        #"linkusdt@kline_3m",   # 3 dakika
-        #"linkusdt@kline_5m",   # 5 dakika
-        #"linkusdt@kline_15m",  # 15 dakika
-        #"linkusdt@kline_30m",  # 30 dakika
-        #"linkusdt@kline_1h",   # 1 saat
-        #"linkusdt@kline_2h",   # 2 saat
-        #"linkusdt@kline_4h",   # 4 saat
-        #"linkusdt@kline_1d",   # 1 gün
-        #"linkusdt@kline_1w",   # 1 hafta
-        #
-        #"maticusdt@kline_1m",   # 1 dakika
-        #"maticusdt@kline_3m",   # 3 dakika
-        #"maticusdt@kline_5m",   # 5 dakika
-        #"maticusdt@kline_15m",  # 15 dakika
-        #"maticusdt@kline_30m",  # 30 dakika
-        #"maticusdt@kline_1h",   # 1 saat
-        #"maticusdt@kline_2h",   # 2 saat
-        #"maticusdt@kline_4h",   # 4 saat
-        #"maticusdt@kline_1d",   # 1 gün
-        #"maticusdt@kline_1w",   # 1 hafta
-        #
-        #"dotusdt@kline_1m",   # 1 dakika
-        #"dotusdt@kline_3m",   # 3 dakika
-        #"dotusdt@kline_5m",   # 5 dakika
-        #"dotusdt@kline_15m",  # 15 dakika
-        #"dotusdt@kline_30m",  # 30 dakika
-        #"dotusdt@kline_1h",   # 1 saat
-        #"dotusdt@kline_2h",   # 2 saat
-        #"dotusdt@kline_4h",   # 4 saat
-        #"dotusdt@kline_1d",   # 1 gün
-        #"dotusdt@kline_1w",   # 1 hafta
-        #
-        #"ltcusdt@kline_1m",   # 1 dakika
-        #"ltcusdt@kline_3m",   # 3 dakika
-        #"ltcusdt@kline_5m",   # 5 dakika
-        #"ltcusdt@kline_15m",  # 15 dakika
-        #"ltcusdt@kline_30m",  # 30 dakika
-        #"ltcusdt@kline_1h",   # 1 saat
-        #"ltcusdt@kline_2h",   # 2 saat
-        #"ltcusdt@kline_4h",   # 4 saat
-        #"ltcusdt@kline_1d",   # 1 gün
-        #"ltcusdt@kline_1w",   # 1 hafta
-        #
-        #"shibusdt@kline_1m",   # 1 dakika
-        #"shibusdt@kline_3m",   # 3 dakika
-        #"shibusdt@kline_5m",   # 5 dakika
-        #"shibusdt@kline_15m",  # 15 dakika
-        #"shibusdt@kline_30m",  # 30 dakika
-        #"shibusdt@kline_1h",   # 1 saat
-        #"shibusdt@kline_2h",   # 2 saat
-        #"shibusdt@kline_4h",   # 4 saat
-        #"shibusdt@kline_1d",   # 1 gün
-        #"shibusdt@kline_1w",   # 1 hafta
-        #
-        #"avaxusdt@kline_1m",   # 1 dakika
-        #"avaxusdt@kline_3m",   # 3 dakika
-        #"avaxusdt@kline_5m",   # 5 dakika
-        #"avaxusdt@kline_15m",  # 15 dakika
-        #"avaxusdt@kline_30m",  # 30 dakika
-        #"avaxusdt@kline_1h",   # 1 saat
-        #"avaxusdt@kline_2h",   # 2 saat
-        #"avaxusdt@kline_4h",   # 4 saat
-        #"avaxusdt@kline_1d",   # 1 gün
-        #"avaxusdt@kline_1w",   # 1 hafta
-        #
+        "trxusdt@kline_1m",   # 1 dakika
+        "trxusdt@kline_3m",   # 3 dakika
+        "trxusdt@kline_5m",   # 5 dakika
+        "trxusdt@kline_15m",  # 15 dakika
+        "trxusdt@kline_30m",  # 30 dakika
+        "trxusdt@kline_1h",   # 1 saat
+        "trxusdt@kline_2h",   # 2 saat
+        "trxusdt@kline_4h",   # 4 saat
+        "trxusdt@kline_1d",   # 1 gün
+        "trxusdt@kline_1w",   # 1 hafta
+        
+        "linkusdt@kline_1m",   # 1 dakika
+        "linkusdt@kline_3m",   # 3 dakika
+        "linkusdt@kline_5m",   # 5 dakika
+        "linkusdt@kline_15m",  # 15 dakika
+        "linkusdt@kline_30m",  # 30 dakika
+        "linkusdt@kline_1h",   # 1 saat
+        "linkusdt@kline_2h",   # 2 saat
+        "linkusdt@kline_4h",   # 4 saat
+        "linkusdt@kline_1d",   # 1 gün
+        "linkusdt@kline_1w",   # 1 hafta
+        
+        "maticusdt@kline_1m",   # 1 dakika
+        "maticusdt@kline_3m",   # 3 dakika
+        "maticusdt@kline_5m",   # 5 dakika
+        "maticusdt@kline_15m",  # 15 dakika
+        "maticusdt@kline_30m",  # 30 dakika
+        "maticusdt@kline_1h",   # 1 saat
+        "maticusdt@kline_2h",   # 2 saat
+        "maticusdt@kline_4h",   # 4 saat
+        "maticusdt@kline_1d",   # 1 gün
+        "maticusdt@kline_1w",   # 1 hafta
+        
+        "dotusdt@kline_1m",   # 1 dakika
+        "dotusdt@kline_3m",   # 3 dakika
+        "dotusdt@kline_5m",   # 5 dakika
+        "dotusdt@kline_15m",  # 15 dakika
+        "dotusdt@kline_30m",  # 30 dakika
+        "dotusdt@kline_1h",   # 1 saat
+        "dotusdt@kline_2h",   # 2 saat
+        "dotusdt@kline_4h",   # 4 saat
+        "dotusdt@kline_1d",   # 1 gün
+        "dotusdt@kline_1w",   # 1 hafta
+        
+        "ltcusdt@kline_1m",   # 1 dakika
+        "ltcusdt@kline_3m",   # 3 dakika
+        "ltcusdt@kline_5m",   # 5 dakika
+        "ltcusdt@kline_15m",  # 15 dakika
+        "ltcusdt@kline_30m",  # 30 dakika
+        "ltcusdt@kline_1h",   # 1 saat
+        "ltcusdt@kline_2h",   # 2 saat
+        "ltcusdt@kline_4h",   # 4 saat
+        "ltcusdt@kline_1d",   # 1 gün
+        "ltcusdt@kline_1w",   # 1 hafta
+        
+        "shibusdt@kline_1m",   # 1 dakika
+        "shibusdt@kline_3m",   # 3 dakika
+        "shibusdt@kline_5m",   # 5 dakika
+        "shibusdt@kline_15m",  # 15 dakika
+        "shibusdt@kline_30m",  # 30 dakika
+        "shibusdt@kline_1h",   # 1 saat
+        "shibusdt@kline_2h",   # 2 saat
+        "shibusdt@kline_4h",   # 4 saat
+        "shibusdt@kline_1d",   # 1 gün
+        "shibusdt@kline_1w",   # 1 hafta
+        
+        "avaxusdt@kline_1m",   # 1 dakika
+        "avaxusdt@kline_3m",   # 3 dakika
+        "avaxusdt@kline_5m",   # 5 dakika
+        "avaxusdt@kline_15m",  # 15 dakika
+        "avaxusdt@kline_30m",  # 30 dakika
+        "avaxusdt@kline_1h",   # 1 saat
+        "avaxusdt@kline_2h",   # 2 saat
+        "avaxusdt@kline_4h",   # 4 saat
+        "avaxusdt@kline_1d",   # 1 gün
+        "avaxusdt@kline_1w",   # 1 hafta
+        # BURAYA KADAR
         #"atomusdt@kline_1m",   # 1 dakika
         #"atomusdt@kline_3m",   # 3 dakika
         #"atomusdt@kline_5m",   # 5 dakika

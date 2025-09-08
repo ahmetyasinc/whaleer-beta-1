@@ -1,138 +1,174 @@
+// src/components/profile_component/(showcase)/(explore)/chooseBotModal.js
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useBotStore } from "@/store/bot/botStore";
+import { useTranslation } from "react-i18next";
+
+function formatUSD(n, locale = "en-US") {
+  if (n === null || n === undefined || Number.isNaN(Number(n))) return "-";
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2
+  }).format(Number(n));
+}
+
+function getPnlPct(initial, current) {
+  const i = Number(initial ?? 0);
+  const c = Number(current ?? 0);
+  if (!(i > 0)) return null; // initial yoksa veya 0/negatifse yüzde hesaplama yok
+  return ((c - i) / i) * 100;
+}
 
 export default function ChooseBotModal({ open, onClose, onSelectBot }) {
-  const { bots, loadBots } = useBotStore();
-  const [selectedBot, setSelectedBot] = useState(null);
+  const { t, i18n } = useTranslation("chooseBotModal");
+  const locale = i18n.language || "en-US";
+
+  const { bots = [], loadBots } = useBotStore();
+  const [tab, setTab] = useState("new"); // 'new' | 'update'
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    if (open) {
-      loadBots();
-    }
+    if (open) loadBots?.();
   }, [open, loadBots]);
+
+  const newListBots = useMemo(
+    () =>
+      (bots || [])
+        .filter((b) => !Boolean(b?.for_sale) && !Boolean(b?.for_rent))
+        .filter((b) => (search ? (b?.name || "").toLowerCase().includes(search.toLowerCase()) : true)),
+    [bots, search]
+  );
+
+  const updateListBots = useMemo(
+    () =>
+      (bots || [])
+        .filter((b) => Boolean(b?.for_sale) || Boolean(b?.for_rent))
+        .filter((b) => (search ? (b?.name || "").toLowerCase().includes(search.toLowerCase()) : true)),
+    [bots, search]
+  );
 
   if (!open) return null;
 
-  const handleSelectBot = (bot) => {
-    setSelectedBot(bot);
-    onSelectBot(bot);
-    onClose();
-  };
+  const list = tab === "new" ? newListBots : updateListBots;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4">
-      <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 text-white rounded-xl shadow-2xl w-full max-w-2xl relative border border-zinc-800 flex flex-col"
-           style={{ height: 'calc(100vh - 120px)', maxHeight: 'calc(100vh - 120px)' }}>
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-6 right-6 text-2xl font-bold hover:text-red-400 transition-colors duration-200 w-8 h-8 flex items-center justify-center hover:bg-red-500/10 rounded-full z-10"
-        >
-          ×
-        </button>
-
-        {/* Header */}
-        <div className="p-8 pb-4 flex-shrink-0">
-          <h2 className="text-xl font-bold text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-            Choose a Bot
-          </h2>
-        </div>
-
-        {/* Bot List - Scrollable Content */}
-        <div className="flex-1 overflow-hidden px-8">
-          <div className="h-full overflow-y-auto custom-scrollbar">
-            {bots.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4 opacity-50">🤖</div>
-                <p className="text-gray-400 text-lg">No bots found</p>
-                <p className="text-gray-500 text-sm mt-2">Create a bot first</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {bots.map((bot) => (
-                  <div
-                    key={bot.id}
-                    className="bg-zinc-800/50 border border-zinc-700 rounded-md px-4 py-4 hover:border-cyan-400/50 transition-all duration-200 group flex items-center gap-4"
-                  >
-                    <div className="flex-1 flex flex-col min-w-0">
-                      {/* Bot Name & Status Dot */}
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className={`w-3 h-3 rounded-full ${bot.isActive ? 'bg-green-400' : 'bg-gray-400'}`} />
-                        <h3 className="text-lg font-semibold text-white group-hover:text-cyan-400 transition-colors truncate">
-                          {bot.name}
-                        </h3>
-                      </div>
-                      {/* Other Bot Info */}
-                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-400 min-w-0">
-                        <div className="flex items-center gap-1">
-                          <span>API:</span>
-                          <span className="text-white">{bot.api}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span>Strategy:</span>
-                          <span className="text-white">{bot.strategy}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span>Period:</span>
-                          <span className="text-white">{bot.period}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span>Balance:</span>
-                          <span className="text-green-400">${bot.balance}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span>Status:</span>
-                          <span className={bot.isActive ? 'text-green-400' : 'text-gray-400'}>
-                            {bot.isActive ? 'Active' : 'Inactive'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    {/* Select Button */}
-                    <button
-                      onClick={() => handleSelectBot(bot)}
-                      className="ml-4 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-500 hover:to-blue-600 text-black font-semibold py-2 px-4 rounded-lg text-sm transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-cyan-400/25 whitespace-nowrap"
-                    >
-                      Select This Bot
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Footer - Cancel Button */}
-        <div className="p-8 pt-4 flex-shrink-0">
-          <div className="flex justify-center">
+    <div className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-4">
+      <div className="w-[95vw] max-w-2xl bg-zinc-900 text-white rounded-xl border border-zinc-800 shadow-2xl">
+        <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
+          <div className="flex gap-2">
             <button
-              onClick={onClose}
-              className="px-8 py-2.5 bg-stone-700 hover:bg-neutral-600 text-white font-medium rounded-lg transition-all duration-200"
+              className={`px-3 py-1.5 rounded-lg text-sm ${tab === "new" ? "bg-cyan-500 text-black" : "bg-zinc-800"}`}
+              onClick={() => setTab("new")}
+              type="button"
+              title={t("tabs.new")}
+              aria-label={t("tabs.new")}
             >
-              Cancel
+              {t("tabs.new")}
+            </button>
+            <button
+              className={`px-3 py-1.5 rounded-lg text-sm ${tab === "update" ? "bg-cyan-500 text-black" : "bg-zinc-800"}`}
+              onClick={() => setTab("update")}
+              type="button"
+              title={t("tabs.update")}
+              aria-label={t("tabs.update")}
+            >
+              {t("tabs.update")}
             </button>
           </div>
+          <button
+            onClick={onClose}
+            className="text-2xl px-2 hover:text-red-400"
+            type="button"
+            title={t("aria.close")}
+            aria-label={t("aria.close")}
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="p-4">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t("search.placeholder")}
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-cyan-500"
+            aria-label={t("search.aria")}
+          />
+        </div>
+
+        <div className="max-h-[50vh] overflow-y-auto p-4 pt-0">
+          {list.length === 0 ? (
+            <div className="text-gray-400 text-sm p-6 text-center">{t("list.empty")}</div>
+          ) : (
+            <ul className="space-y-2">
+              {list.map((b) => {
+                const initial = Number(b?.initial_usd_value ?? 0);
+                const current = Number(b?.current_usd_value ?? 0);
+                const pnlPct = getPnlPct(initial, current);
+
+                const pnlClass =
+                  pnlPct === null
+                    ? "text-gray-400 bg-gray-400/10 border-gray-600/40"
+                    : pnlPct > 0
+                    ? "text-emerald-300 bg-emerald-500/10 border-emerald-500/30"
+                    : pnlPct < 0
+                    ? "text-rose-300 bg-rose-500/10 border-rose-500/30"
+                    : "text-gray-300 bg-gray-500/10 border-gray-500/30";
+
+                const isListed = Boolean(b?.for_sale) || Boolean(b?.for_rent);
+                const saleBadge = b?.for_sale ? (
+                  <span className="px-2 py-0.5 text-[11px] rounded border border-amber-500/30 bg-amber-500/10 text-amber-200">
+                    {t("badges.forSale", { price: formatUSD(b?.sell_price, locale) })}
+                  </span>
+                ) : null;
+
+                const rentBadge = b?.for_rent ? (
+                  <span className="px-2 py-0.5 text-[11px] rounded border border-sky-500/30 bg-sky-500/10 text-sky-200">
+                    {t("badges.forRentPerDay", { price: formatUSD(b?.rent_price, locale) })}
+                  </span>
+                ) : null;
+
+                return (
+                  <li
+                    key={b.id}
+                    className="p-3 rounded-lg border border-zinc-800 bg-zinc-900/70 hover:border-cyan-500/50 transition flex items-center justify-between"
+                  >
+                    <div className="min-w-0">
+                      <div className="font-medium truncate">{b.name}</div>
+
+                      <div className="mt-1 text-xs text-gray-400 flex flex-wrap items-center gap-2">
+                        {/* P&L */}
+                        <span className="whitespace-nowrap">
+                          {formatUSD(initial, locale)} <span className="text-gray-500">→</span> {formatUSD(current, locale)}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded border ${pnlClass}`}>
+                          {pnlPct === null ? t("list.noPnl") : `${pnlPct.toFixed(2)}%`}
+                        </span>
+
+                        {/* Listing badges */}
+                        {saleBadge}
+                        {rentBadge}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => onSelectBot?.(b)}
+                      className="px-3 py-1.5 rounded-lg bg-cyan-500 text-black text-sm hover:bg-cyan-400 shrink-0"
+                      type="button"
+                      title={isListed ? t("actions.selectUpdate") : t("actions.selectNew")}
+                      aria-label={t("actions.select")}
+                    >
+                      {t("actions.select")}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       </div>
-
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #374151;
-          border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #6b7280;
-          border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #9ca3af;
-        }
-      `}</style>
     </div>
   );
 }

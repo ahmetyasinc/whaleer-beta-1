@@ -3,7 +3,7 @@ export const metadata = {
     description: "Backtest ve stratejilerin listelendiği sayfa.",
 };
 
-import ClientPage from './client-page'; // Yeni oluşturacağın istemci bileşeni
+import ClientPage from './client-page';
 
 export default function Showcase() {
     return <ClientPage />;

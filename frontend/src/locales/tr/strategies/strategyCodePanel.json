@@ -1,0 +1,30 @@
+{
+  "titles": {
+    "addNewVersion": "Yeni Sürüm Ekle",
+    "editStrategy": "Stratejiyi Düzenle",
+    "addNewStrategy": "Yeni Strateji Ekle"
+  },
+  "buttons": {
+    "save": "Kaydet",
+    "close": "Kapat",
+    "newVersion": "Yeni Sürüm"
+  },
+  "tooltips": {
+    "fullscreen": "Tam ekran",
+    "fullscreenLocked": "Kilitli sürümler düzenleme için tam ekranda görüntülenemez",
+    "saveLocked": "Kilitli sürümler değiştirilemez"
+  },
+  "inputs": {
+    "namePlaceholder": "Strateji adı..."
+  },
+  "banners": {
+    "locked": "Bu sürüm kilitli (aktif bir bot tarafından kullanılıyor). Düzenlemek için yeni bir sürüm oluşturun."
+  },
+  "labels": {
+    "untitled": "Adsız Strateji"
+  },
+  "errors": {
+    "save": "Strateji kaydedilirken hata"
+  },
+  "terminalReady": "🚀 Terminal hazır..."
+}

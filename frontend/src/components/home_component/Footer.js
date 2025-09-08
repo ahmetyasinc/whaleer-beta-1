@@ -1,18 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
-import i18n from "@/i18n";
 import { useTranslation } from "react-i18next";
 import { FaInstagram, FaLinkedin } from "react-icons/fa";
+import Link from "next/link";
 
-const Footer = ({ locale }) => {
-  const { t } = useTranslation("footer");
+const Footer = () => {
+  const { t, i18n } = useTranslation("footer", { useSuspense: false });
 
-  useEffect(() => {
-    if (locale && i18n.language !== locale) {
-      i18n.changeLanguage(locale);
-    }
-  }, [locale]);
+  const locale = i18n.resolvedLanguage || i18n.language || "en";
+  const withLocale = (path) => (path === "/" ? `/${locale}` : `/${locale}${path}`);
 
   const links = t("links", { returnObjects: true }) || [];
   const leftLinks = links.slice(0, 5);
@@ -25,8 +21,8 @@ const Footer = ({ locale }) => {
           <div className="grid gap-10 lg:grid-cols-4 lg:gap-12">
             {/* About */}
             <div className="lg:col-span-2 glightbox group">
-              <a
-                href="/"
+              <Link
+                href={withLocale("/")}
                 className="mb-4 inline-flex items-center gap-3 no-underline"
               >
                 <img
@@ -35,7 +31,7 @@ const Footer = ({ locale }) => {
                   className="h-10 w-10 rounded-full object-cover ring-2 ring-sky-500/30 group-hover:scale-105 transition-transform duration-300"
                 />
                 <span className="text-xl font-bold text-neutral-200">Whaleer.com</span>
-              </a>
+              </Link>
 
               <div className="text-neutral-200 mt-4 text-left">
                 <p className="text-neutral-200 mb-2">{t("addressLine1")}</p>
@@ -110,7 +106,7 @@ const Footer = ({ locale }) => {
 
           {/* Divider & bottom mini bar */}
           <div className="mt-10 border-t border-neutral-800 pt-6 text-sm text-neutral-400">
-            <p>© {new Date().getFullYear()} Whaleer. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} {t("rights")}</p>
           </div>
         </div>
       </div>

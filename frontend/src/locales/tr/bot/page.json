@@ -1,0 +1,18 @@
+{
+  "tabs": {
+    "myBots": "Botlarım",
+    "purchased": "Satın Alınanlar",
+    "rented": "Kiralık",
+    "noTabYet": "{{tab}} içinde henüz öğe yok"
+  },
+  "actions": {
+    "panicButton": "Panik Butonu!",
+    "panicButtonTitle": "Tüm botları durdur ve pozisyonları kapat",
+    "createNewBot": "Yeni Bot Oluştur"
+  },
+  "empty": {
+    "original": "Henüz orijinal botunuz yok.",
+    "purchased": "Henüz satın aldığınız bir bot yok.",
+    "rented": "Henüz kiraladığınız bir bot yok."
+  }
+}

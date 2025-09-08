@@ -1,0 +1,22 @@
+{
+  "buttons": {
+    "sellRent": "Sell / Rent",
+    "allListings": "All Listings",
+    "myListings": "My Listings",
+    "installPhantom": "Install Phantom",
+    "connectWallet": "Connect Wallet",
+    "connecting": "Connecting...",
+    "signOut": "Sign Out"
+  },
+  "titles": {
+    "allListings": "Show all listings",
+    "myListings": "Show only my listings"
+  },
+  "nav": {
+    "explore": "Explore",
+    "featured": "Featured"
+  },
+  "labels": {
+    "connected": "Connected"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "title": "Are you sure you want to shut down the bot?",
+  "warning": "Your bot will be deleted and all open positions will be closed. Please check your account wallet.",
+  "irreversible": "This action cannot be undone.",
+  "actions": {
+    "cancel": "Cancel",
+    "shutdown": "Shut Down"
+  }
+}

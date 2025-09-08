@@ -1,0 +1,13 @@
+{
+  "loading": "Loading...",
+  "api": {
+    "select": "Select Active API",
+    "noApi": "No API"
+  },
+  "nav": {
+    "portfolio": "My Portfolio",
+    "bots": "My Bots",
+    "indicators": "My Indicators and Strategies"
+  },
+  "settings": "Settings"
+}

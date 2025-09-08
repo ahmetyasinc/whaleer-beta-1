@@ -1,0 +1,31 @@
+{
+  "header": {
+    "joined": "Joined: {{date}}"
+  },
+  "stats": {
+    "totalBots": "Total Bots",
+    "activeBots": "Active Bots",
+    "soldRented": "Sold / Rented",
+    "successRate": "Success Rate",
+    "avgMargin": "Avg. Margin",
+    "followers": "Followers"
+  },
+  "contact": {
+    "title": "Contact"
+  },
+  "bots": {
+    "title": "Created Bots",
+    "active": "Active",
+    "inactive": "Inactive",
+    "uptime": "Uptime",
+    "trades": "Trades",
+    "winRate": "Win Rate",
+    "moreCoins": "+{{count}}"
+  },
+  "runtime": {
+    "startedToday": "Started today",
+    "hoursOnly": "{{hours}} hours",
+    "daysOnly": "{{days}} days",
+    "daysHours": "{{days}} days {{hours}} hours"
+  }
+}

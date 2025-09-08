@@ -1,0 +1,15 @@
+{
+  "ready": "🌊 Hoş geldiniz, Terminal hazır...",
+  "placeholder": "Komut girin (liste için 'help' yazın)",
+  "commands": {
+    "helpTitle": "Kullanılabilir komutlar:",
+    "cls": "cls - Terminali temizle",
+    "help": "help - Komut listesini göster",
+    "time": "time - Geçerli tarih ve saati göster",
+    "uptime": "uptime - Sayfanın ne kadar süredir açık olduğunu göster"
+  },
+  "uptimeFormat": "⏱️ Sayfa açık kalma süresi: {{seconds}} saniye",
+  "warningSample": "Bu bir uyarı mesajıdır!",
+  "successSample": "Bu bir başarı mesajıdır!",
+  "unknown": "Tanımsız komut: {{cmd}}"
+}

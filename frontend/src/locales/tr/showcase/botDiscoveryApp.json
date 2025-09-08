@@ -1,0 +1,13 @@
+{
+  "empty": {
+    "title": "Kriterlerinize uyan bot bulunamadı.",
+    "desc": "Lütfen filtreleri değiştirip tekrar deneyin."
+  },
+  "chart": {
+    "profitPctTitle": "Kâr Grafiği (%)"
+  },
+  "nav": {
+    "prevTooltip": "Önceki bot/kullanıcı",
+    "nextTooltip": "Sonraki bot/kullanıcı"
+  }
+}

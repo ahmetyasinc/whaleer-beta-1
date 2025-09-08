@@ -9,8 +9,11 @@ import ShowcaseLoader from '@/ui/showcaseLoader';
 import BotChart from './botCardChart';
 import BotterGuide from './botterGuide';
 import Trades from './trades';
+import { useTranslation } from 'react-i18next';
 
 const BotDiscoveryApp = () => {
+  const { t } = useTranslation('botDiscoveryApp');
+
   const {
     initializeBots,
     getCurrentBot,
@@ -21,10 +24,11 @@ const BotDiscoveryApp = () => {
   const botData = getCurrentBot();
   const isFollowed = useBotDataStore(state => state.isBotFollowed(botData?.bot?.bot_id));
   const follow = useBotDataStore(state => state.followBot);
-
+  const viewMode = useBotDataStore(s => s.viewMode);
+  
   useEffect(() => {
     initializeBots();
-  }, []);
+  }, [initializeBots, viewMode]);
 
   const handleNavigation = (dir) => {
     navigateBot(dir);
@@ -42,8 +46,8 @@ const BotDiscoveryApp = () => {
     return (
       <div className="flex-1 p-6 h-[calc(100vh-60px)] max-h-screen mt-[60px] relative overflow-auto pl-[340px] pr-[395px] flex items-center justify-center">
         <div className="text-center text-gray-400 text-sm bg-gray-800/50 p-6 rounded-xl border border-gray-600">
-          <p className="text-lg font-semibold text-gray-200 mb-2">No bots found matching your criteria.</p>
-          <p className="text-sm text-gray-400">Please adjust your filters and try again.</p>
+          <p className="text-lg font-semibold text-gray-200 mb-2">{t('empty.title')}</p>
+          <p className="text-sm text-gray-400">{t('empty.desc')}</p>
         </div>
       </div>
     );
@@ -75,7 +79,7 @@ const BotDiscoveryApp = () => {
         {/* Full-width chart card */}
         <div className="col-span-2 mt-[-3px]">
           <div className="bg-gray-800 rounded-2xl shadow-2xl p-4 my-2 border border-gray-700">
-            <h3 className="text-sm font-semibold text-white mb-3">Profit Chart (%)</h3>
+            <h3 className="text-sm font-semibold text-white mb-3">{t('chart.profitPctTitle')}</h3>
             <div className="overflow-hidden">
               <BotChart data={botData.chartData} />
             </div>
@@ -96,7 +100,7 @@ const BotDiscoveryApp = () => {
         <button
           onClick={() => handleNavigation('up')}
           className="p-3 bg-gray-700 rounded-full shadow-lg hover:bg-gray-600 transition-all duration-200 hover:scale-110"
-          title="Previous bot/user"
+          title={t('nav.prevTooltip')}
         >
           <FiChevronUp className="w-5 h-5 text-gray-300" />
         </button>
@@ -104,7 +108,7 @@ const BotDiscoveryApp = () => {
         <button
           onClick={() => handleNavigation('down')}
           className="p-3 bg-gray-700 rounded-full shadow-lg hover:bg-gray-600 transition-all duration-200 hover:scale-110"
-          title="Next bot/user"
+          title={t('nav.nextTooltip')}
         >
           <FiChevronDown className="w-5 h-5 text-gray-300" />
         </button>

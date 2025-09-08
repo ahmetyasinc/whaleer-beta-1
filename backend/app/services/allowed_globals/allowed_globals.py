@@ -28,6 +28,7 @@ def build_allowed_globals(df, print_outputs, indicator_results, updated,
     ns = {
         "__builtins__": {
             "__import__": safe_import,
+            "isinstance": isinstance,
             "abs": abs, "all": all, "any": any, "bin": bin, "bool": bool,
             "timedelta": timedelta, "complex": complex, "dict": dict,
             "await": Await,

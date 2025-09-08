@@ -114,7 +114,7 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
 
         if bot_type == "spot":
             if state == "spot":
-                t["spot"] = max(0.0, curr_pos * curr_per)
+                t["spot"] = (max(0.0, curr_pos * curr_per))/100
         else:  # futures
             if state == "long":
                 t["long"]["pct"] = curr_per
@@ -169,7 +169,7 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
                 ok = maybe_append(act, reduce_frac)
                 if ok:
                     fulness = max(0.0, fulness - reduce_frac)
-                    cur["spot_pct"] = max(0.0, cur["spot_pct"] - reduce_frac * 100.0)
+                    cur["spot_pct"] = max(0.0, cur["spot_pct"] - reduce_frac)
 
     else:  # futures
         for sym, tgt in targets.items():
@@ -245,13 +245,14 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
             meta = tgt["meta"]
             cur = holding_map.get(sym, {"spot_pct": 0.0, "spot_amount": 0.0})
             delta_spot = (tgt["spot"] - cur["spot_pct"])
+
             if delta_spot > 0:
                 add_frac = min(delta_spot, max(0.0, 1.0 - fulness))
                 act = {"coin_id": sym, "trade_type": "spot", "side": "buy", **meta}
                 ok = maybe_append(act, add_frac)
                 if ok:
                     fulness = min(1.0, fulness + add_frac)
-                    cur["spot_pct"] = min(100.0, cur["spot_pct"] + add_frac * 100.0)
+                    cur["spot_pct"] = min(100.0, cur["spot_pct"] + add_frac)
 
     else:
         for sym, tgt in targets.items():

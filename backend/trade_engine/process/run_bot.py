@@ -60,8 +60,9 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
                     "period": bot['period'], "status": "skipped", "message": "No data."
                 })
                 continue
-
-            allowed_globals = allowed_globals_(df_dict[coin_id])
+            
+            print(df_dict[coin_id].tail(10))
+            allowed_globals = allowed_globals_(df_dict[coin_id], bot['id'])
 
             for indicator in indicator_list:
                 exec(indicator['code'], allowed_globals)
@@ -69,7 +70,7 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
             exec(strategy_code, allowed_globals)
 
             result_df = allowed_globals['df']
-
+            print(result_df)
             last_positions = (
                 result_df['position'].iloc[-2:].tolist()
                 if 'position' in result_df.columns and len(result_df) >= 2 else None
@@ -78,8 +79,18 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
                 result_df['percentage'].iloc[-2:].tolist()
                 if 'percentage' in result_df.columns and len(result_df) >= 2 else None
             )
+            
+            both_same = not two_vals_differ(last_positions) and not two_vals_differ(last_percentage)
+            both_zero_positions = all(v == 0 for v in last_positions)
+            both_zero_percentage = all(v == 0 for v in last_percentage)
 
-            should_append = enter_on_start or two_vals_differ(last_positions) or two_vals_differ(last_percentage)
+            should_append = ( # True ise normal çalışacak. False ise sadece değişimlerde işlem yapcak.
+                not enter_on_start # enter_on_start true ise should_append false olmalı
+            )
+            if not should_append and (both_zero_positions or both_zero_percentage): # both_zero_positions yada both_zero_percentage true ise should_append false olacak
+                should_append = True
+            if not should_append and not both_same: # both_same true ise should_append false olcak, both_same false ise should_append true olacak
+                should_append = True
 
             if not should_append:
                 # 🔹 Logla (bilgi)
@@ -108,7 +119,6 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
             results.append(result_entry)
 
         results = control_the_results(bot.get('user_id'), bot['id'], results, min_usd=10.0)
-
         return {
             "bot_id": bot['id'],
             "status": "success",

@@ -80,3 +80,16 @@ async def update_ws_url_and_count(pool: Pool, ws_id: int, url: str, count: int) 
     """
     async with pool.acquire() as conn:
         await conn.execute(query, ws_id, url, count)
+
+async def set_stream_key_closed_and_null_ws_id(pool: Pool, stream_key: str) -> None:
+    """
+    Verilen bir stream_key'in durumunu 'closed' olarak günceller ve ws_id'sini NULL yapar.
+    Bu, anahtarın bir WebSocket grubundan başarıyla kaldırılmasından sonra kullanılır.
+    """
+    query = """
+        UPDATE public.stream_keys
+        SET status = 'closed', ws_id = NULL
+        WHERE stream_key = $1;
+    """
+    async with pool.acquire() as conn:
+        await conn.execute(query, stream_key)

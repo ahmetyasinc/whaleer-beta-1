@@ -9,25 +9,59 @@ from backend.trade_engine.balance.db.stream_key_db import (
     update_streamkey_status
 )
 
+# config.py
+
+# ... (mevcut get_async_pool fonksiyonunuz)
+
+# Binance API Uç Noktaları
+BINANCE_CONFIG = {
+    'spot': {
+        'rest_url': "https://api.binance.com",
+        'ws_url': "wss://stream.binance.com:9443", # veya 443
+        'listenkey_path': "/api/v3/userDataStream",
+        'connection_type': 'spot'
+    },
+    'futures': {
+        'rest_url': "https://fapi.binance.com",
+        'ws_url': "wss://fstream.binance.com",
+        'listenkey_path': "/fapi/v1/listenKey",
+        'connection_type': 'futures'
+    }
+}
+
+# WebSocket Gruplama Ayarları
+WS_MAX_KEYS_PER_GROUP = 100
+
 BASE_URL = "https://fapi.binance.com"
 
+# listenkey_service.py dosyasının başındaki bu satırı SİLİN:
+# BASE_URL = "https://fapi.binance.com"
+
 class ListenKeyManager:
-    def __init__(self, pool, api_id, api_key, user_id, connection_type="futures"):
+    # 1. __init__ metodunu market_config alacak şekilde güncelliyoruz.
+    def __init__(self, pool, api_id, api_key, user_id, market_config: dict):
         self.pool = pool
         self.api_id = api_id
         self.api_key = api_key
         self.user_id = user_id
-        self.connection_type = connection_type
+        
+        # 2. Gerekli tüm değişkenleri market_config sözlüğünden alıyoruz.
+        self.base_url = market_config['rest_url']
+        self.listenkey_path = market_config['listenkey_path']
+        self.connection_type = market_config['connection_type']
+        
         self.listen_key = None
 
     async def create(self, retries: int = 3, delay: float = 0.5):
         """Binance'ten listenKey alır, gerekirse retry eder ve DB'ye upsert eder."""
-        url = f"{BASE_URL}/fapi/v1/listenKey"
+        # 3. Hardcoded URL'leri dinamik değişkenlerle değiştiriyoruz.
+        url = f"{self.base_url}{self.listenkey_path}"
         headers = {"X-MBX-APIKEY": self.api_key}
 
         for attempt in range(1, retries + 1):
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, headers=headers) as resp:
+                    # ... (metodun geri kalanı aynı kalabilir)
                     data = await resp.json()
                     self.listen_key = data.get("listenKey")
 
@@ -38,7 +72,7 @@ class ListenKeyManager:
                     self.api_id,
                     self.connection_type,
                     self.listen_key,
-                    "new",   # oluşturulan key önce new olacak
+                    "new",
                 )
                 print(f"✅ api_id={self.api_id} listenKey oluşturuldu: {self.listen_key}")
                 return
@@ -47,19 +81,18 @@ class ListenKeyManager:
             if attempt < retries:
                 await asyncio.sleep(delay)
 
-        # tüm retry'lar bitti → error
         await update_streamkey_status(self.pool, self.api_id, "error")
         print(f"🚨 api_id={self.api_id} listenKey oluşturma başarısız (tüm denemeler bitti).")
 
     async def refresh(self):
         """Binance'te listenKey’i refresh eder, başarılıysa DB expire süresini uzatır."""
-        url = f"{BASE_URL}/fapi/v1/listenKey"
+        # 3. Hardcoded URL'leri dinamik değişkenlerle değiştiriyoruz.
+        url = f"{self.base_url}{self.listenkey_path}"
         headers = {"X-MBX-APIKEY": self.api_key}
 
         async with aiohttp.ClientSession() as session:
             async with session.put(url, headers=headers) as resp:
                 if resp.status == 200:
-                    # Binance tarafında refresh başarılı
                     await refresh_stream_key_expiration(self.pool, self.api_id, self.connection_type)
                     print(f"🔄 api_id={self.api_id} listenKey başarıyla refresh edildi.")
                 else:
@@ -69,7 +102,8 @@ class ListenKeyManager:
 
     async def refresh_or_create(self):
         """Binance'te refresh dene, başarısızsa yeni listenKey oluştur."""
-        url = f"{BASE_URL}/fapi/v1/listenKey"
+        # 3. Hardcoded URL'leri dinamik değişkenlerle değiştiriyoruz.
+        url = f"{self.base_url}{self.listenkey_path}"
         headers = {"X-MBX-APIKEY": self.api_key}
 
         async with aiohttp.ClientSession() as session:
@@ -82,7 +116,6 @@ class ListenKeyManager:
                     data = await resp.json()
                     print(f"⚠️ api_id={self.api_id} refresh başarısız → {data}")
 
-        # Refresh olmadıysa yeni listenKey oluştur
         await self.create()
 
 
@@ -115,13 +148,13 @@ async def bulk_upsert_listenkeys(pool, records):
     await bulk_upsert_stream_keys(pool, records)
     print(f"✅ {len(records)} listenKey topluca upsert edildi.")
 
+# listenkey_service.py -> refresh_or_create_all fonksiyonunun güncellenmiş hali
 
-async def refresh_or_create_all(pool, connection_type="futures"):
+async def refresh_or_create_all(pool, market_config): # Fonksiyonu da market_config alacak şekilde güncelleyelim
     """
-    status = active, new veya expired olanlar için:
-    - active/new → refresh dene, olmazsa yeni oluştur
-    - expired    → direkt yeni oluştur
+    Tüm uygun listenKey'leri EŞ ZAMANLI olarak yeniler veya yeniden oluşturur.
     """
+    connection_type = market_config['connection_type']
     query = """
         SELECT ak.id, ak.api_key, ak.user_id, sk.status
         FROM public.api_keys ak
@@ -133,35 +166,50 @@ async def refresh_or_create_all(pool, connection_type="futures"):
         records = await conn.fetch(query, connection_type)
 
     if not records:
-        print(f"⚠️ Uygun kriterlere sahip api bulunamadı (connection_type={connection_type})")
+        logging.warning(f"⚠️ [{connection_type.upper()}] Yenilenecek/oluşturulacak listenKey bulunamadı.")
         return
 
-    results = []
+    # 1. Tüm görevleri bir listede topla
+    tasks = []
     for r in records:
-        mgr = ListenKeyManager(pool, r["id"], r["api_key"], r["user_id"], connection_type)
+        mgr = ListenKeyManager(pool, r["id"], r["api_key"], r["user_id"], market_config)
+        if r["status"] == "expired":
+            # expired ise direkt oluşturma görevini ekle
+            tasks.append(mgr.create())
+        else:
+            # active/new ise yenilemeyi dene, olmazsa oluşturan görevi ekle
+            tasks.append(mgr.refresh_or_create())
 
-        try:
-            if r["status"] == "expired":
-                # expired ise → direkt yeni listenKey oluştur
-                res = await mgr.create()
-                print(f"♻️ api_id={r['id']} expired → yeni listenKey oluşturuldu.")
-            else:
-                # active/new → önce refresh dene, başarısızsa yeni oluştur
-                res = await mgr.refresh_or_create()
-            results.append(res)
-        except Exception as e:
-            print(f"❌ api_id={r['id']} işlem sırasında hata: {e}")
+    logging.info(f"🚀 [{connection_type.upper()}] {len(tasks)} adet listenKey için toplu işlem başlatılıyor...")
+
+    # 2. asyncio.gather ile tüm görevleri EŞ ZAMANLI olarak çalıştır
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    # 3. Sonuçları kontrol et (opsiyonel ama önerilir)
+    success_count = 0
+    error_count = 0
+    for res in results:
+        if isinstance(res, Exception):
+            logging.error(f"❌ Toplu işlem sırasında bir görevde hata oluştu: {res}")
+            error_count += 1
+        else:
+            success_count += 1
+    
+    logging.info(f"✅ [{connection_type.upper()}] Toplu işlem tamamlandı. Başarılı: {success_count}, Hatalı: {error_count}")
 
     return results
 
+# Düzeltilmiş, Doğru Çalışan Kod
 async def main():
     pool = await config.get_async_pool()
     if not pool:
         print("❌ DB bağlantısı yok")
         return
 
-    # örnek kullanım
-    await refresh_or_create_all(pool)
+    # ÇÖZÜM: Test için futures ayarlarını config dosyasından alıp fonksiyona iletiyoruz.
+    # Bu dosya sadece futures ile ilgili olduğu için doğrudan futures'ı seçebiliriz.
+    futures_market_config = BINANCE_CONFIG['futures']
+    await refresh_or_create_all(pool, futures_market_config)
 
 if __name__ == "__main__":
     asyncio.run(main())

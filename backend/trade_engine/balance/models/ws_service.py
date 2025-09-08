@@ -219,7 +219,7 @@ class DynamicListenerManager:
             logging.info(f"✅ Yeni WS grubu {new_manager.base_ws_id} oluşturuldu.")
 
     async def _handle_remove_key(self, event: dict):
-        """Bir listenKey'i ait olduğu WS grubundan çıkarır."""
+        """Bir listenKey'i ait olduğu WS grubundan çıkarır ve DB durumunu günceller."""
         ws_id = event.get("ws_id")
         listen_key = event.get("stream_key")
         logging.info(f"➖ Çıkarma işlemi başlatılıyor: {listen_key} (WS ID: {ws_id})")
@@ -231,13 +231,25 @@ class DynamicListenerManager:
         manager = self.active_managers.get(ws_id)
         if not manager:
             logging.warning(f"⚠️ WS ID {ws_id} için aktif yönetici bulunamadı (belki zaten kapatılmış).")
+            # Yöneticisi olmayan bir anahtar için doğrudan DB güncellemesi yapmayı deneyebiliriz.
+            await ws_db.set_stream_key_closed_and_null_ws_id(self.pool, listen_key)
+            logging.info(f"✅ DB Güncellemesi (yönetici yok): {listen_key} durumu 'closed' ve ws_id NULL olarak ayarlandı.")
             return
 
+        # Kalan anahtarları veritabanından al
         updated_keys_records = await ws_db.get_streamkeys_by_ws(self.pool, ws_id)
         updated_keys = [rec['stream_key'] for rec in updated_keys_records]
         
+        # Yöneticiyi kalan anahtarlarla yeniden başlat
         await manager.update_and_restart(updated_keys)
 
+        # ---- YENİ EKLENEN KISIM ----
+        # WS'ten başarıyla çıkarıldıktan sonra DB'de son durumu ('closed') ayarla
+        await ws_db.set_stream_key_closed_and_null_ws_id(self.pool, listen_key)
+        logging.info(f"✅ DB Güncellemesi: {listen_key} durumu 'closed' ve ws_id NULL olarak ayarlandı.")
+        # ---- YENİ EKLENEN KISIM SONU ----
+
+        # Eğer yöneticide hiç anahtar kalmadıysa, yöneticiler listesinden çıkar
         if manager.base_ws_id is None:
             self.active_managers.pop(ws_id, None)
 

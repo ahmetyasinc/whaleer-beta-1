@@ -66,6 +66,17 @@
 - percentage (numeric)
 - profit_loss (numeric)
 
+## public.bot_logs
+- id (bigint)
+- user_id (integer)
+- bot_id (integer)
+- symbol (character varying)
+- period (character varying)
+- level (USER-DEFINED)
+- message (text)
+- details (jsonb)
+- created_at (timestamp with time zone)
+
 ## public.bot_positions
 - id (integer)
 - user_id (integer)
@@ -178,6 +189,8 @@
 - stream_key_expires_at (timestamp without time zone)
 - ws_id (integer)
 - status (character varying)
+- sub_id (bigint)
+- is_futures_enabled (boolean)
 
 ## public.symbol_filters
 - id (integer)
@@ -196,6 +209,7 @@
 - amount (numeric)
 - updated_at (timestamp without time zone)
 - api_id (integer)
+- account_type (USER-DEFINED)
 
 ## public.user_futures_json_settings
 - id (integer)

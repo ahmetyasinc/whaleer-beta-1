@@ -191,3 +191,40 @@ async def get_active_and_new_listenkeys(pool: Pool, connection_type: str = "futu
     async with pool.acquire() as conn:
         rows = await conn.fetch(query, connection_type)
     return [r["stream_key"] for r in rows]
+
+# stream_key_db.py dosyanıza eklenecek
+
+async def get_keys_by_type(pool: Pool, connection_type: str) -> List[dict]:
+    """
+    Belirtilen connection_type'a ve 'active' veya 'new' durumuna sahip
+    tüm anahtar bilgilerini getirir.
+    Servisin başlangıçta durumunu yüklemesi için kullanılır.
+    """
+    query = """
+        SELECT
+            sk.api_id,
+            sk.user_id,
+            sk.sub_id
+        FROM
+            public.stream_keys sk
+        WHERE
+            sk.connection_type = $1 AND sk.status IN ('active', 'new');
+    """
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(query, connection_type)
+        return [dict(r) for r in rows]
+    
+# stream_key_db.py dosyanıza eklenecek
+
+async def set_key_as_closed(pool: Pool, api_id: int, connection_type: str):
+    """
+    Bir anahtarın durumunu 'closed' olarak ayarlar ve sub_id'sini NULL yapar.
+    Abonelikten başarıyla çıkıldıktan sonra kullanılır.
+    """
+    query = """
+        UPDATE public.stream_keys
+        SET status = 'closed', sub_id = NULL
+        WHERE api_id = $1 AND connection_type = $2;
+    """
+    async with pool.acquire() as conn:
+        await conn.execute(query, api_id, connection_type)

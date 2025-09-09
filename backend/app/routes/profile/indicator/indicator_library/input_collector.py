@@ -13,7 +13,6 @@ class InputCollector:
             "step": kwargs.get("step"),
         })
         return default  # Kullanıcının kodu hata vermeden devam etsin diye
-
     def int(self, default, title="", **kwargs):
         return self._add_input("int", title, default, **kwargs)
 

@@ -37,7 +37,8 @@ const CryptoSelectButton = ({locale}) => {
             id: coin.id, 
             name: coin.name, 
             symbol: coin.symbol,
-            binance_symbol: coin.binance_symbol
+            binance_symbol: coin.binance_symbol,
+            tick_size: coin.tick_size
           }));
 
           // Zustand store'un pinned listesini güncelle
@@ -47,7 +48,8 @@ const CryptoSelectButton = ({locale}) => {
               id: coin.id,
               name: coin.name,
               symbol: coin.symbol,
-              binance_symbol: coin.binance_symbol
+              binance_symbol: coin.binance_symbol,
+              tick_size: coin.tick_size
             }));
           
           setCryptosList(coins);

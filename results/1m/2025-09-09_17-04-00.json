@@ -1,0 +1,11 @@
+{
+    "146": [
+        {
+            "coin_id": "ADAUSDT",
+            "trade_type": "spot",
+            "side": "sell",
+            "order_type": "market",
+            "value": 12.591905000000008
+        }
+    ]
+}

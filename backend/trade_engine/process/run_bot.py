@@ -61,7 +61,7 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
                 })
                 continue
             
-            print(df_dict[coin_id].tail(10))
+            #print(df_dict[coin_id].tail(10))
             allowed_globals = allowed_globals_(df_dict[coin_id], bot['id'])
 
             for indicator in indicator_list:

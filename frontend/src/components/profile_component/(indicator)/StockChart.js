@@ -90,6 +90,29 @@ export default function ChartComponent() {
     return undefined;
   }
 
+  function decimalsFromTick(t) {
+    if (t == null) return null;
+    const s = String(t);
+    if (s.includes(".")) return s.split(".")[1].length;
+    const m = s.match(/e-(\d+)/i); // 1e-8 gibi
+    if (m) return parseInt(m[1], 10);
+    return 0; // tam sayı ise
+  }
+
+  function guessPrecisionFromData(data) {
+    if (!data?.length) return 2;
+    let minPrice = Infinity;
+    for (const c of data) if (Number.isFinite(c?.low)) minPrice = Math.min(minPrice, c.low);
+    if (!Number.isFinite(minPrice)) return 2;
+    if (minPrice >= 1) return 2;
+    if (minPrice >= 0.1) return 3;
+    if (minPrice >= 0.01) return 4;
+    if (minPrice >= 0.001) return 5;
+    if (minPrice >= 0.0001) return 6;
+    if (minPrice >= 0.00001) return 7;
+    return 8; // çok küçükler
+  }
+
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
   const [chartData, setChartData] = useState([]);
@@ -302,6 +325,20 @@ export default function ChartComponent() {
       wickUpColor: "rgb(8, 153, 129)",
       wickDownColor: "rgb(242, 54, 69)",
     });
+    
+    // ⬇️ Tick'e göre fiyat formatı ayarla
+    const tick = selectedCrypto?.tick_size ?? null;
+    const tickPrecision = decimalsFromTick(tick);
+    const precision = Math.min(
+      10,
+      Math.max(2, tickPrecision ?? guessPrecisionFromData(chartData))
+    );
+    const minMove = tick ? Number(tick) : Math.pow(10, -precision);
+    
+    candleSeries.applyOptions({
+      priceFormat: { type: "price", precision, minMove },
+    });
+    
     candleSeries.setData(chartData);
 
     const removeRuler = installRulerTool({

@@ -71,7 +71,7 @@ const AddIndicatorButton = ({ indicatorId }) => {
       {isLoading ? (
         <AiOutlineLoading3Quarters className="animate-spin text-yellow-400 text-lg" />
       ) : (
-        <IoDownloadOutline className="text-green-300 text-lg" />
+        <IoDownloadOutline className="text-green-300 hover:text-emerald-500 text-lg" />
       )}
     </button>
   );

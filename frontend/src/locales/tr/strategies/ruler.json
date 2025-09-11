@@ -1,6 +1,6 @@
 {
   "title": "Cetvel",
-  "titleLive": "Cetvel (canlı)",
+  "titleLive": "Cetvel",
   "fields": {
     "start": "Başlangıç",
     "end": "Bitiş",
@@ -8,8 +8,8 @@
     "duration": "Süre"
   },
   "units": {
+    "d": "gün",
     "h": "sa",
-    "m": "dk",
-    "s": "sn"
+    "m": "dk"
   }
 }

@@ -4,6 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePathname, useRouter } from 'next/navigation';
 import i18n from '@/i18n';
+import { IoReturnDownBackOutline } from "react-icons/io5";
+import { FiSave, FiRefreshCcw } from "react-icons/fi";
+
 
 import {
   readSettingsCookie,
@@ -222,24 +225,39 @@ export default function SettingsPage() {
             {/* Title + Actions */}
             <div className="flex items-center justify-between">
               <h1 className="text-2xl font-semibold">
-                {t('title')}
+        {t("title")}
               </h1>
               <div className="flex items-center gap-3">
                 {savedInfo && <span className="text-sm text-emerald-300/90">{savedInfo}</span>}
+        
+                {/* Profile Button */}
+                <button
+                  onClick={() => router.push("/profile")}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors duration-200 hover:scale-[1.02]"
+                >
+                  <IoReturnDownBackOutline className="text-xl" />
+                  {t("myprofile")}
+                </button>
+        
+                {/* Save Button */}
                 <button
                   onClick={onSave}
                   disabled={saving || loading}
-                  className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed transition"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-colors duration-200 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {saving ? t('saving') : t('save')}
+                  <FiSave className="text-lg" />
+                  {saving ? t("saving") : t("save")}
                 </button>
+        
+                {/* Reset Button */}
                 <button
                   onClick={onResetDefaults}
                   disabled={saving}
-                  className="px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 transition"
-                  title={t('reset')}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-white border border-zinc-600 shadow-sm transition-colors duration-200 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed"
+                  title={t("reset")}
                 >
-                  {t('reset')}
+                  <FiRefreshCcw className="text-lg" />
+                  {t("reset")}
                 </button>
               </div>
             </div>

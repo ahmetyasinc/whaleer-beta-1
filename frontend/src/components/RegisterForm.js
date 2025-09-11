@@ -116,7 +116,7 @@ export default function RegisterForm() {
         <div className="bg-[rgb(38,135,192)] rounded-[5px] h-8 w-1/4 flex items-center justify-center absolute left-1 top-[4px] group-hover:w-[151px] z-10 duration-500">
           <FaArrowLeftLong />
         </div>
-        <p className="translate-x-6 translate-y-1">{t("backHome")}</p>
+        <p className="mb-2 translate-x-6 translate-y-1">{t("backHome")}</p>
       </button>
 
       <div className="bg-white/0 backdrop-blur-lg border border-gray-400 rounded-lg shadow-lg overflow-hidden w-full max-w-md">

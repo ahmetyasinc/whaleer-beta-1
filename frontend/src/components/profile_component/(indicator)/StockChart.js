@@ -555,7 +555,7 @@ export default function ChartComponent() {
       cleanupFns.forEach((fn) => { try { fn(); } catch {} });
       if (chartRef.current) { try { chartRef.current.remove(); } catch (error) {} }
     };
-  }, [chartData, indicatorData, strategyData, isMagnetMode, selectedPeriod]);
+  }, [chartData, indicatorData, strategyData, selectedPeriod]);
 
   // ===== Magnet mod değişikliği =====
   useEffect(() => {

@@ -1,6 +1,85 @@
 from typing import Optional, List
 from asyncpg.pool import Pool
 
+
+# Bu fonksiyonları stream_key_db.py dosyanıza ekleyin/güncelleyin
+
+from asyncpg.pool import Pool # Gerekliyse import edin
+
+async def update_key_sub_id_and_status(pool: Pool, api_id: int, sub_id: int, new_status: str):
+    """
+    Bir anahtarın sub_id'sini ve durumunu, connection_type'a bakmadan günceller.
+    """
+    query = """
+        UPDATE public.stream_keys
+        SET sub_id = $2, status = $3
+        WHERE api_id = $1;
+    """
+    async with pool.acquire() as conn:
+        await conn.execute(query, api_id, sub_id, new_status)
+
+async def update_status_by_api_id(pool: Pool, api_id: int, new_status: str):
+    """
+    Belirtilen api_id için bir anahtarın durumunu, connection_type'a bakmadan günceller.
+    """
+    query = """
+        UPDATE public.stream_keys
+        SET status = $2
+        WHERE api_id = $1;
+    """
+    async with pool.acquire() as conn:
+        await conn.execute(query, api_id, new_status)
+
+async def set_key_as_closed(pool: Pool, api_id: int):
+    """
+    Bir anahtarın durumunu 'closed' olarak ayarlar ve sub_id'sini NULL yapar.
+    Abonelikten çıkıldıktan sonra kullanılır, connection_type'a bakmaz.
+    """
+    query = """
+        UPDATE public.stream_keys
+        SET status = 'closed', sub_id = NULL
+        WHERE api_id = $1;
+    """
+    async with pool.acquire() as conn:
+        await conn.execute(query, api_id)
+
+        
+async def get_all_keys(pool):
+    """
+    Veritabanından 'connection_type' filtresi olmadan tüm stream anahtarlarını çeker.
+    """
+    async with pool.acquire() as connection:
+        # connection_type'a göre filtreleme yapmadan tüm kayıtları seç
+        query = "SELECT api_id, user_id, status  FROM stream_keys"
+        records = await connection.fetch(query)
+        return [dict(record) for record in records]
+    
+async def get_api_credentials(pool, api_id: int):
+    """
+    Verilen bir api_id için kimlik bilgileri olan api_key, api_secret ve
+    user_id'yi veritabanından çeker. Bu işlem için stream_keys ve api_keys
+    tablolarını birleştirir.
+    """
+    async with pool.acquire() as connection:
+        # Hata: api_key ve api_secret, stream_keys'de değil, api_keys tablosundadır.
+        # Düzeltme: İki tabloyu JOIN ile birleştirerek doğru veriyi al.
+        query = """
+            SELECT
+                ak.api_key,
+                ak.api_secret,
+                sk.user_id
+            FROM
+                public.stream_keys sk
+            JOIN
+                public.api_keys ak ON sk.api_id = ak.id
+            WHERE
+                sk.api_id = $1
+        """
+        
+        record = await connection.fetchrow(query, api_id)
+        
+        return dict(record) if record else None
+    
 async def attach_listenkeys_to_ws(pool, ws_id: int, listenkeys: list):
     """
     Verilen listenKey'leri ws_id'ye bağla ve status='active' yap.

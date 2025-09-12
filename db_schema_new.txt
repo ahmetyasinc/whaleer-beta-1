@@ -13,6 +13,7 @@
 - spot_balance (numeric)
 - futures_balance (numeric)
 - default (boolean)
+- is_active (boolean)
 
 ## public.api_snapshots
 - id (integer)
@@ -125,6 +126,7 @@
 - price (numeric)
 - amount_state (numeric)
 - leverage (numeric)
+- client_order_id (character varying)
 
 ## public.bots
 - id (integer)

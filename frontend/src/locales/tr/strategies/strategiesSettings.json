@@ -1,0 +1,81 @@
+{
+  "titles": {
+    "settingsForChart": "Ayarlar — Grafik"
+  },
+  "buttons": {
+    "settings": "Ayarlar",
+    "reset": "Sıfırla",
+    "cancel": "İptal",
+    "save": "Kaydet",
+    "close": "Kapat"
+  },
+  "labels": {
+    "chart": "Grafik",
+    "appearance": "Görünüm",
+    "timezone": "Zaman Dilimi",
+    "valueSource": "Değer Kaynağı",
+    "candles": "Mum Seçenekleri",
+    "barOptions": "Bar Seçenekleri",
+    "histogramOptions": "Histogram Seçenekleri",
+    "seriesOptions": "{{type}} Seçenekleri",
+    "priceSettings": "Fiyat Ayarları"
+  },
+  "fields": {
+    "background": "Arka Plan",
+    "textPriceColor": "Yazı / Fiyat Rengi",
+    "seriesType": "Seri",
+    "gridColor": "Grid Rengi",
+    "mode": "Mod",
+    "gmt": "GMT",
+    "useValue": "Kullan",
+    "hollow": "İçi Boş",
+    "heikinAshi": "Heikin Ashi",
+    "upBody": "Yükseliş Gövde",
+    "downBody": "Düşüş Gövde",
+    "upWick": "Yükseliş Fitil",
+    "downWick": "Düşüş Fitil",
+    "border": "Çerçeve",
+    "borderUp": "Yükseliş Çerçeve",
+    "borderDown": "Düşüş Çerçeve",
+    "upColor": "Yükseliş Rengi",
+    "downColor": "Düşüş Rengi",
+    "color": "Renk",
+    "width": "Kalınlık",
+    "stepped": "Basamaklı",
+    "lineColor": "Çizgi Rengi",
+    "topColor": "Üst Renk",
+    "topOpacity": "Üst Opaklık",
+    "bottomColor": "Alt Renk",
+    "bottomOpacity": "Alt Opaklık",
+    "baseValue": "Baz Değer",
+    "opacity": "Opaklık",
+    "pricePrecision": "Hassasiyet (ondalık)",
+    "opacityFor": "{{target}} için opaklık"
+  },
+  "series": {
+    "candlestick": "Mum",
+    "bar": "Bar",
+    "line": "Çizgi",
+    "area": "Alan",
+    "baseline": "Baz Çizgi",
+    "histogram": "Histogram"
+  },
+  "ohlc": {
+    "open": "Açılış",
+    "high": "Yüksek",
+    "low": "Düşük",
+    "close": "Kapanış"
+  },
+  "timezone": {
+    "local": "Yerel",
+    "utc": "UTC",
+    "fixed": "Sabit (GMT±ss:dd)"
+  },
+  "options": {
+    "white": "Beyaz",
+    "black": "Siyah"
+  },
+  "a11y": {
+    "backdrop": "Arka plana tıklayarak kapat"
+  }
+}

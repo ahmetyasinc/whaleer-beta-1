@@ -1,0 +1,81 @@
+{
+  "titles": {
+    "settingsForChart": "Settings — Chart"
+  },
+  "buttons": {
+    "settings": "Settings",
+    "reset": "Reset",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close"
+  },
+  "labels": {
+    "chart": "Chart",
+    "appearance": "Appearance",
+    "timezone": "Timezone",
+    "valueSource": "Value Source",
+    "candles": "Candle Options",
+    "barOptions": "Bar Options",
+    "histogramOptions": "Histogram Options",
+    "seriesOptions": "{{type}} Options",
+    "priceSettings": "Price Settings"
+  },
+  "fields": {
+    "background": "Background",
+    "textPriceColor": "Text / Price Color",
+    "seriesType": "Series",
+    "gridColor": "Grid Color",
+    "mode": "Mode",
+    "gmt": "GMT",
+    "useValue": "Use",
+    "hollow": "Hollow (Outline)",
+    "heikinAshi": "Heikin Ashi",
+    "upBody": "Up Body",
+    "downBody": "Down Body",
+    "upWick": "Up Wick",
+    "downWick": "Down Wick",
+    "border": "Border",
+    "borderUp": "Border Up",
+    "borderDown": "Border Down",
+    "upColor": "Up Color",
+    "downColor": "Down Color",
+    "color": "Color",
+    "width": "Width",
+    "stepped": "Stepped",
+    "lineColor": "Line Color",
+    "topColor": "Top Color",
+    "topOpacity": "Top Opacity",
+    "bottomColor": "Bottom Color",
+    "bottomOpacity": "Bottom Opacity",
+    "baseValue": "Base Value",
+    "opacity": "Opacity",
+    "pricePrecision": "Precision (decimals)",
+    "opacityFor": "Opacity for {{target}}"
+  },
+  "series": {
+    "candlestick": "Candlestick",
+    "bar": "Bar",
+    "line": "Line",
+    "area": "Area",
+    "baseline": "Baseline",
+    "histogram": "Histogram"
+  },
+  "ohlc": {
+    "open": "Open",
+    "high": "High",
+    "low": "Low",
+    "close": "Close"
+  },
+  "timezone": {
+    "local": "Local",
+    "utc": "UTC",
+    "fixed": "Fixed (GMT±hh:mm)"
+  },
+  "options": {
+    "white": "White",
+    "black": "Black"
+  },
+  "a11y": {
+    "backdrop": "Close modal by clicking on backdrop"
+  }
+}

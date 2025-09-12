@@ -1,9 +1,69 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { useProfileStore } from "@/store/profile/profileStore";
 import { useAccountDataStore } from "@/store/profile/accountDataStore";
 import { useTranslation } from "react-i18next";
+
+// ---- Timezone helpers (cookie: wh_settings.timezone = "GMT+3" vb.) ----
+const pad = (n) => String(n).padStart(2, '0');
+
+function getCookie(name) {
+  if (typeof document === 'undefined') return null;
+  const m = document.cookie.split('; ').find((row) => row.startsWith(name + '='));
+  return m ? decodeURIComponent(m.split('=')[1]) : null;
+}
+
+function parseGmtToMinutes(tzStr) {
+  const m = /^GMT\s*([+-])\s*(\d{1,2})(?::?(\d{2}))?$/i.exec((tzStr || '').trim());
+  if (!m) return 0; // GMT+0 fallback
+  const sign = m[1] === '-' ? -1 : 1;
+  const h = parseInt(m[2] || '0', 10);
+  const mins = parseInt(m[3] || '0', 10);
+  return sign * (h * 60 + mins);
+}
+
+function readTimezoneOffsetMinutesFromCookie() {
+  try {
+    const raw = getCookie('wh_settings');
+    if (!raw) return 0;
+    const obj = JSON.parse(raw);
+    return parseGmtToMinutes(obj?.timezone || 'GMT+0');
+  } catch {
+    return 0;
+  }
+}
+
+// Her türlü girişi güvenle UTC epoch saniyeye çevirir
+function parseToUtcSeconds(value) {
+  if (value == null) return null;
+
+  if (typeof value === 'number') {
+    if (value > 1e12) return Math.floor(value / 1000); // ms→s
+    return Math.floor(value); // s
+  }
+
+  if (typeof value === 'string') {
+    if (/^\d+$/.test(value)) {
+      const num = Number(value);
+      return num > 1e12 ? Math.floor(num / 1000) : Math.floor(num);
+    }
+    const hasTz = /[zZ]$|[+-]\d{2}:?\d{2}$/.test(value);
+    const iso = hasTz ? value : `${value.replace(' ', 'T')}Z`; // timezone yoksa UTC varsay
+    const ms = Date.parse(iso);
+    if (!Number.isNaN(ms)) return Math.floor(ms / 1000);
+  }
+
+  const ms = new Date(value).getTime();
+  return Number.isNaN(ms) ? null : Math.floor(ms / 1000);
+}
+
+// UTC saniye + ofset → Date (UTC getter'larıyla okunacak)
+function timeToZonedDate(utcSeconds, offsetMinutes) {
+  const msUTC = (utcSeconds || 0) * 1000;
+  return new Date(msUTC + (offsetMinutes || 0) * 60 * 1000);
+}
+
 
 export default function Portfolio() {
   const { t, i18n } = useTranslation("portfolio");
@@ -21,6 +81,15 @@ export default function Portfolio() {
     () => tradesMap?.[activeApiId] || [],
     [tradesMap, activeApiId]
   );
+  const orderedTransactions = useMemo(
+    () => (Array.isArray(transactions) ? [...transactions].reverse() : []),
+    [transactions]
+  );
+  const [tzOffsetMin, setTzOffsetMin] = useState(0);
+  useEffect(() => {
+    setTzOffsetMin(readTimezoneOffsetMinutesFromCookie());
+  }, []);
+
 
   // ---- Format helpers (locale-aware) ----
   const locale = i18n.language || "en";
@@ -37,23 +106,32 @@ export default function Portfolio() {
   );
 
   const formatDate = useCallback(
-    (date) =>
-      new Intl.DateTimeFormat(locale, {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }).format(new Date(date)),
-    [locale]
+    (date) => {
+      const sec = parseToUtcSeconds(date);
+      if (sec == null) return '—';
+      const d = timeToZonedDate(sec, tzOffsetMin);
+      const Y = d.getUTCFullYear();
+      const M = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const D = String(d.getUTCDate()).padStart(2, '0');
+      // Sadece tarih: DD.MM.YYYY
+      return `${D}.${M}.${Y}`;
+    },
+    [tzOffsetMin]
   );
 
   const formatTime = useCallback(
-    (date) =>
-      new Intl.DateTimeFormat(locale, {
-        hour: "2-digit",
-        minute: "2-digit",
-      }).format(new Date(date)),
-    [locale]
+    (date) => {
+      const sec = parseToUtcSeconds(date);
+      if (sec == null) return '—';
+      const d = timeToZonedDate(sec, tzOffsetMin);
+      const h = String(d.getUTCHours()).padStart(2, '0');
+      const m = String(d.getUTCMinutes()).padStart(2, '0');
+      // Saat: HH:mm
+      return `${h}:${m}`;
+    },
+    [tzOffsetMin]
   );
+
 
   const getTransactionLabel = (direction, type) => {
     const dir = String(direction || "").toLowerCase();
@@ -261,7 +339,7 @@ export default function Portfolio() {
                     </div>
                   </div>
 
-                  {transactions.map((transaction, index) => (
+                  {orderedTransactions.map((transaction, index) => (
                     <div
                       key={`${transaction.symbol}-${transaction.date}-${index}`}
                       className="grid grid-cols-6 gap-3 items-center py-3 bg-gradient-to-r from-slate-800/50 to-slate-900/50 hover:bg-zinc-900 rounded-lg px-2 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10"

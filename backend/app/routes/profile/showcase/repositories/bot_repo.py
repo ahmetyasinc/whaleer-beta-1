@@ -180,7 +180,8 @@ class BotRepository:
                 BotPositions.id,
                 BotPositions.symbol,
                 BotPositions.position_side,
-                #BotPositions.profit_loss
+                BotPositions.realized_pnl,
+                BotPositions.unrealized_pnl
             ).where(
                 BotPositions.bot_id == bot_id,
                 BotPositions.amount > 0
@@ -193,7 +194,7 @@ class BotRepository:
                 id=row.id,
                 pair=row.symbol,
                 type=pos_type,
-                profit=float(row.profit_loss)
+                profit=float(row.realized_pnl+row.unrealized_pnl)
             ))
 
         # 2. bot_holdings'den spot pozisyonlar
@@ -318,14 +319,22 @@ class BotRepository:
             )
 
             # Win rate hesapla
-            #pos_result = await self.db.execute(
-            #    select(BotPositions.profit_loss).where(BotPositions.bot_id == bot.id)
-            #)
-            #hold_result = await self.db.execute(
-            #    select(BotHoldings.profit_loss).where(BotHoldings.bot_id == bot.id)
-            #)
-            pos_result, hold_result = 0,0
-            profits = [float(r[0]) for r in pos_result.all()] + [float(r[0]) for r in hold_result.all()]
+            pos_q = select(
+                (func.coalesce(BotPositions.realized_pnl, 0.0) +
+                 func.coalesce(BotPositions.unrealized_pnl, 0.0)).label("pnl")
+            ).where(BotPositions.bot_id == bot.id)
+            pos_result = await self.db.execute(pos_q)
+            
+            # Spot/holdings
+            hold_q = select(
+                (func.coalesce(BotHoldings.realized_pnl, 0.0) +
+                 func.coalesce(BotHoldings.unrealized_pnl, 0.0)).label("pnl")
+            ).where(BotHoldings.bot_id == bot.id)
+            hold_result = await self.db.execute(hold_q)
+            
+            pnls = [float(r.pnl) for r in pos_result.all()] + [float(r.pnl) for r in hold_result.all()]
+
+            profits = sum(pnls)
             total = len(profits)
             wins = len([p for p in profits if p > 0])
             win_rate = wins / total if total > 0 else 0.0

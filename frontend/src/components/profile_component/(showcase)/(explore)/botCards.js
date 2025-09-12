@@ -1,7 +1,7 @@
 // components/BotCard.js
 "use client";
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   FiCalendar,
@@ -23,6 +23,80 @@ import { useTranslation } from "react-i18next";
 import BuyModal from "@/components/profile_component/(showcase)/(checkout)/BuyModal";
 import RentModal from "@/components/profile_component/(showcase)/(checkout)/RentModal";
 
+/* =========================
+   Timezone helpers
+   ========================= */
+const pad = (n) => String(n).padStart(2, '0');
+
+function getCookie(name) {
+  if (typeof document === 'undefined') return null;
+  const m = document.cookie.split('; ').find((row) => row.startsWith(name + '='));
+  return m ? decodeURIComponent(m.split('=')[1]) : null;
+}
+
+// "GMT+3", "GMT-5:30" → dakika cinsinden offset
+function parseGmtToMinutes(tzStr) {
+  const m = /^GMT\s*([+-])\s*(\d{1,2})(?::?(\d{2}))?$/i.exec((tzStr || '').trim());
+  if (!m) return 0;
+  const sign = m[1] === '-' ? -1 : 1;
+  const h = parseInt(m[2] || '0', 10);
+  const mins = parseInt(m[3] || '0', 10);
+  return sign * (h * 60 + mins);
+}
+
+function readTimezoneOffsetMinutesFromCookie() {
+  try {
+    const raw = getCookie('wh_settings');
+    if (!raw) return 0; // GMT+0
+    const obj = JSON.parse(raw);
+    return parseGmtToMinutes(obj?.timezone || 'GMT+0');
+  } catch {
+    return 0;
+  }
+}
+
+// Değer → UTC saniye
+function parseToUtcSeconds(value) {
+  if (value == null) return null;
+
+  if (typeof value === 'number') {
+    if (value > 1e12) return Math.floor(value / 1000); // ms → s
+    return Math.floor(value); // s
+  }
+
+  if (typeof value === 'string') {
+    if (/^\d+$/.test(value)) {
+      const num = Number(value);
+      return num > 1e12 ? Math.floor(num / 1000) : Math.floor(num);
+    }
+    // ISO değilse UTC varsayalım
+    const hasTz = /[zZ]$|[+-]\d{2}:?\d{2}$/.test(value);
+    const iso = hasTz ? value : `${value.replace(' ', 'T')}Z`;
+    const ms = Date.parse(iso);
+    if (!Number.isNaN(ms)) return Math.floor(ms / 1000);
+  }
+
+  const ms = new Date(value).getTime();
+  return Number.isNaN(ms) ? null : Math.floor(ms / 1000);
+}
+
+// UTC saniye + offset → Date (UTC getter’larıyla okunacak)
+function timeToZonedDate(utcSeconds, offsetMinutes) {
+  const msUTC = (utcSeconds || 0) * 1000;
+  return new Date(msUTC + (offsetMinutes || 0) * 60 * 1000);
+}
+
+// Sadece tarih (saat yok): DD.MM.YYYY
+function formatDateOnly(value, offsetMinutes) {
+  const sec = parseToUtcSeconds(value);
+  if (sec == null) return '—';
+  const d = timeToZonedDate(sec, offsetMinutes);
+  const Y = d.getUTCFullYear();
+  const M = pad(d.getUTCMonth() + 1);
+  const D = pad(d.getUTCDate());
+  return `${D}.${M}.${Y}`;
+}
+
 const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
   if (!botData) return null;
 
@@ -31,15 +105,29 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
   const [buyOpen, setBuyOpen] = useState(false);
   const [rentOpen, setRentOpen] = useState(false);
 
-  const formatRunningTime = (hours) => {
-    if (hours < 1) return t('runtime.startedToday');
-    const days = Math.floor(hours / 24);
-    const remainingHours = hours % 24;
-    return days === 0
-      ? t('runtime.hoursOnly', { hours })
-      : remainingHours === 0
-        ? t('runtime.daysOnly', { days })
-        : t('runtime.daysHours', { days, hours: remainingHours });
+  const [tzOffsetMin, setTzOffsetMin] = useState(0);
+  useEffect(() => {
+    setTzOffsetMin(readTimezoneOffsetMinutesFromCookie());
+  }, []);
+
+  // runningTime: saat cinsinden gelebilir (float/int). Gün-saat metni.
+  const formatRunningTime = (hoursInput) => {
+    const h = Math.max(0, Math.floor(Number(hoursInput) || 0)); // negatif/NaN koruması + tam saat
+    if (h < 1) return t('runtime.startedToday'); // <1 saat
+
+    const days = Math.floor(h / 24);
+    const remainingHours = h % 24;
+
+    if (days === 0) {
+      // sadece saat
+      return t('runtime.hoursOnly', { hours: h });
+    }
+    if (remainingHours === 0) {
+      // tam gün
+      return t('runtime.daysOnly', { days });
+    }
+    // gün + saat
+    return t('runtime.daysHours', { days, hours: remainingHours });
   };
 
   const coins = useMemo(() => {
@@ -140,14 +228,22 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
 
           {/* Stats */}
           <div className="flex flex-col space-y-2 mb-6">
-            <StatBox icon={<FiCalendar />} title={t('stats.createdOn')} value={botData.startDate} />
-            <StatBox icon={<FiClock />} title={t('stats.uptime')} value={formatRunningTime(botData.runningTime)} />
+            {/* createdOn: sadece tarih, cookie timezone'a göre */}
+            <StatBox
+              icon={<FiCalendar />}
+              title={t('stats.createdOn')}
+              value={formatDateOnly(botData.startDate, tzOffsetMin)}
+            />
+            <StatBox
+              icon={<FiClock />}
+              title={t('stats.uptime')}
+              value={formatRunningTime(botData.runningTime)}
+            />
             <StatBox icon={<FiTrendingUp />} title={t('stats.winRate')} value={`${botData.winRate}%`} />
             <StatBox icon={<LuChartNoAxesCombined />} title={t('stats.totalMargin')} value={`${botData.totalMargin}%`} />
             <StatBox icon={<GiCharging />} title={t('stats.profitFactor')} value={botData.profitFactor} />
             <StatBox icon={<IoMdWarning />} title={t('stats.riskFactor')} value={botData.riskFactor} />
             <StatBox icon={<LiaChargingStationSolid />} title={t('stats.avgFullness')} value={`${botData.avg_fullness}%`} />
-            <StatBox icon={<MdOutlineNumbers />} title={t('stats.tradesDWM')} value={`${botData.dayTrades} / ${botData.weekTrades} / ${botData.monthTrades}`} />
             <StatBoxTrades icon={<FiBarChart />} title={t('stats.plDWM')} value={`${botData.dayMargin}% / ${botData.weekMargin}% / ${botData.monthMargin}%`} />
           </div>
 

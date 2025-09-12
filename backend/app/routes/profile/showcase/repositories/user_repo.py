@@ -55,15 +55,22 @@ class UserRepository:
                 select(func.count()).select_from(BotTrades).where(BotTrades.bot_id == bot.id)
             )
             # Win rate
-            #pos_result = await self.db.execute(
-            #    select(BotPositions.profit_loss).where(BotPositions.bot_id == bot.id)
-            #)
-            #hold_result = await self.db.execute(
-            #    select(BotHoldings.profit_loss).where(BotHoldings.bot_id == bot.id)
-            #)
-            pos_result, hold_result = 0,0
-            profits = [float(r[0]) for r in pos_result.all()] + [float(r[0]) for r in hold_result.all()]
-            win_rate = len([p for p in profits if p > 0]) / len(profits) if profits else 0.0
+            pos_q = select(
+                (func.coalesce(BotPositions.realized_pnl, 0.0) +
+                 func.coalesce(BotPositions.unrealized_pnl, 0.0)).label("pnl")
+            ).where(BotPositions.bot_id == bot.id)
+            pos_result = await self.db.execute(pos_q)
+            
+            # Spot/holdings
+            hold_q = select(
+                (func.coalesce(BotHoldings.realized_pnl, 0.0) +
+                 func.coalesce(BotHoldings.unrealized_pnl, 0.0)).label("pnl")
+            ).where(BotHoldings.bot_id == bot.id)
+            hold_result = await self.db.execute(hold_q)
+            
+            pnls = [float(r.pnl) for r in pos_result.all()] + [float(r.pnl) for r in hold_result.all()]
+
+            win_rate = (sum(p > 0 for p in pnls) / len(pnls)) if pnls else 0.0
 
             if bot.initial_usd_value:
                 profit_rate = ((float(bot.current_usd_value or 0) - float(bot.initial_usd_value)) / float(bot.initial_usd_value))*100

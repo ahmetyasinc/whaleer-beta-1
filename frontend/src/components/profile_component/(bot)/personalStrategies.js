@@ -5,7 +5,7 @@ import { IoMdStar, IoIosStarOutline } from "react-icons/io";
 import { useTranslation } from "react-i18next";
 
 const PersonalStrategies = ({ onSelect }) => {
-  const { t } = useTranslation("personalStrategies");
+  const { t } = useTranslation("botPersonalStrategies");
   const { favorites, strategies } = useStrategyStore();
 
   return (

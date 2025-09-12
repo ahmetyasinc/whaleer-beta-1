@@ -1,3 +1,4 @@
+// src/components/chart/PanelChart.jsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -18,7 +19,8 @@ import {
   FUTURE_PADDING_BARS,
   getLastRangeCache,
 } from "@/utils/chartSync";
-
+// 🔽 YENİ: settings’i içeri al
+import { useChartSettingsStore } from "@/store/indicator/chartSettingsStore";
 
 function hexToRgba(hex, opacity) {
   hex = hex.replace("#", "");
@@ -30,7 +32,7 @@ function hexToRgba(hex, opacity) {
 }
 
 export default function PanelChart({ indicatorName, indicatorId, subId }) {
-  // UTC tabanlı tarih üretici
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const pad = (n) => String(n).padStart(2, "0");
 
   function timeToUTCDate(t) {
@@ -45,7 +47,6 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     const isHours = ["1h","2h","4h"].includes(period);
     const isDays  = ["1d"].includes(period);
     const isWeeks = ["1w"].includes(period);
-
     return (t) => {
       const d = timeToUTCDate(t);
       const Y = d.getUTCFullYear();
@@ -53,16 +54,68 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       const D = pad(d.getUTCDate());
       const h = pad(d.getUTCHours());
       const m = pad(d.getUTCMinutes());
-
-      if (isMins)  return `${D}.${M} ${h}:${m}`; // 1–30m
-      if (isHours) return `${D}.${M} ${h}:00`;      // 1h–4h
-      if (isDays)  return `${D}.${M}.${Y}`;      // 1d
-      if (isWeeks) return `${D}.${M}.${Y}`;      // 1w
-
+      if (isMins)  return `${D}.${M} ${h}:${m}`;
+      if (isHours) return `${D}.${M} ${h}:00`;
+      if (isDays)  return `${D}.${M}.${Y}`;
+      if (isWeeks) return `${D}.${M}.${Y}`;
       return `${D}.${M} ${h}:${m}`;
     };
   }
 
+  // ---- Cookie & timezone helpers ----
+  function getCookie(name) {
+    if (typeof document === 'undefined') return null;
+    const m = document.cookie.split('; ').find(row => row.startsWith(name + '='));
+    return m ? decodeURIComponent(m.split('=')[1]) : null;
+  }
+  function parseGmtToMinutes(tzStr) {
+    const m = /^GMT\s*([+-])\s*(\d{1,2})(?::?(\d{2}))?$/i.exec((tzStr || '').trim());
+    if (!m) return 0;
+    const sign = m[1] === '-' ? -1 : 1;
+    const h = parseInt(m[2] || '0', 10);
+    const mins = parseInt(m[3] || '0', 10);
+    return sign * (h * 60 + mins);
+  }
+  function readTimezoneOffsetMinutesFromCookie() {
+    try {
+      const raw = getCookie('wh_settings');
+      if (!raw) return 0;
+      const obj = JSON.parse(raw);
+      return parseGmtToMinutes(obj?.timezone || 'GMT+0');
+    } catch { return 0; }
+  }
+
+  function timeToZonedDate(t, offsetMinutes) {
+    let msUTC;
+    if (t && typeof t === 'object' && 'year' in t && 'month' in t && 'day' in t) {
+      msUTC = Date.UTC(t.year, t.month - 1, t.day, 0, 0, 0);
+    } else {
+      const sec = (typeof t === 'number' ? t : 0);
+      msUTC = sec * 1000;
+    }
+    return new Date(msUTC + (offsetMinutes || 0) * 60 * 1000);
+  }
+  function makeZonedFormatter(period, offsetMinutes) {
+    const isMins  = ["1m","3m","5m","15m","30m"].includes(period);
+    const isHours = ["1h","2h","4h"].includes(period);
+    const isDays  = period === "1d";
+    const isWeeks = period === "1w";
+    const twoDigitYear = (Y) => String(Y).slice(2);
+    return (t) => {
+      const d = timeToZonedDate(t, offsetMinutes);
+      const Y = d.getUTCFullYear();
+      const yy = twoDigitYear(Y);
+      const M = pad(d.getUTCMonth() + 1);
+      const D = pad(d.getUTCDate());
+      const h = pad(d.getUTCHours());
+      const m = pad(d.getUTCMinutes());
+      if (isMins)  return `${D}.${M} ${h}:${m}`;
+      if (isHours) return `${D}.${M}.${yy} ${h}:00`;
+      if (isDays)  return `${D}.${M}.${yy}`;
+      if (isWeeks) return `${D}.${M}.${yy}`;
+      return `${D}.${M}.${yy} ${h}:${m}`;
+    };
+  }
 
   const { selectedPeriod } = useCryptoStore();
   const chartContainerRef = useRef(null);
@@ -70,12 +123,24 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
   const { indicatorData, removeSubIndicator } = useIndicatorDataStore();
 
   const [displayName, setDisplayName] = useState(`${indicatorId} (${subId})`);
+  const [tzOffsetMin, setTzOffsetMin] = useState(0);
+
+  // 🔽 YENİ: settings’i al
+  const { settings } = useChartSettingsStore();
 
   // ==== Senkronizasyon guard & ID ====
   const chartId = `${indicatorId}-${subId}`;
   const isApplyingRef = useRef(false);
   const lastSeqAppliedRef = useRef(0);
   let rafHandle = null;
+
+  // 🔽 YENİ: timezone cookie'sini settings değişince de yeniden oku (main ile aynı davranış)
+  useEffect(() => {
+    setTzOffsetMin(readTimezoneOffsetMinutesFromCookie());
+  }, [settings.timezoneMode, settings.timezoneFixed]);
+
+  // formatter’ı settings’e bağlı hale getir
+  const fmt = makeZonedFormatter(selectedPeriod, tzOffsetMin);
 
   useEffect(() => {
     const indicatorInfo = indicatorData?.[indicatorId]?.subItems?.[subId];
@@ -85,19 +150,24 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     const firstNonGraphItem = result.find((r) => r.on_graph === false);
     if (firstNonGraphItem?.name) setDisplayName(firstNonGraphItem.name);
 
+    // 🔽 YENİ: main chart’taki görsel ayarları kullan
+    const textColor = settings.textColor === "black" ? "#111111" : "#ffffff";
+    const gridColor = settings?.grid?.color || "#111111";
+    const bgColor = settings.bgColor || (settings.theme === 'light' ? '#ffffff' : 'rgb(0,0,7)');
+
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
       height: chartContainerRef.current.clientHeight,
-      layout: { background: { color: "rgb(0, 0, 7)" }, textColor: "#FFF" },
-      grid: { vertLines: { color: "#111" }, horzLines: { color: "#111" } },
+      layout: { background: { color: bgColor }, textColor },
+      grid: { vertLines: { color: gridColor }, horzLines: { color: gridColor } },
       lastValueVisible: false,
-      localization: { timeFormatter: makeUTCFormatter(selectedPeriod) },
+      localization: { timeFormatter: fmt },
       timeScale: {
         rightBarStaysOnScroll: true,
         shiftVisibleRangeOnNewBar: false,
         timeVisible: !["1d","1w"].includes(selectedPeriod),
         secondsVisible: false,
-        tickMarkFormatter: makeUTCFormatter(selectedPeriod),
+        tickMarkFormatter: fmt,
       },
     });
 
@@ -128,37 +198,41 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     const timeScale = chart.timeScale();
     timeScale.applyOptions({ rightOffset: FUTURE_PADDING_BARS });
 
-    // Seriler
+    // Seriler (mevcut mantığa dokunmuyoruz)
     result
       .filter((item) => item?.on_graph === false)
-      .forEach(({ type, settings, data }) => {
+      .forEach(({ type, settings: s, data }) => {
         let series;
         switch (type) {
           case "line":
-            series = chart.addLineSeries({ color: settings?.color || "white", lineWidth: settings?.width || 1, priceLineVisible: false });
+            series = chart.addLineSeries({ color: s?.color || "white", lineWidth: s?.width || 1, priceLineVisible: false, lastValueVisible: false });
             break;
           case "histogram": {
-            const defaultColor = settings?.color ?? "0, 128, 0";
-            const opacity = settings?.opacity ?? 1;
+            const defaultColor = s?.color ?? "0, 128, 0";
+            const opacity = s?.opacity ?? 1;
             const colorString = defaultColor.includes(",") ? `rgba(${defaultColor}, ${opacity})` : hexToRgba(defaultColor, opacity);
-            series = chart.addHistogramSeries({ color: colorString, priceLineVisible: false });
+            series = chart.addHistogramSeries({ color: colorString, priceLineVisible: false, lastValueVisible: false });
             break;
           }
           case "area":
-            series = chart.addAreaSeries({ topColor: settings?.color || "rgba(33, 150, 243, 0.5)", bottomColor: "rgba(33, 150, 243, 0.1)", lineColor: settings?.color || "blue", priceLineVisible: false });
+            series = chart.addAreaSeries({
+              topColor: s?.color || "rgba(33, 150, 243, 0.5)",
+              bottomColor: "rgba(33, 150, 243, 0.1)",
+              lineColor: s?.color || "blue",
+              priceLineVisible: false,
+              lastValueVisible: false,
+            });
             break;
           default:
-            series = chart.addLineSeries({ color: "white", lineWidth: 2, priceLineVisible: false });
+            series = chart.addLineSeries({ color: "white", lineWidth: 2, priceLineVisible: false, lastValueVisible: false });
         }
         const timeValueMap = new Map();
         data.forEach(([time, value]) => {
           if (value === undefined) return;
           let ms;
           if (typeof time === "number") {
-            // saniye mi milisaniye mi?
             ms = time > 1e12 ? time : time * 1000;
           } else if (typeof time === "string") {
-            // ISO ise ve Z yoksa UTC olarak kabul etmesi için Z ekle
             const iso = /Z$/.test(time) ? time : time + "Z";
             ms = Date.parse(iso);
           } else {
@@ -184,12 +258,10 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       requestAnimationFrame(() => { isApplyingRef.current = false; });
     };
 
-    // 1) Cache varsa direkt uygula
     const cached = getLastRangeCache();
     if (cached) {
       applyRangeSilently(cached);
     } else {
-      // 2) Cache yoksa main'den iste → ilk gelen RANGE_EVENT (main-chart) ile uygula
       const oneShot = (e) => {
         const { sourceId } = (e && e.detail) || {};
         if (sourceId === 'main-chart') {
@@ -198,11 +270,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
         }
       };
       window.addEventListener(RANGE_EVENT, oneShot);
-    
-      // İstek yayınla
       window.dispatchEvent(new CustomEvent(RANGE_REQUEST_EVENT));
-    
-      // 3) Emniyet: kısa süre yanıt yoksa fallback (son 5 bar, son bar ortada)
       setTimeout(() => {
         try { window.removeEventListener(RANGE_EVENT, oneShot); } catch (_) {}
         let dataLen = 0;
@@ -221,7 +289,6 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       }, 150);
     }
 
-    //timeScale.scrollToRealTime();
     const removeWheelZoom = installCursorWheelZoom({
       chart,
       chartId,
@@ -232,8 +299,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     });
     cleanupFns.push(removeWheelZoom);
 
-
-    // ===== ZAMAN SİNK. – YAYIN (Sadece lider) =====
+    // Zaman sink – yayın
     timeScale.subscribeVisibleTimeRangeChange(() => {
       if (isApplyingRef.current) return;
       if (!isLeader(chartId)) return;
@@ -257,7 +323,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       });
     });
 
-    // ===== ZAMAN SİNK. – DİNLE (Uygula ama yayınlama) =====
+    // Zaman sink – dinle
     const onRangeEvent = (e) => {
       const { from, to, rightOffset, sourceId, seq } = (e && e.detail) || {};
       if (sourceId === chartId) return;
@@ -269,33 +335,49 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       requestAnimationFrame(() => { isApplyingRef.current = false; });
     };
     window.addEventListener(RANGE_EVENT, onRangeEvent);
-    
-    // Resize
+
     const resizeObserver = new ResizeObserver(() => {
       if (chartContainerRef.current) {
-        chart.applyOptions({ width: chartContainerRef.current.clientWidth, height: chartContainerRef.current.clientHeight });
+        chart.applyOptions({
+          width: chartContainerRef.current.clientWidth,
+          height: chartContainerRef.current.clientHeight
+        });
       }
     });
     resizeObserver.observe(chartContainerRef.current);
 
-    // cleanup
     return () => {
       window.removeEventListener(RANGE_EVENT, onRangeEvent);
       resizeObserver.disconnect();
-      if (chartRef.current) { try { chartRef.current.remove(); } catch (error) {} }
+      if (chartRef.current) { try { chartRef.current.remove(); } catch {} }
       cleanupFns.forEach((fn) => { try { fn(); } catch {} });
     };
-  }, [indicatorData, indicatorId, subId, selectedPeriod]);
+  // 🔽 settings bağımlılığı eklendi (bg/text/grid de değişince yeniden kur)
+  }, [indicatorData, indicatorId, subId, selectedPeriod, tzOffsetMin, settings]);
+
+  // 🔽 YENİ: settings görseli değişirse chart’ı yeniden yaratmadan da güncelle (opsiyonel ama akıcı)
+  useEffect(() => {
+    if (!chartRef.current) return;
+    const textColor = settings.textColor === "black" ? "#111111" : "#ffffff";
+    const gridColor = settings?.grid?.color || "#111111";
+    const bgColor = settings.bgColor || (settings.theme === 'light' ? '#ffffff' : 'rgb(0,0,7)');
+    chartRef.current.applyOptions({
+      layout: { background: { color: bgColor }, textColor },
+      grid: { vertLines: { color: gridColor }, horzLines: { color: gridColor } },
+      localization: { timeFormatter: makeZonedFormatter(selectedPeriod, tzOffsetMin) },
+      timeScale: { tickMarkFormatter: makeZonedFormatter(selectedPeriod, tzOffsetMin) },
+    });
+  }, [settings, selectedPeriod, tzOffsetMin]);
 
   return (
     <div className="relative w-full h-full">
-      <div className="absolute top-2 left-2 z-10 flex items-center gap-2 bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-md">
+      <div className="absolute top-2 left-2 z-10 flex items-center gap-2 bg-gray-800/50 text-white text-xs px-2 py-1 rounded shadow-md">
         <span>{indicatorName}</span>
-        <button className="hover:text-yellow-400" onClick={() => console.log('Open settings via parent')}>⚙️</button>
+        <button className="hover:text-yellow-400" onClick={() => setSettingsOpen(true)}>⚙️</button>
         <button className="hover:text-red-400" onClick={() => removeSubIndicator(indicatorId, subId)}>❌</button>
       </div>
       <div ref={chartContainerRef} className="absolute top-0 left-0 w-full h-full"></div>
-      <IndicatorSettingsModal isOpen={false} onClose={() => {}} indicatorId={indicatorId} subId={subId} />
+      <IndicatorSettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} indicatorId={indicatorId} subId={subId} />
     </div>
   );
 }

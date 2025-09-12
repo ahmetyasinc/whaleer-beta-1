@@ -1221,7 +1221,7 @@ async def last_trial():
            
         
     }
-    test_one ={"110": [
+    test_one ={"99": [
             
               {
                 "trade_type": "test_futures",
@@ -1232,7 +1232,7 @@ async def last_trial():
                 "price": 3000,
                 "positionside": "long",  # ✅ Kullanıcı "long" gönderdi, DB'ye "long" kaydedilir, Binance'e "BOTH"
                 "timeInForce": "GTC",
-                "leverage": 10,
+                "leverage": 3,
             }
         ]
         

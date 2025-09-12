@@ -14,6 +14,7 @@
 - spot_balance (numeric)
 - futures_balance (numeric)
 - default (boolean)
+- is_active (boolean)
 
 ## public.api_snapshots
 - id (integer)
@@ -120,6 +121,7 @@
 - price (numeric)
 - amount_state (numeric)
 - leverage (numeric)
+- client_order_id (character varying)
 
 ## public.bots
 - id (integer)
@@ -191,6 +193,7 @@
 - status (character varying)
 - sub_id (bigint)
 - is_futures_enabled (boolean)
+- spot_status (character varying)
 
 ## public.symbol_filters
 - id (integer)
@@ -207,9 +210,11 @@
 - user_id (integer)
 - coin_symbol (character varying)
 - amount (numeric)
-- updated_at (timestamp without time zone)
+- updated_at (timestamp with time zone)
 - api_id (integer)
-- account_type (USER-DEFINED)
+- account_type (text)
+- free_amount (numeric)
+- locked_amount (numeric)
 
 ## public.user_futures_json_settings
 - id (integer)

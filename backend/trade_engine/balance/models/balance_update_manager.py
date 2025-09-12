@@ -72,6 +72,8 @@ async def update_permissions_in_db(stream_key_id: int, is_futures_enabled: bool)
 
 # balance_update_manager.py içindeki bu fonksiyonu güncelle
 
+# Lütfen update_balances_in_db fonksiyonunu bu blokla tamamen değiştirin.
+
 async def update_balances_in_db(api_id: int, user_id: int, balances: List[Dict[str, Any]]):
     """user_api_balances tablosunda tam senkronizasyon (ekle/güncelle + artık olmayanları sil)."""
     async with await get_async_connection() as conn:
@@ -85,22 +87,35 @@ async def update_balances_in_db(api_id: int, user_id: int, balances: List[Dict[s
                 await conn.execute("DELETE FROM public.user_api_balances WHERE api_id = $1", api_id)
                 return
 
+            # --- DEĞİŞTİRİLDİ: SQL sorgusu ve veri listesi yeni sütunları içerecek şekilde güncellendi ---
+            
             # 1) Ekle veya güncelle (upsert)
             insert_query = """
-                INSERT INTO public.user_api_balances (api_id, user_id, coin_symbol, amount, account_type, updated_at)
-                VALUES ($1, $2, $3, $4, $5, NOW())
+                INSERT INTO public.user_api_balances 
+                (api_id, user_id, coin_symbol, amount, free_amount, locked_amount, account_type, updated_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
                 ON CONFLICT (api_id, coin_symbol, account_type)
                 DO UPDATE SET 
                     amount = EXCLUDED.amount,
+                    free_amount = EXCLUDED.free_amount,
+                    locked_amount = EXCLUDED.locked_amount,
                     user_id = EXCLUDED.user_id,
                     updated_at = NOW()
             """
             data_to_insert = [
-                (api_id, user_id, b['asset'], b['amount'], b['account_type']) for b in balances
+                (
+                    api_id, 
+                    user_id, 
+                    b['asset'], 
+                    b['amount'], 
+                    b['free_amount'], 
+                    b['locked_amount'], 
+                    b['account_type']
+                ) for b in balances
             ]
             await conn.executemany(insert_query, data_to_insert)
 
-            # 2) Artık olmayan coinleri sil
+            # 2) Artık olmayan coinleri silme mantığı aynı kalabilir, doğru çalışıyor.
             existing_assets = [b['asset'] for b in balances]
             existing_accounts = [b['account_type'] for b in balances]
 
@@ -117,39 +132,42 @@ async def update_balances_in_db(api_id: int, user_id: int, balances: List[Dict[s
                 existing_accounts
             )
 
-    logging.info(f"API ID {api_id} için {len(balances)} bakiye güncellendi, artık olmayanlar silindi.")
-
+    logging.info(f"API ID {api_id} için {len(balances)} bakiye (total/free/locked) güncellendi, artık olmayanlar silindi.")
 
 async def process_user(api_key_data: Dict[str, Any]):
-    """İki farklı ID'yi alıp doğru fonksiyonlara yönlendirir."""
-    # BURASI ÇOK ÖNEMLİ: İki farklı ID'yi alıyoruz
-    stream_key_id = api_key_data['id']      # Bu ID (3, 4 gibi) stream_keys'e ait
-    api_id = api_key_data['api_id']         # Bu ID (26, 30 gibi) api_keys'e ait ve bize lazım olan bu
+    """Tek bir kullanıcı için izinleri kontrol eder, spot ve futures bakiyelerini çeker ve DB'ye yazar."""
+    stream_key_id = api_key_data['id']
+    api_id = api_key_data['api_id']
     user_id = api_key_data['user_id']
     api_key = api_key_data['api_key']
     api_secret = api_key_data['api_secret']
     
     logging.info(f"Stream Key ID {stream_key_id} (İlişkili API ID: {api_id}) için işlem başlatıldı...")
     
-    # ... (try-except bloğunun geri kalanı aynı)
+    client = None # finally bloğunda kontrol için
     try:
         client = await AsyncClient.create(api_key, api_secret)
         restrictions = await client.get_account_api_permissions()
         is_futures_enabled = restrictions.get('enableFutures', False)
         is_spot_enabled = restrictions.get('enableSpotAndMarginTrading', False)
         
-        # İzin güncellemesi, stream_keys tablosunu etkilediği için stream_key_id kullanır (DOĞRU)
         await update_permissions_in_db(stream_key_id, is_futures_enabled)
 
         all_balances = []
         if is_spot_enabled:
             spot_account = await client.get_account()
             for b in spot_account.get('balances', []):
-                total_balance = Decimal(b['free']) + Decimal(b['locked'])
+                # --- DEĞİŞTİRİLDİ: Spot için free, locked ve total değerlerini alıyoruz ---
+                free_balance = Decimal(b['free'])
+                locked_balance = Decimal(b['locked'])
+                total_balance = free_balance + locked_balance
+                
                 if total_balance > 0:
                     all_balances.append({
                         'asset': b['asset'],
                         'amount': total_balance,
+                        'free_amount': free_balance,
+                        'locked_amount': locked_balance,
                         'account_type': 'spot'
                     })
 
@@ -158,13 +176,17 @@ async def process_user(api_key_data: Dict[str, Any]):
             for b in futures_account_balance:
                 balance = Decimal(b['balance'])
                 if balance != 0:
+                    # --- DEĞİŞTİRİLDİ: Futures için total ve free aynı, locked 0 kabul edilir ---
+                    # Bu API endpoint'i pozisyonlardaki kilitli miktarı değil, cüzdan bakiyesini verir.
                     all_balances.append({
                         'asset': b['asset'],
                         'amount': balance,
+                        'free_amount': balance, # Futures cüzdan bakiyesi 'free' olarak kabul edilir
+                        'locked_amount': Decimal('0'), # Bu endpoint'te locked bilgisi yok
                         'account_type': 'futures'
                     })
 
-        # Bakiye güncellemesi, api_keys'e bağlı olduğu için api_id kullanmalıdır (DÜZELTİLMİŞ KISIM)
+        # Bakiye güncellemesi, api_keys'e bağlı olduğu için api_id kullanır
         await update_balances_in_db(api_id, user_id, all_balances)
 
     except BinanceAPIException as e:

@@ -4,6 +4,7 @@ import psycopg2
 import asyncpg
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import create_async_engine
+import logging
 
 DB_CONFIG = {
     'dbname': 'balina_db',
@@ -78,3 +79,20 @@ async def get_async_connection():
         # otomatik olarak havuza geri bırakır. Bu çok önemlidir.
         return pool.acquire()
     return None
+
+
+async def create_single_connection():
+    """LISTEN/NOTIFY için özel, tek bir veritabanı bağlantısı oluşturur."""
+    try:
+        conn = await asyncpg.connect(
+            user=DB_CONFIG['user'],
+            password=DB_CONFIG['password'],
+            database=DB_CONFIG['dbname'],
+            host=DB_CONFIG['host'],
+            port=DB_CONFIG['port']
+        )
+        logging.info("✅ Dinleyici için özel veritabanı bağlantısı başarıyla oluşturuldu.")
+        return conn
+    except Exception as e:
+        logging.error(f"❌ Özel veritabanı bağlantısı oluşturulurken hata: {e}")
+        return None

@@ -180,7 +180,7 @@ class BotRepository:
                 BotPositions.id,
                 BotPositions.symbol,
                 BotPositions.position_side,
-                BotPositions.profit_loss
+                #BotPositions.profit_loss
             ).where(
                 BotPositions.bot_id == bot_id,
                 BotPositions.amount > 0
@@ -201,7 +201,8 @@ class BotRepository:
             select(
                 BotHoldings.id,
                 BotHoldings.symbol,
-                BotHoldings.profit_loss
+                BotHoldings.realized_pnl,
+                BotHoldings.unrealized_pnl,
             ).where(
                 BotHoldings.bot_id == bot_id,
                 BotHoldings.amount > 0
@@ -213,7 +214,7 @@ class BotRepository:
                 id=row.id,
                 pair=row.symbol,
                 type="spot",
-                profit=float(row.profit_loss)
+                profit=float(row.realized_pnl + row.unrealized_pnl)
             ))
 
         return positions
@@ -317,13 +318,13 @@ class BotRepository:
             )
 
             # Win rate hesapla
-            pos_result = await self.db.execute(
-                select(BotPositions.profit_loss).where(BotPositions.bot_id == bot.id)
-            )
-            hold_result = await self.db.execute(
-                select(BotHoldings.profit_loss).where(BotHoldings.bot_id == bot.id)
-            )
-
+            #pos_result = await self.db.execute(
+            #    select(BotPositions.profit_loss).where(BotPositions.bot_id == bot.id)
+            #)
+            #hold_result = await self.db.execute(
+            #    select(BotHoldings.profit_loss).where(BotHoldings.bot_id == bot.id)
+            #)
+            pos_result, hold_result = 0,0
             profits = [float(r[0]) for r in pos_result.all()] + [float(r[0]) for r in hold_result.all()]
             total = len(profits)
             wins = len([p for p in profits if p > 0])

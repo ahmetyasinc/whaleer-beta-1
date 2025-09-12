@@ -40,18 +40,10 @@ def merge_by_symbol(
     symbol_attr: str = "symbol",
     amount_attr: str = "amount",
     avg_cost_attr: str = "average_cost",
-    extra_sum_attrs: Tuple[str, ...] = ("profit_loss",),   # toplama tabi alanlar
-    # futures için long/short karışmasın istersek anahtar genişletilebilir:
-    side_attr: str | None = None,       # örn. "position_side" (None => dikkate alma)
-    leverage_attr: str | None = "leverage"  # ortalama alınır (ağırlıksız)
+    extra_sum_attrs: Tuple[str, ...] = ("realized_pnl", "unrealized_pnl"),  # <-- yeni varsayılan
+    side_attr: str | None = None,
+    leverage_attr: str | None = "leverage"
 ) -> List[Dict[str, Any]]:
-    """
-    Aynı sembolleri birleştirir:
-      - amount: toplam
-      - average_cost: amount'a göre ağırlıklı ortalama
-      - extra_sum_attrs: toplam
-      - leverage_attr: basit ortalama (ihtiyaca göre güncelleyebilirsiniz)
-    """
     buckets: Dict[Tuple[str, str | None], Dict[str, Any]] = {}
 
     for r in rows:
@@ -64,7 +56,6 @@ def merge_by_symbol(
                 **({"position_side": side} if side_attr else {}),
                 "amount": Decimal("0"),
                 "avg_cost_weighted_sum": Decimal("0"),
-                "avg_cost": Decimal("0"),
                 "_leverage_acc": Decimal("0"),
                 "_leverage_cnt": 0,
             }
@@ -89,23 +80,42 @@ def merge_by_symbol(
     for (_, _), v in buckets.items():
         total_amt = v["amount"]
         avg_cost = (v["avg_cost_weighted_sum"] / total_amt) if total_amt else Decimal("0")
-        out = {
+
+        out: Dict[str, Any] = {
             "symbol": v["symbol"],
             **({"position_side": v["position_side"]} if "position_side" in v else {}),
             "amount": _to_float(total_amt),
             "average_cost": _to_float(avg_cost),
         }
+
+        # extra alanları taşı
+        realized = Decimal("0")
+        unrealized = Decimal("0")
         for k, val in list(v.items()):
-            if k in ("symbol", "amount", "avg_cost_weighted_sum", "avg_cost",
+            if k in ("symbol", "amount", "avg_cost_weighted_sum",
                      "_leverage_acc", "_leverage_cnt", "position_side"):
                 continue
+            if k == "avg_cost":
+                continue
+            # dizi dışı yardımcı alanlar üstte filtrelendi; kalanlar out'a yazılacak
             out[k] = _to_float(val)
+            if k == "realized_pnl":
+                realized = Decimal(str(val))
+            elif k == "unrealized_pnl":
+                unrealized = Decimal(str(val))
+
+        # Toplam PnL ve backward-compat alanı
+        total_pnl = realized + unrealized
+        out["total_pnl"] = _to_float(total_pnl)
+        # İstersen geçici süre eski isimle de döndür (frontend kırılmasın)
+        out["profit_loss"] = _to_float(total_pnl)  # <- geçiş sürecinde işine yarar
 
         if v["_leverage_cnt"] > 0:
             out["leverage"] = _to_float(v["_leverage_acc"] / v["_leverage_cnt"])
 
         merged.append(out)
     return merged
+
 
 def _pct_change(cur, init):
     cur = _to_float(cur)
@@ -436,16 +446,18 @@ async def get_profile_all_datas(
             symbol_attr="symbol",
             amount_attr="amount",
             avg_cost_attr="average_cost",
-            extra_sum_attrs=("profit_loss", "percentage"),
+            # Eğer holdings tablosunda yüzdeyi de tutuyorsan ekle; yoksa çıkar.
+            extra_sum_attrs=("realized_pnl", "unrealized_pnl", "percentage"),
             side_attr=None,
             leverage_attr=None
         )
+        
         portfolio_positions_merged = merge_by_symbol(
             api_pos_rows,
             symbol_attr="symbol",
             amount_attr="amount",
             avg_cost_attr="average_cost",
-            extra_sum_attrs=("profit_loss",),
+            extra_sum_attrs=("realized_pnl", "unrealized_pnl"),
             side_attr="position_side",
             leverage_attr="leverage"
         )
@@ -544,7 +556,8 @@ async def get_profile_analysis(
         select(
             BotPositions.symbol,
             BotPositions.amount,
-            BotPositions.profit_loss,
+            BotPositions.realized_pnl,
+            BotPositions.unrealized_pnl,
             BotPositions.average_cost
         ).where(BotPositions.bot_id.in_(bot_ids))
     )
@@ -552,7 +565,8 @@ async def get_profile_analysis(
         select(
             BotHoldings.symbol,
             BotHoldings.amount,
-            BotHoldings.profit_loss,
+            BotHoldings.realized_pnl,
+            BotHoldings.unrealized_pnl,
             BotHoldings.average_cost
         ).where(BotHoldings.bot_id.in_(bot_ids))
     )
@@ -560,9 +574,9 @@ async def get_profile_analysis(
     # 4) Aynı symbol'leri birleştir (weighted avg cost)
     merged: Dict[str, Dict[str, float]] = {}
     for row in [*q_pos.all(), *q_hold.all()]:
-        sym, amt, pl, avg_cost = row
+        sym, amt, rl_pl, unrl_pl, avg_cost = row
         amt = float(amt or 0)
-        pl = float(pl or 0)
+        pl = float((rl_pl+unrl_pl) or 0)
         avg_cost = float(avg_cost or 0)
 
         entry = merged.setdefault(sym, {"amount": 0.0, "profit_loss": 0.0, "cost_weighted_sum": 0.0})

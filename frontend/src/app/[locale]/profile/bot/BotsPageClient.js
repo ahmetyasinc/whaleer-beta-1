@@ -108,6 +108,39 @@ export default function BotsPageClient() {
     }
   }, [activeTab, originals, purchased, rented]);
 
+  const sortedBots = useMemo(() => {
+    const locale = typeof navigator !== 'undefined' ? navigator.language : 'tr';
+    const collator = new Intl.Collator(locale, { sensitivity: 'base', numeric: true });
+
+    const getName = (b) => (b?.name ?? '').toString() || `#${b?.id ?? ''}`;
+
+    // isActive normalizasyonu
+    const isOn = (b) => {
+      const v = b?.isActive ?? b?.is_active ?? b?.active ?? b?.status;
+      if (typeof v === 'string') return ['1','true','active','ACTIVE'].includes(v);
+      return !!v; // true/1
+    };
+
+    const arr = [...(visibleBots ?? [])];
+
+    arr.sort((a, b) => {
+      const aActive = isOn(a);
+      const bActive = isOn(b);
+
+      // 1) Aktifler önde
+      if (aActive !== bActive) return aActive ? -1 : 1;
+
+      // 2) Aynı aktiflikte alfabetik (TR duyarlı)
+      const byName = collator.compare(getName(a), getName(b));
+      if (byName !== 0) return byName;
+
+      // 3) Son çare: id ile deterministik sırala
+      return (a?.id ?? 0) - (b?.id ?? 0);
+    });
+
+    return arr;
+  }, [visibleBots]);
+
   // --- Sekme etiketleri (i18n)
   const tabLabels = {
     ORIGINAL: t('tabs.myBots'),
@@ -191,7 +224,7 @@ export default function BotsPageClient() {
         {modalOpen && <BotModal onClose={() => setModalOpen(false)} />}
 
         {/* Liste alanı */}
-        {visibleBots.length === 0 ? (
+        {sortedBots.length === 0 ? (
           <div className="px-6 text-white/70">
             {activeTab === 'ORIGINAL'  && t("empty.original")}
             {activeTab === 'PURCHASED' && t("empty.purchased")}
@@ -199,7 +232,7 @@ export default function BotsPageClient() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 px-4">
-            {visibleBots.map((bot, index) => (
+            {sortedBots.map((bot, index) => (
               <BotCard
                 key={bot.id}
                 bot={bot}

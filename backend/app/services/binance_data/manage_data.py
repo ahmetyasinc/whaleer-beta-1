@@ -133,16 +133,17 @@ ALL_STREAMS = [
         "linkusdt@kline_1d",   # 1 gün
         "linkusdt@kline_1w",   # 1 hafta
         
-        "maticusdt@kline_1m",   # 1 dakika
-        "maticusdt@kline_3m",   # 3 dakika
-        "maticusdt@kline_5m",   # 5 dakika
-        "maticusdt@kline_15m",  # 15 dakika
-        "maticusdt@kline_30m",  # 30 dakika
-        "maticusdt@kline_1h",   # 1 saat
-        "maticusdt@kline_2h",   # 2 saat
-        "maticusdt@kline_4h",   # 4 saat
-        "maticusdt@kline_1d",   # 1 gün
-        "maticusdt@kline_1w",   # 1 hafta
+        # SORUNLU GİBİ
+        #"maticusdt@kline_1m",   # 1 dakika
+        #"maticusdt@kline_3m",   # 3 dakika
+        #"maticusdt@kline_5m",   # 5 dakika
+        #"maticusdt@kline_15m",  # 15 dakika
+        #"maticusdt@kline_30m",  # 30 dakika
+        #"maticusdt@kline_1h",   # 1 saat
+        #"maticusdt@kline_2h",   # 2 saat
+        #"maticusdt@kline_4h",   # 4 saat
+        #"maticusdt@kline_1d",   # 1 gün
+        #"maticusdt@kline_1w",   # 1 hafta
         
         "dotusdt@kline_1m",   # 1 dakika
         "dotusdt@kline_3m",   # 3 dakika
@@ -276,16 +277,16 @@ ALL_STREAMS = [
         #"seiusdt@kline_1d",   # 1 gün
         #"seiusdt@kline_1w",   # 1 hafta
         #
-        #"pepeusdt@kline_1m",   # 1 dakika
-        #"pepeusdt@kline_3m",   # 3 dakika
-        #"pepeusdt@kline_5m",   # 5 dakika
-        #"pepeusdt@kline_15m",  # 15 dakika
-        #"pepeusdt@kline_30m",  # 30 dakika
-        #"pepeusdt@kline_1h",   # 1 saat
-        #"pepeusdt@kline_2h",   # 2 saat
-        #"pepeusdt@kline_4h",   # 4 saat
-        #"pepeusdt@kline_1d",   # 1 gün
-        #"pepeusdt@kline_1w",   # 1 hafta
+        "pepeusdt@kline_1m",   # 1 dakika
+        "pepeusdt@kline_3m",   # 3 dakika
+        "pepeusdt@kline_5m",   # 5 dakika
+        "pepeusdt@kline_15m",  # 15 dakika
+        "pepeusdt@kline_30m",  # 30 dakika
+        "pepeusdt@kline_1h",   # 1 saat
+        "pepeusdt@kline_2h",   # 2 saat
+        "pepeusdt@kline_4h",   # 4 saat
+        "pepeusdt@kline_1d",   # 1 gün
+        "pepeusdt@kline_1w",   # 1 hafta
         #
         #"nearusdt@kline_1m",   # 1 dakika
         #"nearusdt@kline_3m",   # 3 dakika
@@ -754,58 +755,82 @@ async def subscribe_chunk(streams, conn_idx, db_pool):
     payload = {"method": "SUBSCRIBE", "params": streams, "id": conn_idx}
     async with websockets.connect(
         WS_URI,
-        ping_interval=20,   # ping/pong aralığı
+        ping_interval=20,
         ping_timeout=20,
         close_timeout=5,
-        max_size=2**24      # büyük mesajlar için buffer
+        max_size=2**24
     ) as ws:
         await ws.send(json.dumps(payload))
         print(f"✅ Conn{conn_idx}: {len(streams)} stream'e abone olundu.")
+
         while True:
             msg = await ws.recv()
             json_data = json.loads(msg)
-            # Eğer mesaj "kline" içeriyorsa işlem yap
+
             if "k" in json_data:
                 kline = json_data["k"]
-                is_closed = kline["x"]  # Mum kapanmış mı?
-                interval = kline["i"]   # Zaman aralığı ("1m", "2m")
-                coin_id = kline["s"].upper()  # Coin ID ("BTCUSDT", "ETHUSDT")
-                
-                if is_closed:  # Eğer mum kapanmışsa kaydet
-                    timestamp = datetime.utcfromtimestamp(kline["t"] / 1000)
-                    open_price = float(kline["o"])
-                    high_price = float(kline["h"])
-                    low_price = float(kline["l"])
+                is_closed = kline["x"]
+                interval = kline["i"]
+                coin_id = kline["s"].upper()
+
+                if is_closed:
+                    timestamp   = datetime.utcfromtimestamp(kline["t"] / 1000)
+                    open_price  = float(kline["o"])
+                    high_price  = float(kline["h"])
+                    low_price   = float(kline["l"])
                     close_price = float(kline["c"])
-                    volume = float(kline["v"])
+                    volume      = float(kline["v"])
 
-                    # ✅ 5️⃣ Veriyi veritabanına kaydet
                     async with db_pool.acquire() as conn:
+                        async with conn.transaction():
+                            # 1) Ham veriyi büyük tabloya ekle (idempotent)
+                            await conn.execute(
+                                """
+                                INSERT INTO binance_data
+                                  (coin_id, interval, "timestamp", open, high, low, close, volume)
+                                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                                ON CONFLICT (coin_id, interval, "timestamp") DO NOTHING
+                                """,
+                                coin_id, interval, timestamp,
+                                open_price, high_price, low_price, close_price, volume
+                            )
 
-                        #await fill_data_from_binance(conn, coin_id, interval, timestamp)
+                            # 2) Son fiyatı güncelle (yarışa dayanıklı UPSERT)
+                            #    Yalnızca gelen mum daha yeni/eşitse güncelle.
+                            
+                            await conn.execute(
+                                """
+                                INSERT INTO binance_last_price (coin_id, "interval", "timestamp", close)
+                                VALUES ($1, $2, $3, $4)
+                                ON CONFLICT (coin_id, "interval") DO UPDATE
+                                SET "timestamp" = EXCLUDED."timestamp",
+                                    close       = EXCLUDED.close
+                                WHERE EXCLUDED."timestamp" > binance_last_price."timestamp";
+                                """,
+                                coin_id, interval, timestamp, close_price
+                            )
 
-                        await conn.execute(
-                            """
-                            INSERT INTO binance_data (coin_id, interval, timestamp, open, high, low, close, volume)
-                            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                            ON CONFLICT (coin_id, interval, timestamp) DO NOTHING
-                            """,
-                            coin_id, interval, timestamp, open_price, high_price, low_price, close_price, volume
-                        )
-
-                        # ✅ Eski verileri temizle (5000 kayıt üstü sil)
-                        await conn.execute(
-                            """
-                            DELETE FROM binance_data 
-                            WHERE id IN (
-                                SELECT id FROM binance_data 
-                                WHERE coin_id = $1 AND interval = $2
-                                ORDER BY timestamp ASC
-                                LIMIT GREATEST(0, (SELECT COUNT(*) FROM binance_data WHERE coin_id = $1 AND interval = $2) - 5000)
-                            );
-                            """,
-                            coin_id, interval
-                        )
+                            # 3) (İsteğe bağlı) Eski verileri sayıya göre silmek yerine ZAMAN’a göre tutmak daha hızlıdır.
+                            #    Örn: sadece son 7 gün tutulacaksa:
+                            # cutoff = datetime.utcnow() - timedelta(days=7)
+                            # await conn.execute(
+                            #     'DELETE FROM binance_data WHERE coin_id=$1 AND interval=$2 AND "timestamp" < $3',
+                            #     coin_id, interval, cutoff
+                            # )
+                            #
+                            # Eğer sayı bazlı devam edecekseniz alt sorguyu tek COUNT hesapıyla optimize etmeyi düşünün.
+                            await conn.execute(
+                                """
+                                DELETE FROM binance_data 
+                                WHERE id IN (
+                                    SELECT id FROM binance_data 
+                                    WHERE coin_id = $1 AND interval = $2
+                                    ORDER BY "timestamp" DESC
+                                    OFFSET 5000
+                                );
+                                """,
+                                coin_id, interval
+                            )
 
                     print(f"✅ New Data: {interval} - {coin_id} - {timestamp}")
             pass
@@ -824,73 +849,3 @@ async def binance_websocket(db_pool):
         await asyncio.sleep(0.3)  # çok hızlı parallel handshake yapmamak için küçük gecikme
 
     await asyncio.gather(*tasks)
-
-async def fill_data_from_binance(conn, coin_id, interval, latest_timestamp):
-    """
-    Eğer eksik veri varsa, Binance REST API'den çekerek aradaki tüm boşlukları tamamla.
-    """
-    interval_minutes = interval_to_minutes(interval)
-
-    # 🔹 Önce en son kaydedilen veriyi al
-    last_timestamp = await conn.fetchval(
-        """
-        SELECT timestamp FROM binance_data
-        WHERE coin_id = $1 AND interval = $2
-        ORDER BY timestamp DESC
-        LIMIT 1
-        """,
-        coin_id, interval
-    )
-
-    if last_timestamp is None:
-        print(f"⚠ Veritabanında hiç veri yok, eksik veri çekilemiyor.")
-        return 404
-
-    # 🔹 Eğer son kaydedilen veri ile yeni gelen veri arasında boşluk varsa
-    if last_timestamp < latest_timestamp - timedelta(minutes=interval_minutes):
-        print(f"⚠ {coin_id} {interval} için eksik veri tespit edildi: {last_timestamp} - {latest_timestamp}, Binance'den çekiliyor...")
-
-        # 🔹 Binance API'den eksik verileri al
-        missing_data = await fetch_missing_data(coin_id, interval, last_timestamp + timedelta(minutes=1), latest_timestamp)
-
-        if missing_data:
-            insert_queries = []
-            for kline in missing_data:
-                ts = datetime.utcfromtimestamp(kline[0] / 1000) + timedelta(hours=3)
-                open_price, high_price, low_price, close_price, volume = map(float, kline[1:6])
-
-                insert_queries.append((coin_id, interval, ts, open_price, high_price, low_price, close_price, volume))        
-
-            for query in insert_queries:
-                await conn.execute(
-                    """
-                    INSERT INTO binance_data (coin_id, interval, timestamp, open, high, low, close, volume)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                    ON CONFLICT (coin_id, interval, timestamp) DO NOTHING
-                    """,
-                    *query
-                )
-
-            print(f"✅ {coin_id} - {interval} için eksik veriler tamamlandı ({len(insert_queries)} adet mum eklendi).")
-
-async def fetch_missing_data(coin_id, interval, start_time, end_time):
-    """
-    Binance REST API kullanarak eksik mum verilerini getir.
-    """
-    url = f"https://api.binance.com/api/v3/klines"
-    params = {
-        "symbol": coin_id,
-        "interval": interval,
-        "startTime": int(start_time.timestamp() * 1000),
-        "endTime": int(end_time.timestamp() * 1000),
-        "limit": 1000
-    }
-
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, params=params) as response:
-            if response.status == 200:
-                data = await response.json()
-                return data
-            else:
-                print(f"❌ Binance API hatası: {response.status}")
-                return []

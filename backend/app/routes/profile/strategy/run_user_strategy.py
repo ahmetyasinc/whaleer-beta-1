@@ -6,6 +6,7 @@ from app.routes.profile.strategy.strategy_library.input_shim import InputShim
 from app.routes.profile.strategy.strategy_library.mark_strategy import mark_strategy
 from app.routes.profile.strategy.strategy_library.plot_strategy import plot_strategy
 from app.routes.profile.strategy.strategy_library.print_strategy import custom_print
+from app.routes.profile.strategy.strategy_library.get_percentage import get_percentage
 
 from app.services.allowed_globals.allowed_globals import build_allowed_globals
 
@@ -18,8 +19,7 @@ async def run_user_strategy(strategy_name: str, user_code: str, data: list[dict]
     - `data`: 5000 mumluk veri (dict listesi)
     """
 
-    try:       
-
+    try:
         # Veriyi Pandas DataFrame'e çevir
         df = pd.DataFrame(data)
 
@@ -42,6 +42,8 @@ async def run_user_strategy(strategy_name: str, user_code: str, data: list[dict]
         allowed_globals["print"] = lambda *args, **kwargs: custom_print(print_outputs, *args, **kwargs)
         allowed_globals["mark"] = lambda *args, **kwargs: mark_strategy(strategy_name, strategy_results, *args, **kwargs)
         allowed_globals["plot"] = lambda *args, **kwargs: plot_strategy(strategy_name, strategy_graph,print_outputs, *args, **kwargs)
+        allowed_globals["get_percentage"] = lambda: get_percentage(df.get("percentage"))
+        
         allowed_globals["__builtins__"]["print"] = lambda *args, **kwargs: custom_print(print_outputs, *args, **kwargs)
         
         # Kullanıcı kodunu çalıştır

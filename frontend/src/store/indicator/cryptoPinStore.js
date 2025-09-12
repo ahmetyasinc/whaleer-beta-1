@@ -3,7 +3,7 @@ import { create } from "zustand";
 const useCryptoStore = create((set) => ({
     coins: [],
     pinned: [], 
-    selectedCrypto: { id: 1, name: "Bitcoin", symbol: "BTC", binance_symbol: "BTCUSDT" },
+    selectedCrypto: { id: 1, name: "Bitcoin", symbol: "BTC", binance_symbol: "BTCUSDT", tick_size: 0.01 },
     selectedPeriod: "1m",
 
     togglePinned: (crypto) => set((state) => {

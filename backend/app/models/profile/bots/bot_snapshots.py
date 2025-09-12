@@ -15,11 +15,7 @@ class BotSnapshots(Base):
 
     balance_usdt = Column(Numeric(18, 8), nullable=False)
     total_profit = Column(Numeric(18, 8), nullable=False)
-    open_positions_count = Column(Integer, nullable=True)
-    open_positions = Column(JSON, nullable=True)
 
     pnl_ratio = Column(Numeric(18, 6), nullable=True)
-    held_assets = Column(JSON, nullable=True)
-    held_assets_count = Column(Integer, nullable=True)
     fullness = Column(Numeric(20, 8), nullable=True)
     active = Column(Boolean, nullable=True)

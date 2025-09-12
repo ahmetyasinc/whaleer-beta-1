@@ -14,7 +14,7 @@ async def fetch_holdings_for_bot(bot_id: int, db: AsyncSession):
             symbol=holding.symbol or "",
             amount=float(holding.amount or 0),
             cost=float(holding.average_cost or 0),
-            profit=float(holding.profit_loss or 0),
+            profit=float((holding.realized_pnl+holding.unrealized_pnl) or 0),
         )
         for holding in holdings
     ]

@@ -55,12 +55,13 @@ class UserRepository:
                 select(func.count()).select_from(BotTrades).where(BotTrades.bot_id == bot.id)
             )
             # Win rate
-            pos_result = await self.db.execute(
-                select(BotPositions.profit_loss).where(BotPositions.bot_id == bot.id)
-            )
-            hold_result = await self.db.execute(
-                select(BotHoldings.profit_loss).where(BotHoldings.bot_id == bot.id)
-            )
+            #pos_result = await self.db.execute(
+            #    select(BotPositions.profit_loss).where(BotPositions.bot_id == bot.id)
+            #)
+            #hold_result = await self.db.execute(
+            #    select(BotHoldings.profit_loss).where(BotHoldings.bot_id == bot.id)
+            #)
+            pos_result, hold_result = 0,0
             profits = [float(r[0]) for r in pos_result.all()] + [float(r[0]) for r in hold_result.all()]
             win_rate = len([p for p in profits if p > 0]) / len(profits) if profits else 0.0
 

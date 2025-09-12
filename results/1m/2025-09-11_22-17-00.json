@@ -1,0 +1,8 @@
+{
+    "147": [
+        {
+            "status": "error",
+            "error": "name 'plot_indicator' is not defined\nTraceback (most recent call last):\n  File \"C:\\dev\\whaleer\\backend\\trade_engine\\process\\run_bot.py\", line 70, in run_bot\n    exec(strategy_code, allowed_globals)\n  File \"<string>\", line 155, in <module>\nNameError: name 'plot_indicator' is not defined\n"
+        }
+    ]
+}

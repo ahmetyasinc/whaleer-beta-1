@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { IoMdClose } from "react-icons/io";
 import { FaRegSave } from "react-icons/fa";
-import { MdOpenInFull } from "react-icons/md"; // 👈 Tam ekran ikonu
+import { MdOpenInFull } from "react-icons/md";
 import CodeEditor from "../../CodeEditor";
 import usePanelStore from "@/store/indicator/panelStore";
 import useCodePanelStore from "@/store/indicator/indicatorCodePanelStore";
@@ -12,7 +12,7 @@ import RunButton from "./run_button";
 import TerminalIndicator from "./terminalIndicator";
 import axios from "axios";
 import VersionSelect from "./versionSelect";
-import CodeModal from "./fullScreenCodeModal"; // 👈 aynı klasördeyse bu yol doğru
+import CodeModal from "./fullScreenCodeModal";
 import { useTranslation } from "react-i18next";
 
 const CodePanel = () => {
@@ -33,17 +33,15 @@ const CodePanel = () => {
     setIndicatorEditing,
   } = useCodePanelStore();
 
-  const { addIndicator, deleteIndicator, indicators } = useIndicatorStore();
+  const { addIndicator } = useIndicatorStore();
+  const indicatorStore = useIndicatorStore;
 
   const [localName, setLocalName] = useState("");
-  0;
   const [localCode, setLocalCode] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const terminalRef = useRef(null);
-
-  // Tam ekran CodeModal durumu
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [codeModalIndicator, setCodeModalIndicator] = useState(null);
+  const terminalRef = useRef(null);
 
   const { t } = useTranslation("indicatorEditor");
 
@@ -52,11 +50,10 @@ const CodePanel = () => {
     setLocalCode(indicatorCode);
   }, [indicatorName, indicatorCode]);
 
-  const handleSaveIndicator = async () => {
+  const handleSaveIndicator = async (codeToSave = localCode) => {
     setIsSaving(true);
 
-    const { indicators, setPersonalIndicators } = useIndicatorStore.getState();
-    if (!localName.trim() || !localCode.trim()) {
+    if (!localName.trim() || !codeToSave.trim()) {
       setIsSaving(false);
       return;
     }
@@ -65,54 +62,41 @@ const CodePanel = () => {
 
     try {
       if (selected && !isNewVersion) {
-        // Güncelleme
         setIndicatorName(localName);
-        setIndicatorCode(localCode);
+        setIndicatorCode(codeToSave); // panel state güncellendi
 
         const updateRequest = axios.put(
           `${process.env.NEXT_PUBLIC_API_URL}/api/edit-indicator/`,
-          { id: selected.id, name: localName, code: localCode },
+          { id: selected.id, name: localName, code: codeToSave },
           { withCredentials: true, headers: { "Content-Type": "application/json" } }
         );
 
         await Promise.all([updateRequest, delay]);
 
-        setPersonalIndicators(
-          indicators.map((ind) =>
-            ind.id === selected.id ? { ...ind, name: localName, code: localCode } : ind
-          )
-        );
-        deleteIndicator(selected.id);
-        addIndicator({ id: selected.id, name: localName, code: localCode });
+        // store güncelle
+        const updateFn = indicatorStore.getState().updateIndicator;
+        if (typeof updateFn === "function") {
+          updateFn(selected.id, { name: localName, code: codeToSave });
+        }
+
+        setIndicatorEditing({ ...selected, name: localName, code: codeToSave });
       } else {
-        // Yeni ekleme veya yeni versiyon
         const postRequest = axios.post(
           `${process.env.NEXT_PUBLIC_API_URL}/api/add-indicator/`,
-          {
-            name: localName,
-            code: localCode,
-            parent_indicator_id: parent_indicator_id,
-          },
+          { name: localName, code: codeToSave, parent_indicator_id },
           { withCredentials: true, headers: { "Content-Type": "application/json" } }
         );
 
         const [response] = await Promise.all([postRequest, delay]);
         const newIndicator = response.data;
 
-        addIndicator({
-          id: newIndicator.id,
-          name: newIndicator.name,
-          code: newIndicator.code,
-          version: newIndicator.version,
-          parent_indicator_id: newIndicator.parent_indicator_id,
-        });
-
+        addIndicator(newIndicator);
         setIndicatorEditing(newIndicator);
-        setIndicatorName(newIndicator.name);
-        setIndicatorCode(newIndicator.code);
+        setIndicatorName(newIndicator.name || "");
+        setIndicatorCode(newIndicator.code || "");
       }
     } catch (err) {
-      console.error(t("errors.save"), err);
+      console.error("Save failed", err);
     }
 
     setIsSaving(false);
@@ -123,7 +107,6 @@ const CodePanel = () => {
     removeCustomPanel("panel-indicator-editor");
   };
 
-  // Tam ekran modal aç (Run'ın solundaki ikon)
   const openFullscreenModal = () => {
     setCodeModalIndicator({
       id: selected?.id ?? null,
@@ -147,18 +130,20 @@ const CodePanel = () => {
         </h2>
       </div>
 
-      {/* Sağ üst aksiyon çubuğu: [Tam ekran ikonu] [Run] [Save] [Close] */}
       {selected && !isNewVersion && (
         <div className="absolute top-10 right-[10px] flex items-center gap-2">
-          {/* Tam ekran ikonu — Run'ın SOLUNDA */}
-          <button onClick={openFullscreenModal} className="p-[1px]" title={t("tooltips.fullscreen")}>
+          <button
+            onClick={openFullscreenModal}
+            className="p-[1px]"
+            title={t("tooltips.fullscreen")}
+          >
             <MdOpenInFull size={16} />
           </button>
         </div>
       )}
+
       <RunButton indicatorId={selected?.id} onBeforeRun={handleSaveIndicator} />
 
-      {/* Save button */}
       <button
         className="absolute top-2 right-10 gap-1 px-[9px] py-[5px] mr-[6px] bg-[rgb(16,45,100)] hover:bg-[rgb(27,114,121)] rounded text-xs font-medium flex items-center"
         title={t("buttons.save")}
@@ -171,7 +156,6 @@ const CodePanel = () => {
         )}
       </button>
 
-      {/* Close button */}
       <button
         className="absolute top-2 right-1 gap-1 px-[9px] py-[5px] mr-1 bg-[rgb(100,16,16)] hover:bg-[rgb(189,49,49)] rounded text-sm font-medium"
         onClick={handleClose}
@@ -180,7 +164,6 @@ const CodePanel = () => {
         <IoMdClose />
       </button>
 
-      {/* Input + Version select yan yana */}
       <div className="flex items-center gap-2 mb-3">
         <input
           type="text"
@@ -191,7 +174,6 @@ const CodePanel = () => {
           maxLength={40}
         />
 
-        {/* Versiyon seçici */}
         {versions.length > 0 && (
           <VersionSelect
             versions={versions}
@@ -202,25 +184,22 @@ const CodePanel = () => {
         )}
       </div>
 
-      {/* Editor */}
       <div className="flex-1 overflow-hidden rounded-t-[4px]">
         <CodeEditor code={localCode} setCode={setLocalCode} language="python" />
       </div>
 
-      {/* Terminal */}
       <TerminalIndicator
         {...(selected ? { id: selected.id } : {})}
         ref={terminalRef}
         initialOutput={t("terminal.ready")}
       />
 
-      {/* Tam ekran CodeModal */}
       <CodeModal
         isOpen={isCodeModalOpen}
         onClose={() => setIsCodeModalOpen(false)}
-        indicator={codeModalIndicator}
-        onSave={handleSaveIndicator}          // 👈 Kaydet işlevini CodePanel’den al
-        runIndicatorId={selected?.id || null} // 👈 RunButton için id ver
+        indicator={{ ...codeModalIndicator, code: localCode }}
+        onSave={handleSaveIndicator}  // artık kod parametresi alıyor
+        runIndicatorId={selected?.id || null}
       />
     </div>
   );

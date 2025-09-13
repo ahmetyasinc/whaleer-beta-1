@@ -1,73 +1,115 @@
 import { create } from "zustand";
 
-const useStrategyStore = create((set) => ({
+const dedupeById = (arr = []) => Array.from(new Map(arr.map((i) => [String(i.id), i])).values());
+
+const mergeFavorites = (existingFavs = [], newItems = []) => {
+  const newFavs = (newItems || []).filter((it) => it && it.favorite);
+  const merged = [...(existingFavs || []), ...newFavs];
+  return dedupeById(merged);
+};
+
+const buildAllStrategies = ({ tecnic = [], personal = [], community = [] }) => {
+  // Öncelik: tecnic, personal, community (orjinal mantığa uygun)
+  return [...(tecnic || []), ...(personal || []), ...(community || [])];
+};
+
+const useStrategyStore = create((set, get) => ({
   tecnic: [],
   community: [],
-  strategies: [],
+  strategies: [], // personal
   all_strategies: [],
   favorites: [],
   isVisible: {},
 
-  setCommunityStrategies: (newStrategies) => set((state) => {
-    const newFavorites = newStrategies.filter((strategy) => strategy.favorite);
-    const mergedFavorites = [...state.favorites, ...newFavorites];
-    const uniqueFavorites = Array.from(new Map(mergedFavorites.map((item) => [item.name, item])).values());
-    const all_strategies = [...state.tecnic, ...state.strategies, ...newStrategies];
-    return { community: newStrategies, favorites: uniqueFavorites, all_strategies };
-  }),
+  setCommunityStrategies: (newStrategies) =>
+    set((state) => {
+      const favorites = mergeFavorites(state.favorites, newStrategies);
+      const all_strategies = buildAllStrategies({ tecnic: state.tecnic, personal: state.strategies, community: newStrategies });
+      return { community: newStrategies, favorites, all_strategies };
+    }),
 
-  setTecnicStrategies: (newStrategies) => set((state) => {
-    const newFavorites = newStrategies.filter((strategy) => strategy.favorite);
-    const mergedFavorites = [...state.favorites, ...newFavorites];
-    const uniqueFavorites = Array.from(new Map(mergedFavorites.map((item) => [item.name, item])).values());
-    const all_strategies = [...newStrategies, ...state.strategies, ...state.community];
-    return { tecnic: newStrategies, favorites: uniqueFavorites, all_strategies };
-  }),
+  setTecnicStrategies: (newStrategies) =>
+    set((state) => {
+      const favorites = mergeFavorites(state.favorites, newStrategies);
+      const all_strategies = buildAllStrategies({ tecnic: newStrategies, personal: state.strategies, community: state.community });
+      return { tecnic: newStrategies, favorites, all_strategies };
+    }),
 
-  setPersonalStrategies: (newStrategies) => set((state) => {
-    const newFavorites = newStrategies.filter((strategy) => strategy.favorite);
-    const mergedFavorites = [...state.favorites, ...newFavorites];
-    const uniqueFavorites = Array.from(new Map(mergedFavorites.map((item) => [item.name, item])).values());
-    const all_strategies = [...state.tecnic, ...newStrategies, ...state.community];
-    return { strategies: newStrategies, favorites: uniqueFavorites, all_strategies };
-  }),
+  setPersonalStrategies: (newStrategies) =>
+    set((state) => {
+      const favorites = mergeFavorites(state.favorites, newStrategies);
+      const all_strategies = buildAllStrategies({ tecnic: state.tecnic, personal: newStrategies, community: state.community });
+      return { strategies: newStrategies, favorites, all_strategies };
+    }),
 
-  addStrategy: (strategy) => set((state) => {
-    const updatedStrategies = [...state.strategies, strategy];
-    const isFavorite = strategy.favorite;
-    const updatedFavorites = isFavorite
-      ? Array.from(new Map([...state.favorites, strategy].map((item) => [item.id, item])).values())
-      : state.favorites;
-    const all_strategies = [...state.tecnic, ...updatedStrategies, ...state.community];
-    return { strategies: updatedStrategies, favorites: updatedFavorites, all_strategies };
-  }),
+  /**
+   * addStrategy:
+   * - Eğer aynı id zaten varsa replace eder (bu sayede addStrategy hem add hem update davranışı gösterebilir)
+   * - favorites id bazlı güncellenir
+   * - all_strategies yeniden oluşturulur
+   */
+  addStrategy: (strategy) =>
+    set((state) => {
+      if (!strategy) return {};
+      const idStr = String(strategy.id);
+      const exists = (state.strategies || []).some((s) => String(s.id) === idStr);
+      const updatedStrategies = exists
+        ? (state.strategies || []).map((s) => (String(s.id) === idStr ? { ...s, ...strategy } : s))
+        : [...(state.strategies || []), strategy];
 
-  deleteStrategy: (id) => set((state) => ({
-    strategies: state.strategies.filter((strategy) => strategy.id !== id),
-    all_strategies: [...state.tecnic, ...state.strategies.filter((s)=>s.id!==id), ...state.community]
-  })),
+      const updatedFavorites = strategy.favorite
+        ? dedupeById([...(state.favorites || []), strategy])
+        : state.favorites || [];
 
-  toggleFavorite: (strategy) => set((state) => {
-    const isAlreadyFavorite = state.favorites.some((fav) => fav.id === strategy.id);
-    return {
-      favorites: isAlreadyFavorite
-        ? state.favorites.filter((fav) => fav.id !== strategy.id)
-        : [...state.favorites, strategy]
-    };
-  }),
+      const all_strategies = buildAllStrategies({ tecnic: state.tecnic, personal: updatedStrategies, community: state.community });
 
-  toggleStrategy: (strategyId) => set((state) => ({
-    isVisible: { ...state.isVisible, [strategyId]: !state.isVisible[strategyId] }
-  })),
+      return { strategies: updatedStrategies, favorites: updatedFavorites, all_strategies };
+    }),
 
-  setStrategyPendingRelease: (strategyId, pendingRelease) => set((state) => {
-    const strategies = state.strategies.map((st) =>
-      st.id === strategyId ? { ...st, pending_release: pendingRelease } : st
-    );
-    const all_strategies = [...state.tecnic, ...strategies, ...state.community];
-    return { strategies, all_strategies };
-  }),
+  /**
+   * updateStrategy:
+   * - id ile eşleşen entry'yi patch ile günceller
+   * - favorites içinde varsa o kaydı da günceller
+   * - all_strategies yeniden oluşturulur
+   */
+  updateStrategy: (id, patch) =>
+    set((state) => {
+      const idStr = String(id);
+      const strategies = (state.strategies || []).map((st) => (String(st.id) === idStr ? { ...st, ...patch } : st));
+      const favorites = (state.favorites || []).map((f) => (String(f.id) === idStr ? { ...f, ...patch } : f));
+      const all_strategies = buildAllStrategies({ tecnic: state.tecnic, personal: strategies, community: state.community });
+      return { strategies, favorites, all_strategies };
+    }),
 
+  deleteStrategy: (id) =>
+    set((state) => {
+      const idStr = String(id);
+      const strategies = (state.strategies || []).filter((strategy) => String(strategy.id) !== idStr);
+      const favorites = (state.favorites || []).filter((fav) => String(fav.id) !== idStr);
+      const all_strategies = buildAllStrategies({ tecnic: state.tecnic, personal: strategies, community: state.community });
+      return { strategies, favorites, all_strategies };
+    }),
+
+  toggleFavorite: (strategy) =>
+    set((state) => {
+      const isAlreadyFavorite = (state.favorites || []).some((fav) => String(fav.id) === String(strategy.id));
+      const favorites = isAlreadyFavorite
+        ? (state.favorites || []).filter((fav) => String(fav.id) !== String(strategy.id))
+        : [...(state.favorites || []), strategy];
+      return { favorites };
+    }),
+
+  toggleStrategy: (strategyId) =>
+    set((state) => ({ isVisible: { ...state.isVisible, [strategyId]: !state.isVisible[strategyId] } })),
+
+  setStrategyPendingRelease: (strategyId, pendingRelease) =>
+    set((state) => {
+      const strategies = (state.strategies || []).map((st) =>
+        String(st.id) === String(strategyId) ? { ...st, pending_release: pendingRelease } : st
+      );
+      const all_strategies = buildAllStrategies({ tecnic: state.tecnic, personal: strategies, community: state.community });
+      return { strategies, all_strategies };
+    }),
 }));
 
 export default useStrategyStore;

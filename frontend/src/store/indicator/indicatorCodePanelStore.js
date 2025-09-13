@@ -1,38 +1,49 @@
 import { create } from "zustand";
 
 /**
- * Panel artık bir GRUP (parent) ve gruptaki TÜM versiyonları taşır.
- * - groupId: parent_indicator_id veya (yoksa) tabanın id’si
- * - versions: [{id, name, code, version, parent_indicator_id, ...}]
- * - selected: aktif versiyon objesi (null ise yeni versiyon modu)
- * - parent_indicator_id: yeni versiyon yaratırken backend’e gönderilecek değer
+ * Minimal, hedefe yönelik düzeltme:
+ * - id karşılaştırmalarında normalizeId kullan (string'e çevir) -> tip farkı sorununu giderir
+ * - version'ı Number'a çevirip sıralama yap -> yanlış sıralamayı engeller
+ * - selectVersion(null) => startNewVersion() davranışı eklenir
  */
+
+const normalizeId = (id) => (id === null || id === undefined ? null : String(id));
+const normalizeVersion = (v) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+};
+
 const useCodePanelStore = create((set, get) => ({
   isOpen: false,
 
   // panel context
   groupId: null,
   versions: [],
-  selected: null,            // aktif versiyon objesi
-  isNewVersion: false,       // true → yeni versiyon oluşturuluyor
-  parent_indicator_id: null, // backend’e gönderilecek
+  selected: null, // aktif versiyon objesi
+  isNewVersion: false,
+  parent_indicator_id: null, // backend'e gönderilecek
 
   // edit alanları (UI binding)
   indicatorName: "",
   indicatorCode: "",
 
-  /**
-   * group = { groupId, versions, initialSelectedId }
-   * - Eğer initialSelectedId yoksa veya bulunamazsa gruptaki EN BÜYÜK versiyon seçilir.
-   * - groupId null ise tamamen yeni indikatör (parent yok) senaryosu.
-   */
   openPanel: (group) => {
-    const versions = Array.isArray(group?.versions) ? [...group.versions] : [];
-    versions.sort((a, b) => (a.version || 1) - (b.version || 1));
+    const rawVersions = Array.isArray(group?.versions) ? [...group.versions] : [];
 
-    const last = versions[versions.length - 1] || null;
+    // numeric version'a göre güvenilir sıralama
+    const versions = rawVersions
+      .map((v) => ({ ...v, __verNum: normalizeVersion(v.version) }))
+      .sort((a, b) => a.__verNum - b.__verNum)
+      .map(({ __verNum, ...rest }) => rest);
+
+    const last = versions.length ? versions[versions.length - 1] : null;
+
+    // initialSelectedId ile eşleştirmede tip farkını engelle
     const selected =
-      versions.find((v) => v.id === group?.initialSelectedId) || last;
+      (group?.initialSelectedId &&
+        versions.find((v) => normalizeId(v.id) === normalizeId(group.initialSelectedId))) ||
+      last ||
+      null;
 
     set({
       isOpen: true,
@@ -49,8 +60,15 @@ const useCodePanelStore = create((set, get) => ({
 
   // Seçili versiyonu değiştir
   selectVersion: (id) => {
+    // id null/undefined ise yeni versiyon oluşturulmak isteniyor demektir
+    if (id == null) {
+      get().startNewVersion();
+      return;
+    }
+
     const { versions, groupId } = get();
-    const next = versions.find((v) => v.id === id) || null;
+    const next = versions.find((v) => normalizeId(v.id) === normalizeId(id)) || null;
+
     set({
       selected: next,
       isNewVersion: false,
@@ -63,13 +81,16 @@ const useCodePanelStore = create((set, get) => ({
   // Yeni versiyon oluşturma moduna geç
   startNewVersion: () => {
     const { groupId, selected } = get();
+    // parent: grup varsa kullan, yoksa seçili kaydın parent'ı veya id'si
+    const parent =
+      groupId ?? selected?.parent_indicator_id ?? selected?.id ?? null;
+
     set({
       isNewVersion: true,
       selected: null,
       indicatorName: "",
       indicatorCode: "",
-      // parent: mevcut gruptan; yoksa seçili kayıt id’si fallback
-      parent_indicator_id: groupId || selected?.parent_indicator_id || selected?.id || null,
+      parent_indicator_id: parent,
     });
   },
 
@@ -79,29 +100,41 @@ const useCodePanelStore = create((set, get) => ({
    */
   setIndicatorEditing: (newInd) => {
     set((state) => {
-      const newGroupId = newInd.parent_indicator_id ?? newInd.id;
+      // normalize ederek karşılaştır, tip farkı sebebiyle resetlenmeyi engelle
+      const newGroupIdRaw = newInd.parent_indicator_id ?? newInd.id;
+      const newGroupIdNorm = normalizeId(newGroupIdRaw);
+      const stateGroupIdNorm = normalizeId(state.groupId);
 
-      // Bu gösterimdeki grup mu? Eğer değilse sıfırdan kur.
       let nextVersions = Array.isArray(state.versions) ? [...state.versions] : [];
-      if (state.groupId !== newGroupId) {
+
+      if (stateGroupIdNorm !== newGroupIdNorm) {
+        // Gerçekten farklı bir grupsa sıfırdan başla
         nextVersions = [newInd];
       } else {
-        const ix = nextVersions.findIndex((v) => v.id === newInd.id);
+        // Aynı grubun içindeysek güncelle veya ekle
+        const ix = nextVersions.findIndex(
+          (v) => normalizeId(v.id) === normalizeId(newInd.id)
+        );
         if (ix >= 0) {
           nextVersions[ix] = { ...nextVersions[ix], ...newInd };
         } else {
           nextVersions.push(newInd);
         }
       }
-      nextVersions.sort((a, b) => (a.version || 1) - (b.version || 1));
+
+      // numeric version'a göre sıralama (güvenilir)
+      nextVersions = nextVersions
+        .map((v) => ({ ...v, __verNum: normalizeVersion(v.version) }))
+        .sort((a, b) => a.__verNum - b.__verNum)
+        .map(({ __verNum, ...rest }) => rest);
 
       return {
         isOpen: true,
-        groupId: newGroupId,
+        groupId: newGroupIdRaw,
         versions: nextVersions,
         selected: newInd,
         isNewVersion: false,
-        parent_indicator_id: newGroupId, // yeni versiyonlar için hazır tut
+        parent_indicator_id: newGroupIdRaw,
         indicatorName: newInd.name || "",
         indicatorCode: newInd.code || "",
       };

@@ -326,6 +326,8 @@ class SpotWsApiManager:
                 except Exception as e:
                     logging.error(f"❌ [Batch] Emir DB güncellemesi başarısız: {e}", exc_info=True)
 
+# spot_ws_service.py dosyasındaki main fonksiyonu
+
 async def main():
     logging.info("🚀 Spot WebSocket Servisi başlatılıyor...")
     pool = await config.get_async_pool()
@@ -333,25 +335,14 @@ async def main():
         logging.error("❌ Veritabanı bağlantı havuzu oluşturulamadı. Çıkılıyor.")
         return
     
-    # Manager'ı başlatırken konfigürasyon modunu iletiyoruz
     manager = SpotWsApiManager(pool, order_save_mode=ORDER_SAVE_MODE)
     
+    # BU KISMI GÜNCELLEYİN
     try:
         await manager.run()
-    except (KeyboardInterrupt, asyncio.CancelledError):
-        logging.info("🛑 Servis durduruldu.")
+    except (KeyboardInterrupt, asyncio.CancelledError): # CancelledError eklendi
+        logging.info("🛑 Spot servisi durdurma sinyali aldi, kapatiliyor.")
     finally:
         if pool:
             await pool.close()
-            logging.info("ℹ️ Veritabanı bağlantı havuzu kapatıldı.")
-
-if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("\nProgram kapatıldı.")
-if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("\nProgram kapatıldı.")
+            logging.info("ℹ️ Spot servisi veritabani baglanti havuzu kapatildi.")

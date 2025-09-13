@@ -12,7 +12,7 @@ import { BiUser, BiCandles, BiLineChart, BiBroadcast, BiSearchAlt, BiLogOut, BiC
 import { IoMdArrowDropright } from "react-icons/io";
 import { LuBot } from "react-icons/lu";
 import { BsGrid1X2 } from "react-icons/bs";
-
+import { AiOutlineSetting } from "react-icons/ai";
 const LeftMenu = ({ locale }) => {
   const { t } = useTranslation("leftmenu");
   const [user, setUser] = useState(null);
@@ -36,6 +36,7 @@ const LeftMenu = ({ locale }) => {
     { href: "/profile/bot", icon: <LuBot />, label: t("bots") },
     { href: "/profile/showcase", icon: <BsGrid1X2 />, label: t("showcase") },
     { href: "/profile/apiconnect", icon: <BiBroadcast />, label: t("apiconnect") },
+    { href: "/profile/settings", icon: <AiOutlineSetting />, label: t("settings") },
   ];
 
   useEffect(() => {

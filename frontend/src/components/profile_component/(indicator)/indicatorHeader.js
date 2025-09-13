@@ -133,11 +133,11 @@ const IndicatorHeader = ({ locale }) => {
           <div className="ml-auto flex items-center">
             <button
               onClick={() => setSettingsOpen(true)}
-              className="mr-2 flex items-center justify-center w-[50px] h-[40px] rounded-md transition-all duration-200 bg-gray-950 hover:bg-gray-900 text-[24px]"
+              className="mr-2 flex items-center justify-center w-[50px] h-[40px] rounded-md transition-all duration-200 bg-black border border-gray-800 hover:border-gray-600 text-[21px] "
               aria-label={t("buttons.settings")}
               title={t("buttons.settings")}
             >
-              <IoMdSettings className="text-white" />
+              <IoMdSettings className="text-gray-200" />
             </button>
           </div>
         </div>

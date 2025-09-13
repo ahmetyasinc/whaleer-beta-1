@@ -91,13 +91,6 @@ export default function ProfileHeader() {
             })}
           </nav>
 
-          <Link
-            href={`/${locale}/profile/settings`}
-            className={`flex items-center justify-center w-10 h-10 rounded-full transition-all text-gray-100 hover:text-gray-400`}
-            title={t("settings")}
-          >
-            <IoMdSettings size={24} />
-          </Link>
         </div>
       </div>
     </div>

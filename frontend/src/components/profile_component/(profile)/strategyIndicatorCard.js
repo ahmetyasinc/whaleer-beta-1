@@ -26,7 +26,7 @@ function Portal({ children }) {
 function Toast({ toasts }) {
   const { t } = useTranslation("strategyIndicator");
   return (
-    <div className="fixed top-4 right-4 z-[9999] space-y-3">
+    <div className="fixed top-4 right-4 space-y-3">
       {toasts.map((to) => {
         const title =
           to.title ||
@@ -361,7 +361,7 @@ export default function StrategyIndicatorCard() {
               <div className="text-xs text-gray-300/90 line-clamp-2 mt-2">{selected.description}</div>
             )}
           </div>        
-          <div className="relative z-[9999]" ref={menuOpenKey === menuKey ? menuRef : null}>
+          <div className="relative" ref={menuOpenKey === menuKey ? menuRef : null}>
             <button
               onClick={() => setMenuOpenKey(menuOpenKey === menuKey ? null : menuKey)}
               className="p-1.5 rounded-full hover:bg-zinc-700 transition-colors"

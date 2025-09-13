@@ -243,7 +243,7 @@ export const BotCard = ({ bot, column }) => {
 
             {/* SAĞ: Toggle + Spinner */}
             <div className="flex flex-col justify-center items-center relative">
-              <div className="absolute flex items-center gap-3 mb-[152px] mr-[7px] z-10 pointer-events-none">
+              <div className="absolute flex items-center gap-3 mb-[148px] mr-[7px] z-10 pointer-events-none">
                 <SpinningWheel isActive={bot.isActive} />
               </div>
               <div
@@ -289,7 +289,7 @@ export const BotCard = ({ bot, column }) => {
         <div className="grid grid-cols-3 gap-4">
           {/* SOL: Toggle + Spinner */}
           <div className="flex flex-col justify-center items-center relative">
-            <div className="absolute flex items-center gap-3 mb-[152px] ml-[7px] z-10 pointer-events-none scale-x-[-1]">
+            <div className="absolute flex items-center gap-3 mb-[148px] ml-[7px] z-10 pointer-events-none scale-x-[-1]">
               <SpinningWheel isActive={bot.isActive} />
             </div>
             <div

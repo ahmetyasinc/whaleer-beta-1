@@ -474,7 +474,7 @@ export default function ChartComponent() {
       try { chartRef.current?.remove?.(); } catch {}
       cleanupFns.forEach(fn => { try { fn(); } catch {} });
     };
-  }, [chartData, indicatorData, strategyData, isMagnetMode, selectedPeriod, tzOffsetMin, settings]);
+  }, [chartData, indicatorData, strategyData, selectedPeriod]);
 
   // Crosshair mode live change
   useEffect(() => { if (chartRef.current) { chartRef.current.applyOptions({ crosshair: { mode: isMagnetMode ? CrosshairMode.Magnet : CrosshairMode.Normal } }); } }, [isMagnetMode]);

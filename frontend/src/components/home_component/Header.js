@@ -74,7 +74,7 @@ export default function Header({ pageClass }) {
           "transition-all duration-200 ease-out active:scale-95",
           "shadow-sm hover:shadow-lg",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900",
-          active ? "text-white bg-white/5" : "text-slate-300 hover:text-white bg-transparent",
+          active ? "text-white bg-neutral-950 border border-cyan-500/50" : "text-slate-300 hover:text-white bg-transparent",
         ].join(" ")}
       >
         <span className="relative z-10">{label}</span>
@@ -89,9 +89,8 @@ export default function Header({ pageClass }) {
         <span
           className={[
             "pointer-events-none absolute -top-1 left-1/2 h-1 w-8 -translate-x-1/2 rounded-full",
-            "bg-gradient-to-r from-sky-400 to-cyan-400",
             "transition-all duration-300",
-            active ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1",
+            active ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 ",
           ].join(" ")}
         />
       </Link>

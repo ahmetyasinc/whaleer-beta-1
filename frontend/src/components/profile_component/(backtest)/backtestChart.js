@@ -5,6 +5,73 @@ import { createChart } from 'lightweight-charts';
 import useBacktestStore from '@/store/backtest/backtestStore';
 import { useTranslation } from 'react-i18next';
 
+// ---- Timezone helpers ----
+const pad = (n) => String(n).padStart(2, '0');
+
+function getCookie(name) {
+  if (typeof document === 'undefined') return null;
+  const m = document.cookie.split('; ').find(row => row.startsWith(name + '='));
+  return m ? decodeURIComponent(m.split('=')[1]) : null;
+}
+
+function parseGmtToMinutes(tzStr) {
+  // "GMT+1", "GMT-3", "GMT+5:30" desteklenir
+  const m = /^GMT\s*([+-])\s*(\d{1,2})(?::?(\d{2}))?$/i.exec((tzStr || '').trim());
+  if (!m) return 0; // default GMT+0
+  const sign = m[1] === '-' ? -1 : 1;
+  const h = parseInt(m[2] || '0', 10);
+  const mins = parseInt(m[3] || '0', 10);
+  return sign * (h * 60 + mins);
+}
+
+function readTimezoneOffsetMinutesFromCookie() {
+  try {
+    const raw = getCookie('wh_settings');
+    if (!raw) return 0; // GMT+0
+    const obj = JSON.parse(raw);
+    return parseGmtToMinutes(obj?.timezone || 'GMT+0');
+  } catch {
+    return 0; // parse hatası → GMT+0
+  }
+}
+
+// t → business day ({year,month,day}) veya UNIX saniye (number)
+function timeToZonedDate(t, offsetMinutes) {
+  let msUTC;
+  if (t && typeof t === 'object' && 'year' in t && 'month' in t && 'day' in t) {
+    msUTC = Date.UTC(t.year, t.month - 1, t.day, 0, 0, 0);
+  } else {
+    const sec = (typeof t === 'number' ? t : 0);
+    msUTC = sec * 1000;
+  }
+  return new Date(msUTC + (offsetMinutes || 0) * 60 * 1000);
+}
+
+// Saatlik ve daha uzun periyotlarda iki haneli yıl (yy) gösterir
+function makeZonedFormatter(period, offsetMinutes) {
+  const isMins  = ['1m','5m','15m'].includes(period) || period === '3m' || period === '30m';
+  const isHours = ['1h','2h','4h'].includes(period);
+  const isDays  = period === '1d';
+  const isWeeks = period === '1w';
+  const twoDigitYear = (Y) => String(Y).slice(2);
+
+  return (t) => {
+    const d  = timeToZonedDate(t, offsetMinutes);
+    const Y  = d.getUTCFullYear();
+    const yy = twoDigitYear(Y);
+    const M  = pad(d.getUTCMonth() + 1);
+    const D  = pad(d.getUTCDate());
+    const h  = pad(d.getUTCHours());
+    const m  = pad(d.getUTCMinutes());
+
+    if (isMins)  return `${D}.${M} ${h}:${m}`;     // 1–30m → yıl yok
+    if (isHours) return `${D}.${M}.${yy} ${h}:00`; // 1h–4h → DD.MM.yy HH:00
+    if (isDays)  return `${D}.${M}.${yy}`;         // 1d     → DD.MM.yy
+    if (isWeeks) return `${D}.${M}.${yy}`;         // 1w     → DD.MM.yy
+    return `${D}.${M}.${yy} ${h}:${m}`;
+  };
+}
+
 export default function BacktestChart() {
   const { t } = useTranslation('backtestChart');
 
@@ -19,6 +86,8 @@ export default function BacktestChart() {
 
   const [showCandlestick, setShowCandlestick] = useState(true);
   const [showLine, setShowLine] = useState(true);
+
+  const [tzOffsetMin, setTzOffsetMin] = useState(0);
 
   // NEW: which metric to show in the bottom chart
   const [bottomMetric, setBottomMetric] = useState('returns'); // 'returns' | 'position' | 'percentage'
@@ -63,12 +132,25 @@ export default function BacktestChart() {
   };
 
   useEffect(() => {
+    setTzOffsetMin(readTimezoneOffsetMinutesFromCookie());
+  }, []);
+
+  useEffect(() => {
     const container = mainChartContainerRef.current;
     if (!container) return;
+    
+    const fmt = makeZonedFormatter(period, tzOffsetMin);
 
     const mainChart = createChart(container, {
       ...getChartConfig(300),
       width: container.clientWidth,
+      localization: { timeFormatter: fmt },
+      timeScale: {
+        ...getChartConfig(300).timeScale,
+        timeVisible: true,
+        secondsVisible: ['1m','5m','15m'].includes(period),
+        tickMarkFormatter: fmt,
+      },
     });
 
     mainChartRef.current = mainChart;
@@ -99,10 +181,20 @@ export default function BacktestChart() {
     const container = returnsChartContainerRef.current;
     if (!container) return;
 
+    const fmt = makeZonedFormatter(period, tzOffsetMin);
+
     const returnsChart = createChart(container, {
       ...getChartConfig(150),
       width: container.clientWidth,
+      localization: { timeFormatter: fmt },
+      timeScale: {
+        ...getChartConfig(150).timeScale,
+        timeVisible: true,
+        secondsVisible: ['1m','5m','15m'].includes(period),
+        tickMarkFormatter: fmt,
+      },
     });
+
 
     returnsChartRef.current = returnsChart;
 
@@ -175,6 +267,7 @@ export default function BacktestChart() {
 
   // price + overlay updates
   useEffect(() => {
+    // seri güncellemeleri
     if (candlestickSeriesRef.current && candles.length > 0) {
       const formatted = candles.map((c) => ({
         time: c.time,
@@ -190,14 +283,29 @@ export default function BacktestChart() {
       lineSeriesRef.current.setData(showLine ? chartData : []);
     }
 
+    const fmt = makeZonedFormatter(period, tzOffsetMin);
+
     if (mainChartRef.current) {
       mainChartRef.current.applyOptions({
+        localization: { timeFormatter: fmt },
         timeScale: {
-          secondsVisible: ['1m', '5m', '15m'].includes(period),
+          secondsVisible: ['1m','5m','15m'].includes(period),
+          tickMarkFormatter: fmt,
         },
       });
     }
-  }, [candles, chartData, period, showCandlestick, showLine]);
+
+    if (returnsChartRef.current) {
+      returnsChartRef.current.applyOptions({
+        localization: { timeFormatter: fmt },
+        timeScale: {
+          secondsVisible: ['1m','5m','15m'].includes(period),
+          tickMarkFormatter: fmt,
+        },
+      });
+    }
+  }, [candles, chartData, period, showCandlestick, showLine, tzOffsetMin]);
+
 
   // bottom chart updates (NEW: switchable metric)
   useEffect(() => {
@@ -283,13 +391,16 @@ export default function BacktestChart() {
     }
 
     if (returnsChartRef.current) {
+      const fmt = makeZonedFormatter(period, tzOffsetMin);
       returnsChartRef.current.applyOptions({
+        localization: { timeFormatter: fmt },
         timeScale: {
-          secondsVisible: ['1m', '5m', '15m'].includes(period),
+          secondsVisible: ['1m','5m','15m'].includes(period),
+          tickMarkFormatter: fmt,
         },
       });
     }
-  }, [returns, period, bottomMetric]);
+  }, [returns, period, bottomMetric, tzOffsetMin]);
 
   return (
     <div className="w-full h-full flex flex-col space-y-2">

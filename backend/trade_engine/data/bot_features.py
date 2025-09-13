@@ -63,7 +63,7 @@ def load_bot_context(bot_id: int):
                            ELSE NULL
                            END AS leverage
                     FROM bot_positions
-                    WHERE bot_id = %s AND status = 'filled';
+                    WHERE bot_id = %s;
                 """, (bot_id,))
                 positions = cur.fetchall() or []
 

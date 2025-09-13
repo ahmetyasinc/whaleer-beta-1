@@ -3,31 +3,91 @@ import PnLChart from "./pnlCharts";
 import useBotExamineStore from "@/store/bot/botExamineStore";
 import { MdTrendingUp, MdTrendingDown, MdNotes } from "react-icons/md";
 import { FaCoins, FaChartLine, FaExchangeAlt } from "react-icons/fa";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
+/* ================= Timezone helpers ================= */
+// cookie oku
+function getCookie(name) {
+  if (typeof document === "undefined") return null;
+  const m = document.cookie.split("; ").find((row) => row.startsWith(name + "="));
+  return m ? decodeURIComponent(m.split("=")[1]) : null;
+}
+
+// "GMT+3", "GMT-4", "GMT+5:30" → dakikaya çevir
+function parseGmtToMinutes(tzStr) {
+  const m = /^GMT\s*([+-])\s*(\d{1,2})(?::?(\d{2}))?$/i.exec((tzStr || "").trim());
+  if (!m) return 0;
+  const sign = m[1] === "-" ? -1 : 1;
+  const h = parseInt(m[2] || "0", 10);
+  const mins = parseInt(m[3] || "0", 10);
+  return sign * (h * 60 + mins);
+}
+
+// cookie → ofset (dakika)
+function readTimezoneOffsetMinutesFromCookie() {
+  try {
+    const raw = getCookie("wh_settings");
+    if (!raw) return 0;
+    const obj = JSON.parse(raw);
+    return parseGmtToMinutes(obj?.timezone || "GMT+0");
+  } catch {
+    return 0;
+  }
+}
+
+// "2025-09-12 03:45:25.593889" / "2025-09-12T03:45:25Z" / number → ms (UTC varsay)
+function toUnixMsUTC(ts) {
+  if (typeof ts === "number") return ts > 1e12 ? ts : ts * 1000;
+  if (typeof ts !== "string") return 0;
+  let s = ts.trim();
+  if (s.includes(" ") && !s.includes("T")) s = s.replace(" ", "T");
+  if (!/Z$|[+-]\d\d:\d\d$/.test(s)) s += "Z";
+  const ms = Date.parse(s);
+  return Number.isFinite(ms) ? ms : 0;
+}
+
+// UTC ms + ofset dk → Date (zoned)
+function msToZonedDate(msUTC, offsetMinutes) {
+  return new Date(msUTC + (offsetMinutes || 0) * 60 * 1000);
+}
+/* ==================================================== */
+
 export default function ExamineBot({ isOpen, onClose, botId }) {
-  // 1) Tüm hook'lar koşulsuz, en üstte
   const { t, i18n } = useTranslation("examineBot");
   const locale = i18n.language || "en-GB";
-  const [view, setView] = useState("trades");       // yeni hook
+
+  const [view, setView] = useState("trades");
   const [expandedLogId, setExpandedLogId] = useState(null);
+  const [tzOffsetMin, setTzOffsetMin] = useState(0);
+
+  // mount'ta cookie'den TZ ofsetini al
+  useEffect(() => {
+    setTzOffsetMin(readTimezoneOffsetMinutesFromCookie());
+  }, []);
+
+  // item.date -> UNIX saniye (UTC) çevir. Z/offset yoksa Z ekle.
+  const toUnixSecUTC = (ts) => {
+    const ms = toUnixMsUTC(ts);
+    return Math.floor(ms / 1000);
+  };
 
   const bot = useBotExamineStore((s) => s.getBot(botId));
 
   const trades = bot?.trades || [];
   const logs = bot?.logs || [];
 
+  // Sıralamayı da UTC yorumu ile yap
   const sortedTrades = useMemo(
-    () => [...trades].sort((a, b) => new Date(b.date) - new Date(a.date)),
+    () => [...trades].sort((a, b) => toUnixMsUTC(b.date) - toUnixMsUTC(a.date)),
     [trades]
   );
+
   const sortedLogs = useMemo(
-    () => [...logs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
+    () => [...logs].sort((a, b) => toUnixMsUTC(b.created_at) - toUnixMsUTC(a.created_at)),
     [logs]
   );
 
-  // 2) Guard return her zaman hook'lardan sonra
   if (!isOpen || !bot) return null;
 
   const LevelBadge = ({ level }) => {
@@ -41,10 +101,20 @@ export default function ExamineBot({ isOpen, onClose, botId }) {
     return <span className={`text-[10px] px-2 py-0.5 rounded ${cls}`}>{lv.toUpperCase()}</span>;
   };
 
+  // Cookie TZ’ye göre tarih formatı
   const formatDate = (dateString) => {
-    const options = { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" };
-    return new Date(dateString).toLocaleString(locale, options);
+    const msUTC = toUnixMsUTC(dateString);                // geleni UTC varsayarak ms
+    const zoned = msToZonedDate(msUTC, tzOffsetMin);      // cookie ofsetini uygula
+    // Hile: zoned Date'i "UTC" timeZone'unda yazdır → istenen ofsete göre görüntü
+    return zoned.toLocaleString(locale, {
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "UTC",
+    });
   };
+
   const formatUSD = (n) => {
     const num = Number(n ?? 0);
     if (!Number.isFinite(num)) return "-";
@@ -118,12 +188,12 @@ export default function ExamineBot({ isOpen, onClose, botId }) {
             </div>
           </div>
 
-          {/* Chart (her iki sekmede de dursun istersen burayı kaldırma) */}
+          {/* Chart */}
           <div className="p-4 border-b border-zinc-700">
             <h3 className="text-sm font-semibold text-white mb-2">{t("charts.pnlTitle")}</h3>
             <PnLChart
               data={bot.pnl_data.map((item) => ({
-                time: Math.floor(new Date(item.date).getTime() / 1000),
+                time: toUnixSecUTC(item.date), // UTC saniye
                 value: item.pnl,
               }))}
             />
@@ -164,7 +234,7 @@ export default function ExamineBot({ isOpen, onClose, botId }) {
                         <td className="text-zinc-300">{String(trade.trade_type || "").toUpperCase()}</td>
                         <td className="text-zinc-300">{trade.position_side || "-"}</td>
                         <td className="text-zinc-300">{trade.leverage > 0 ? `${trade.leverage}x` : "-"}</td>
-                        <td className="text-zinc-300">{(trade.amount)}</td>
+                        <td className="text-zinc-300">{trade.amount}</td>
                         <td className="text-zinc-300">$ {formatUSD((trade.amount || 0) * (trade.price || 0))}</td>
                         <td className="text-zinc-300">{trade.fee}</td>
                       </tr>
@@ -178,7 +248,6 @@ export default function ExamineBot({ isOpen, onClose, botId }) {
               <table className="w-full text-sm text-left text-white border-collapse">
                 <thead className="text-xs border-b pl-2 border-zinc-700 text-zinc-400 uppercase sticky top-0 bg-zinc-900 z-10">
                   <tr>
-                    <th>{t("logs.columns.id")}</th>
                     <th>{t("logs.columns.date")}</th>
                     <th>{t("logs.columns.level")}</th>
                     <th>{t("logs.columns.symbol")}</th>
@@ -199,7 +268,6 @@ export default function ExamineBot({ isOpen, onClose, botId }) {
                     const isOpen = expandedLogId === lg.id;
                     return (
                       <tr key={lg.id} className="border-b border-zinc-800">
-                        <td className="py-2 pr-2 text-zinc-500">{lg.id}</td>
                         <td className="py-2 pl-2">{formatDate(lg.created_at)}</td>
                         <td className="py-2"><LevelBadge level={lg.level} /></td>
                         <td className="py-2">{lg.symbol || "-"}</td>
@@ -220,7 +288,7 @@ export default function ExamineBot({ isOpen, onClose, botId }) {
               </table>
             )}
 
-            {/* Detay paneli: tabloda seçilen log için ayrı bir kutu (sticky altta değil, listede altında açılır) */}
+            {/* Detay paneli */}
             {view === "logs" && expandedLogId != null && (
               <div className="mt-3 rounded-lg border border-zinc-700 bg-zinc-950 p-3">
                 {(() => {

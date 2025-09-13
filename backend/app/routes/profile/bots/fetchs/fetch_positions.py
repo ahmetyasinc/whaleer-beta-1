@@ -16,7 +16,7 @@ async def fetch_positions_for_bot(bot_id: int, db: AsyncSession):
             cost=float(pos.average_cost or 0),
             position_side=pos.position_side or "",
             leverage=float(pos.leverage or 0),
-            profit=float(pos.profit_loss or 0),
+            profit=float((pos.realized_pnl+pos.unrealized_pnl) or 0),
         )
         for pos in positions
     ]

@@ -66,7 +66,7 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
     el.style.color = "#e5e7eb";
     el.style.padding = "8px 12px";
     el.style.fontSize = "12px";
-    el.style.borderRadius = "8px";
+    el.style.borderRadius = "2px";
     el.style.zIndex = "9999";
     el.style.boxShadow = "0 6px 16px rgba(0,0,0,0.35)";
     container.appendChild(el);
@@ -79,12 +79,34 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
   function setOverlayHtml(html, x, y) {
     const el = ensureOverlayBox();
     el.innerHTML = html;
-    el.style.left = `${x + 12}px`;
-    el.style.top  = `${y + 12}px`;
+    el.style.left = `${x + 4}px`;
+    el.style.top  = `${y + 4}px`;
   }
 
   // ---------- SVG + shapes ----------
-  const LINE_COLOR = "rgb(100,180,255)";
+  const LINE_COLOR_POS = "rgb(100,180,255)";
+  const LINE_COLOR_NEG = "rgb(255,100,100)";
+
+  function setRulerColor(isPositive) {
+  const color = isPositive ? LINE_COLOR_POS : LINE_COLOR_NEG;
+  setRulerColor(positive);
+
+  
+    if (line) {
+      line.setAttribute("stroke", color);
+    }
+    if (rect) {
+      rect.setAttribute("fill", isPositive ? "rgba(100,180,255,0.15)" : "rgba(255,100,100,0.15)");
+      rect.setAttribute("stroke", isPositive ? "rgba(100,180,255,0.5)" : "rgba(255,100,100,0.5)");
+    }
+    if (svg) {
+      const startArrow = svg.querySelector("#rulerArrowStart path");
+      const endArrow = svg.querySelector("#rulerArrowEnd path");
+      if (startArrow) startArrow.setAttribute("fill", color);
+      if (endArrow) endArrow.setAttribute("fill", color);
+    }
+  }
+
   function ensureSvg() {
     if (svg && line && rect && vGuide && hGuide) return { svg, line, rect, vGuide, hGuide };
     if (!svg) {
@@ -111,7 +133,7 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
       mkStart.setAttribute("orient", "auto");
       const startPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
       startPath.setAttribute("d", "M0 0 L10 5 L0 10 Z");
-      startPath.setAttribute("fill", LINE_COLOR);
+      startPath.setAttribute("fill", LINE_COLOR_POS);
       mkStart.appendChild(startPath);
 
       // End marker
@@ -125,7 +147,7 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
       mkEnd.setAttribute("orient", "auto-start-reverse");
       const endPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
       endPath.setAttribute("d", "M0 0 L10 5 L0 10 Z");
-      endPath.setAttribute("fill", LINE_COLOR);
+      endPath.setAttribute("fill", LINE_COLOR_POS);
       mkEnd.appendChild(endPath);
 
       defs.appendChild(mkStart); defs.appendChild(mkEnd);
@@ -141,7 +163,7 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
     }
     if (!line) {
       line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-      line.setAttribute("stroke", LINE_COLOR);
+      line.setAttribute("stroke", LINE_COLOR_POS);
       line.setAttribute("stroke-width", "2");
       line.setAttribute("stroke-dasharray", "6,6");
       line.setAttribute("stroke-linecap", "round");
@@ -165,6 +187,7 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
     }
     return { svg, line, rect, vGuide, hGuide };
   }
+
   function drawAllPx(p1, p2) {
     const { line, rect, vGuide, hGuide } = ensureSvg();
     // Main diagonal line
@@ -204,14 +227,23 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
   }
 
   // ---------- Helpers ----------
-  function fmtDuration(sec) {
-    const s = Math.max(0, Math.floor(sec));
-    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
-    const uh = tr("units.h"), um = tr("units.m"), us = tr("units.s");
-    if (h) return `${h}${uh} ${m}${um} ${r}${us}`;
-    if (m) return `${m}${um} ${r}${us}`;
-    return `${r}${us}`;
-  }
+function fmtDuration(sec) {
+  const s = Math.max(0, Math.floor(sec));
+
+  const d = Math.floor(s / 86400); // gün
+  const h = Math.floor((s % 86400) / 3600); // saat
+  const m = Math.floor((s % 3600) / 60);   // dakika
+
+  const ud = tr("units.d");
+  const uh = tr("units.h");
+  const um = tr("units.m");
+
+  if (d) return `${d}${ud} ${h}${uh} ${m}${um}`;
+  if (h) return `${h}${uh} ${m}${um}`;
+  return `${m}${um}`;
+}
+
+
   function compute(param) {
     if (!param || !param.point) return null;
     let time = null;
@@ -249,9 +281,9 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
     return `
       <div style="min-width:220px;display:grid;gap:6px;">
         <div style="font-weight:700;letter-spacing:.3px;">${title}</div>
-        <div>${tr("fields.start")}: <b>${a.price.toFixed(4)}</b></div>
-        <div>${tr("fields.end")}: <b>${b.price.toFixed(4)}</b></div>
-        <div>${tr("fields.change")}: <b style="color:${pctColor}">${positive ? "▲" : "▼"} ${pct.toFixed(2)}%</b> (${dPrice.toFixed(4)})</div>
+        <div>${tr("fields.start")}: <b>${a.price.toFixed(2)}</b></div>
+        <div>${tr("fields.end")}: <b>${b.price.toFixed(2)}</b></div>
+        <div>${tr("fields.change")}: <b style="color:${pctColor}">${positive ? "▲" : "▼"} ${pct.toFixed(2)}%</b> (${dPrice.toFixed(2)})</div>
         <div>${tr("fields.duration")}: <b>${fmtDuration(dSec)}</b></div>
       </div>`;
   }
@@ -309,9 +341,26 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
       start = cur;
       clearShapes();
       setOverlayHtml(
-        `<div style="font-weight:700;margin-bottom:4px;">${tr("title")}</div><div>${tr("fields.start")}: <b>${start.price.toFixed(4)}</b></div>`,
-        start.point.x, start.point.y
+        `<div style="
+            font-weight:700;
+            margin-bottom:4px;
+            background:rgba(255,0,0,0.15);
+            padding:6px 10px;
+            border-radius:6px;
+          ">
+            ${tr("title")}
+          </div>
+          <div style="
+            background:rgba(255,0,0,0.15);
+            padding:4px 10px;
+            border-radius:6px;
+          ">
+            ${tr("fields.start")}: <b>${start.price.toFixed(4)}</b>
+          </div>`,
+        start.point.x,
+        start.point.y
       );
+
       lockInteractions();
       return;
     }

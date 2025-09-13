@@ -59,8 +59,8 @@ export default function ProfileHeader() {
             <select
               value={activeApiId || ""}
               onChange={(e) => setActiveApiById(Number(e.target.value))}
-              className="px-4 py-[6px] rounded-2xl transition font-medium border-1 border-gray-700 text-white
-                         bg-black hover:bg-gray-950 hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              className="px-4 py-[8px] rounded-xl transition font-medium border border-gray-800 hover:border-gray-600 text-white
+                         bg-black focus:outline-none focus:ring-cyan-500"
               title={t("api.select")}
             >
               {!apis?.length && <option value="">{t("api.noApi")}</option>}
@@ -91,13 +91,6 @@ export default function ProfileHeader() {
             })}
           </nav>
 
-          <Link
-            href={`/${locale}/profile/settings`}
-            className={`flex items-center justify-center w-10 h-10 rounded-full transition-all text-gray-100 hover:text-gray-400`}
-            title={t("settings")}
-          >
-            <IoMdSettings size={24} />
-          </Link>
         </div>
       </div>
     </div>

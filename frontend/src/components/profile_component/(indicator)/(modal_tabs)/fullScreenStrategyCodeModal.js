@@ -15,7 +15,7 @@ const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false 
  * - isOpen: boolean
  * - onClose: () => void
  * - strategy: { id?: number, name: string, code: string, locked?: boolean }
- * - onSave?: () => Promise<void> | void
+ * - onSave?: (code?: string) => Promise<void> | void   <-- artık kodu argüman olarak alabilir
  * - runStrategyId?: number | null
  * - locked?: boolean
  */
@@ -54,6 +54,7 @@ const FullScreenStrategyCodeModal = ({
     if (monacoRef.current) return;
     monacoRef.current = monaco;
 
+    // basit custom python tokenizer (mevcut haliyle bırakıyorum)
     monaco.languages.register({ id: "python-custom" });
 
     monaco.languages.setMonarchTokensProvider("python-custom", {
@@ -81,17 +82,21 @@ const FullScreenStrategyCodeModal = ({
 
   // Kaydet → Kapat
   const handleSaveThenClose = async () => {
-    if (!onSave || locked) return onClose?.();
+    // locked ise sadece kapat (ve onSave çağrılmaz)
+    if (locked) return onClose?.();
+
     try {
       setIsSaving(true);
-      await onSave();
+      // onSave fonksiyonu kodu argüman olarak alıyorsa onu gönderiyoruz
+      const maybePromise = onSave ? onSave(code) : null;
+      if (maybePromise && typeof maybePromise.then === "function") await maybePromise;
       onClose?.();
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Run öncesi: kaydet & kapat
+  // Run öncesi: kaydet & kapat (aynı zamanda parent'e kodu iletir)
   const handleBeforeRun = async () => {
     if (locked) return; // kilitliyse çalıştırma yok
     await handleSaveThenClose();
@@ -103,10 +108,9 @@ const FullScreenStrategyCodeModal = ({
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50">
       <div className="bg-gray-900 text-white rounded-md w-[900px] h-[600px] p-6 shadow-2xl relative">
         {/* Sağ üst aksiyonlar: [Run] [Save] [Close] */}
-        
         {runStrategyId && !locked ? (
           <div className="absolute top-5 right-4 ">
-              <RunButton strategyId={runStrategyId} onBeforeRun={handleBeforeRun} />
+            <RunButton strategyId={runStrategyId} onBeforeRun={handleBeforeRun} />
           </div>
         ) : null}
 
@@ -120,6 +124,7 @@ const FullScreenStrategyCodeModal = ({
             title={locked ? "Locked versions cannot be modified" : "Save"}
             onClick={handleSaveThenClose}
             disabled={locked || isSaving}
+            aria-disabled={locked || isSaving}
           >
             {isSaving ? (
               <div className="w-[16px] h-[16px] border-2 border-t-white border-gray-400 rounded-full animate-spin"></div>
@@ -147,8 +152,11 @@ const FullScreenStrategyCodeModal = ({
             value={code}
             theme="vs-dark"
             height="100%"
+            onChange={(val) => {
+              if (!locked) setCode(val ?? "");
+            }}
             options={{
-              readOnly: true,
+              readOnly: locked, // artık locked kontrolü ile düzenlenebilirlik
               fontSize: 13,
               minimap: { enabled: false },
               scrollBeyondLastLine: false,

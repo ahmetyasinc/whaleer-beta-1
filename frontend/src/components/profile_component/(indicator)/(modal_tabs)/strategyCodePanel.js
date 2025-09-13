@@ -37,6 +37,8 @@ const CodePanel = () => {
   } = useCodePanelStore();
 
   const { addStrategy, deleteStrategy } = useStrategyStore();
+  // store API'larını getState üzerinden alacağız (updateStrategy vs.)
+  const strategyStore = useStrategyStore;
 
   const [localName, setLocalName] = useState("");
   const [localCode, setLocalCode] = useState("");
@@ -57,63 +59,79 @@ const CodePanel = () => {
   // seçili versiyon kilitli mi? (yeni versiyon modunda kilit devre dışı)
   const isLockedActive = !!(selected && !isNewVersion && selected.locked);
 
-  const handleSaveStrategy = async () => {
+  /**
+   * handleSaveStrategy(incomingCode?)
+   * - incomingCode: modalden gelen kod (string) — varsa onu doğrudan kullan
+   * - state set'lerine güvenmek yerine kodu bir değişkende tutup onu kullan
+   */
+  const handleSaveStrategy = async (incomingCode) => {
     // kilitliyken kaydetme yok
     if (isLockedActive) return;
 
+    // Eğer modalden kod geldiyse onu öncelikle kullan; aksi halde localCode kullan
+    const codeToSave = typeof incomingCode === "string" ? incomingCode : localCode;
+    const nameToSave = localName?.trim();
+
+    // Eşitle UI side (isteğe bağlı, kullanıcı modalde düzenleme görsün)
+    if (typeof incomingCode === "string") {
+      setLocalCode(incomingCode);
+      setStrategyCode(incomingCode); // panel store binding
+    }
+
     setIsSaving(true);
 
-    const { strategies, setPersonalStrategies } = useStrategyStore.getState();
-    if (!localName.trim() || !localCode.trim()) {
+    // validation (kod ve isim kesin olmalı)
+    if (!nameToSave || !codeToSave || !codeToSave.trim()) {
       setIsSaving(false);
       return;
     }
 
-    const delay = new Promise((res) => setTimeout(res, 250));
+    const delay = new Promise((res) => setTimeout(res, 350));
 
     try {
       if (selected && !isNewVersion) {
         // ---- GÜNCELLEME (mevcut versiyon) ----
-        const isNameUnchanged = localName === strategyName;
-        const isCodeUnchanged = localCode === strategyCode;
+        const isNameUnchanged = nameToSave === strategyName;
+        const isCodeUnchanged = codeToSave === strategyCode;
         if (isNameUnchanged && isCodeUnchanged) {
           setIsSaving(false);
           return;
         }
 
-        setStrategyName(localName);
-        setStrategyCode(localCode);
+        // update panel binding
+        setStrategyName(nameToSave);
+        setStrategyCode(codeToSave);
 
         const updateRequest = axios.put(
           `${process.env.NEXT_PUBLIC_API_URL}/api/edit-strategy/`,
-          { id: selected.id, name: localName, code: localCode },
+          { id: selected.id, name: nameToSave, code: codeToSave },
           { withCredentials: true, headers: { "Content-Type": "application/json" } }
         );
 
         await Promise.all([updateRequest, delay]);
 
-        setPersonalStrategies(
-          strategies.map((s) =>
-            s.id === selected.id ? { ...s, name: localName, code: localCode } : s
-          )
-        );
-        // replace mantığı
-        deleteStrategy(selected.id);
-        addStrategy({
-          id: selected.id,
-          name: localName,
-          code: localCode,
-          version: selected.version,
-          parent_strategy_id: selected.parent_strategy_id,
-          locked: selected.locked,
-        });
+        // store'da atomik güncelleme: updateStrategy kullan
+        const updateFn = strategyStore.getState().updateStrategy;
+        if (typeof updateFn === "function") {
+          updateFn(selected.id, { name: nameToSave, code: codeToSave });
+        } else {
+          // fallback: setPersonalStrategies ile manuel map (eski davranış)
+          const { strategies = [], setPersonalStrategies } = strategyStore.getState();
+          const updated = (strategies || []).map((s) =>
+            String(s.id) === String(selected.id) ? { ...s, name: nameToSave, code: codeToSave } : s
+          );
+          if (typeof setPersonalStrategies === "function") setPersonalStrategies(updated);
+        }
+
+        // Paneldeki versiyon listesini güncellemek için setStrategyEditing çağır
+        setStrategyEditing({ ...selected, name: nameToSave, code: codeToSave });
       } else {
         // ---- YENİ / YENİ VERSİYON ----
         const postRequest = axios.post(
           `${process.env.NEXT_PUBLIC_API_URL}/api/add-strategy/`,
           {
-            name: localName,
-            code: localCode,
+            name: nameToSave,
+            code: codeToSave,
             parent_strategy_id: parent_strategy_id,
           },
           { withCredentials: true, headers: { "Content-Type": "application/json" } }
@@ -122,24 +140,19 @@ const CodePanel = () => {
         const [response] = await Promise.all([postRequest, delay]);
         const newStrategy = response.data;
 
-        addStrategy({
-          id: newStrategy.id,
-          name: newStrategy.name,
-          code: newStrategy.code,
-          version: newStrategy.version,
-          parent_strategy_id: newStrategy.parent_strategy_id,
-          locked: newStrategy.locked,
-        });
+        // addStrategy tüm backend objesini eklesin (version/parent/locked... korunur)
+        addStrategy(newStrategy);
 
+        // paneli edit moda geçir
         setStrategyEditing(newStrategy);
-        setStrategyName(newStrategy.name);
-        setStrategyCode(newStrategy.code);
+        setStrategyName(newStrategy.name || "");
+        setStrategyCode(newStrategy.code || "");
       }
     } catch (error) {
       console.error(t("errors.save"), error);
+    } finally {
+      setIsSaving(false);
     }
-
-    setIsSaving(false);
   };
 
   const handleClose = () => {
@@ -199,7 +212,7 @@ const CodePanel = () => {
             : "bg-[rgb(16,45,100)] hover:bg-[rgb(27,114,121)]"
         }`}
         title={isLockedActive ? t("tooltips.saveLocked") : t("buttons.save")}
-        onClick={handleSaveStrategy}
+        onClick={() => handleSaveStrategy()}
         disabled={isLockedActive || isSaving}
         aria-disabled={isLockedActive || isSaving}
       >
@@ -286,10 +299,15 @@ const CodePanel = () => {
         isOpen={isCodeModalOpen}
         onClose={() => setIsCodeModalOpen(false)}
         strategy={codeModalStrategy}
-        onSave={handleSaveStrategy}               // Kaydet işlevi panelden
-        runStrategyId={selected?.id || null}      // RunButton için id
-        locked={isLockedActive}                   // Kilit kontrolü
+        onSave={async (codeFromModal) => {
+          // modal onSave(code) çağırdığında parent burada kodu alır,
+          // handleSaveStrategy içine direk geçiriyoruz ve modal kendi içinde onClose eder.
+          await handleSaveStrategy(codeFromModal);
+        }}
+        runStrategyId={selected?.id || null}
+        locked={isLockedActive}
       />
+
     </div>
   );
 };

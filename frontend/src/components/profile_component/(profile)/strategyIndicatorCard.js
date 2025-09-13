@@ -12,6 +12,15 @@ import { publishStrategy, publishIndicator } from "@/api/strategies";
 import CodeModal from "@/components/profile_component/(indicator)/(modal_tabs)/CodeModal";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { createPortal } from "react-dom";
+
+function Portal({ children }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+  return createPortal(children, document.body);
+}
+
 
 /* ------------------------ Toast (yüksek kontrast) ------------------------ */
 function Toast({ toasts }) {
@@ -308,16 +317,15 @@ export default function StrategyIndicatorCard() {
     const selected = group.versions.find((v) => v.id === selectedId) || group.latest;
     const menuKey = `s-${selected.id}`;
     const approved = selected?.approved_release || null;
-    const pending  = selected?.pending_release  || null;
-
+    const pending  = selected?.pending_release  || null;//
     const onChangeVersion = (e) => {
       const newId = Number(e.target.value);
       setSelectedVersionByStrategyGroup((prev) => ({ ...prev, [group.groupId]: newId }));
     };
-
     return (
       <div
-        className="group bg-gradient-to-r from-slate-800/60 to-slate-900/60 rounded-lg p-3 hover:bg-zinc-900 transition-all duration-200 border border-zinc-700 hover:border-zinc-500 relative"
+        className="group bg-gradient-to-r from-slate-800/60 to-slate-900/60 rounded-lg p-3 hover:bg-zinc-900 transition-all duration-200 border border-zinc-700 hover:border-zinc-500 relative
+               max-h-56 overflow-y-auto"
         style={initialLoad ? { animationDelay: `${index * 200}ms`, animation: "fadeInUp 1s ease-out forwards" } : {}}
       >
         <div className="flex justify-between items-start gap-3">
@@ -332,8 +340,7 @@ export default function StrategyIndicatorCard() {
                   {t("badges.versions", { count: group.versions.length })}
                 </span>
               )}
-            </div>
-
+            </div>          
             {group.versions.length > 1 && (
               <select
                 value={selectedId}
@@ -349,24 +356,21 @@ export default function StrategyIndicatorCard() {
             )}
 
             <ReleaseStrip titleKey="approved" color="blue"  release={approved} />
-            <ReleaseStrip titleKey="pending"  color="amber" release={pending} />
-
+            <ReleaseStrip titleKey="pending"  color="amber" release={pending} />        
             {selected?.description && (
               <div className="text-xs text-gray-300/90 line-clamp-2 mt-2">{selected.description}</div>
             )}
-          </div>
-
-          <div className="relative" ref={menuOpenKey === menuKey ? menuRef : null}>
+          </div>        
+          <div className="relative z-[9999]" ref={menuOpenKey === menuKey ? menuRef : null}>
             <button
               onClick={() => setMenuOpenKey(menuOpenKey === menuKey ? null : menuKey)}
               className="p-1.5 rounded-full hover:bg-zinc-700 transition-colors"
               title={t("menu.actions")}
             >
               <BsThreeDotsVertical className="text-gray-200" size={14} />
-            </button>
-
+            </button>        
             {menuOpenKey === menuKey && (
-              <div className="absolute top-0 right-8 w-40 bg-gray-900/95 backdrop-blur-sm rounded-lg shadow-xl border border-gray-700 z-20 overflow-hidden">
+              <div className="absolute top-0 right-8 w-40 bg-gray-900/95 backdrop-blur-sm rounded-lg shadow-xl border border-gray-700 overflow-hidden">
                 <button
                   onClick={() => handleInspect(selected)} // 👈 sadece modal
                   className="flex items-center gap-2 w-full px-3 py-2 text-xs text-yellow-300 hover:bg-gray-800/80 transition-colors"
@@ -396,16 +400,15 @@ export default function StrategyIndicatorCard() {
     const selected = group.versions.find((v) => v.id === selectedId) || group.latest;
     const menuKey = `i-${selected.id}`;
     const approved = selected?.approved_release || null;
-    const pending  = selected?.pending_release  || null;
-
+    const pending  = selected?.pending_release  || null;//
     const onChangeVersion = (e) => {
       const newId = Number(e.target.value);
       setSelectedVersionByIndicatorGroup((prev) => ({ ...prev, [group.groupId]: newId }));
     };
-
     return (
       <div
-        className="group bg-gradient-to-r from-slate-800/60 to-slate-900/60 rounded-lg p-3 hover:bg-zinc-900 transition-all duration-200 border border-zinc-700 hover:border-zinc-500 relative"
+        className="group bg-gradient-to-r from-slate-800/60 to-slate-900/60 rounded-lg p-3 hover:bg-zinc-900 transition-all duration-200 border border-zinc-700 hover:border-zinc-500 relative
+               max-h-56 overflow-y-auto"
         style={initialLoad ? { animationDelay: `${index * 200}ms`, animation: "fadeInUp 1s ease-out forwards" } : {}}
       >
         <div className="flex justify-between items-start gap-3">
@@ -420,8 +423,7 @@ export default function StrategyIndicatorCard() {
                   {t("badges.versions", { count: group.versions.length })}
                 </span>
               )}
-            </div>
-
+            </div>          
             {group.versions.length > 1 && (
               <select
                 value={selectedId}
@@ -437,13 +439,11 @@ export default function StrategyIndicatorCard() {
             )}
 
             <ReleaseStrip titleKey="approved" color="blue"  release={approved} />
-            <ReleaseStrip titleKey="pending"  color="amber" release={pending} />
-
+            <ReleaseStrip titleKey="pending"  color="amber" release={pending} />        
             {selected?.description && (
               <div className="text-xs text-gray-300/90 line-clamp-2 mt-2">{selected.description}</div>
             )}
-          </div>
-
+          </div>        
           <div className="relative" ref={menuOpenKey === menuKey ? menuRef : null}>
             <button
               onClick={() => setMenuOpenKey(menuOpenKey === menuKey ? null : menuKey)}
@@ -451,8 +451,7 @@ export default function StrategyIndicatorCard() {
               title={t("menu.actions")}
             >
               <BsThreeDotsVertical className="text-gray-200" size={14} />
-            </button>
-
+            </button>        
             {menuOpenKey === menuKey && (
               <div className="absolute top-0 right-8 w-40 bg-gray-900/95 backdrop-blur-sm rounded-lg shadow-xl border border-gray-700 z-20 overflow-hidden">
                 <button
@@ -481,9 +480,9 @@ export default function StrategyIndicatorCard() {
 
   /* --------------------------- RENDER --------------------------- */
   return (
-    <div className="w-full h-full flex gap-3 overflow-hidden">
+    <div className="w-full h-[calc(100vh-94px)] flex gap-3 overflow-hidden">
       {/* Strategies (GROUPED) */}
-      <div className="flex-1 bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl border border-zinc-700 shadow-xl flex flex-col max-h=[calc(100vh-110px)]">
+      <div className="flex-1 bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl border border-zinc-700 shadow-xl flex flex-col max-h=[calc(100vh-180px)]">
         <div className="px-4 py-3 border-b border-zinc-700 bg-gradient-to-r from-blue-900/20 to-blue-800/10">
           <div className="flex items-center gap-3">
             <div className="w-4 h-4 bg-blue-400 rounded-full"></div>
@@ -504,8 +503,7 @@ export default function StrategyIndicatorCard() {
             )}
           </div>
         </div>
-      </div>
-
+      </div>        
       {/* Indicators (GROUPED) */}
       <div className="flex-1 bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl border border-zinc-700 shadow-xl flex flex-col max-h=[calc(100vh-110px)]">
         <div className="px-4 py-3 border-b border-zinc-700 bg-gradient-to-r from-purple-900/20 to-purple-800/10">
@@ -528,8 +526,7 @@ export default function StrategyIndicatorCard() {
             )}
           </div>
         </div>
-      </div>
-
+      </div>        
       {/* Modals */}
       <PublishStrategyModal
         isOpen={showStrategyModal}
@@ -550,8 +547,7 @@ export default function StrategyIndicatorCard() {
       />
 
       {/* Toast container */}
-      <Toast toasts={toasts} />
-
+      <Toast toasts={toasts} />        
       <style jsx>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateX(-40px); }

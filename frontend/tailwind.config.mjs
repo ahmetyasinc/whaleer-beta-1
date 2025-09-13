@@ -15,6 +15,9 @@ export default {
         // Tüm sitede varsayılan
         sans: ["var(--font-main)", "system-ui", "sans-serif"],
       },
+      fontFamily: {
+      sans: ["Work Sans", "sans-serif"], // mevcut "font-sans" class’ını override ediyor
+    }
     },
   },
   plugins: [

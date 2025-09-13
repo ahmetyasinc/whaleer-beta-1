@@ -79,6 +79,7 @@ async def get_coin_list(
             BinanceCoin.id,
             BinanceCoin.name,
             BinanceCoin.symbol,
+            BinanceCoin.tick_size,
             #BinanceCoin.created_at,
             BinanceCoin.binance_symbol,
             BinanceCoinsPinned.id.isnot(None).label("pinned")  # Eğer pinned varsa True, yoksa False döner

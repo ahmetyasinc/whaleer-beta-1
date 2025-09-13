@@ -6,9 +6,12 @@ import pandas as pd
 import time
 import asyncio
 import ta
+from backend.trade_engine.process.library.get_percentage import get_percentage
+
 
 def empty(*args, **kwargs):
     pass
+    
 
 class EmptyClass:
     def int(self, default=0, **kwargs):
@@ -33,10 +36,24 @@ def safe_import(name, globals=None, locals=None, fromlist=(), level=0):
         return __import__(name, globals, locals, fromlist, level)
     raise ImportError(f"Modül yükleme izni yok: {name}")
 
-def allowed_globals_(df):
+def allowed_globals_(df, bot_id):
+
+    python_keywords = {
+        "nonlocal": None,
+        "global": None,
+        "yield": None,
+        "async": None,
+        "await": Await,
+        "lambda": lambda: None,  # lambda desteği
+    }
+
     allowed_globals_ = {
                 "__builtins__": {
                     "__import__": safe_import,
+                    "isinstance": isinstance,
+                    "getattr": getattr,
+                    "hasattr": hasattr,
+                    **python_keywords,
                     "await": Await,
                     # ✅ Temel Python Fonksiyonları
                     "range": range,
@@ -93,6 +110,7 @@ def allowed_globals_(df):
                 "ta": ta,
 
                 # ✅ Grafik oluşturma fonksiyonu (plot)
+                "get_percentage": (lambda: get_percentage(bot_id)),
                 "plot": lambda *args, **kwargs: empty(*args, **kwargs),
                 "mark": lambda *args, **kwargs: empty(*args, **kwargs),
                 "input": EmptyClass(),

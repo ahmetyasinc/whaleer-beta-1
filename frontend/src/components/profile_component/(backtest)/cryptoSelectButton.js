@@ -29,7 +29,8 @@ const CryptoSelectButton = () => {
             id: coin.id,
             name: coin.name,
             symbol: coin.symbol,
-            binance_symbol: coin.binance_symbol
+            binance_symbol: coin.binance_symbol,
+            tick_size: coin.tick_size
           }));
 
           const pinnedCoins = response.data.coins
@@ -38,7 +39,8 @@ const CryptoSelectButton = () => {
               id: coin.id,
               name: coin.name,
               symbol: coin.symbol,
-              binance_symbol: coin.binance_symbol
+              binance_symbol: coin.binance_symbol,
+              tick_size: coin.tick_size
             }));
 
           setCryptosList(coins);

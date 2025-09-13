@@ -276,16 +276,16 @@ ALL_STREAMS = [
         #"seiusdt@kline_1d",   # 1 gün
         #"seiusdt@kline_1w",   # 1 hafta
         #
-        #"pepeusdt@kline_1m",   # 1 dakika
-        #"pepeusdt@kline_3m",   # 3 dakika
-        #"pepeusdt@kline_5m",   # 5 dakika
-        #"pepeusdt@kline_15m",  # 15 dakika
-        #"pepeusdt@kline_30m",  # 30 dakika
-        #"pepeusdt@kline_1h",   # 1 saat
-        #"pepeusdt@kline_2h",   # 2 saat
-        #"pepeusdt@kline_4h",   # 4 saat
-        #"pepeusdt@kline_1d",   # 1 gün
-        #"pepeusdt@kline_1w",   # 1 hafta
+        "pepeusdt@kline_1m",   # 1 dakika
+        "pepeusdt@kline_3m",   # 3 dakika
+        "pepeusdt@kline_5m",   # 5 dakika
+        "pepeusdt@kline_15m",  # 15 dakika
+        "pepeusdt@kline_30m",  # 30 dakika
+        "pepeusdt@kline_1h",   # 1 saat
+        "pepeusdt@kline_2h",   # 2 saat
+        "pepeusdt@kline_4h",   # 4 saat
+        "pepeusdt@kline_1d",   # 1 gün
+        "pepeusdt@kline_1w",   # 1 hafta
         #
         #"nearusdt@kline_1m",   # 1 dakika
         #"nearusdt@kline_3m",   # 3 dakika

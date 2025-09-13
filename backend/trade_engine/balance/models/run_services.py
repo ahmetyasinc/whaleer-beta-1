@@ -23,7 +23,6 @@ logger = logging.getLogger('ServiceRunner')
 # Servisleri ve onların çalışan task'larını burada takip edeceğiz.
 managed_services = {
     "spot": {"func": spot_main, "task": None},
-    # GÜNCELLENDİ: Futures servisi sözlüğe eklendi
     "futures": {"func": futures_main, "task": None},
 }
 
@@ -40,14 +39,12 @@ async def start_service(name: str):
         return
 
     if not service["func"]:
-        # DEĞİŞTİ: Daha açıklayıcı bir hata mesajı
         logger.error(f"'{name}' servisinin ana fonksiyonu import edilemedi. Dosya yolu dogru mu? (Örn: backend.trade_engine.balance.models.ws_service)")
         return
         
     logger.info(f"▶️ '{name}' servisi baslatiliyor...")
-    # Servisi bir asyncio Task'ı olarak başlatıp sözlüğe kaydediyoruz.
     service["task"] = asyncio.create_task(service["func"]())
-    await asyncio.sleep(1) # Servisin başlaması için kısa bir süre verelim.
+    await asyncio.sleep(1) 
     logger.info(f"✅ '{name}' servisi baslatildi.")
 
 
@@ -63,10 +60,8 @@ async def stop_service(name: str):
         return
 
     logger.info(f"🛑 '{name}' servisi durduruluyor...")
-    # Task'a iptal sinyali gönderiyoruz.
     service["task"].cancel()
     try:
-        # Task'ın sonlanmasını bekliyoruz.
         await service["task"]
     except asyncio.CancelledError:
         logger.info(f"✅ '{name}' servisi basariyla durduruldu.")
@@ -82,7 +77,7 @@ def show_status():
         return
 
     for name, service in managed_services.items():
-        if service.get("func"): # Sadece import edilebilen servisleri göster
+        if service.get("func"): 
             if service["task"] and not service["task"].done():
                 status = "🟢 Calisiyor"
             else:
@@ -95,7 +90,9 @@ def show_help():
     """Kullanılabilir komutları gösterir."""
     print("\n--- Komutlar ---")
     print("start <isim>  -> Belirtilen servisi baslatir (or: start spot)")
+    print("start all     -> Tanimli tum servisleri baslatir") # YENİ
     print("stop <isim>   -> Belirtilen servisi durdurur (or: stop futures)")
+    print("stop all      -> Tanimli tum servisleri durdurur") # YENİ
     print("status        -> Tum servislerin durumunu gosterir")
     print("exit          -> Programdan cikar")
     print("help          -> Bu yardim menusunu gosterir")
@@ -108,7 +105,6 @@ async def command_loop():
     logger.info("Komut Yoneticisi baslatildi. Komutlar icin 'help' yazin.")
     
     while True:
-        # input() fonksiyonu block edici olduğu için onu ayrı bir thread'de çalıştırıyoruz.
         command = await loop.run_in_executor(None, lambda: input("> ").strip().lower())
         parts = command.split()
         if not parts:
@@ -118,7 +114,6 @@ async def command_loop():
         
         if action == "exit":
             logger.info("Cikis yapiliyor... Tum servisler durdurulacak.")
-            # Çıkmadan önce çalışan tüm servisleri durdur
             for name in list(managed_services.keys()):
                 if managed_services[name]["task"] and not managed_services[name]["task"].done():
                     await stop_service(name)
@@ -129,10 +124,26 @@ async def command_loop():
             show_help()
         elif action in ["start", "stop"] and len(parts) > 1:
             service_name = parts[1]
-            if action == "start":
-                await start_service(service_name)
-            else: # stop
-                await stop_service(service_name)
+            
+            # --- YENİ EKLENEN BLOK ---
+            if service_name == "all":
+                # Tüm servisler için işlemi yap
+                logger.info(f"Tüm servisler için '{action}' komutu yürütülüyor...")
+                # asyncio.gather ile tüm başlatma/durdurma işlemlerini aynı anda çalıştırıyoruz
+                tasks = []
+                for name in managed_services.keys():
+                    if action == "start":
+                        tasks.append(start_service(name))
+                    else: # stop
+                        tasks.append(stop_service(name))
+                await asyncio.gather(*tasks)
+            # --- YENİ BLOK SONU ---
+            else:
+                # Tek bir servis için işlemi yap
+                if action == "start":
+                    await start_service(service_name)
+                else: # stop
+                    await stop_service(service_name)
         else:
             logger.warning(f"Gecersiz komut: '{command}'. Yardim icin 'help' yazin.")
 

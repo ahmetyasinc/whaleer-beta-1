@@ -1,7 +1,4 @@
-import asyncio
-import websockets
-import logging
-import json
+import asyncio,websockets, logging,json
 from decimal import Decimal # YENİ
 from backend.trade_engine import config
 from backend.trade_engine import config
@@ -158,16 +155,27 @@ class WebSocketRedundantManager:
     def _handle_order_update(self, data: dict, user_info: dict):
         order_info = data.get('o', {})
         order_data = {
-            "user_id": user_info['user_id'], "api_id": user_info['api_id'],
-            "symbol": order_info.get("s"), "client_order_id": order_info.get("c"),
-            "side": order_info.get("S"), "position_side": order_info.get("ps"),
-            "status": order_info.get("X"), "price": order_info.get("p", "0"),
-            "executed_quantity": order_info.get("z", "0"), "commission": order_info.get("n", "0"),
-            "order_id": order_info.get("i"), "event_time": order_info.get("T"),
-            "realized_profit": order_info.get("rp", "0")
+            "user_id": user_info['user_id'], 
+            "api_id": user_info['api_id'],
+            "symbol": order_info.get("s"), 
+            "client_order_id": order_info.get("c"),
+            "side": order_info.get("S"), 
+            "position_side": order_info.get("ps"),
+            "status": order_info.get("X"), 
+            
+            # --- DÜZELTİLMESİ GEREKEN ALAN ---
+            "price": Decimal(order_info.get("p", "0")),
+            "executed_quantity": Decimal(order_info.get("z", "0")),
+            "commission": Decimal(order_info.get("n", "0")),
+            "realized_profit": Decimal(order_info.get("rp", "0")),
+            # --- DÜZELTME BİTTİ ---
+
+            "order_id": order_info.get("i"), 
+            "event_time": order_info.get("T")
         }
         self.order_update_queue.append(order_data)
         logging.debug(f"Futures emir güncellemesi kuyruğa eklendi: user_id={user_info['user_id']}, order_id={order_data['order_id']}")
+
 
     # YENİ: Bakiye kuyruğunu DB'ye yazar
     async def _balance_batch_writer(self):
@@ -194,10 +202,13 @@ class WebSocketRedundantManager:
                     logging.error(f"❌ [Batch] Futures Emir DB güncellemesi başarısız: {e}", exc_info=True)
 
     async def _close_ws(self, ws):
-        if ws and not ws.closed:
-            try:
-                await ws.close()
-            except Exception: pass
+            # DÜZELTME: 'ws.closed' kontrolü kaldırıldı.
+            # ws.close() metodu zaten kapalı bir bağlantı için hata vermez.
+            if ws:
+                try:
+                    await ws.close()
+                except Exception: 
+                    pass
 
 class DynamicListenerManager:
     def __init__(self, pool, url="wss://fstream.binance.com", max_per_ws=100):
@@ -215,7 +226,7 @@ class DynamicListenerManager:
         PostgreSQL'in LISTEN/NOTIFY mekanizmasını kullanarak veritabanı olaylarını
         sürekli olarak dinler ve ilgili callback fonksiyonunu tetikler.
         """
-        channel_name = "stream_key_events" # DB trigger'ınızın bildirim gönderdiği kanal
+        channel_name = "streamkey_events" # DB trigger'ınızın bildirim gönderdiği kanal
         logging.info(f"👂 Veritabanı '{channel_name}' kanalı dinlenmeye başlanıyor...")
         
         # Bu metodun sürekli çalışması için bir sonsuz döngü gerekiyor.

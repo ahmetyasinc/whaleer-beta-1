@@ -183,7 +183,7 @@ export const PublishStrategyModal = ({ isOpen, onClose, onPublish }) => {
             </button>
             <button 
               onClick={handleConfirm}
-              disabled={loading}
+              disabled={loading || !Object.values(permissions).some(Boolean)}
               className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-blue-500/25 font-medium relative overflow-hidden group"
             >
               <span className="relative z-10">{loading ? t('buttons.publishing') : t('buttons.publish')}</span>

@@ -165,7 +165,7 @@ export default function SettingsModal({ open, onClose, locale }) {
   };
 
   const Section = ({ title, children }) => (
-    <div className="border border-gray-800 rounded-xl p-4 bg-black/60">
+    <div className="border border-gray-800 rounded-xl p-4 bg-black/60 mb-4">
       <div className="text-sm font-medium text-gray-200 mb-3">{title}</div>
       <div className="grid gap-3">{children}</div>
     </div>
@@ -195,21 +195,24 @@ export default function SettingsModal({ open, onClose, locale }) {
 
       {/* Modal */}
       <div
-        className="absolute left-1/2 top-10 -translate-x-1/2 w-[min(100%,1024px)]"
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
+             w-[min(100%-2rem,1024px)] h-[calc(100vh-4rem)]
+             bg-transparent rounded-xl"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-label={t("titles.settingsForChart")}
       >
-        <div className="rounded-2xl shadow-2xl border border-gray-800 bg-[#0b0b0c]">
+        <div className="rounded-2xl shadow-2xl border border-gray-800 bg-[#0b0b0c] 
+                  h-full flex flex-col">
           {/* Header */}
-          <div className="px-5 py-4 flex items-center justify-between border-b border-gray-800">
+          <div className="p-4 border-b border-gray-700 flex items-center justify-between">
             <div className="text-base font-semibold text-white">
               {t("buttons.settings")} — {t("labels.chart")}
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-2 00"
+              className="text-red-600 hover:text-red-400 transition-colors"
               aria-label={t("buttons.close")}
               title={t("buttons.close")}
             >
@@ -218,7 +221,7 @@ export default function SettingsModal({ open, onClose, locale }) {
           </div>
 
           {/* Body */}
-          <div className="p-5 grid gap-4 md:grid-cols-2">
+          <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
             {/* Appearance */}
             <Section title={t("labels.appearance")}>
               {/* Background */}
@@ -603,21 +606,31 @@ export default function SettingsModal({ open, onClose, locale }) {
           </div>
 
           {/* Footer */}
-          <div className="px-5 py-4 border-t border-gray-800 flex items-center justify-between">
+          <div className="p-4 border-t border-gray-700 flex justify-end gap-3">
             <div className="flex items-center gap-3">
-              <button onClick={reset} className="px-3 py-2 text-sm rounded-md border border-gray-700 text-gray-200 hover:bg-gray-900">
+              <button
+                onClick={reset}
+                className="px-3 py-2 text-sm rounded-md border border-gray-700 text-gray-200 hover:bg-stone-900"
+              >
                 {t("buttons.reset")}
               </button>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={onClose} className="px-3 py-2 text-sm rounded-md border border-gray-700 text-gray-300 hover:bg-gray-900">
+              <button
+                onClick={onClose}
+                className="px-3 py-2 text-sm rounded-md border border-gray-700 text-gray-300 hover:bg-stone-900"
+              >
                 {t("buttons.cancel")}
               </button>
-              <button onClick={handleSave} className="px-4 py-2 text-sm rounded-md bg-white text-black font-medium hover:opacity-90">
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 text-sm rounded-md bg-white text-black font-medium hover:bg-gray-300"
+              >
                 {t("buttons.save")}
               </button>
             </div>
           </div>
+
         </div>
       </div>
     </div>

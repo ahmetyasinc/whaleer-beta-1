@@ -8,7 +8,7 @@ import i18n from "@/i18n";
 import { useLogout } from "@/utils/HookLogout";
 import axios from "axios";
 import LogoutConfirmModal from "./confirmLogout";
-import { BiUser, BiCandles, BiLineChart, BiBroadcast, BiSearchAlt, BiLogOut, BiChevronLeft } from "react-icons/bi";
+import { BiUser, BiCandles, BiLineChart, BiBroadcast, BiSearchAlt, BiLogOut, BiChevronLeft, BiSupport } from "react-icons/bi";
 import { IoMdArrowDropright } from "react-icons/io";
 import { LuBot } from "react-icons/lu";
 import { BsGrid1X2 } from "react-icons/bs";
@@ -36,6 +36,7 @@ const LeftMenu = ({ locale }) => {
     { href: "/profile/bot", icon: <LuBot />, label: t("bots") },
     { href: "/profile/showcase", icon: <BsGrid1X2 />, label: t("showcase") },
     { href: "/profile/apiconnect", icon: <BiBroadcast />, label: t("apiconnect") },
+    { href: "/profile/support", icon: <BiSupport />, label: t("support") },
     { href: "/profile/settings", icon: <AiOutlineSetting />, label: t("settings") },
   ];
 

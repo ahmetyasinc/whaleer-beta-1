@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Settings",
-  description: "Kullanıcı ayarlarını yönetme sayfası.",
+  title: "Support",
+  description: "Kullanıcı destek sayfası.",
 };
 
 import ClientPage from './client-page'; // Yeni oluşturacağın istemci bileşeni

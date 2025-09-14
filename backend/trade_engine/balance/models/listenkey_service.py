@@ -150,53 +150,43 @@ async def bulk_upsert_listenkeys(pool, records):
 
 # listenkey_service.py -> refresh_or_create_all fonksiyonunun güncellenmiş hali
 
-async def refresh_or_create_all(pool, market_config): # Fonksiyonu da market_config alacak şekilde güncelleyelim
+async def refresh_or_create_all(pool, market_config):
     """
-    Tüm uygun listenKey'leri EŞ ZAMANLI olarak yeniler veya yeniden oluşturur.
+    Tüm uygun listenKey'leri (SADECE FUTURES ETKİN OLANLAR) EŞ ZAMANLI olarak yeniler veya yeniden oluşturur.
     """
     connection_type = market_config['connection_type']
+    
+    # "sk.is_futures_enabled = TRUE" KONTROLÜ EKLENDİ
     query = """
         SELECT ak.id, ak.api_key, ak.user_id, sk.status
         FROM public.api_keys ak
         JOIN public.stream_keys sk ON sk.api_id = ak.id
         WHERE sk.connection_type = $1
+          AND sk.is_futures_enabled = TRUE   -- <-- EN ÖNEMLİ GÜNCELLEME
           AND sk.status IN ('active', 'new', 'expired');
     """
     async with pool.acquire() as conn:
         records = await conn.fetch(query, connection_type)
 
     if not records:
-        logging.warning(f"⚠️ [{connection_type.upper()}] Yenilenecek/oluşturulacak listenKey bulunamadı.")
+        logging.warning(f"⚠️ [{connection_type.upper()}] Yenilenecek/oluşturulacak aktif futures listenKey bulunamadı.")
         return
 
-    # 1. Tüm görevleri bir listede topla
     tasks = []
     for r in records:
         mgr = ListenKeyManager(pool, r["id"], r["api_key"], r["user_id"], market_config)
         if r["status"] == "expired":
-            # expired ise direkt oluşturma görevini ekle
             tasks.append(mgr.create())
         else:
-            # active/new ise yenilemeyi dene, olmazsa oluşturan görevi ekle
             tasks.append(mgr.refresh_or_create())
 
     logging.info(f"🚀 [{connection_type.upper()}] {len(tasks)} adet listenKey için toplu işlem başlatılıyor...")
-
-    # 2. asyncio.gather ile tüm görevleri EŞ ZAMANLI olarak çalıştır
     results = await asyncio.gather(*tasks, return_exceptions=True)
-
-    # 3. Sonuçları kontrol et (opsiyonel ama önerilir)
-    success_count = 0
-    error_count = 0
-    for res in results:
-        if isinstance(res, Exception):
-            logging.error(f"❌ Toplu işlem sırasında bir görevde hata oluştu: {res}")
-            error_count += 1
-        else:
-            success_count += 1
+    
+    success_count = sum(1 for res in results if not isinstance(res, Exception))
+    error_count = len(results) - success_count
     
     logging.info(f"✅ [{connection_type.upper()}] Toplu işlem tamamlandı. Başarılı: {success_count}, Hatalı: {error_count}")
-
     return results
 
 # Düzeltilmiş, Doğru Çalışan Kod

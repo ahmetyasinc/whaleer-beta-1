@@ -1,5 +1,5 @@
 // stores/attachmentsStore.js
-import {create} from "zustand";
+import { create } from "zustand";
 import * as supportApi from "@/api/support";
 
 export const useAttachmentsStore = create((set, get) => ({
@@ -8,10 +8,10 @@ export const useAttachmentsStore = create((set, get) => ({
   uploading: false,
   error: null,
 
-  uploadAttachment: async (file, ticketId) => {
+  uploadAttachment: async (file, ticketId, messageId = null) => {
     set({ uploading: true, error: null });
     try {
-      const saved = await supportApi.uploadAttachment(file, ticketId);
+      const saved = await supportApi.uploadAttachment(file, ticketId, messageId);
       set((state) => ({ 
         attachments: [...state.attachments, saved], 
         uploading: false 
@@ -29,7 +29,7 @@ export const useAttachmentsStore = create((set, get) => ({
       
       return saved;
     } catch (err) {
-      console.error("uploadAttachment hata:", err);
+      console.error("uploadAttachment error:", err);
       set({ error: err?.response?.data || err.message, uploading: false });
       throw err;
     }
@@ -46,7 +46,7 @@ export const useAttachmentsStore = create((set, get) => ({
       }));
       return attachments;
     } catch (err) {
-      console.error("fetchTicketAttachments hata:", err);
+      console.error("fetchTicketAttachments error:", err);
       set({ error: err?.response?.data || err.message });
       throw err;
     }
@@ -55,5 +55,19 @@ export const useAttachmentsStore = create((set, get) => ({
   getTicketAttachments: (ticketId) => {
     const state = get();
     return state.ticketAttachments[ticketId] || [];
+  },
+
+  // Yeni: Mesaj attachment'larını getir
+  fetchMessageAttachments: async (messageId) => {
+    try {
+      // Bu endpoint'i backend'de oluşturmanız gerekebilir
+      // Şimdilik ticket attachment'ları üzerinden filtreleme yapabiliriz
+      const allAttachments = Object.values(get().ticketAttachments).flat();
+      return allAttachments.filter(att => att.message_id === messageId);
+    } catch (err) {
+      console.error("fetchMessageAttachments error:", err);
+      set({ error: err?.response?.data || err.message });
+      throw err;
+    }
   }
 }));

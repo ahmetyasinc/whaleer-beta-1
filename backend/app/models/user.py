@@ -1,14 +1,6 @@
 from sqlalchemy import Column, BigInteger, String, DateTime, Boolean, func, Enum, Integer
 from sqlalchemy.orm import relationship
 from app.database import Base
-import enum
-
-
-class UserRole(str, enum.Enum):
-    ADMIN = "admin"
-    USER = "user"
-    MODERATOR = "moderator"
-
 
 class User(Base):
     __tablename__ = 'users'
@@ -34,7 +26,7 @@ class User(Base):
     github = Column(String(255), nullable=True)
 
     # Kullanıcı durumu ve rolü
-    role = Column(Enum(UserRole), default=UserRole.USER, nullable=False)
+    role = Column(String(20), default="user", nullable=False)
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
 

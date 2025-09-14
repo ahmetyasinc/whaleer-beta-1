@@ -54,5 +54,6 @@ async def get_user_info(
     return {
         "id": user.id,
         "name": user.name,
-        "username": user.username
+        "username": user.username,
+        "role": user.role,
     }

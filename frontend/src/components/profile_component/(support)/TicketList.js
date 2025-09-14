@@ -1,32 +1,52 @@
+// components/TicketList.jsx
 "use client";
 
 import { useSupportStore } from "@/store/support/supportStore";
 import TicketItem from "./TicketItem";
 
-export default function TicketList() {
+export default function TicketList({ onSelectTicket, selectedTicketId, isModerator = false }) {
   const tickets = useSupportStore((s) => s.tickets);
-  const loading = useSupportStore((s) => s.loading);
-  const fetchTickets = useSupportStore((s) => s.fetchTickets);
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Geçmiş Talepler</h3>
-        <button onClick={fetchTickets} className="text-sm text-blue-600">Yenile</button>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          {isModerator ? "Tüm Talepler" : "Taleplerim"}
+        </h2>
+        {isModerator && (
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Toplam {tickets.length} talep
+          </p>
+        )}
       </div>
 
-      {loading && <div className="text-sm text-gray-500">Yükleniyor...</div>}
-
-      {!loading && tickets.length === 0 && (
-        <div className="text-sm text-gray-500">Henüz destek talebiniz yok.</div>
-      )}
-
-      <ul className="space-y-2">
-        {tickets.map((t) => (
-          <li key={t.id}>
-            <TicketItem ticket={t} />
+      <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+        {tickets.map((ticket) => (
+          <li key={ticket.id} className="p-3">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => onSelectTicket?.(ticket.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") onSelectTicket?.(ticket.id);
+              }}
+              className="w-full text-left"
+            >
+              <TicketItem
+                ticket={ticket}
+                onSelect={onSelectTicket}
+                isSelected={selectedTicketId === ticket.id}
+                showUserInfo={isModerator}
+              />
+            </div>
           </li>
         ))}
+
+        {tickets.length === 0 && (
+          <li className="p-6 text-center text-gray-500 dark:text-gray-400">
+            Henüz talebiniz yok.
+          </li>
+        )}
       </ul>
     </div>
   );

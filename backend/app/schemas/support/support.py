@@ -1,73 +1,73 @@
 # app/schemas/profile/support/support.py
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from datetime import datetime
 from typing import Optional, List
+from enum import Enum
 
-# Support Tickets Schemas
-class SupportTicketCreate(BaseModel):
-    subject: str = Field(..., min_length=1, max_length=500)
-    message: str = Field(..., min_length=1)
-    priority: str = Field(default="normal")
-    type: str = Field(default="user")
-    
-    @field_validator('priority')
-    @classmethod
-    def validate_priority(cls, v):
-        allowed_priorities = ['low', 'normal', 'high', 'urgent']
-        if v not in allowed_priorities:
-            raise ValueError(f'Priority must be one of: {", ".join(allowed_priorities)}')
-        return v
-    
-    @field_validator('type')
-    @classmethod
-    def validate_type(cls, v):
-        allowed_types = ['user', 'admin', 'system']
-        if v not in allowed_types:
-            raise ValueError(f'Type must be one of: {", ".join(allowed_types)}')
-        return v
+# Enumlar
+class TicketStatus(str, Enum):
+    OPEN = "open"
+    IN_PROGRESS = "in_progress"
+    RESOLVED = "resolved"
+    CLOSED = "closed"
 
-class SupportTicketUpdate(BaseModel):
-    subject: Optional[str] = Field(None, min_length=1, max_length=500)
-    message: Optional[str] = Field(None, min_length=1)
-    status: Optional[str] = None
-    priority: Optional[str] = None
-    
-    @field_validator('status')
-    @classmethod
-    def validate_status(cls, v):
-        if v is not None:
-            allowed_statuses = ['open', 'in_progress', 'closed', 'pending']
-            if v not in allowed_statuses:
-                raise ValueError(f'Status must be one of: {", ".join(allowed_statuses)}')
-        return v
-    
-    @field_validator('priority')
-    @classmethod
-    def validate_priority(cls, v):
-        if v is not None:
-            allowed_priorities = ['low', 'normal', 'high', 'urgent']
-            if v not in allowed_priorities:
-                raise ValueError(f'Priority must be one of: {", ".join(allowed_priorities)}')
-        return v
+class TicketPriority(str, Enum):
+    LOW = "low"
+    NORMAL = "normal"
+    HIGH = "high"
+    URGENT = "urgent"
+
+class AssignedModerator(BaseModel):
+    id: int
+    name: Optional[str] = None
+    email: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
+
+class CategoryBrief(BaseModel):
+    id: int
+    name: str
+    is_active: Optional[bool] = None   # tablonuzda varsa
+    model_config = ConfigDict(from_attributes=True)
 
 class SupportTicketOut(BaseModel):
     id: int
     user_id: int
-    type: str
+    category_id: Optional[int]
     subject: str
-    message: str
     status: str
     priority: str
+    satisfaction_rating: Optional[int]
+    satisfaction_feedback: Optional[str]
     created_at: datetime
     updated_at: datetime
+    closed_at: Optional[datetime]
 
-    class Config:
-        from_attributes = True
+    assigned_moderator: Optional[AssignedModerator] = None
+    category: Optional[CategoryBrief] = None   # ← YENİ (nested kategori)
 
-# Support Attachments Schemas
+    model_config = ConfigDict(from_attributes=True)
+
+    
+# Kategori Şemaları
+class SupportCategoryBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    description: Optional[str] = None
+    is_active: bool = True
+
+class SupportCategoryCreate(SupportCategoryBase):
+    pass
+
+class SupportCategoryOut(SupportCategoryBase):
+    id: int
+    created_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
+
+# Attachment Şemaları
 class SupportAttachmentOut(BaseModel):
     id: int
     ticket_id: Optional[int]
+    message_id: Optional[int]
     user_id: int
     filename: str
     storage_path: str
@@ -77,8 +77,67 @@ class SupportAttachmentOut(BaseModel):
     height: Optional[int]
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class SupportAttachmentUpload(BaseModel):
     ticket_id: Optional[int] = None
+    message_id: Optional[int] = None
+
+# Ticket Şemaları
+class SupportTicketBase(BaseModel):
+    subject: str = Field(..., min_length=1, max_length=200)
+    category_id: Optional[int] = None
+    priority: TicketPriority = TicketPriority.NORMAL
+
+class SupportTicketCreate(SupportTicketBase):
+    message: str = Field(..., min_length=1)
+
+class SupportTicketUpdate(BaseModel):
+    subject: Optional[str] = Field(None, min_length=1, max_length=200)
+    category_id: Optional[int] = None
+    status: Optional[TicketStatus] = None
+    priority: Optional[TicketPriority] = None
+
+class SupportTicketSatisfaction(BaseModel):
+    rating: int = Field(..., ge=1, le=5)
+    feedback: Optional[str] = None
+
+# Mesaj Şemaları
+class SupportMessageBase(BaseModel):
+    message: str = Field(..., min_length=1)
+    is_internal: bool = False
+
+class SupportMessageCreate(SupportMessageBase):
+    pass
+
+class SupportMessageOut(BaseModel):
+    id: int
+    ticket_id: int
+    user_id: int
+    message: str
+    is_internal: bool
+    created_at: datetime
+    read_at: Optional[datetime]
+    attachments: List[SupportAttachmentOut] = []  # Mesaj ekleri
+    
+    model_config = ConfigDict(from_attributes=True)
+
+# Atama Şemaları
+class SupportAssignmentOut(BaseModel):
+    id: int
+    ticket_id: int
+    assigned_to: int
+    assigned_by: int
+    assigned_at: datetime
+    unassigned_at: Optional[datetime]
+    
+    model_config = ConfigDict(from_attributes=True)
+
+# Detaylı Ticket Şeması (mesajlar ve eklerle birlikte)
+class SupportTicketDetailOut(SupportTicketOut):
+    category: Optional[SupportCategoryOut] = None
+    messages: List[SupportMessageOut] = []
+    assignments: List[SupportAssignmentOut] = []
+
+class SupportAssignmentCreate(BaseModel):
+    moderator_id: int

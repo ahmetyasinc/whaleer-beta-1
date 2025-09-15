@@ -7,7 +7,7 @@ axios.defaults.withCredentials = true;
 export const getBots = async () => {
   try {
     const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/get-bots`);
-
+    
     const { apiList } = useApiStore.getState();
     const { all_strategies } = useStrategyStore.getState();
 

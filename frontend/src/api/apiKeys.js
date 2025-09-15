@@ -53,8 +53,8 @@ export const getApiKeys = async () => {
           name: item.api_name,
           createdAt: createdDate,
           id: item.id,
-          spot_balance: item.spot_balance || 0,
-          futures_balance: item.futures_balance || 0, 
+          spot_balance: item.spot_usdt_balance || 0,
+          futures_balance: item.futures_usdt_balance || 0, 
           default: item.default
         };
       });

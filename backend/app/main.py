@@ -30,6 +30,7 @@ from app.routes.mobile.profile.profile import protected_router as profileMobile
 from app.routes.admin.admin import protected_router as admin
 from app.routes.profile.support.support import protected_router as support_router
 from app.routes import google_auth
+from app.routes.profile.telegram.telegram_bot import protected_router as tg_protected, public_router as tg_public
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -37,6 +38,8 @@ app = FastAPI()
 
 
 # USER ROUTES
+app.include_router(tg_protected)
+app.include_router(tg_public)
 app.include_router(google_auth.router, prefix="/api")
 app.include_router(user_router)
 app.include_router(auth_router)

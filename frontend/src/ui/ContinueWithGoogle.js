@@ -1,17 +1,84 @@
-import React from 'react';
-import styled from 'styled-components';
+"use client";
 
-const Button = () => {
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import styled from "styled-components";
+import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
+import { startGoogleOidcFlow } from "@/lib/auth/googleFlow"; // önceki mesajdaki fonksiyon
+
+/**
+ * Props:
+ * - locale?: string  (opsiyonel; vermezsen i18n’den alınır)
+ */
+export default function ContinueWithGoogle({ locale: givenLocale }) {
+  const { t, i18n } = useTranslation("register", { useSuspense: false });
+  const locale = givenLocale || i18n.resolvedLanguage || i18n.language || "en";
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const onClick = async () => {
+    if (loading) return;
+    setLoading(true);
+
+    const toastId = toast.loading(t("toast.submitting", "İşlem yapılıyor..."));
+
+    try {
+      await startGoogleOidcFlow({
+        locale,
+        onSuccess: () => {
+          toast.update(toastId, {
+            render: t("toast.success", "Giriş başarılı"),
+            type: "success",
+            isLoading: false,
+            autoClose: 1500,
+            closeOnClick: true,
+          });
+          console.log("Google ile giriş başarılı, sayfa yenileniyor...");
+          setTimeout(() => {
+            router.push("/profile");
+            router.refresh();           // SSR/Middleware’ı tetikler
+          }, 200);
+        },
+        onError: (reason) => {
+          toast.update(toastId, {
+            render: reason || t("toast.genericError", "Bir hata oluştu"),
+            type: "error",
+            isLoading: false,
+            autoClose: 4000,
+            closeOnClick: true,
+          });
+        },
+      });
+    } catch (e) {
+      toast.update(toastId, {
+        render: e?.message || t("toast.unexpected", "Beklenmeyen bir hata oluştu"),
+        type: "error",
+        isLoading: false,
+        autoClose: 4000,
+        closeOnClick: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <StyledWrapper>
-      <button className="button group relative w-full flex justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid" viewBox="0 0 256 262">
+      <button
+        type="button"
+        className="button group relative w-full flex justify-center"
+        onClick={onClick}
+        disabled={loading}
+        aria-label={t("continueWithGoogle", "Google ile devam et")}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid" viewBox="0 0 256 262" aria-hidden="true">
           <path fill="#4285F4" d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" />
           <path fill="#34A853" d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" />
           <path fill="#FBBC05" d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" />
           <path fill="#EB4335" d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" />
         </svg>
-        Google ile devam et
+        {loading ? t("google.loading", "Google...") : t("continueWithGoogle", "Google ile devam et")}
       </button>
     </StyledWrapper>
   );
@@ -38,12 +105,7 @@ const StyledWrapper = styled.div`
     transition: all .1s ease;
   }
 
-  .button svg {
-    height: 24px;
-  }
-
-  button:hover {
-    transform: scale(1.01);
-  }`;
-
-export default Button;
+  .button svg { height: 24px; }
+  button:hover { transform: scale(1.01); }
+  button:disabled { opacity: .6; cursor: not-allowed; }
+`;

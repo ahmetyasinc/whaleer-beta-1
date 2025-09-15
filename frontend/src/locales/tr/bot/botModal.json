@@ -4,6 +4,8 @@
     "edit": "Botu Düzenle"
   },
   "labels": {
+    "enterOnCurrentSignalTitle": "Mevcut sinyalde hemen gir",
+    "enterOnCurrentSignalDesc": "Bot şu an alım bölgesindeyse, yeni sinyali beklemeden pozisyona girsin.",
     "botName": "Bot Adı",
     "enterBotName": "Bot adı girin",
     "type": "Tür",

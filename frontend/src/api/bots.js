@@ -38,7 +38,8 @@ export const getBots = async () => {
         rent_price: item.rent_price,
         revenue_wallet : item.revenue_wallet,
         acquisition_type: item.acquisition_type,
-        rent_expires_at: item.rent_expires_at
+        rent_expires_at: item.rent_expires_at,
+        enterOnCurrentSignal: item.enter_on_start
       };
     });
 
@@ -82,6 +83,7 @@ export const createBot = async (botData) => {
       current_usd_value: Number(botData.initial_usd_value),
       balance: Number(botData.balance),
       bot_type: botData.type || {},  // Yeni alan
+      enter_on_start: botData.enterOnCurrentSignal || false
     };
 
     const response = await axios.post(

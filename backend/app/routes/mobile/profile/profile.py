@@ -273,8 +273,8 @@ async def get_profile_all_datas(
                 "is_test_api": api.is_test_api,
                 "created_at": api.created_at,
                 "default": getattr(api, "default", None),
-                "spot_balance": _to_float(getattr(api, "spot_balance", 0)),
-                "futures_balance": _to_float(getattr(api, "futures_balance", 0)),
+                "spot_balance": _to_float(getattr(api, "spot_usdt_balance", 0)),
+                "futures_balance": _to_float(getattr(api, "futures_usdt_balance", 0)),
             },
             "snapshots": snapshots_by_api.get(api.id, []),
             "bots": bots_payload,  # sadece botlar

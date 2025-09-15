@@ -15,6 +15,7 @@ class BotsBase(BaseModel):
     initial_usd_value: Optional[float] = None
     current_usd_value: Optional[float] = None
     bot_type: Optional[str] = None
+    enter_on_start: Optional[bool] = Field(False, description="Bot starts trading immediately on current signal if True")
 
 
 class BotsCreate(BotsBase):
@@ -44,6 +45,7 @@ class BotsOut(BotsBase):
     revenue_wallet: Optional[str] = None
     acquisition_type: Optional[str] = None
     rent_expires_at: Optional[datetime] = None
+    enter_on_start: Optional[bool] = None
     
     class Config:
         orm_mode = True

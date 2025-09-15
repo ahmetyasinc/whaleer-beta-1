@@ -42,6 +42,7 @@ export const useBotStore = create((set) => ({
         acquisition_type: createdBot.acquisition_type,
         bot_type: createdBot.bot_type,
         current_usd_value: createdBot.current_usd_value,
+        enterOnCurrentSignal: createdBot.enter_on_start,
       };
 
       // local cache

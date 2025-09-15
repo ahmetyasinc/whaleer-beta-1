@@ -4,6 +4,8 @@
     "edit": "Edit Bot"
   },
   "labels": {
+    "enterOnCurrentSignalTitle": "Enter immediately on the current signal",
+    "enterOnCurrentSignalDesc": "If the bot is currently in the buy zone, enter the position without waiting for the new signal.",
     "botName": "Bot Name",
     "enterBotName": "Enter bot name",
     "type": "Type",

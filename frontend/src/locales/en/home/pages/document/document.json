@@ -1,0 +1,45 @@
+{
+  "title": "Whaleer Documentation",
+  "intro": "Create a strategy, test it on historical data, run the bot, and share with the community.",
+  "sections": [
+    {
+      "id": "olusturma",
+      "title": "1. Strategy Creation",
+      "content": "Use the editor to build your strategy. Supports indicators like RSI, EMA, and volume.",
+      "media": {
+        "images": ["/docs/strategy-editor.png"],
+        "videos": ["/docs/strategy-intro.mp4"]
+      },
+      "sub": [
+        {
+          "id": "olusturma-temel",
+          "title": "Basic Rules",
+          "content": "Define entry/exit conditions, e.g., buy when RSI < 30, sell when RSI > 70."
+        },
+        {
+          "id": "olusturma-indikator",
+          "title": "Using Indicators",
+          "content": "Add RSI, EMA, MACD with customizable parameters."
+        }
+      ]
+    },
+    {
+      "id": "backtest",
+      "title": "2. Backtesting",
+      "content": "Test your strategy on historical data. Review performance, drawdown, and success rate.",
+      "media": {
+        "images": ["/docs/backtest-result.png"]
+      }
+    },
+    {
+      "id": "bot",
+      "title": "3. Running a Bot",
+      "content": "Execute automated buy/sell with real-time data. Consider risk and fees."
+    },
+    {
+      "id": "paylasim",
+      "title": "4. Strategy Sharing",
+      "content": "You can mint strategies as NFTs, archive them, and share."
+    }
+  ]
+}

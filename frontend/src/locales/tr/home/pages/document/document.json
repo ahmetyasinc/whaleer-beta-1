@@ -1,0 +1,47 @@
+{
+  "title": "Whaleer Dokümantasyon",
+  "intro": "Strateji oluştur, geçmiş veride test et, botu çalıştır ve toplulukla paylaş.",
+  "sections": [
+    {
+      "id": "olusturma",
+      "title": "1. Strateji Oluşturma",
+      "content": "Editör ile kendi stratejini kur. RSI, EMA ve hacim gibi indikatörleri destekler.",
+      "media": {
+        "images": ["/docs/strategy-editor.png"],
+        "videos": ["/docs/strategy-intro.mp4"]
+      },
+      "sub": [
+        {
+          "id": "olusturma-temel",
+          "title": "Temel Kurallar",
+          "content": "Giriş/çıkış koşullarını tanımla. Örn: RSI < 30 iken al, RSI > 70 iken sat."
+        },
+        {
+          "id": "olusturma-indikator",
+          "title": "İndikatör Kullanımı",
+          "content": "RSI, EMA, MACD gibi indikatörleri parametreleriyle birlikte ekle."
+        }
+      ]
+    },
+    {
+      "id": "backtest",
+      "title": "2. Backtest",
+      "content": "Stratejini geçmiş veride test et. Performans, drawdown ve başarı oranını incele.",
+      "media": {
+        "images": ["/docs/backtest-result.png"]
+      }
+    },
+    {
+      "id": "bot",
+      "title": "3. Botu Çalıştırma",
+      "content": "Gerçek zamanlı veriyle otomatik al/sat işlemleri çalışır. Risk ve komisyonları göz önünde bulundur."
+    },
+    {
+      "id": "paylasim",
+      "title": "4. Strateji Paylaşımı",
+      "content": "Stratejileri NFT olarak mint edebilir, arşivleyebilir ve paylaşabilirsin."
+    }
+  ]
+}
+
+

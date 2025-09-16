@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Premium Membership",
+  title: "Whaleer",
   description: "Create, test, and apply crypto strategies with Whaleer.",
 };
 

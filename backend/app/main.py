@@ -12,6 +12,7 @@ from app.routes.profile.indicator.indicator_release import protected_router as i
 from app.routes.profile.indicator.indicator_run import protected_router as indicator_run_router
 from app.routes.profile.indicator.indicator_adjustment import protected_router as indicator_adjustment_router
 from app.routes.profile.indicator.websocket_binance import websocket_router as websocket_binance_router
+from app.routes.profile.settings.settings import router as settings_router
 from app.routes.profile.binance_coins.binance_coins import protected_router as binance_coins_router
 from app.routes.profile.strategy.strategy import protected_router as strategy_router
 from app.routes.profile.strategy.strategy_release import protected_router as strategy_release
@@ -39,6 +40,7 @@ app = FastAPI()
 
 # USER ROUTES
 app.include_router(tg_protected)
+app.include_router(settings_router)
 app.include_router(tg_public)
 app.include_router(google_auth.router, prefix="/api")
 app.include_router(user_router)

@@ -268,7 +268,7 @@ async def startup():
     db_pool = await asyncpg.create_pool(DATABASE_URL)
 
     # WebSocket'i çalıştır ve görevi sakla
-    websocket_task = asyncio.create_task(run_websocket_with_reconnect())
+    #websocket_task = asyncio.create_task(run_websocket_with_reconnect())
 
 # ✅ FastAPI kapandığında temizleme işlemleri
 @websocket_router.on_event("shutdown")
@@ -289,7 +289,7 @@ async def run_websocket_with_reconnect():
     while True:
         try:
             print(f"🌐 * WebSocket başlatılıyor... {time.time()}")
-            await binance_websocket(db_pool)
+            #await binance_websocket(db_pool)
         except Exception as e:
             print(f"❌ WebSocket bağlantısı kesildi: {e}")
             print("⏳ 5 saniye sonra tekrar bağlanıyor...")

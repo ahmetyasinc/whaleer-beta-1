@@ -5,30 +5,80 @@
   "reset": "Varsayılanlara dön",
   "saved": "Kaydedildi",
   "myprofile": "Profilim",
+
   "language": "Dil",
-  "language_hint": "Seçiminiz anında uygulanır ve çereze kaydedilir.",
-  "languages": {
-    "tr": "Türkçe",
-    "en": "English"
-  },
+  "language_hint": "Seçiminiz hemen uygulanır ve çereze kaydedilir.",
+  "languages": { "tr": "Türkçe", "en": "İngilizce" },
+
   "theme": "Tema",
   "theme_system": "Sistem",
   "theme_light": "Açık",
   "theme_dark": "Koyu",
+
   "timezone": "Zaman Dilimi",
   "current_timezone": "Geçerli değer:",
-  "timezone_search": "Bölge ara… (ör. Istanbul, Tokyo, New_York)",
-  "selected": "Seçildi",
+  "timezone_search": "Bölge ara… (örn. Istanbul, Tokyo, New_York)",
+  "selected": "Seçili",
   "no_results": "Sonuç bulunamadı.",
-  "timezone_hint": "Seçiminizde çerezde yalnızca GMT ofset değeri tutulur (örn. GMT+03:00).",
-  "notifications": "Bildirimler",
-  "email_reports": "E-posta raporları",
-  "email_reports_hint": "Haftalık performans raporlarını e-posta ile al.",
-  "on": "Açık",
-  "off": "Kapalı",
+  "timezone_hint": "Çereze yalnızca GMT ofseti kaydedilir (örn. GMT+03:00).",
+
   "loading": "Yükleniyor…",
+
+  "profile": {
+    "title": "Profil Bilgileri",
+    "name": "Ad",
+    "last_name": "Soyad",
+    "username": "Kullanıcı Adı",
+    "email": "E-posta",
+    "phone": "Telefon",
+    "location": "Konum",
+    "bio": "Biyografi",
+    "bio_ph": "Kendiniz hakkında kısa bir açıklama…"
+  },
+
+  "social": { "title": "Sosyal Bağlantılar" },
+
+  "security": {
+    "title": "Hesap Güvenliği",
+    "current": "Mevcut Şifre",
+    "new": "Yeni Şifre",
+    "confirm": "Yeni Şifre (Tekrar)",
+    "hint": "Şifre değişikliği için mevcut şifrenizi doğrulayın.",
+    "no_new_pw": "Lütfen yeni şifre giriniz.",
+    "mismatch": "Yeni şifreler eşleşmiyor.",
+    "changed": "Şifre güncellendi."
+  },
+
+  "validation": {
+    "required": "Bu alan zorunludur.",
+    "email": "Geçerli bir e-posta girin.",
+    "fix_fields": "Lütfen hatalı/eksik alanları düzeltin."
+  },
+
+  "telegram": {
+    "title": "Telegram Bildirimleri",
+    "connected": "Bağlı",
+    "connected_hint": "Telegram hesabınız bağlı. Bildirim alacaksınız.",
+    "connect_hint": "Bildirim almak için Telegram hesabınızı bağlayın.",
+    "account": "Hesap",
+    "connect": "Bağla",
+    "connecting": "Bağlanıyor…",
+    "disconnect": "Bağlantıyı kes",
+    "disconnecting": "Bağlantı kesiliyor…",
+    "refresh": "Yenile",
+    "refresh_status": "Durumu yenile",
+    "errors": {
+      "status": "Telegram durumu alınamadı.",
+      "link": "Telegram bağlantısı oluşturulamadı.",
+      "unlink": "Telegram bağlantısı kesilemedi."
+    }
+  },
+
   "errors": {
     "load": "Ayarlar yüklenirken bir sorun oluştu.",
-    "save": "Kaydetme sırasında bir hata oluştu."
-  }
+    "loadProfile": "Profil bilgileri alınamadı.",
+    "save": "Kaydederken bir hata oluştu."
+  },
+
+  "notifications": "Bildirimler"
 }

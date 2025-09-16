@@ -9,6 +9,7 @@ async def notify_user_by_telegram(user_id: int, text: str) -> bool:
     user_id'e bağlı aktif Telegram hesabı varsa mesaj yollar.
     Dönüş: True = yollandı, False = kullanıcı bağlı değil.
     """
+    print(f"notify_user_by_telegram: user_id={user_id}")
     async for db in get_db():  # get_db bir generator -> async for ile bir session açılır
         acc = (await db.execute(
             select(TelegramAccount).where(

@@ -21,6 +21,8 @@ from solders.message import MessageV0
 from solana.rpc.async_api import AsyncClient
 from solders.signature import Signature as SolSignature
 
+from app.routes.profile.telegram.telegram_service import notify_user_by_telegram  
+
 PLATFORM_WALLET = Pubkey.from_string("AkmufZViBgt9mwuLPhFM8qyS1SjWNbMRBK8FySHajvUA")
 RPC_URL = "https://api.mainnet-beta.solana.com"
 
@@ -82,6 +84,11 @@ async def _build_v0_message_b64(payer: Pubkey, transfers: list[dict]) -> str:
 
     return base64.b64encode(bytes(msg)).decode("utf-8")
 
+def _fmt_sol(lamports: int) -> str:
+    try:
+        return f"{lamports / 1_000_000_000:.6f} SOL".rstrip("0").rstrip(".")
+    except Exception:
+        return f"{lamports} lamports"
 
 # ---------- Endpoints ----------
 @router.post("/intent/listing", response_model=CreateIntentResp)
@@ -192,8 +199,8 @@ async def create_purchase_intent(
         purpose="purchase",
         bot_id=body.bot_id,
         seller_wallet=body.seller_wallet,
-        platform_fee_usd=platform_fee_usd,   # Backend hesaplıyor
-        buyer_pays_usd=total_usd,           # Kullanıcının ödediği toplam
+        platform_fee_usd=platform_fee_usd,
+        buyer_pays_usd=total_usd,         
         quote_sol=total_lamports / 1_000_000_000,
         quote_lamports=total_lamports,
         quote_rate_usd_per_sol=usd_per_sol,
@@ -308,5 +315,33 @@ async def confirm_payment(
         .values(status=1, tx_sig=body.signature)
     )
     await db.commit()
+    # ====== BURADAN İTİBAREN TELEGRAM BİLDİRİMİ ======
+    try:
+        amount_text = _fmt_sol(int(intent.quote_lamports)) if getattr(intent, "quote_lamports", None) else "Tutar onaylandı"
+        sig_short = body.signature[:8] + "…" if body.signature and len(body.signature) > 10 else body.signature or ""
+
+        # intent türünü tespit etmeye çalış (yoksa genel onay metni kullan)
+        intent_kind = (getattr(intent, "intent_type", None) or getattr(intent, "purpose", None) or "").upper()
+        if "RENT" in intent_kind:
+            title = "Kiralama işleminiz onaylandı"
+        elif "PURCHASE" in intent_kind or "BUY" in intent_kind:
+            title = "Satın alma işleminiz onaylandı"
+        else:
+            title = "Ödemeniz onaylandı"
+
+        text = (
+            f"🎉 <b>{title}</b>\n\n"
+            f"💳 Tutar: <b>{amount_text}</b>\n"
+            + (f"🧾 İşlem: <code>{sig_short}</code>\n" if sig_short else "")
+            + "\n"
+              "🔔 İlgili bot(lar) ile ilgili gelişmeleri Telegram üzerinden anlık olarak bildireceğiz.\n\n"
+              "🌐 Daha fazla detay ve takibiniz için <a href=\"https://whaleer.com\">whaleer.com</a> adresini ziyaret edebilirsiniz. 🚀"
+        )
+
+        await notify_user_by_telegram(int(user_id), text)
+    except Exception:
+        # Bildirim hatasını sessiz yutuyoruz; ödeme akışını etkilemesin.
+        pass
+
     return {"ok": True}
 

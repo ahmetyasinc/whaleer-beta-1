@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import i18n from '@/i18n';
 import { IoReturnDownBackOutline } from "react-icons/io5";
 import { FiSave, FiRefreshCcw } from "react-icons/fi";
+import { toast } from 'react-toastify';
 
 import {
   readSettingsCookie,
@@ -14,6 +15,11 @@ import {
 } from '@/utils/cookies/settingsCookie';
 
 import TelegramConnect from '@/components/profile_component/(settings)/TelegramConnect';
+
+// 🔹 Yeni kartlar
+import ProfileBasicsCard from '@/components/profile_component/(settings)/ProfileBasicsCard';
+import SocialLinksCard from '@/components/profile_component/(settings)/SocialLinksCard';
+import AccountSecurityCard from '@/components/profile_component/(settings)/AccountSecurityCard';
 
 /* =========================
    Defaults & Utilities
@@ -166,6 +172,7 @@ export default function SettingsPage() {
     try {
       writeSettingsCookie(form);
       setSavedAt(new Date());
+      toast.success(t('saved'));
     } catch (e) {
       console.error(e);
       setError(t('errors.save'));
@@ -210,7 +217,7 @@ export default function SettingsPage() {
     <div className="w-full h-screen flex flex-col bg-zinc-950/60 text-white">
       <div className="flex-1 overflow-hidden">
         <div className="h-full p-6 overflow-y-auto">
-          <div className="max-w-5xl mx-auto flex flex-col gap-6">
+          <div className="max-w-6xl mx-auto flex flex-col gap-6">
 
             {/* Title + Actions */}
             <div className="flex items-center justify-between">
@@ -254,6 +261,11 @@ export default function SettingsPage() {
                 {error}
               </div>
             )}
+
+            {/* 🔹 Yeni: Profil düzenleme kartları (Whaleer tarzı) */}
+            <ProfileBasicsCard t={t} />
+            <SocialLinksCard  t={t} />
+            <AccountSecurityCard t={t} />
 
             {/* Dil */}
             <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">

@@ -5,16 +5,16 @@ from sqlalchemy.future import select
 from pydantic import BaseModel
 from app.models import User
 from app.database import get_db
-from app.core.auth import create_access_token, create_refresh_token  # JWT fonksiyonlarını içe aktar
+from app.core.auth import create_access_token, create_refresh_token
 import logging
 from datetime import datetime
-
+import bcrypt
 
 from dotenv import load_dotenv
 import os
 load_dotenv()
 
-SECRET_KEY = "38842270259879952027900728229105"  # Gerçek projelerde .env dosyasına koymalısın!
+SECRET_KEY = "38842270259879952027900728229105"  # .env'e taşı
 ALGORITHM = "HS256"
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 1 saat
@@ -22,11 +22,13 @@ REFRESH_TOKEN_EXPIRE_DAYS = 30   # 30 gün
 
 router = APIRouter()
 
+# --------------------------
+# Pydantic modelleri
+# --------------------------
 class LoginRequest(BaseModel):
     username: str
     password: str
 
-# Giriş verileri için Pydantic modeli
 class RegisterRequest(BaseModel):
     first_name: str
     last_name: str
@@ -35,14 +37,31 @@ class RegisterRequest(BaseModel):
     password: str
     confirmPassword: str
 
-# Refresh token isteği için Pydantic modeli
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
-    
-# Logger kullanımı
+
+# --------------------------
+# Logger
+# --------------------------
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# --------------------------
+# Yardımcı fonksiyonlar
+# --------------------------
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+def verify_password(password: str, hashed: str) -> bool:
+    try:
+        return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
+    except Exception as e:
+        logger.warning(f"Password verify error: {e}")
+        return False
+
+# --------------------------
+# Login
+# --------------------------
 @router.post("/api/login/")
 async def login(response: Response, data: LoginRequest, db: AsyncSession = Depends(get_db)):
     username = data.username
@@ -54,8 +73,8 @@ async def login(response: Response, data: LoginRequest, db: AsyncSession = Depen
     if not user:
         raise HTTPException(status_code=401, detail="Geçersiz kullanıcı adı veya şifre!")
 
-    # Şifre kontrolü (Burada basit bir string kontrolü yaptım, ama bcrypt gibi bir kütüphane kullanmalısın)
-    if user.password != password:
+    # ✅ Hash ile şifre doğrulama
+    if not verify_password(password, user.password):
         raise HTTPException(status_code=401, detail="Geçersiz kullanıcı adı veya şifre!")
 
     user.last_login = datetime.utcnow()
@@ -70,7 +89,6 @@ async def login(response: Response, data: LoginRequest, db: AsyncSession = Depen
         secure=False,
         max_age=60 * ACCESS_TOKEN_EXPIRE_MINUTES,
         samesite="Lax",
-        #domain=os.getenv("COOKIE_DOMAIN"),
         path="/"
     )
 
@@ -78,55 +96,65 @@ async def login(response: Response, data: LoginRequest, db: AsyncSession = Depen
         key="refresh_token",
         value=refresh_token,
         secure=False,
-        max_age= 86400 * REFRESH_TOKEN_EXPIRE_DAYS,
+        max_age=86400 * REFRESH_TOKEN_EXPIRE_DAYS,
         samesite="Lax",
-        #domain=os.getenv("COOKIE_DOMAIN"),
         path="/"
     )
 
     return {"message": "Giriş başarılı"}
 
-# Kullanıcı ekleme fonksiyonu
+# --------------------------
+# Register
+# --------------------------
 @router.post("/api/register/")
 async def add_user(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
-    print(data)
-    # Aynı e-posta adresi zaten var mı kontrol et
+    # Şifre doğrulama
+    if data.password != data.confirmPassword:
+        raise HTTPException(status_code=400, detail="Şifreler eşleşmiyor!")
+
+    # Aynı e-posta var mı?
     result = await db.execute(select(User).where(User.email == data.email))
     existing_user = result.scalars().first()
 
     if existing_user:
-        print(existing_user)
-        print(existing_user.email)
         raise HTTPException(status_code=400, detail="Bu e-posta zaten kullanılıyor!")
 
-    # Yeni kullanıcı oluştur
-    user = User(name=data.first_name, last_name=data.last_name, username=data.username, email=data.email, password=data.password)
+    # ✅ Şifreyi hashle
+    hashed_password = hash_password(data.password)
+
+    # Yeni kullanıcı
+    user = User(
+        name=data.first_name,
+        last_name=data.last_name,
+        username=data.username,
+        email=data.email,
+        password=hashed_password
+    )
     db.add(user)
-    await db.commit()  # Değişiklikleri kaydet
-    await db.refresh(user)  # Kullanıcıyı güncelle
+    await db.commit()
+    await db.refresh(user)
     return {"message": "Kayıt başarılı"}
 
+# --------------------------
+# Refresh token
+# --------------------------
 @router.post("/api/refresh-token/")
 async def refresh_token(request: RefreshTokenRequest, response: Response, db: AsyncSession = Depends(get_db)):
     try:
         payload = jwt.decode(request.refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
-        username = payload.get("sub")
+        user_id = payload.get("sub")
 
-        if not username:
+        if not user_id:
             raise HTTPException(status_code=401, detail="Geçersiz refresh token")
 
-        # 🚀 `query()` yerine `execute()` kullanıyoruz
-        result = await db.execute(select(User).where(User.name == username))
-        user = result.scalars().first()  # `scalars()` ile veriyi alıyoruz
+        result = await db.execute(select(User).where(User.id == int(user_id)))
+        user = result.scalars().first()
 
         if not user:
             raise HTTPException(status_code=401, detail="Kullanıcı bulunamadı")
 
-        # Yeni access token oluştur
-        new_access_token = create_access_token({"sub": user.name})
+        new_access_token = create_access_token({"sub": str(user.id)})
         return {"access_token": new_access_token, "token_type": "bearer"}
     
     except JWTError:
         raise HTTPException(status_code=401, detail="Geçersiz token")
-
-

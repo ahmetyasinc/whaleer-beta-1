@@ -74,7 +74,7 @@ export default function TradesList({ trades }) {
           <tbody>
             {trades.map((trade) => {
               const isClose = trade.type.endsWith('CLOSE');
-              const investedAmount = trade.amount * trade.price;
+              const investedAmount = trade?.value || trade.amount * trade.price;
               const commission = trade.commission || 0;
               const pnlPercentage = trade.pnlPercentage || null;
               const pnlAmount = trade.pnlAmount || null;

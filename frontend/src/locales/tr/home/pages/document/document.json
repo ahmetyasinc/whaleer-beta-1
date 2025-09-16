@@ -1,47 +1,263 @@
 {
   "title": "Whaleer Dokümantasyon",
-  "intro": "Strateji oluştur, geçmiş veride test et, botu çalıştır ve toplulukla paylaş.",
+  "intro": "Whaleer ile strateji yaz, geçmiş veride test et (backtest), bot olarak canlıda çalıştır, sonuçları paylaş ya da pazar yerine çıkar. Bu belge; veri modeli, indikatör ve strateji geliştirme kuralları, backtest kullanımı, bot kurulum/çalıştırma, pazar yeri (vitrin), API anahtarı bağlama ve destek süreçlerini ayrıntılı şekilde açıklar.",
   "sections": [
     {
-      "id": "olusturma",
-      "title": "1. Strateji Oluşturma",
-      "content": "Editör ile kendi stratejini kur. RSI, EMA ve hacim gibi indikatörleri destekler.",
+      "id": "genel-yapi",
+      "title": "0. Genel Yapı ve Veri Modeli",
+      "content": "Whaleer, stratejinizi pandas DataFrame (df) üzerinde çalıştırır. Size varsayılan olarak şu sütunlar sağlanır: timestamp, open, high, low, close, volume. Siz, yeni sütunlar üreterek indikatörlerinizi ve strateji kurallarınızı tanımlarsınız. Stratejilerinizin temel çıktıları df['position'], df['percentage'], (opsiyonel) df['take_profit'], df['stop_loss'] sütunlarıdır. Komisyon için ayrı bir değişken (commission) kullanılmalıdır.\n\nTemel kurallar:\n• df['position']: İşlem yönünü ve kaldıraç büyüklüğünü belirler. Örn: 1 = long, -1 = short, 2 = 2x long, -3 = 3x short.\n• df['percentage']: İşlem büyüklüğünü yüzde olarak belirtir (genelde 100).\n• commission: 0 ile 1 arasında olmalıdır (genelde 0.001 = %0.1).\n• take_profit ve stop_loss: Fiyat seviyeleri olarak (yüzde değil) close bazlı belirlenir ve sütun olarak df'ye eklenir.\n\nNotlar:\n• Platform, sayısal kolonları varsayılan olarak Decimal döndürebilir. İsterseniz float64'e dönüştürüp çalışabilirsiniz (örn: df[col] = df[col].astype(float)).\n• Strateji yürütücüsü, her bar için sizin ürettiğiniz position/percentage'a göre işlem simülasyonu yapar.",
       "media": {
-        "images": ["/docs/strategy-editor.png"],
-        "videos": ["/docs/strategy-intro.mp4"]
+        "images": ["/docs/overview-dataframe.png"],
+        "videos": []
       },
       "sub": [
         {
-          "id": "olusturma-temel",
-          "title": "Temel Kurallar",
-          "content": "Giriş/çıkış koşullarını tanımla. Örn: RSI < 30 iken al, RSI > 70 iken sat."
+          "id": "genel-yapi-float-donusumu",
+          "title": "Decimal → float Dönüşümü",
+          "content": "Sayısal tüm kolonları float64'e çevirmek için örnek:\n\n```python\nfor col in ['open', 'high', 'low', 'close', 'volume']:\n    if col in df.columns:\n        df[col] = df[col].astype(float)\n```\n\n(Görsel: \"DataFrame sütun türleri\" ekran görüntüsü)"
         },
         {
-          "id": "olusturma-indikator",
-          "title": "İndikatör Kullanımı",
-          "content": "RSI, EMA, MACD gibi indikatörleri parametreleriyle birlikte ekle."
+          "id": "genel-yapi-zorunlu-sutunlar",
+          "title": "Zorunlu/Önerilen Sütunlar",
+          "content": "Zorunlu: position, percentage.\nÖnerilen: take_profit, stop_loss (fiyat seviyeleri).\nKüresel değişken: commission (0–1 arası)."
+        }
+      ]
+    },
+    {
+      "id": "indikator",
+      "title": "1. İndikatör Geliştirme",
+      "content": "İndikatörler, df üzerinde yeni sütunlar üreterek veya ayrı bir dizi oluşturup plot_indicator ile grafiğe çizdirilerek geliştirilir. Kullanıcıdan dinamik parametre almak için input.* fonksiyonları sağlanır (int, float, bool, string, color).",
+      "media": {
+        "images": ["/docs/indicator-editor.png", "/docs/indicator-plot.png"],
+        "videos": ["/docs/indicator-walkthrough.mp4"]
+      },
+      "sub": [
+        {
+          "id": "indikator-input",
+          "title": "Input Kullanımı (int, float, bool, string, color)",
+          "content": "Input'lar indikatör/strateji çalışırken kullanıcıya ayar sunar. Örnekler:\n\n```python\nlength = input.int(10, title=\"SMA Periyodu\", minval=1)\nalpha  = input.float(0.8, title=\"Denge Katsayısı\", minval=0.0, step=0.1)\nuse_smooth = input.bool(True, title=\"Yumuşatma Açık\")\nlabel = input.string(\"SMA\", title=\"Etiket\")\ncolor_line = input.color(\"#2962FF\", title=\"Çizgi Rengi\")\n```\n\n(Görsel: \"Input paneli\" yakın plan)"
+        },
+        {
+          "id": "indikator-plot-indicator",
+          "title": "plot_indicator ile Çizim",
+          "content": "İmza: plot_indicator(indicator_name: str, plot_type: str, on_graph: bool, indicator_data: list[tuple], color, line_width).\n• indicator_name: Grafikte görünen ad.\n• plot_type: \"line\", \"area\", \"histogram\" vb.\n• on_graph: True → ana fiyat grafiği üzerinde, False → ayrı panel.\n• indicator_data: (timestamp, value) çiftlerinden oluşan liste.\n• color: HEX veya input.color ile gelen değer.\n• line_width: Çizgi kalınlığı.\n\nBasit SMA örneği:\n\n```python\nlength = input.int(10, title=\"SMA Periyodu\", minval=1)\nsma = df['close'].rolling(window=length, min_periods=1).mean()\nplot_indicator(\n    \"SMA_\" + str(length),\n    \"line\",\n    True,\n    list(zip(df['timestamp'], sma)),\n    color=\"#0000FF\",\n    line_width=1\n)\n```\n\n(Görsel: \"SMA çizgisi\" üstünde gösterim)"
+        },
+        {
+          "id": "indikator-terminal-komutlari",
+          "title": "Terminal Komutları (İndikatör İçe Aktarma)",
+          "content": "Stratejinize terminalden başka bir indikatörü import edebilirsiniz.\n\nKomutlar:\n• `cls` → Terminali temizler\n• `help` → Komutları listeler\n• `time` → Geçerli zamanı gösterir\n• `uptime` → Sayfanın açık olduğu süreyi gösterir\n• `import <indicator>` → Belirtilen indikatörü içe aktarır\n• `list imports` → İçe aktarılan indikatörleri listeler\n• `reset <indicator|imports>` → Belirli veya tüm içe aktarımları kaldırır\n\n(Görsel: \"Terminal çıktısı\" örneği)"
+        }
+      ]
+    },
+    {
+      "id": "strateji",
+      "title": "2. Strateji Geliştirme",
+      "content": "Stratejiler, indikatör mantığına benzer şekilde df üzerinde kurallar üreterek yazılır. Zorunlu olarak df['position'] ve df['percentage'] üretilmelidir. İsteğe bağlı olarak df['take_profit'] ve df['stop_loss'] fiyat seviyeleri belirlenebilir. commission değişkeni 0–1 aralığında olmalıdır.",
+      "media": {
+        "images": ["/docs/strategy-rules.png", "/docs/marks.png"],
+        "videos": ["/docs/strategy-flow.mp4"]
+      },
+      "sub": [
+        {
+          "id": "strateji-kurallar",
+          "title": "Temel Kurallar ve Örnek",
+          "content": "• Alım başlatmak için df['position'] değerini 1 (veya kaldıraçlı için 2,3,...) yapın ve bu değer satış noktasına kadar sürer.\n• Satış/kapatma için df['position']'ı 0'a veya short için -1'e çekebilirsiniz.\n• df['percentage'] strateji büyüklüğünü (yüzde) tanımlar; genelde 100. Birden fazla coini aynı botla yönetecekseniz yüzdeleri dikkatle ayarlayın.\n• commission = input.float(0.001, title=\"Commission\") gibi tanımlanmalı.\n• take_profit / stop_loss sütunları fiyat seviyesi olmalıdır; yüzde değil.\n\nÖrnek iskelet:\n\n```python\nlong_open  = input.string(\"\", title=\"Long Açılış Etiketi\")\nlong_close = input.string(\"\", title=\"Long Kapanış Etiketi\")\nshort_open = input.string(\"\", title=\"Short Açılış Etiketi\")\nshort_close= input.string(\"\", title=\"Short Kapanış Etiketi\")\ncommission = input.float(0.001, title=\"Commission\")\n\n# Sayısal kolonları float yap\nfor col in ['open','high','low','close','volume']:\n    if col in df.columns:\n        df[col] = df[col].astype(float)\n\n# Basit sinyal: EMA200 üstü long, altı short\ndf['ema200'] = df['close'].ewm(span=200).mean()\n\nlong_condition  = df['close'] > df['ema200']\nshort_condition = df['close'] < df['ema200']\n\ndf['percentage'] = 100.0\ndf['position']   = 0.0\n\ndf.loc[long_condition,  'position'] = 1.0\ndf.loc[short_condition, 'position'] = -1.0\n\n# Opsiyonel: sabit TP/SL (fiyat olarak)\ndf['take_profit'] = df['close'] * 1.02  # +%2 fiyat seviyesi\ndf['stop_loss']   = df['close'] * 0.98  # -%2 fiyat seviyesi\n\n# İşaretler (oklar)\nmark(df, long_open=long_open, long_close=long_close, short_open=short_open, short_close=short_close)\n\n# Performans çizimi\nplot(df, commission)\nprint(\"Strateji başarıyla üretildi.\")\n```\n\n(Görsel: \"EMA tabanlı strateji\" akış şeması)"
+        },
+        {
+          "id": "strateji-kaldirac",
+          "title": "Kaldıraçlı Pozisyonlar (position ile)",
+          "content": "Whaleer'da kaldıraç, df['position']'ın mutlak değeriyle ifade edilir: 2 → 2x long, -3 → 3x short. Bu, backtest ve canlı yürütücünün pozisyon büyüklüğünü hesaplamasında kullanılır.\n\nÖrnek:\n```python\n# EMA kesişiminde 2x long\ncond = (df['close'] > df['ema200'])\ndf.loc[cond, 'position'] = 2.0\n```\n\n(Görsel: \"Kaldıraç simgesi\" ile pozisyon etiketi)"
+        },
+        {
+          "id": "strateji-tp-sl",
+          "title": "Take Profit / Stop Loss (Fiyat Bazlı)",
+          "content": "TP/SL değeri yüzde değil fiyattır. Genelde close baz alınır.\n\nÖrnekler:\n```python\n# Sabit farkla TP/SL\ndf['take_profit'] = df['close'] + 50      # 50$ üstü hedef\ndf['stop_loss']   = df['close'] - 30      # 30$ altı zarar kes\n\n# Oransal fiyat (yüzde hesaplayıp fiyata çevirme)\ntp_pct  = input.float(2.5, title=\"TP (%)\", minval=0.01, step=0.1)\nsl_pct  = input.float(1.0, title=\"SL (%)\", minval=0.01, step=0.1)\n\ndf['take_profit'] = df['close'] * (1 + tp_pct/100.0)\ndf['stop_loss']   = df['close'] * (1 - sl_pct/100.0)\n```\n\n(Görsel: \"Fiyat seviyeleri\" çizimi, TP/SL bantları)"
+        },
+        {
+          "id": "strateji-get-percentage",
+          "title": "get_percentage ile Dinamik Yüzde Yönetimi",
+          "content": "get_percentage(), strateji çalışırken bir önceki satırın percentage değerini döndürür. Böylece pozisyon içindeyken yüzdeleri zamana bağlı ayarlayabilirsiniz.\n\nÖrnek:\n```python\nprev = get_percentage()  # önceki barın yüzdesi\n# Pozisyondayken kademeli azaltım\nopen_pos = df['position'].shift(1) != 0\ndf.loc[open_pos, 'percentage'] = max(20.0, prev - 5.0)\n```\n\n(Görsel: \"Kademeli yüzdelik yönetimi\" diyagramı)"
+        },
+        {
+          "id": "strateji-gorsellestirme",
+          "title": "mark ve plot ile Görselleştirme",
+          "content": "• `mark(df, ...)` alım/satım noktalarına ok ekler. Etiketlerle özelleştirebilirsiniz.\n• `plot(df, commission)` performans grafiğini çizer (stratejinin PnL eğrisi vb.).\n\nÖneri: Strateji kodunun sonunda mark → plot sıralamasını kullanın.\n\n(Görsel: \"Yeşil/Kırmızı oklar\" ve \"PNL grafiği\")"
         }
       ]
     },
     {
       "id": "backtest",
-      "title": "2. Backtest",
-      "content": "Stratejini geçmiş veride test et. Performans, drawdown ve başarı oranını incele.",
+      "title": "3. Backtest",
+      "content": "Backtest sayfasında periyot (örn. 1m, 5m, 1h), işlem yapılacak kripto ve isteğe bağlı başlangıç bakiyesi seçilir. Başlangıç bakiyesi verilmezse ilk mumdaki fiyat ve varsayılan ayarlarla hesap başlatılır. Motor; df['position'], df['percentage'], take_profit/stop_loss (varsa) ve commission'a göre işlemleri simüle eder.",
       "media": {
-        "images": ["/docs/backtest-result.png"]
-      }
+        "images": ["/docs/backtest-setup.png", "/docs/backtest-result.png", "/docs/backtest-trade-list.png"],
+        "videos": ["/docs/backtest-tour.mp4"]
+      },
+      "sub": [
+        {
+          "id": "backtest-metrikler",
+          "title": "Metrikler ve Çıktılar",
+          "content": "• Toplam getiri, Max Drawdown, Win/Loss oranı, Profit Factor, Sharpe/Sortino (uygunsa)\n• İşlem listesi (giriş/çıkış zamanları, fiyat, PnL, komisyon)\n• Zaman serisi kâr eğrisi\n• İndikatör ve sinyal işaretleri ile senkronize grafik\n\n(Görseller: \"Metrik kutuları\", \"İşlem tablosu\", \"Kâr eğrisi\")"
+        },
+        {
+          "id": "backtest-arsiv",
+          "title": "Backtest Arşivleme",
+          "content": "Beğendiğiniz koşuları arşivleyip daha sonra karşılaştırabilirsiniz. Arşiv; strateji sürümü, parametreler, tarih aralığı ve sonuç metriklerini içerir.\n\n(Görsel: \"Arşiv listesi\" ve \"Karşılaştırma tablosu\")"
+        }
+      ]
     },
     {
       "id": "bot",
-      "title": "3. Botu Çalıştırma",
-      "content": "Gerçek zamanlı veriyle otomatik al/sat işlemleri çalışır. Risk ve komisyonları göz önünde bulundur."
+      "title": "4. Bot Oluşturma ve Çalıştırma",
+      "content": "Botlar, stratejinizi canlı piyasada (gerçek zamanlı) çalıştırır. Bot kurarken dönem (period), minimum mum sayısı, coin listesi, çalışma gün/saatleri ve bakiye tahsisi gibi ayarlar yapılır.",
+      "media": {
+        "images": ["/docs/bot-create.png", "/docs/bot-run.png", "/docs/bot-shutdown.png"],
+        "videos": ["/docs/bot-setup-guide.mp4", "/docs/bot-live-demo.mp4"]
+      },
+      "sub": [
+        {
+          "id": "bot-min-candle",
+          "title": "Minimum Mum Sayısı (Teknik Gereksinim)",
+          "content": "Stratejinizin doğru çalışması için ihtiyaç duyduğu minimum mum sayısını belirtmelisiniz (örn. EMA 200 kullanıyorsanız en az 200+ tampon). Emin değilseniz 5000 yazabilirsiniz, ancak bu verimliliği etkileyebilir.\n\n(Görsel: \"Minimum mum uyarı\" diyalogu)"
+        },
+        {
+          "id": "bot-bakiye-coin",
+          "title": "Bakiye Tahsisi ve Çoklu Coin Yönetimi",
+          "content": "Botu oluştururken bağlı API'den anlık bakiyeniz getirilir. Kaydırma barı ile bota ayıracağınız toplam bakiyeyi seçersiniz. Birden fazla coin eklediğinizde, her coini bağımsız bir alt-bot gibi değerlendirir ve her biri df['percentage'] kadar bu toplam bakiyeden pay kullanır.\n\nÖnemli: 5 coin ekleyip aynı anda hepsinin sinyal üretmesini bekliyorsanız, df['percentage'] değerini en fazla 20 olacak şekilde planlayın (5×20 = 100).\n\n(Görsel: \"Coin çoklu seçim\" ve \"Bakiye slider\")"
+        },
+        {
+          "id": "bot-calistirma-kapatma",
+          "title": "Çalıştırma, Kapatma, Silme",
+          "content": "• Çalıştır: Bot gerçek zamanlı veri ile sinyalleri uygular.\n• Shutdown: Bot kendini kapatmadan önce tüm açık pozisyonları güvenli şekilde kapatır.\n• Delete: Botu siler; **açık işlemleri kapatmaz** (dikkat).\n• Kiralık botların süresi dolduğunda açık işlemler otomatik kapatılır ve bot kapanır.\n\n(Görseller: \"Run\", \"Shutdown\", \"Delete\" butonları)"
+        },
+        {
+          "id": "bot-analiz-izleme",
+          "title": "Canlı İzleme ve Analiz",
+          "content": "Bot sayfasında canlı işlemler, son sinyaller, PnL, komisyon etkisi ve dağılımlar izlenir. Hata/uyarı logları ve yeniden başlatma seçenekleri mevcuttur.\n\n(Video: \"Canlı bot izleme turu\")"
+        }
+      ]
     },
     {
-      "id": "paylasim",
-      "title": "4. Strateji Paylaşımı",
-      "content": "Stratejileri NFT olarak mint edebilir, arşivleyebilir ve paylaşabilirsin."
+      "id": "vitrin",
+      "title": "5. Vitrin (Pazar Yeri)",
+      "content": "Topluluk botlarını görüntüleyip performanslarını inceleyebilir, satın alabilir veya kiralayabilirsiniz. Kendi botlarınızı da satışa/kiralığa çıkarabilirsiniz.",
+      "media": {
+        "images": ["/docs/marketplace-grid.png", "/docs/marketplace-detail.png"],
+        "videos": ["/docs/marketplace-howto.mp4"]
+      },
+      "sub": [
+        {
+          "id": "vitrin-cuzdan",
+          "title": "Cüzdan Bağlama (Ödeme/Kazanç)",
+          "content": "Ödemeler ve kazançlar için Phantom cüzdanınızı bağlamanız gerekir. İndirme bağlantısını sayfaya ekleyin: (Görsel/Buton: \"Phantom'u İndir\").\n\nNot: Bağlantı için Phantom indirme sayfasını kullanın. (Ekranda metin: \"Cüzdanı bağlamadan satın alma/kirala işlemleri yapılamaz.\")"
+        },
+        {
+          "id": "vitrin-satis-kiralama",
+          "title": "Botu Satışa/Kiralığa Çıkarma",
+          "content": "• Fiyatlandırma: Satış ücreti / kira süresi ve bedeli.\n• Açıklama ve risk profili: Strateji mantığını ve kullanım uyarılarını ekleyin.\n• Performans kanıtı: Arşivlenmiş backtest sonuçlarınızı iliştirin.\n\n(Görseller: \"Satış/Kiralama formu\", \"Ödeme onayı\")"
+        }
+      ]
+    },
+    {
+      "id": "api-baglama",
+      "title": "6. API Bağlama (Binance vb.)",
+      "content": "API anahtarı bağlama süreci; borsa hesabınızdan alınan API Key/Secret ile gerçekleşir. Bu işlem **para çekme yetkisi olmadan** yapılandırılmalıdır (sadece al/sat). Bu nedenle güvenlidir: API üzerinden cüzdan dışına aktarım yapılamaz, sadece işlem emri gönderilir.",
+      "media": {
+        "images": ["/docs/api-connect.png", "/docs/api-permissions.png"],
+        "videos": ["/docs/api-setup-video.mp4"]
+      },
+      "sub": [
+        {
+          "id": "api-izinler",
+          "title": "Önerilen Yetkiler",
+          "content": "• Trade/Order yetkisi: Aç/Kapa emirleri.\n• Read-only hesap bilgisi: Bakiye ve pozisyonları görüntülemek için.\n• **Para çekme (withdraw)** yetkisi **kapalı** olmalıdır.\n\n(Görsel: \"API izin ayarları\")"
+        },
+        {
+          "id": "api-video",
+          "title": "Adım Adım Video",
+          "content": "Bu bölümde kullanıcıya API anahtarı oluşturma ve Whaleer'a ekleme adımlarını gösterecek bir video yerleştirin.\n\n(Video: \"Binance API Bağlama\" eğitimi)"
+        }
+      ]
+    },
+    {
+      "id": "ornekler",
+      "title": "7. Uçtan Uca Örnekler",
+      "content": "Aşağıdaki örnekler; input kullanımı, indikatör üretimi, strateji kuralları, TP/SL, mark ve plot çağrılarını bir araya getirir.",
+      "media": {
+        "images": ["/docs/example-sma-rsi.png"],
+        "videos": []
+      },
+      "sub": [
+        {
+          "id": "ornek-sma-rsi-macd",
+          "title": "SMA + RSI + MACD Stratejisi (Basit)",
+          "content": "```python\n# --- Parametreler ---\nlength_sma = input.int(50, title=\"SMA Periyodu\", minval=1)\nrsi_len    = input.int(14, title=\"RSI Periyodu\", minval=2)\nmacd_fast  = input.int(12, title=\"MACD Hızlı\" , minval=1)\nmacd_slow  = input.int(26, title=\"MACD Yavaş\" , minval=1)\nmacd_sig   = input.int(9,  title=\"MACD Sinyal\", minval=1)\ncommission = input.float(0.001, title=\"Commission\")\ncolor_sma  = input.color(\"#1E88E5\", title=\"SMA Rengi\")\n\n# --- Tip dönüşümü ---\nfor col in ['open','high','low','close','volume']:\n    if col in df.columns:\n        df[col] = df[col].astype(float)\n\n# --- İndikatörler ---\ndf['sma'] = df['close'].rolling(window=length_sma, min_periods=1).mean()\n\ndelta      = df['close'].diff()\ngain       = delta.where(delta > 0, 0)\nloss       = -delta.where(delta < 0, 0)\ndf['rsi']  = 100 - (100 / (1 + (gain.rolling(rsi_len).mean() / loss.rolling(rsi_len).mean())))\n\nema_fast   = df['close'].ewm(span=macd_fast).mean()\nema_slow   = df['close'].ewm(span=macd_slow).mean()\ndf['macd'] = ema_fast - ema_slow\ndf['signal']= df['macd'].ewm(span=macd_sig).mean()\n\n# Plot indikatörleri\nplot_indicator(\"SMA\", \"line\", True, list(zip(df['timestamp'], df['sma'])), color=color_sma, line_width=1)\nplot_indicator(\"MACD\", \"line\", False, list(zip(df['timestamp'], df['macd'])), color=\"#00BFA5\", line_width=1)\nplot_indicator(\"Signal\", \"line\", False, list(zip(df['timestamp'], df['signal'])), color=\"#FDD835\", line_width=1)\n\n# --- Kurallar ---\nlong_cond  = (df['close'] > df['sma']) & (df['macd'] > df['signal']) & (df['rsi'] < 70)\nshort_cond = (df['close'] < df['sma']) & (df['macd'] < df['signal']) & (df['rsi'] > 30)\n\ndf['percentage'] = 100.0\ndf['position']   = 0.0\ndf.loc[long_cond,  'position'] = 1.0\ndf.loc[short_cond, 'position'] = -1.0\n\n# Fiyat bazlı TP/SL\ntp_pct = input.float(2.0, title=\"TP (%)\", minval=0.1, step=0.1)\nsl_pct = input.float(1.0, title=\"SL (%)\", minval=0.1, step=0.1)\ndf['take_profit'] = df['close'] * (1 + tp_pct/100.0)\ndf['stop_loss']   = df['close'] * (1 - sl_pct/100.0)\n\n# İşaretler ve performans\nmark(df, long_open=\"Long\", long_close=\"Long Exit\", short_open=\"Short\", short_close=\"Short Exit\")\nplot(df, commission)\n```\n(Görsel: \"Fiyat + SMA + MACD paneli\")"
+        },
+        {
+          "id": "ornek-kaldirac-kademeli",
+          "title": "Kademeli ve Kaldıraçlı Örnek",
+          "content": "```python\ncommission = input.float(0.001, title=\"Commission\")\nbase_pct   = input.float(20.0, title=\"Baz Yüzde\")\n\n# SMA'ya uzaklık artırdıkça kaldıraç ve yüzde artır\ndf['sma200'] = df['close'].ewm(span=200).mean()\ndist = (df['close'] - df['sma200']) / df['sma200']\n\ndf['position']   = 0.0\ndf['percentage'] = base_pct\n\n# 0–2% üstünde 1x, 2–4% üstünde 2x, 4%+ üstünde 3x gibi kademeli\ncond1 = dist.between(0.00, 0.02)\ncond2 = dist.between(0.02, 0.04)\ncond3 = dist > 0.04\n\ndf.loc[cond1, 'position'] = 1.0\ndf.loc[cond2, 'position'] = 2.0\ndf.loc[cond3, 'position'] = 3.0\n\n# Pozisyondayken yüzdeleri kademeli artır\nprev_pct = get_percentage()\nopen_pos = df['position'] != 0\ndf.loc[open_pos, 'percentage'] = prev_pct + 5.0\n\nmark(df, long_open=\"ScaleIn\", long_close=\"Close\", short_open=\"\", short_close=\"\")\nplot(df, commission)\n```\n(Görsel: \"Kademeli ölçekleme\" şeması)"
+        }
+      ]
+    },
+    {
+      "id": "guvenlik",
+      "title": "8. Güvenlik ve En İyi Uygulamalar",
+      "content": "• API anahtarlarında para çekme iznini **asla** açmayın.\n• Stratejinizi canlıya almadan önce yeterli veri aralığında backtest edin.\n• Kaldıraç (df['position'] mutlak değeri) arttıkça risk katlanır; SL/TP kullanın.\n• Çoklu coin ile çalışırken df['percentage'] toplamının aynı anda tetiklenebileceğini hesaba katın.\n• Komisyon (commission) değerini gerçek borsa komisyonlarınıza yakın girin.\n\n(Görsel: \"Güvenlik uyarıları\" infografiği)",
+      "media": {
+        "images": ["/docs/security-tips.png"],
+        "videos": []
+      }
+    },
+    {
+      "id": "sss",
+      "title": "9. SSS (Sık Sorulan Sorular)",
+      "content": "",
+      "media": {
+        "images": [],
+        "videos": []
+      },
+      "sub": [
+        {
+          "id": "sss-position-percentage",
+          "title": "Position ile Percentage farkı nedir?",
+          "content": "Position yön ve kaldıraç büyüklüğünü belirler (1, -1, 2, -3 gibi). Percentage ise işlem büyüklüğünü yüzde olarak ifade eder. İkisi birlikte, gerçek pozisyon boyutunun hesaplanmasında kullanılır."
+        },
+        {
+          "id": "sss-tp-sl-fiyat-mi-yuzde-mi",
+          "title": "TP/SL fiyat mı yüzde mi olmalı?",
+          "content": "Whaleer'da TP/SL **fiyat seviyesidir**. Yüzde girmek istiyorsanız önce fiyata çevirip df'ye fiyat olarak yazın (örn. df['take_profit'] = df['close'] * (1 + 0.02))."
+        },
+        {
+          "id": "sss-commission",
+          "title": "Commission nasıl ayarlanmalı?",
+          "content": "0–1 aralığında ondalık bir değerdir (örn. 0.001 = %0.1). Borsanızın işlem komisyonuna yakın seçmeniz backtest uyumu için önemlidir."
+        },
+        {
+          "id": "sss-min-candle",
+          "title": "Minimum mum sayısını nasıl belirlerim?",
+          "content": "Kullandığınız indikatörlerin pencere boyutlarını düşünün (örneğin EMA 200 + tampon). Emin değilseniz 5000 üst sınırı kullanabilirsiniz; bu performansı etkileyebilir."
+        },
+        {
+          "id": "sss-multi-coin",
+          "title": "Birden fazla coin eklersem yüzde yönetimini nasıl yaparım?",
+          "content": "Hepsi aynı anda sinyal üretirse toplam yüzde 100'ü aşmamalı. Örn. 5 coin için bariz eşit paylaşımda df['percentage'] ≤ 20 olmalıdır."
+        },
+        {
+          "id": "sss-kiralik-bot-bitis",
+          "title": "Kiralık botun süresi bitince ne olur?",
+          "content": "Açık tüm işlemler otomatik kapatılır ve bot kendini kapatır."
+        }
+      ]
+    },
+    {
+      "id": "destek",
+      "title": "10. Destek",
+      "content": "Sorularınız ve talepleriniz için 7/24 destek sayfasından bize ulaşabilirsiniz. Yol haritanız, strateji incelemeleriniz ve entegrasyon sorularınız için yanınızdayız.\n\n(Görsel: \"Destek bileti oluşturma\" ekran görüntüsü)",
+      "media": {
+        "images": ["/docs/support.png"],
+        "videos": ["/docs/support-howto.mp4"]
+      }
     }
   ]
 }
-
-

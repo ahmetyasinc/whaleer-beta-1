@@ -22,7 +22,8 @@ export const metadata = {
 // Statik cache (opsiyonel)
 export const revalidate = 86400; // 24 saat
 
-export default function AboutPage({ params }) {
+export default async function AboutPage(props) {
+  const params = await props.params;
   const locale = (params?.locale || "tr").toLowerCase();
   const dict = locale === "en" ? en : tr;
 

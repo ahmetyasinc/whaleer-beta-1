@@ -101,28 +101,37 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func, distinct
 
-
-@app.get("/ping")
-def ping():
-    return {"status": "ok"}
-
+from app.database import get_db
+from app.models import User
+from app.models.profile.strategy.strategy import Strategy
+from app.models.profile.bots.bots import Bots
 
 @app.get("/api/hero-infos/")
-def get_hero_infos():
-    user_count = 8
-    trader_count = 3
-    strategy_count = 5
-    bot_count = 2
-    hero_infos = {
+async def get_hero_infos(db: AsyncSession = Depends(get_db)):
+    # toplam kullanıcı
+    user_count_result = await db.execute(select(func.count()).select_from(User))
+    user_count = user_count_result.scalar_one()
+
+    # toplam strateji
+    strategy_count_result = await db.execute(select(func.count()).select_from(Strategy))
+    strategy_count = strategy_count_result.scalar_one()
+
+    # toplam bot
+    bot_count_result = await db.execute(select(func.count()).select_from(Bots))
+    bot_count = bot_count_result.scalar_one()
+
+    # toplam trader (botu olan farklı kullanıcı sayısı)
+    trader_count_result = await db.execute(select(func.count(distinct(Bots.user_id))))
+    trader_count = trader_count_result.scalar_one()
+
+    return {
         "user_count": user_count,
         "trader_count": trader_count,
         "strategy_count": strategy_count,
         "bot_count": bot_count
     }
-    return hero_infos
 
-# test için
-@app.get("/api/fake-unauthorized/")
-def fake_unauthorized():
-    raise HTTPException(status_code=401, detail="Unauthorized")

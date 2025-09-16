@@ -4,7 +4,7 @@
     "title": "Strategy Creation",
     "heading": "Create Strategy",
     "description": "Use any indicator you want, follow trends or price action, and build your strategy algorithm.",
-    "image": "/img/str_img.jpeg",
+    "image": "/img/image4.png",
     "bullets": [
       "Create an algorithm that detects buy/sell zones and translate it into code.",
       "Use optional indicator settings to find the most profitable parameters in backtests.",
@@ -16,7 +16,7 @@
     "title": "Trading Bots",
     "heading": "Automated Trading Bots",
     "description": "Connect your strategies to bots and automate trading without manual tracking.",
-    "image": "/img/bt-img.jpeg",
+    "image": "/img/image5.png",
     "bullets": [
       "Build your own trading strategy.",
       "Translate your strategy into code from the creation page.",

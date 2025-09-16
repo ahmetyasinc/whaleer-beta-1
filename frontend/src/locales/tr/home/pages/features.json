@@ -1,0 +1,23 @@
+{
+  "title": "Whaleer ile Algoritmik Trade",
+  "subtitle": "Whaleer ile stratejiler oluştur, test et, çalıştır ve paylaş. Başlamak için aşağıdaki adımları takip et!",
+  "cta": "Hemen Başla",
+  "steps": {
+    "1": {
+      "title": "1. Stratejini Oluştur",
+      "desc": "Python tabanlı editör ile kendi algoritmik stratejini kolayca oluştur. RSI, MACD gibi indikatörlerle kurallarını tanımla."
+    },
+    "2": {
+      "title": "2. Backtest ile Test Et",
+      "desc": "Stratejini geçmiş veriler üzerinde test et. Sonuçları anında gör ve performansını analiz et."
+    },
+    "3": {
+      "title": "3. Botu Çalıştır",
+      "desc": "Stratejini gerçek zamanlı piyasa verileriyle çalıştır. Sistem senin yerine al-sat işlemlerini gerçekleştirsin."
+    },
+    "4": {
+      "title": "4. Arşivle ve Piyasaya Sun",
+      "desc": "Stratejilerini arşivle, geçmiş performanslarını karşılaştır. İstersen kiraya ver ya da sat."
+    }
+  }
+}

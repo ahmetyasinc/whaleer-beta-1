@@ -1,0 +1,49 @@
+{
+  "labels": {
+    "beta": "Beta",
+    "available": "Aktif",
+    "comingSoon": "Yakında"
+  },
+  "betaBanner": "Whaleer şu anda beta sürecinde. Premium özellikler kademeli olarak açılacaktır.",
+  "hero": {
+    "title": "Premium Üyelik",
+    "desc": "Stratejini Whaleer ile geliştir, test et ve canlıya al. Planını seç, avantajlardan yararlanmaya başla!",
+    "notice": "⚠ Premium özellikler yakında — şu an yalnızca Free plan aktiftir."
+  },
+  "cta": {
+    "getStarted": "Hemen Başla"
+  },
+  "plans": {
+    "clam": {
+      "title": "Midye Plan",
+      "price": "Ücretsiz",
+      "features": [
+        "Sınırsız strateji",
+        "3 bot çalıştırma",
+        "Gerçek zamanlı bot yürütme"
+      ]
+    },
+    "octopus": {
+      "title": "Ahtapot Plan",
+      "price": "Ayda $15",
+      "features": [
+        "Sınırsız strateji",
+        "Gelişmiş tarama özelliği",
+        "10 bot çalıştırma",
+        "Gerçek zamanlı bot yürütme",
+        "Öncelikli destek"
+      ]
+    },
+    "whale": {
+      "title": "Balina Plan",
+      "price": "Ayda $50",
+      "features": [
+        "Sınırsız strateji",
+        "Animasyonlu backtest",
+        "Sınırsız bot çalıştırma",
+        "Gerçek zamanlı bot yürütme",
+        "Öncelikli destek"
+      ]
+    }
+  }
+}

@@ -4,17 +4,18 @@
   "sections": [
     {
       "id": "genel-yapi",
-      "title": "0. Genel Yapı ve Veri Modeli",
+      "title": "1. Genel Yapı ve Veri Modeli",
       "content": "Whaleer, stratejinizi pandas DataFrame (df) üzerinde çalıştırır. Size varsayılan olarak şu sütunlar sağlanır: timestamp, open, high, low, close, volume. Siz, yeni sütunlar üreterek indikatörlerinizi ve strateji kurallarınızı tanımlarsınız. Stratejilerinizin temel çıktıları df['position'], df['percentage'], (opsiyonel) df['take_profit'], df['stop_loss'] sütunlarıdır. Komisyon için ayrı bir değişken (commission) kullanılmalıdır.\n\nTemel kurallar:\n• df['position']: İşlem yönünü ve kaldıraç büyüklüğünü belirler. Örn: 1 = long, -1 = short, 2 = 2x long, -3 = 3x short.\n• df['percentage']: İşlem büyüklüğünü yüzde olarak belirtir (genelde 100).\n• commission: 0 ile 1 arasında olmalıdır (genelde 0.001 = %0.1).\n• take_profit ve stop_loss: Fiyat seviyeleri olarak (yüzde değil) close bazlı belirlenir ve sütun olarak df'ye eklenir.\n\nNotlar:\n• Platform, sayısal kolonları varsayılan olarak Decimal döndürebilir. İsterseniz float64'e dönüştürüp çalışabilirsiniz (örn: df[col] = df[col].astype(float)).\n• Strateji yürütücüsü, her bar için sizin ürettiğiniz position/percentage'a göre işlem simülasyonu yapar.",
       "media": {
-        "images": ["/docs/overview-dataframe.png"],
+        "images": ["/doc/dataframe.png"],
+        "captions": ["DataFrame üzerinde strateji çıktılarının örnek gösterimi."],
         "videos": []
       },
       "sub": [
         {
           "id": "genel-yapi-float-donusumu",
           "title": "Decimal → float Dönüşümü",
-          "content": "Sayısal tüm kolonları float64'e çevirmek için örnek:\n\n```python\nfor col in ['open', 'high', 'low', 'close', 'volume']:\n    if col in df.columns:\n        df[col] = df[col].astype(float)\n```\n\n(Görsel: \"DataFrame sütun türleri\" ekran görüntüsü)"
+          "content": "Sayısal tüm kolonları float64'e çevirmek için örnek:\n\n```python\nfor col in ['open', 'high', 'low', 'close', 'volume']:\n    if col in df.columns:\n        df[col] = df[col].astype(float)\n```\n\n"
         },
         {
           "id": "genel-yapi-zorunlu-sutunlar",
@@ -253,7 +254,7 @@
     {
       "id": "destek",
       "title": "10. Destek",
-      "content": "Sorularınız ve talepleriniz için 7/24 destek sayfasından bize ulaşabilirsiniz. Yol haritanız, strateji incelemeleriniz ve entegrasyon sorularınız için yanınızdayız.\n\n(Görsel: \"Destek bileti oluşturma\" ekran görüntüsü)",
+      "content": "Sorularınız ve talepleriniz için 7/24 destek sayfasından bize ulaşabilirsiniz. Yol haritanız, strateji incelemeleriniz ve entegrasyon sorularınız için yanınızdayız.\n\n",
       "media": {
         "images": ["/docs/support.png"],
         "videos": ["/docs/support-howto.mp4"]

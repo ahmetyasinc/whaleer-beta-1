@@ -1,6 +1,6 @@
-
 import tr from "@/locales/tr/home/pages/document/document.json";
 import en from "@/locales/en/home/pages/document/document.json";
+import ResponsiveGallery from "@/components/home_component/ResponsiveGallery";
 
 export const metadata = {
   title: "Whaleer",
@@ -41,7 +41,7 @@ function parseBlocks(text) {
 }
 
 function IDECodeBlock({ lang, code }) {
-  // Very lightweight IDE-like chrome using Tailwind
+  // IDE-like görünüm – siyah arka plan
   return (
     <div className="mb-6 rounded-xl border border-white/10 overflow-hidden shadow-xl bg-black">
       <div className="flex items-center gap-2 px-4 py-2 bg-neutral-900 border-b border-white/10">
@@ -50,7 +50,7 @@ function IDECodeBlock({ lang, code }) {
         <span className="inline-block w-3 h-3 rounded-full bg-green-500/80"></span>
         <span className="ml-3 text-xs uppercase tracking-wider text-neutral-300">{lang}</span>
       </div>
-      <pre className="m-0 p-4 bg-[#2d2d2d] text-neutral-200 text-sm leading-relaxed overflow-x-auto">
+      <pre className="m-0 p-4 bg-black text-neutral-200 text-sm leading-relaxed overflow-x-auto">
         <code className={`language-${lang}`}>{code}</code>
       </pre>
     </div>
@@ -66,7 +66,9 @@ function RichContent({ text }) {
         b.type === "code" ? (
           <IDECodeBlock key={i} lang={b.lang} code={b.code} />
         ) : (
-          <p key={i} className="text-neutral-300 leading-relaxed whitespace-pre-line mb-6">{b.text}</p>
+          <p key={i} className="text-neutral-300 leading-relaxed whitespace-pre-line mb-6">
+            {b.text}
+          </p>
         )
       )}
     </div>
@@ -137,12 +139,10 @@ export default async function DocsPage(props) {
         </aside>
 
         {/* Content */}
-        <main className="flex-1 p-6 md:p-8 lg:p-12 space-y-10 scroll-smooth max-w-4xl mx-auto">
+        <main className="flex-1 p-6 md:p-8 lg:p-12 space-y-10 scroll-smooth max-w-6xl lg:max-w-7xl mx-auto">
           <header className="mb-4">
             <h1 className="text-3xl font-bold text-white">{dict.title}</h1>
-            {dict.intro && (
-              <p className="text-neutral-300 mt-2">{dict.intro}</p>
-            )}
+            {dict.intro && <p className="text-neutral-300 mt-2">{dict.intro}</p>}
           </header>
 
           {sections.map((section) => (
@@ -156,21 +156,14 @@ export default async function DocsPage(props) {
               {/* Rich content with code-fence support */}
               {section.content && <RichContent text={section.content} />}
 
-              {/* Görseller */}
+              {/* Otomatik yerleşen görseller + lightbox */}
               {section.media?.images?.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                  {section.media.images.map((src, idx) => (
-                    <figure
-                      key={idx}
-                      className="bg-white/5 border border-white/10 rounded-lg p-3"
-                    >
-                      <img
-                        src={src}
-                        alt={`${section.title} image ${idx + 1}`}
-                        className="w-full h-auto rounded"
-                        loading="lazy"
-                      />
-                    </figure>
+                <div className="mb-6">
+                  <ResponsiveGallery images={section.media.images} />
+                  {section.media?.captions?.map((caption, idx) => (
+                    <p key={idx} className="text-sm text-neutral-400 mt-2 text-center">
+                      {caption}
+                    </p>
                   ))}
                 </div>
               )}
@@ -179,10 +172,7 @@ export default async function DocsPage(props) {
               {section.media?.videos?.length > 0 && (
                 <div className="space-y-4 mb-6">
                   {section.media.videos.map((src, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-white/5 border border-white/10 rounded-lg p-3"
-                    >
+                    <div key={idx} className="bg-white/5 border border-white/10 rounded-lg p-3">
                       <video src={src} controls className="w-full rounded" />
                     </div>
                   ))}
@@ -197,13 +187,9 @@ export default async function DocsPage(props) {
                   className="ml-0 mt-8 border-l border-white/10 pl-4 scroll-mt-28"
                   aria-labelledby={`${sub.id}-title`}
                 >
-                  <h3
-                    id={`${sub.id}-title`}
-                    className="text-xl font-semibold mb-2 text-white"
-                  >
+                  <h3 id={`${sub.id}-title`} className="text-xl font-semibold mb-2 text-white">
                     {sub.title}
                   </h3>
-
                   {sub.content && <RichContent text={sub.content} />}
                 </section>
               ))}
@@ -213,10 +199,7 @@ export default async function DocsPage(props) {
       </div>
 
       {/* JSON-LD (SSR olarak HTML'e gömülür) */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
     </section>
   );
 }

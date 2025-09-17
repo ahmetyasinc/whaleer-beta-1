@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="444" viewBox="0 0 1280 444">
+<rect x="0" y="0" width="1280" height="444" fill="#0b0f14"/>
+<text x="20" y="28" fill="#e5e7eb" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto" font-size="18" font-weight="600">DataFrame (strategy inputs & outputs)</text>
+<rect x="20" y="40" width="1120" height="44" rx="10" ry="10" fill="#111827" stroke="#1f2937"/>
+<text x="30" y="68" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="14">timestamp</text>
+<line x1="230" y1="40" x2="230" y2="444" stroke="#1f2937" stroke-width="1"/>
+<text x="240" y="68" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="14">open</text>
+<line x1="320" y1="40" x2="320" y2="444" stroke="#1f2937" stroke-width="1"/>
+<text x="330" y="68" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="14">high</text>
+<line x1="410" y1="40" x2="410" y2="444" stroke="#1f2937" stroke-width="1"/>
+<text x="420" y="68" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="14">low</text>
+<line x1="500" y1="40" x2="500" y2="444" stroke="#1f2937" stroke-width="1"/>
+<text x="510" y="68" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="14">close</text>
+<line x1="590" y1="40" x2="590" y2="444" stroke="#1f2937" stroke-width="1"/>
+<text x="600" y="68" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="14">volume</text>
+<line x1="680" y1="40" x2="680" y2="444" stroke="#1f2937" stroke-width="1"/>
+<text x="690" y="68" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="14">position</text>
+<line x1="780" y1="40" x2="780" y2="444" stroke="#1f2937" stroke-width="1"/>
+<text x="790" y="68" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="14">percentage</text>
+<line x1="900" y1="40" x2="900" y2="444" stroke="#1f2937" stroke-width="1"/>
+<text x="910" y="68" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="14">take_profit</text>
+<line x1="1020" y1="40" x2="1020" y2="444" stroke="#1f2937" stroke-width="1"/>
+<text x="1030" y="68" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="14">stop_loss</text>
+<rect x="20" y="84" width="1120" height="36" fill="#0e141b"/>
+<text x="30" y="108" text-anchor="start" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">2023-10-11 16:00:00</text>
+<text x="310" y="108" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">27000.0</text>
+<text x="400" y="108" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">27030.15</text>
+<text x="490" y="108" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26934.79</text>
+<text x="580" y="108" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26948.82</text>
+<text x="670" y="108" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">309</text>
+<text x="690" y="108" text-anchor="start" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">1</text>
+<text x="890" y="108" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">100</text>
+<text x="1010" y="108" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">27487.8</text>
+<text x="1130" y="108" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26409.84</text>
+<rect x="20" y="120" width="1120" height="36" fill="#0b0f14"/>
+<text x="30" y="144" text-anchor="start" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">2023-10-11 16:01:00</text>
+<text x="310" y="144" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26948.82</text>
+<text x="400" y="144" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">27001.75</text>
+<text x="490" y="144" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26926.31</text>
+<text x="580" y="144" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26967.76</text>
+<text x="670" y="144" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">151</text>
+<text x="690" y="144" text-anchor="start" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">0</text>
+<text x="890" y="144" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">0</text>
+<text x="1010" y="144" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13"></text>
+<text x="1130" y="144" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13"></text>
+<rect x="20" y="156" width="1120" height="36" fill="#0e141b"/>
+<text x="30" y="180" text-anchor="start" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">2023-10-11 16:02:00</text>
+<text x="310" y="180" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26967.76</text>
+<text x="400" y="180" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">27004.54</text>
+<text x="490" y="180" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26870.76</text>
+<text x="580" y="180" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26889.37</text>
+<text x="670" y="180" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">320</text>
+<text x="690" y="180" text-anchor="start" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">2</text>
+<text x="890" y="180" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">100</text>
+<text x="1010" y="180" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">27696.05</text>
+<text x="1130" y="180" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26486.03</text>
+<rect x="20" y="192" width="1120" height="36" fill="#0b0f14"/>
+<text x="30" y="216" text-anchor="start" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">2023-10-11 16:03:00</text>
+<text x="310" y="216" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26889.37</text>
+<text x="400" y="216" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26967.88</text>
+<text x="490" y="216" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26877.63</text>
+<text x="580" y="216" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26944.86</text>
+<text x="670" y="216" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">228</text>
+<text x="690" y="216" text-anchor="start" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">-1</text>
+<text x="890" y="216" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">100</text>
+<text x="1010" y="216" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26405.96</text>
+<text x="1130" y="216" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">27483.76</text>
+<rect x="20" y="228" width="1120" height="36" fill="#0e141b"/>
+<text x="30" y="252" text-anchor="start" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">2023-10-11 16:04:00</text>
+<text x="310" y="252" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26944.86</text>
+<text x="400" y="252" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26977.94</text>
+<text x="490" y="252" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26884.86</text>
+<text x="580" y="252" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26916.53</text>
+<text x="670" y="252" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">279</text>
+<text x="690" y="252" text-anchor="start" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">-2</text>
+<text x="890" y="252" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">100</text>
+<text x="1010" y="252" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26109.03</text>
+<text x="1130" y="252" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">27320.28</text>
+<rect x="20" y="264" width="1120" height="36" fill="#0b0f14"/>
+<text x="30" y="288" text-anchor="start" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">2023-10-11 16:05:00</text>
+<text x="310" y="288" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26916.53</text>
+<text x="400" y="288" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26945.19</text>
+<text x="490" y="288" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26866.59</text>
+<text x="580" y="288" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26881.37</text>
+<text x="670" y="288" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">379</text>
+<text x="690" y="288" text-anchor="start" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">1</text>
+<text x="890" y="288" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">50</text>
+<text x="1010" y="288" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">27284.59</text>
+<text x="1130" y="288" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26612.56</text>
+<rect x="20" y="300" width="1120" height="36" fill="#0e141b"/>
+<text x="30" y="324" text-anchor="start" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">2023-10-11 16:06:00</text>
+<text x="310" y="324" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26881.37</text>
+<text x="400" y="324" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26899.78</text>
+<text x="490" y="324" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26856.84</text>
+<text x="580" y="324" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26871.3</text>
+<text x="670" y="324" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">157</text>
+<text x="690" y="324" text-anchor="start" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">0</text>
+<text x="890" y="324" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">0</text>
+<text x="1010" y="324" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13"></text>
+<text x="1130" y="324" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13"></text>
+<rect x="20" y="336" width="1120" height="36" fill="#0b0f14"/>
+<text x="30" y="360" text-anchor="start" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">2023-10-11 16:07:00</text>
+<text x="310" y="360" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26871.3</text>
+<text x="400" y="360" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26917.06</text>
+<text x="490" y="360" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26856.74</text>
+<text x="580" y="360" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26902.21</text>
+<text x="670" y="360" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">396</text>
+<text x="690" y="360" text-anchor="start" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">-1</text>
+<text x="890" y="360" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">25</text>
+<text x="1010" y="360" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26633.19</text>
+<text x="1130" y="360" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">27171.23</text>
+<rect x="20" y="372" width="1120" height="36" fill="#0e141b"/>
+<text x="30" y="396" text-anchor="start" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">2023-10-11 16:08:00</text>
+<text x="310" y="396" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26902.21</text>
+<text x="400" y="396" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26938.42</text>
+<text x="490" y="396" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26883.45</text>
+<text x="580" y="396" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26894.34</text>
+<text x="670" y="396" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">134</text>
+<text x="690" y="396" text-anchor="start" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">3</text>
+<text x="890" y="396" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">100</text>
+<text x="1010" y="396" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">28239.06</text>
+<text x="1130" y="396" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26356.45</text>
+<rect x="20" y="408" width="1120" height="36" fill="#0b0f14"/>
+<text x="30" y="432" text-anchor="start" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">2023-10-11 16:09:00</text>
+<text x="310" y="432" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26894.34</text>
+<text x="400" y="432" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26912.8</text>
+<text x="490" y="432" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26833.59</text>
+<text x="580" y="432" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">26869.66</text>
+<text x="670" y="432" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">386</text>
+<text x="690" y="432" text-anchor="start" fill="#e5e7eb" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">-3</text>
+<text x="890" y="432" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">75</text>
+<text x="1010" y="432" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">25526.18</text>
+<text x="1130" y="432" text-anchor="end" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="13">27407.05</text>
+</svg>

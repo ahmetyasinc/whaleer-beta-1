@@ -218,7 +218,11 @@ async def follow_bot(follow_data: FollowCreate, db: Session = Depends(get_db), u
     user_id = int(user_data)
 
     # 1. Bot var mı?
-    result = await db.execute(select(Bots).where(Bots.id == follow_data.bot_id),Bots.deleted.is_(False))
+    stmt = select(Bots).where(
+        Bots.id == follow_data.bot_id,
+        Bots.deleted.is_(False)
+    )
+    result = await db.execute(stmt)
     bot = result.scalar_one_or_none()
     if not bot:
         raise HTTPException(status_code=404, detail="Bot not found")
@@ -256,7 +260,11 @@ async def unfollow_bot(
     user_id = int(user_data)
 
     # 1. Bot var mı?
-    result = await db.execute(select(Bots).where(Bots.id == follow_data.bot_id),Bots.deleted.is_(False))
+    stmt = select(Bots).where(
+        Bots.id == follow_data.bot_id,
+        Bots.deleted.is_(False)
+    )
+    result = await db.execute(stmt)
     bot = result.scalar_one_or_none()
     if not bot:
         raise HTTPException(status_code=404, detail="Bot not found")

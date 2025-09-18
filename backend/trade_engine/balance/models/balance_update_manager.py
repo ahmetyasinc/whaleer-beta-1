@@ -6,7 +6,8 @@ import argparse
 from typing import List, Dict, Optional, Any
 
 # 3. parti kütüphaneler
-from binance import AsyncClient, BinanceAPIException
+from binance import AsyncClient
+from binance.exceptions import BinanceAPIException
 
 # Yerel import: Bağlantı havuzunu başlatan ve bağlantı kiralayan fonksiyonlar config.py'den alınır.
 from backend.trade_engine.config import get_async_pool, get_async_connection

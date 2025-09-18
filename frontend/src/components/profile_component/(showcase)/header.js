@@ -30,8 +30,8 @@ export default function Header() {
   const isFeatured = pathname?.includes("/profile/showcase/featured");
   
   const navItems = [
-    { name: t("nav.explore"), href: "/profile/showcase" },
-    { name: t("nav.featured"), href: "/profile/showcase/featured" }
+    //{ name: t("nav.explore"), href: "/profile/showcase" },
+    //{ name: t("nav.featured"), href: "/profile/showcase/featured" }
   ];
 
   const viewMode = useBotDataStore(s => s.viewMode);

@@ -4,8 +4,7 @@
     "addNew": "Add New API"
   },
   "steps": {
-    "step1": "Step 1/2 — Verify with ED Key (direct to Binance)",
-    "step2": "Step 2/2 — Verify HMAC Keys (direct to Binance)"
+    "step2": "Verify HMAC Keys (direct to Binance)"
   },
   "fields": {
     "apiName": "API Name",

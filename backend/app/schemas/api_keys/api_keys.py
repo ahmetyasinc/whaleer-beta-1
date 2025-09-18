@@ -29,8 +29,8 @@ class APIKeyCreate(BaseModel):
     ed_private_pem: Optional[str] = None
 
     # Balances
-    spot_usdt_balance: Optional[float] = Field(default=0)
-    futures_usdt_balance: Optional[float] = Field(default=0)
+    spot_balance: Optional[float] = Field(default=0)
+    futures_balance: Optional[float] = Field(default=0)
 
 class APIKeyOut(BaseModel):
     id: int

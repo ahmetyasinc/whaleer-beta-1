@@ -1,0 +1,48 @@
+{
+  "labels": {
+    "beta": "Beta",
+    "available": "Available",
+    "comingSoon": "Coming Soon"
+  },
+  "betaBanner": "Whaleer is currently in beta. Premium features will roll out gradually.",
+  "hero": {
+    "title": "Premium Membership",
+    "desc": "Improve, test, and deploy your strategy with Whaleer. Choose your plan now and enjoy the benefits!",
+    "notice": "⚠ Premium features are coming soon — only the Free plan is active right now."
+  },
+  "cta": {
+    "getStarted": "Get Started"
+  },
+  "plans": {
+    "clam": {
+      "title": "Clam Plan",
+      "price": "Free",
+      "features": [
+        "Create 1 bot",
+        "Real-time bot execution",
+        "Unlimited strategies"
+      ]
+    },
+    "octopus": {
+      "title": "Octopus Plan",
+      "price": "$5/month",
+      "features": [
+        "Unlimited strategies",
+        "Advanced scanner",
+        "Advanced backtest",
+        "Real-time bot execution",
+        "Priority support"
+      ]
+    },
+    "whale": {
+      "title": "Whale Plan",
+      "price": "$10/month",
+      "features": [
+        "API access",
+        "Team account",
+        "Dedicated infrastructure",
+        "24/7 support"
+      ]
+    }
+  }
+}

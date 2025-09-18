@@ -126,6 +126,22 @@ export default function ChartComponent() {
   const chartRef = useRef(null);
   const priceSeriesRef = useRef(null);
 
+  // dispose korumaları
+  const isMountedRef = useRef(false);
+  const chartInstanceIdRef = useRef(0); // her chart yaratımında artar
+  const rafRef = useRef(null);          // tekil RAF id
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, []);
+
   const [chartData, setChartData] = useState([]);
   const handleLogout = useLogout();
   const { isMagnetMode } = useMagnetStore();
@@ -151,7 +167,6 @@ export default function ChartComponent() {
   const chartId = "main-chart";
   const isApplyingRef = useRef(false);
   const lastSeqAppliedRef = useRef(0);
-  let rafHandle = null;
 
   const openIndicatorSettings = (indicatorId, subId) => { setActiveIndicatorId(indicatorId); setActiveSubIndicatorId(subId); setSettingsIndicatorModalOpen(true); };
   const openStrategySettings = (strategyId, subId) => { setActiveStrategyId(strategyId); setActiveSubStrategyId(subId); setSettingsStrategyModalOpen(true); };
@@ -297,7 +312,13 @@ export default function ChartComponent() {
   useEffect(() => {
     if (chartData.length === 0 || !chartContainerRef.current) return;
 
-    try { chartRef.current?.remove?.(); chartRef.current = null; } catch {}
+    // önceki chart'ı ve series'i bırak
+    try { chartRef.current?.remove?.(); } catch {}
+    chartRef.current = null;
+    priceSeriesRef.current = null;
+
+    // bu yaratım için benzersiz kimlik
+    const myInstanceId = ++chartInstanceIdRef.current;
 
     const fmt = makeZonedFormatter(selectedPeriod, tzOffsetMin);
 
@@ -441,40 +462,91 @@ export default function ChartComponent() {
 
     // Range sync
     timeScale.subscribeVisibleTimeRangeChange(() => {
-      if (isApplyingRef.current) return; if (!isLeader(chartId)) return; const logical = timeScale.getVisibleLogicalRange(); if (!logical) return;
-      let { from, to } = logical; const minBars = minBarsFor(selectedPeriod);
-      if (to - from < minBars) { const c = (from + to) / 2; from = c - minBars / 2; to = c + minBars / 2; isApplyingRef.current = true; timeScale.setVisibleLogicalRange({ from, to }); requestAnimationFrame(() => { isApplyingRef.current = false; }); }
+      if (!isMountedRef.current || chartInstanceIdRef.current !== myInstanceId) return;
+      if (isApplyingRef.current) return;
+      if (!isLeader(chartId)) return;
+    
+      const logical = timeScale.getVisibleLogicalRange();
+      if (!logical) return;
+      let { from, to } = logical;
+      const minBars = minBarsFor(selectedPeriod);
+    
+      if (to - from < minBars) {
+        const c = (from + to) / 2;
+        from = c - minBars / 2;
+        to = c + minBars / 2;
+        isApplyingRef.current = true;
+        timeScale.setVisibleLogicalRange({ from, to });
+        requestAnimationFrame(() => { isApplyingRef.current = false; });
+      }
+    
       const rightOffset = timeScale.getRightOffset ? timeScale.getRightOffset() : FUTURE_PADDING_BARS;
-      if (rafHandle) cancelAnimationFrame(rafHandle); const seq = nextSeq();
+    
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      const seq = nextSeq();
       setLastRangeCache({ from, to, rightOffset, sourceId: chartId });
-      rafHandle = requestAnimationFrame(() => { window.dispatchEvent(new CustomEvent(RANGE_EVENT, { detail: { from, to, rightOffset, sourceId: chartId, seq } })); });
+      rafRef.current = requestAnimationFrame(() => {
+        if (!isMountedRef.current || chartInstanceIdRef.current !== myInstanceId) return;
+        window.dispatchEvent(new CustomEvent(RANGE_EVENT, { detail: { from, to, rightOffset, sourceId: chartId, seq } }));
+      });
     });
 
+
     const onRangeEvent = (e) => {
-      const { from, to, rightOffset, sourceId, seq } = (e && e.detail) || {}; if (sourceId === chartId) return; if (seq && seq <= lastSeqAppliedRef.current) return; lastSeqAppliedRef.current = seq;
-      isApplyingRef.current = true; if (rightOffset != null) timeScale.applyOptions({ rightOffset }); timeScale.setVisibleLogicalRange({ from, to }); requestAnimationFrame(() => { isApplyingRef.current = false; });
+      if (!isMountedRef.current || chartInstanceIdRef.current !== myInstanceId) return;
+      const { from, to, rightOffset, sourceId, seq } = (e && e.detail) || {};
+      if (sourceId === chartId) return;
+      if (seq && seq <= lastSeqAppliedRef.current) return;
+
+      lastSeqAppliedRef.current = seq;
+      isApplyingRef.current = true;
+      if (rightOffset != null) timeScale.applyOptions({ rightOffset });
+      timeScale.setVisibleLogicalRange({ from, to });
+      requestAnimationFrame(() => { isApplyingRef.current = false; });
     };
+
     window.addEventListener(RANGE_EVENT, onRangeEvent);
 
-    const onRangeRequest = () => { const payload = getLastRangeCache(); if (!payload) return; const seq = nextSeq(); window.dispatchEvent(new CustomEvent(RANGE_EVENT, { detail: { ...payload, seq } })); };
+    const onRangeRequest = () => {
+      if (!isMountedRef.current || chartInstanceIdRef.current !== myInstanceId) return;
+      const payload = getLastRangeCache();
+      if (!payload) return;
+      const seq = nextSeq();
+      window.dispatchEvent(new CustomEvent(RANGE_EVENT, { detail: { ...payload, seq } }));
+    };
     window.addEventListener(RANGE_REQUEST_EVENT, onRangeRequest);
 
     const resizeObserver = new ResizeObserver(() => {
-      if (chartContainerRef.current) {
-        chart.applyOptions({ width: chartContainerRef.current.clientWidth, height: chartContainerRef.current.clientHeight });
-      }
+      if (!isMountedRef.current || chartInstanceIdRef.current !== myInstanceId) return;
+      if (!chartContainerRef.current) return;
+      chart.applyOptions({
+        width: chartContainerRef.current.clientWidth,
+        height: chartContainerRef.current.clientHeight,
+      });
     });
     resizeObserver.observe(chartContainerRef.current);
 
     // cleanup
     return () => {
+      // bekleyen RAF varsa iptal
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    
       resizeObserver.disconnect();
       window.removeEventListener(RANGE_EVENT, onRangeEvent);
       window.removeEventListener(RANGE_REQUEST_EVENT, onRangeRequest);
+    
+      // helper'ların cleanup'ı
+      cleanupFns.forEach(fn => { try { fn?.(); } catch {} });
+    
+      // en sonda chart'ı güvenle sök
       try { chartRef.current?.remove?.(); } catch {}
-      cleanupFns.forEach(fn => { try { fn(); } catch {} });
+      chartRef.current = null;
+      priceSeriesRef.current = null;
     };
-  }, [chartData, indicatorData, strategyData, selectedPeriod]);
+  }, [chartData, indicatorData, strategyData, selectedPeriod, settings]);
 
   // Crosshair mode live change
   useEffect(() => { if (chartRef.current) { chartRef.current.applyOptions({ crosshair: { mode: isMagnetMode ? CrosshairMode.Magnet : CrosshairMode.Normal } }); } }, [isMagnetMode]);

@@ -31,14 +31,22 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [candleCount, setCandleCount] = useState(0);
 
+  // NEW: Mevcut sinyalde hemen girilsin mi?
+  const [enterOnCurrentSignal, setEnterOnCurrentSignal] = useState(false);
+
   const apiList = useApiStore((state) => state.apiList);
 
   // --- Acquisition lock kontrolü ---
   const isEdit = mode === 'edit' && !!bot;
   const acquisitionType = (bot?.acquisition_type || '').toUpperCase();
-  const isAcquiredLocked = isEdit && (acquisitionType === 'PURCHASED' || acquisitionType === 'RENTED');
+  const isAcquiredLocked =
+    isEdit && (acquisitionType === 'PURCHASED' || acquisitionType === 'RENTED');
 
+  // Strateji alanı kilidi (edit veya satın/kirala)
   const isStrategyLocked = isEdit || isAcquiredLocked;
+
+  // Statik alan kilidi (Mum Sayısı ve enterOnCurrentSignal)
+  const isLockedStatic = isEdit || isAcquiredLocked;
 
   const displayStrategyName = bot?.strategy || selectedStrategy?.name || '';
 
@@ -70,7 +78,7 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
     if (isEdit) {
       setBotName(bot.name || '');
       setApi(bot.api || '');
-      // Strateji adı satın alanda gösterilmeyecek → UI'da boş kalsın
+      // Strateji adı satın alınan/kiralanan bottaysa gizli → UI'da boş
       setStrategy(isAcquiredLocked ? '' : (bot.strategy || ''));
       setPeriod(bot.period || '');
       setIsActive(bot.isActive ?? true);
@@ -79,6 +87,12 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
       setEndTime(bot.endTime || '');
       setCryptoList(bot.cryptos || []);
       setCandleCount(bot.candleCount || 0);
+
+      // NEW: edit ilk değeri (camelCase/snake_case her ikisini de destekle)
+      setEnterOnCurrentSignal(
+        bot.enterOnCurrentSignal ?? bot.enter_on_current_signal ?? false
+      );
+
       setAllocatedAmount(
         bot.initial_usd_value != null ? bot.initial_usd_value : (bot.balance || 0)
       );
@@ -131,13 +145,15 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
 
     if (!botName.trim()) errors.push(t('errors.nameRequired'));
     if (!api) errors.push(t('errors.apiRequired'));
-    // Strateji seçme zorunluluğu sadece kilitli olmayanlarda
-    if (!isAcquiredLocked) {
-      if (!selectedStrategy || !selectedStrategy.name) errors.push(t('errors.strategyRequired'));
+
+    // Strateji sadece CREATE modunda istenir (edit'te zorunlu değil)
+    const shouldRequireStrategy = mode !== 'edit' && !isAcquiredLocked;
+    if (shouldRequireStrategy) {
+      if (!selectedStrategy || !selectedStrategy.name) {
+        errors.push(t('errors.strategyRequired'));
+      }
     }
-    if (!isStrategyLocked) {
-      if (!selectedStrategy || !selectedStrategy.name) errors.push(t('errors.strategyRequired'));
-    }
+
     if (!period) errors.push(t('errors.periodRequired'));
     if (!candleCount || candleCount <= 0) errors.push(t('errors.candleInvalid'));
     if (days.length === 0) errors.push(t('errors.dayRequired'));
@@ -179,6 +195,7 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
       initial_usd_value: Number(allocatedAmount),
       balance: Number(balance),
       type, // spot | futures
+      enterOnCurrentSignal,
     };
 
     if (mode === 'edit') {
@@ -253,21 +270,21 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
             <div>
               <label className="block mb-1 text-gray-300">{t('labels.strategy')}</label>
               {!isStrategyLocked ? (
-                  // Oluşturma modunda veya tamamen serbestse: buton aktif
-                  <StrategyButton onSelect={(selected) => setStrategy(selected)} />
-                ) : isAcquiredLocked ? (
-                  // Satın alınan/kiralanan bottaysa: strateji gizli
-                  <div className="w-full p-2 bg-gray-800 text-gray-300 rounded flex items-center gap-2">
-                    <FiLock className="shrink-0" />
-                    <span className="text-sm">{t('labels.hidden')}</span>
-                  </div>
-                ) : (
-                  // Edit modunda (normal bot): strateji adı kilitli/readonly göster
-                  <div className="w-full p-2 bg-gray-800 text-gray-300 rounded flex items-center gap-2 opacity-70 cursor-not-allowed">
-                    <FiLock className="shrink-0" />
-                    <span className="text-sm">{displayStrategyName || t('labels.hidden')}</span>
-                  </div>
-                )}
+                // Oluşturma modunda veya tamamen serbestse: buton aktif
+                <StrategyButton onSelect={(selected) => setStrategy(selected)} />
+              ) : isAcquiredLocked ? (
+                // Satın alınan/kiralanan bottaysa: strateji gizli
+                <div className="w-full p-2 bg-gray-800 text-gray-300 rounded flex items-center gap-2">
+                  <FiLock className="shrink-0" />
+                  <span className="text-sm">{t('labels.hidden')}</span>
+                </div>
+              ) : (
+                // Edit modunda (normal bot): strateji adı kilitli/readonly göster
+                <div className="w-full p-2 bg-gray-800 text-gray-300 rounded flex items-center gap-2 opacity-70 cursor-not-allowed">
+                  <FiLock className="shrink-0" />
+                  <span className="text-sm">{displayStrategyName || t('labels.hidden')}</span>
+                </div>
+              )}
             </div>
 
             <div>
@@ -298,11 +315,32 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
                 type="number"
                 min="1"
                 placeholder={t('labels.candleCountPlaceholder')}
-                className={`w-full p-2 bg-gray-800 text-white rounded ${isAcquiredLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
+                className={`w-full p-2 bg-gray-800 text-white rounded ${isLockedStatic ? 'opacity-60 cursor-not-allowed' : ''}`}
                 value={candleCount}
                 onChange={(e) => setCandleCount(Number(e.target.value))}
-                disabled={isAcquiredLocked}
+                disabled={isLockedStatic}
               />
+            </div>
+          </div>
+
+          {/* NEW: Mevcut sinyalde hemen gir */}
+          <div className="mb-4">
+            <label className="block mb-2 text-gray-200 font-medium">
+              {t('labels.enterOnCurrentSignalTitle')}
+            </label>
+            <div
+              className={`flex items-center gap-3 p-3 rounded bg-gray-800 border border-gray-700 ${isLockedStatic ? 'opacity-60 cursor-not-allowed' : ''}`}
+            >
+              <input
+                type="checkbox"
+                className="accent-blue-500 h-4 w-4"
+                checked={enterOnCurrentSignal}
+                onChange={(e) => setEnterOnCurrentSignal(e.target.checked)}
+                disabled={isLockedStatic}
+              />
+              <div className="text-sm text-gray-300">
+                {t('labels.enterOnCurrentSignalDesc')}
+              </div>
             </div>
           </div>
 

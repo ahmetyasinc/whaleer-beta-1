@@ -1,0 +1,9 @@
+{
+  "title": "About Whaleer",
+  "p1": "is an innovative web-based platform that enables users to design, test, and commercialize their own trading algorithms—regardless of their technical background. Our mission is to democratize algorithmic trading by making it accessible, efficient, and user-friendly for everyone, from complete beginners to advanced developers and professional traders.",
+  "p2": "At the core of Whaleer lies a powerful yet intuitive interface. Beginners can build trading strategies through simple configuration panels, while more experienced users can write and fine-tune their own algorithmic scripts with advanced customization options. By catering to all skill levels, Whaleer fosters a collaborative ecosystem where users can learn, experiment, and grow together.",
+  "p3": "Beyond algorithm creation, Whaleer features a dynamic marketplace where strategies can be shared, sold, or leased to other users. This opens up a new revenue stream for creators while providing investors access to diverse, ready-to-use strategies. Our platform encourages innovation and knowledge-sharing, creating a space where algorithm developers and algorithm consumers can interact and benefit from one another.",
+  "p4": "Our lightweight vector-based processing engine allows us to extend the limits of free-tier usage while maintaining high performance. Whaleer also offers premium features such as advanced analytics, backtesting tools, and increased strategy limits for users seeking enhanced capabilities.",
+  "p5": "Whaleer is not just a platform—it’s a movement toward more transparent, collaborative, and empowered trading for all.",
+  "imageAlt": "Whaleer logo"
+}

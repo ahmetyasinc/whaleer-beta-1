@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Ayarlar",
+  title: "Settings",
   description: "Kullanıcı ayarlarını yönetme sayfası.",
 };
 

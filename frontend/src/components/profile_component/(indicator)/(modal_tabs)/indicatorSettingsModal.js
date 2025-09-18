@@ -2,8 +2,10 @@ import ReactDOM from 'react-dom';
 import React, { useState, useEffect, useMemo } from 'react';
 import { IoClose } from 'react-icons/io5';
 import useIndicatorDataStore from '@/store/indicator/indicatorDataStore';
+import { useTranslation } from "react-i18next";
 
 const IndicatorSettingsModal = ({ isOpen, onClose, indicatorId, subId }) => {
+  const { t } = useTranslation("apiContent");
   const { indicatorData, updateInputs } = useIndicatorDataStore();
   const [formState, setFormState] = useState({});
 
@@ -49,7 +51,7 @@ const IndicatorSettingsModal = ({ isOpen, onClose, indicatorId, subId }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center overflow-y-auto">
       <div className="bg-[#1e1e1e] text-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Ayarlar</h2>
+          <h2 className="text-lg font-semibold">{t("settings")}</h2>
           <button onClick={onClose}>
             <IoClose className="text-2xl hover:text-red-500" />
           </button>
@@ -115,7 +117,7 @@ const IndicatorSettingsModal = ({ isOpen, onClose, indicatorId, subId }) => {
           onClick={handleSave}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
         >
-          Kaydet
+          {t("save")}
         </button>
       </div>
     </div>,

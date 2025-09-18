@@ -103,14 +103,14 @@ export default function About() {
           <div className="relative" data-aos="fade-up" data-aos-delay="300">
             <div className="relative" data-aos="zoom-out" data-aos-delay="400">
               <img
-                src="/img/bluewhale1.jpg"
+                src="/img/image2.png" //src="/img/bluewhale1.jpg"
                 alt="bluewhale"
                 className="w-full rounded-2xl object-cover border border-gray-700 shadow-lg"
               />
               <img
-                src="/img/img1.jpeg"
+                src="/img/image3.png" //src="/img/img1.jpeg"
                 alt="tablet-image"
-                className="absolute -bottom-6 -right-6 w-40 rounded-xl border border-gray-700 shadow-xl sm:w-48 md:w-56"
+                className="absolute -bottom-16 -right-8 w-40 rounded-xl border border-gray-700 shadow-xl sm:w-48 md:w-56"
               />
             </div>
           </div>

@@ -1,6 +1,9 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from backend.trade_engine.config import DB_CONFIG
+from datetime import datetime, timezone
+
+DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 def _ensure_rent_expiry_closed_defaults(conn):
     """
@@ -29,14 +32,14 @@ def load_active_bots(interval):
       - active = TRUE
       - period = interval
       - deleted != TRUE
-      - acquisition_type = 'RENTED' ise rent_expires_at > NOW() olmalı (aksi halde hariç)
-
-    NOT: rent_expires_at timestamptz ise NOW() ile kıyas doğru çalışır.
+      - acquisition_type = 'RENTED' ise rent_expires_at > NOW()
+      - (YENİ) Şu an UTC'ye göre active_days ve active_hours penceresi içindeyse
     """
     sql = """
         SELECT
             id, user_id, strategy_id, api_id, period, stocks, active, candle_count, enter_on_start,
-            acquisition_type, rent_expires_at
+            acquisition_type, rent_expires_at,
+            active_days, active_hours
         FROM bots
         WHERE active = TRUE
           AND period = %s
@@ -48,7 +51,7 @@ def load_active_bots(interval):
     """
 
     def _parse_stocks(val):
-        # PostgreSQL text[] ise zaten list olarak gelebilir; string ise {} biçiminden ayıkla
+        # PostgreSQL text[] -> psycopg2 zaten list döndürebilir; string gelirse {} içinden ayıkla
         if isinstance(val, list):
             return val
         if isinstance(val, str):
@@ -59,9 +62,80 @@ def load_active_bots(interval):
             return [p for p in parts if p]
         return []
 
+    def _now_utc_minutes():
+        now = datetime.now(timezone.utc)
+        return now, now.hour * 60 + now.minute  # 0..1439
+
+    def _parse_time_to_minutes(hhmm):
+        # "24:00" desteği (günü sonlandırmak için) -> 1440 dakikaya eşitle
+        hh, mm = hhmm.split(":")
+        h, m = int(hh), int(mm)
+        if h == 24 and m == 0:
+            return 1440
+        return h * 60 + m
+
+    def _parse_hours_ranges(s):
+        """
+        "09:00-12:00,13:30-18:00" -> [(540,720), (810,1080)]
+        Boş/None -> tam gün [(0, 1440)]
+        """
+        if not s or not str(s).strip():
+            return [(0, 1440)]
+        ranges = []
+        for part in str(s).split(","):
+            part = part.strip()
+            if not part:
+                continue
+            if "-" not in part:
+                # tek saat verilmişse (örn "15:00") => o dakikadan itibaren 1 dk
+                start = _parse_time_to_minutes(part)
+                end = min(start + 1, 1440)
+            else:
+                a, b = part.split("-", 1)
+                start = _parse_time_to_minutes(a.strip())
+                end = _parse_time_to_minutes(b.strip())
+            # normalize aralık
+            start = max(0, min(start, 1440))
+            end = max(0, min(end, 1440))
+            ranges.append((start, end))
+        return ranges or [(0, 1440)]
+
+    def _is_within_hours(ranges, minute_of_day):
+        """
+        Gece aşımı destekli.
+        (start <= end): start <= t < end
+        (start > end): t >= start veya t < end   (örn. 22:00-02:00)
+        """
+        for start, end in ranges:
+            if start == end:
+                continue  # boş aralık
+            if start < end:
+                if start <= minute_of_day < end:
+                    return True
+            else:
+                # wrap midnight
+                if minute_of_day >= start or minute_of_day < end:
+                    return True
+        return False
+
+    def _is_within_schedule(active_days, active_hours, now_dt_utc, minute_of_day):
+        # Gün kontrolü (Mon..Sun). Eğer active_days boş/None ise gün kısıtı yok say.
+        day_ok = True
+        if active_days:
+            # psycopg2 text[] -> list gelebilir, aksi halde brace-string olabilir
+            days = active_days if isinstance(active_days, list) else _parse_stocks(active_days)
+            today = DAY_NAMES[now_dt_utc.weekday()]  # 0=Mon
+            day_ok = today in set(days)
+
+        # Saat kontrolü
+        ranges = _parse_hours_ranges(active_hours)
+        time_ok = _is_within_hours(ranges, minute_of_day)
+
+        return day_ok and time_ok
+
     try:
         with psycopg2.connect(**DB_CONFIG) as conn:
-            # 1) Aktif botları çek
+            # 1) Çek
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                 cursor.execute(sql, (interval,))
                 bots = cursor.fetchall() or []
@@ -71,11 +145,20 @@ def load_active_bots(interval):
             if updated_ids:
                 print(f"rent_expiry_closed = FALSE yapılan botlar: {updated_ids}")
 
-        # 3) stocks alanını normalize et
+        # 3) Zaman penceresine göre filtrele (UTC)
+        now_dt_utc, minute_of_day = _now_utc_minutes()
+        filtered = []
         for bot in bots:
             bot["stocks"] = _parse_stocks(bot.get("stocks"))
+            if _is_within_schedule(
+                bot.get("active_days"),
+                bot.get("active_hours"),
+                now_dt_utc,
+                minute_of_day,
+            ):
+                filtered.append(bot)
 
-        return bots
+        return filtered
 
     except Exception as e:
         print(f"Veritabanı hatası: {e}")

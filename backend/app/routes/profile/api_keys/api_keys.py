@@ -157,8 +157,8 @@ async def create_api_key(
         ed_public=api_key.ed_public,
         ed_public_pem=api_key.ed_public_pem,
         ed_private_pem=api_key.ed_private_pem,
-        spot_balance=api_key.spot_balance or 0,
-        futures_balance=api_key.futures_balance or 0,
+        spot_usdt_balance=api_key.spot_balance or 0,
+        futures_usdt_balance=api_key.futures_balance or 0,
         user_id=int(user_id),
         # default, is_test_api → default değerlerinden gelir
     )

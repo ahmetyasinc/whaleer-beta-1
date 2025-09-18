@@ -4,7 +4,7 @@
     "title": "Strateji oluşturma",
     "heading": "Strateji Oluşturma",
     "description": "İstediğiniz indikatörü kullanabilir, trend takibi yapabilir ve ya fiyat aksiyon kullanarak stratejinizin algoritmasını hazırlayın.",
-    "image": "/img/str_img.jpeg",
+    "image": "/img/image4.png",
     "bullets": [
       "Alım Satım bölgelerini saptayan bir algoritma oluşturun ve koda dökün.",
       "Opsiyonel indikatör ayarını kullanarak backtest de en karlı değerleri saptayın.",
@@ -16,7 +16,7 @@
     "title": "Alım Satım Botları",
     "heading": "Otomatik Alım Satım Botları",
     "description": "Stratejilerinizi robotlara bağlayarak otomatik hale getirin ve varlıklarınızın takibini yapmadan trade edin.",
-    "image": "/img/bt-img.jpeg",
+    "image": "/img/image5.png",
     "bullets": [
       "Kendi alım satım stratejinizi oluşturun.",
       "Strateji oluşturma sayfasından stratejinizi koda dökün.",

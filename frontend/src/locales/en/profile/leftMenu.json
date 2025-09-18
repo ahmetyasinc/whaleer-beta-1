@@ -7,8 +7,11 @@
   "bots": "My Bots",
   "showcase": "Showcase",
   "apiconnect": "API Connection",
+  "settings": "Settings",
+  "support": "Support",
   "logout": "Logout",
   "logoutConfirm": "Are you sure you want to log out?",
   "no": "No",
   "loading": "Loading user information..."
 }
+

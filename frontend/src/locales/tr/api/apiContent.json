@@ -29,5 +29,8 @@
   },
   "errors": {
     "saveFailed": "API anahtarı kaydedilemedi."
-  }
+  },
+  "save": "Kaydet",
+  "saved": "Anahtar kaydedildi ✅",
+  "settings": "Ayarlar"  
 }

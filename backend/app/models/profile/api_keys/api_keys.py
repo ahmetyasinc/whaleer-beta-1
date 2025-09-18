@@ -23,10 +23,13 @@ class APIKey(Base):
 
     user_id = Column(Integer, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
-
+    is_active = Column(Boolean, default=False)
     # Bakiye alanları → numeric(18,8)
     spot_balance = Column(Numeric(18, 8), nullable=False, default=0)
     futures_balance = Column(Numeric(18, 8), nullable=False, default=0)
+
+    spot_usdt_balance = Column(Numeric(18, 8), nullable=False, default=0)
+    futures_usdt_balance = Column(Numeric(18, 8), nullable=False, default=0)
 
     default = Column(Boolean, default=False)
     is_test_api = Column(Boolean, default=False)

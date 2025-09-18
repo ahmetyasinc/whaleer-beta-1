@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { ImKey } from "react-icons/im";
 import { motion, useAnimation } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 const ApiKeyInput = () => {
+  const { t } = useTranslation("apiContent");
   const [apiKey, setApiKey] = useState("");
   const [isSaved, setIsSaved] = useState(false);
   const [isAnimationFinished, setIsAnimationFinished] = useState(false);
@@ -91,11 +93,11 @@ const ApiKeyInput = () => {
           onClick={handleSave}
           className="px-4 py-2 bg-blue-500 text-white rounded-md"
         >
-          Kaydet
+          {t("save")}
         </button>
       )}
       {isSaved && (
-        <p className="text-green-600 font-medium">Anahtar kaydedildi ✅</p>
+        <p className="text-green-600 font-medium">{t("saved")}</p>
       )}
     </div>
   );

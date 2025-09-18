@@ -58,5 +58,6 @@ class Bots(Base):
     acquisition_price = Column(Numeric(8, 2), nullable=True)  # satın alma veya kira bedeli
     acquisition_tx = Column(String(128), nullable=True)       # blokzincir işlem referansı
 
+    enter_on_start = Column(Boolean, nullable=False, server_default=text("false"))
     deleted = Column(Boolean, nullable=False, server_default=text("false"))
 

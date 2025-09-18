@@ -1,0 +1,311 @@
+{
+  "title": "Whaleer Documentation",
+  "intro": "With Whaleer, you can author strategies, test them on historical data (backtesting), deploy them as live trading bots, share the outcomes, or publish to the marketplace. This document details the data model, rules for indicator and strategy development, backtest usage, bot setup/operation, marketplace (Showcase), API key linking, and support processes.",
+  "sections": [
+    {
+      "id": "architecture-and-data-model",
+      "title": "1. Architecture and Data Model",
+      "content": "Whaleer executes your strategy over a pandas DataFrame (`df`). By default, the following columns are provided: `timestamp`, `open`, `high`, `low`, `close`, `volume`. You define indicators and strategy rules by generating additional columns. The primary outputs of your strategies are `df['position']`, `df['percentage']`, and optionally `df['take_profit']`, `df['stop_loss']`. A separate variable (`commission`) must be used for fees.\n\nKey rules:\n• `df['position']`: Determines direction and leverage magnitude. E.g., 1 = long, -1 = short, 2 = 2x long, -3 = 3x short.\n• `df['percentage']`: Order size as a percentage (typically 100).\n• `commission`: Must be between 0 and 1 (e.g., 0.001 = 0.1%).\n• `take_profit` and `stop_loss`: Must be **price levels** (not percentages), usually derived off `close`, and added as columns to `df`.\n\nNotes:\n• The platform may return numeric columns as Decimal by default. You may convert to `float64` if preferred (e.g., `df[col] = df[col].astype(float)`).\n• The strategy runner simulates trades per bar according to your generated `position`/`percentage`.![DataFrame Overview](/doc/en/dataframe.png \"DataFrame example – core columns\"){w=wide}\nRow-by-row example commentary:\n• 2023-10-11 16:00:00 → 1x long, 100% of balance used. TP: 27500, SL: 26900.\n• 2023-10-11 16:01:00 → No new trade; positions closed.\n• 2023-10-11 16:02:00 → 2x long, 100% of balance used. TP: 27550, SL: 26980.\n• 2023-10-11 16:03:00 → 1x short, 50% of balance used. SL: 27000.\n• 2023-10-11 16:04:00 → No new trade; positions closed again.\n\n When switching direction, position increases/decreases are executed in a manner that minimizes fee overhead.",
+      "sub": [
+        {
+          "id": "decimal-to-float",
+          "title": "Decimal → float Conversion",
+          "content": "Example for converting numeric columns to `float64`:\n\n```python\nfor col in ['open', 'high', 'low', 'close', 'volume']:\n    if col in df.columns:\n        df[col] = df[col].astype(float)\n```\n\n"
+        },
+        {
+          "id": "required-recommended-columns",
+          "title": "Required/Recommended Columns",
+          "content": "Required: `position`, `percentage`.\nRecommended: `take_profit`, `stop_loss` (price levels).\nGlobal variable: `commission` (range 0–1)."
+        }
+      ]
+    },
+    {
+      "id": "indicator-development",
+      "title": "2. Indicator Development",
+      "content": "Indicators are developed by creating new columns on `df` or by computing a separate series and plotting it with `plot_indicator`. To accept dynamic parameters from users, the `input.*` functions are provided (int, float, bool, string, color). ![Input Indicator Overview](/doc/en/indicator-editor.png \"Adding inputs to an indicator\"){w=wide}",
+      "sub": [
+        {
+          "id": "indicator-inputs",
+          "title": "Using Inputs (int, float, bool, string, color)",
+          "content": "Inputs expose runtime parameters for indicators/strategies. Examples:\n\n```python\nlength = input.int(10, title=\"SMA Period\", minval=1)\nalpha  = input.float(0.8, title=\"Smoothing Coefficient\", minval=0.0, step=0.1)\nuse_smooth = input.bool(True, title=\"Enable Smoothing\")\nlabel = input.string(\"SMA\", title=\"Label\")\ncolor_line = input.color(\"#2962FF\", title=\"Line Color\")\n```\n\n"
+        },
+        {
+          "id": "plot-indicator",
+          "title": "Plotting with plot_indicator",
+          "content": "Signature: `plot_indicator(indicator_name: str, plot_type: str, on_graph: bool, indicator_data: list[tuple], color, line_width)`.\n• `indicator_name`: Display name on the chart.\n• `plot_type`: e.g., `line`, `area`, `histogram`.\n• `on_graph`: `True` → overlay on the main price chart; `False` → dedicated panel.\n• `indicator_data`: List of `(timestamp, value)` tuples.\n• `color`: HEX or value provided by `input.color`.\n• `line_width`: Stroke width.\n\nSimple SMA example:\n\n```python\nlength = input.int(10, title=\"SMA Period\", minval=1)\nsma = df['close'].rolling(window=length, min_periods=1).mean()\nplot_indicator(\n    \"SMA_\" + str(length),\n    \"line\",\n    True,\n    list(zip(df['timestamp'], sma)),\n    color=\"#0000FF\",\n    line_width=1\n)\n```\n\n ![SMA Indicator Overview](/doc/en/sma.png \"SMA indicator over BTCUSDT\"){w=wide}"
+        },
+        {
+          "id": "terminal-commands",
+          "title": "Terminal Commands (Importing Indicators)",
+          "content": "You can import other indicators into your strategy from the terminal.\n\nCommands:\n• `cls` → Clear terminal\n• `help` → List commands\n• `time` → Show current time\n• `uptime` → Show session uptime\n• `import <indicator>` → Import specified indicator\n• `list imports` → List imported indicators\n• `reset <indicator|imports>` → Remove specific or all imports\n\n ![Terminal Help](/doc/en/terminal1.png \"Terminal 'help' command\"){w=wide} ![Import from Terminal](/doc/en/terminal2.png \"Importing an indicator via terminal\"){w=wide}"
+        }
+      ]
+    },
+    {
+      "id": "strategy-development",
+      "title": "3. Strategy Development",
+      "content": "Strategies are authored by generating rules on `df`, similar to indicator logic. `df['position']` and `df['percentage']` are mandatory. Optionally, define price levels via `df['take_profit']` and `df['stop_loss']`. The `commission` variable must remain within 0–1.",
+      "sub": [
+        {
+          "id": "strategy-basics",
+          "title": "Core Rules and Example",
+          "content": "• To initiate a buy, set `df['position']` to 1 (or 2, 3, ... for leverage) and keep it until the exit condition.\n• For exits/closures, set `df['position']` to 0, or use -1 for shorts.\n• `df['percentage']` defines trade size in percent; typically 100. If managing multiple coins in a single bot, size allocations require careful planning.\n• Define `commission = input.float(0.001, title=\"Commission\")`.\n• `take_profit`/`stop_loss` must be **price levels**, not percentages.\n\nSkeleton example:\n\n```python\nlong_open  = input.string(\"\", title=\"Long Open Label\")\nlong_close = input.string(\"\", title=\"Long Close Label\")\nshort_open = input.string(\"\", title=\"Short Open Label\")\nshort_close= input.string(\"\", title=\"Short Close Label\")\ncommission = input.float(0.001, title=\"Commission\")\n\n# Cast numeric columns to float\nfor col in ['open','high','low','close','volume']:\n    if col in df.columns:\n        df[col] = df[col].astype(float)\n\n# Simple signal: long above EMA200, short below\ndf['ema200'] = df['close'].ewm(span=200).mean()\n\nlong_condition  = df['close'] > df['ema200']\nshort_condition = df['close'] < df['ema200']\n\ndf['percentage'] = 100.0\ndf['position']   = 0.0\n\ndf.loc[long_condition,  'position'] = 1.0\n\ndf.loc[short_condition, 'position'] = -1.0\n\n# Optional: fixed TP/SL (as price)\ndf['take_profit'] = df['close'] * 1.02  # +2% price level\ndf['stop_loss']   = df['close'] * 0.98  # -2% price level\n\n# Marks (arrows)\nmark(df, long_open=long_open, long_close=long_close, short_open=short_open, short_close=short_close)\n\n# Output\nprint(\"Strategy generated successfully.\")\n```\n\n"
+        },
+        {
+          "id": "leveraged-positions",
+          "title": "Leveraged Positions (via position)",
+          "content": "In Whaleer, leverage is expressed by the absolute value of `df['position']`: 2 → 2x long, -3 → 3x short. This is used by both the backtester and live runner when sizing positions.\n\nExample:\n```python\n# 2x long on EMA crossover\ncond = (df['close'] > df['ema200'])\ndf.loc[cond, 'position'] = 2.0\n```\n\n"
+        },
+        {
+          "id": "tp-sl-price-based",
+          "title": "Take Profit / Stop Loss (Price-Based)",
+          "content": "TP/SL values are **prices**, not percentages—commonly based on `close`.\n\nExamples:\n```python\n# Fixed distance TP/SL\ndf['take_profit'] = df['close'] + 50      # target +$50\n\ndf['stop_loss']   = df['close'] - 30      # stop -$30\n\n# Percentage to price conversion\ntp_pct  = input.float(2.5, title=\"TP (%)\", minval=0.01, step=0.1)\nsl_pct  = input.float(1.0, title=\"SL (%)\", minval=0.01, step=0.1)\n\ndf['take_profit'] = df['close'] * (1 + tp_pct/100.0)\ndf['stop_loss']   = df['close'] * (1 - sl_pct/100.0)\n```\n\n"
+        },
+        {
+          "id": "get-percentage",
+          "title": "Dynamic Sizing with get_percentage()",
+          "content": "`get_percentage()` returns the previous bar's `percentage` during backtests. In live bots, it reflects the aggregate utilized percentage based on **executed** orders. This allows you to size independently of pending/unfilled orders.\n\nExample:\n```python\nprev = get_percentage()  # previous bar percentage\n# Gradual reduction while in position\nopen_pos = df['position'].shift(1) != 0\ndf.loc[open_pos, 'percentage'] = max(20.0, prev - 5.0)\n```\n\n"
+        },
+        {
+          "id": "mark-visualization",
+          "title": "Visualizing with mark",
+          "content": "• `mark(df, long_open='LONG OPEN', long_close='LONG CLOSE', short_open='SHORT OPEN', short_close='SHORT CLOSE')` adds arrows to entry/exit points. You can customize labels as needed.\n![Strategy Mark](/doc/en/strategymark.png \"Visualizing strategy on the chart.\"){w=wide}"
+        }
+      ]
+    },
+    {
+      "id": "backtest",
+      "title": "4. Backtesting",
+      "content": "On the Backtest page, select a period (e.g., 1m, 5m, 1h), the crypto asset to trade, and an optional starting balance. If no initial balance is provided, the engine initializes at the first candle using defaults. The engine simulates trades based on `df['position']`, `df['percentage']`, optional `take_profit`/`stop_loss`, and `commission`. ![Backtest Result Chart](/doc/en/backtestgraph.png \"Backtest Result Chart\"){w=wide} ![Backtest Form](/doc/en/backtest.png \"Backtest Creation Form\"){w=wide}",
+      "sub": [
+        {
+          "id": "backtest-metrics",
+          "title": "Metrics and Outputs",
+          "content": "• Total return, Max Drawdown, Win/Loss ratio, Profit Factor, Sharpe/Sortino (where applicable)\n• Trade list (entry/exit timestamps, price, PnL, commission)\n• Equity curve over time\n• Synchronized chart with indicators and signal markers\n\n![Backtest Metrics](/doc/en/backtestmetric.png \"Backtest Metric Outputs\"){w=wide}"
+        },
+        {
+          "id": "backtest-archive",
+          "title": "Backtest Archiving",
+          "content": "You can archive preferred runs and compare them later. The archive maintains strategy version, parameters, date range, and result metrics.\n\n ![Backtest Archive](/doc/en/backtestarchive.png \"Backtest Page\"){w=wide}"
+        }
+      ]
+    },
+    {
+      "id": "bot",
+      "title": "5. Bot Creation and Operation",
+      "content": "Whaleer bots execute your strategies against real-time market data in a secure and reproducible manner. During setup, bot type (Spot/Futures), connected API, strategy, period, minimum candle count, schedule, and balance allocation are configured using a wizard aligned with enterprise standards. Run, safe shutdown, and delete operations are clearly distinguished. When a rented bot’s term ends, all open positions are automatically and safely closed, and the bot shuts down.",
+      "sub": [
+        {
+          "id": "bot-setup-wizard",
+          "title": "Setup Wizard",
+          "content": "The New Bot form includes Bot Name, Type (Spot/Futures), API connection, Strategy selection, Period, Minimum Candle Count, Operating Days/Hours, and Multi-Coin list. If “Enter on existing signal” is enabled and the market is in a valid buy zone, the bot will enter without waiting for the next signal.\n\n![Create Bot](/doc/en/createbot.png \"Bot creation form\"){w=wide}"
+        },
+        {
+          "id": "bot-min-candle",
+          "title": "Minimum Candle Count (Technical Prerequisite)",
+          "content": "Provide the amount of historical data your strategy needs. For instance, if you use EMA(200), we recommend 200 candles plus a buffer. If uncertain, you may set 5,000—this may increase warmup time but helps ensure data integrity.\n\n"
+        },
+        {
+          "id": "bot-allocation-multicoin",
+          "title": "Balance Allocation and Multi-Coin",
+          "content": "After connecting an API, your current balance is retrieved and you can allocate a total amount to the bot. \n When multiple coins are added, each coin is managed like a sub-bot and consumes a share of this allocation equal to its `df['percentage']`. For example, if five coins might trigger simultaneously, plan `df['percentage']` so the total never exceeds the allocation (e.g., 5 × 20 = 100). \n Ensure the strategy sizes orders to at least 10 USD per order. ![Create Bot 2](/doc/en/createbot2.png \"Bot creation form\"){w=wide}"
+        },
+        {
+          "id": "bot-cards-status",
+          "title": "Bot Cards and Status Indicators",
+          "content": "Bots are listed as cards on the main page. Each card displays API name, strategy, period, planned days/hours, tracked symbols, and status (Active/Inactive). The power glyph (green/red) reflects the operational state.\n\n![Bots Page](/doc/en/bots.png \"Bots page\"){w=wide}"
+        },
+        {
+          "id": "bot-run-shutdown-delete",
+          "title": "Run, Safe Shutdown, and Delete",
+          "content": "![Delete Bot](/doc/en/botsilme.png \"Delete Bot menu\"){w=wide} • **Run**: Executes signals against live data.\n• **Safe Shutdown**: Closes all open positions, then stops the bot. Irreversible.\n• **Delete**: Removes the bot; **does not** close open positions. Use only in risk-free states.\n• **Panic button**: Upon confirmation, closes **all** positions across **all** bots."
+        },
+        {
+          "id": "rented-bot-lifecycle",
+          "title": "Rented Bot Term Management",
+          "content": "Remaining time for rented bots is clearly displayed on the card. At the end of the term, the system closes open positions according to order types and stops the bot automatically—ensuring a safe close without user intervention.\n![Rented Bot Timer](/doc/en/rentedbot.png \"Rented bot time tracking\"){w=wide}"
+        },
+        {
+          "id": "bot-monitoring-logs-assets",
+          "title": "Live Monitoring, Trade Log, and Assets",
+          "content": "The bot detail view provides a P/L chart (percent), live trades, commission impact, side (BUY/SELL), leverage, quantity, and notional value. “Open Positions” and “Spot/Futures Assets” panels reflect your portfolio in real time. Trade and system events are recorded with timestamps in logs.\n![Bot Analysis](/doc/en/analizbot.png \"Bot analysis view\"){w=wide}"
+        },
+        {
+          "id": "bot-alerts-panic",
+          "title": "Alerts and Panic Scenario",
+          "content": "The “Panic Button” halts all bots and safely closes open positions during emergencies. As it is irreversible, a second confirmation step is required. This mechanism is designed for risk control during unexpected market volatility or infrastructure incidents.\n![Close Bots](/doc/en/botkapama.png \"Closing bots\"){w=wide}"
+        }
+      ]
+    },
+    {
+      "id": "showcase",
+      "title": "6. Showcase (Marketplace)",
+      "content": "The Whaleer Showcase is a centralized marketplace where developers can share their bots with the community for sale or rental. Users can review historical performance, purchase bots, or rent them for specific durations. All financial transactions are securely processed on the Solana network via Phantom Wallet. **Important:** All payment routing and wallet address responsibility lies with the user. Incorrect addresses or approvals are irreversible. ![Showcase](/doc/en/showcase/4e9b6d27-21ad-4268-8ad7-cd0a3ac4878b.png \"Showcase page\"){w=wide}",
+      "sub": [
+        {
+          "id": "showcase-wallet",
+          "title": "Wallet Connection (Payments and Payouts)",
+          "content": "To transact in the Showcase, you must connect your Phantom wallet. Without a connected wallet, purchasing and renting are not permitted. On first use, users are guided to install Phantom Wallet. After connection, SOL balance checks are performed automatically.\n![Showcase Wallet](/doc/en/showcase/4e9b6d27-21ad-4268-8ad7-cd0a3ac5878b.png \"Showcase page\"){w=wide}"
+        },
+        {
+          "id": "showcase-listing",
+          "title": "Listing for Sale or Rent",
+          "content": "As a developer, you may list your bot for sale or rent. While creating a listing:\n• **Sale Price:** Permanent sale price (USD).\n• **Rental Price:** Daily rate (USD/day).\n• **Payout Wallet Address:** You are solely responsible for entering the correct address. The system does not refund incorrect entries.\n• **Listing Description:** Strategy overview, use cases, and risk disclosures.\n\nA one-time 1 USD listing fee is collected via Solana. The transaction is approved through Phantom and is irreversible.\n![Showcase Listing](/doc/en/showcase/6dc8f7a7-22f0-43b8-a4fe-bea57b517039.png \"Showcase page\"){w=wide}"
+        },
+        {
+          "id": "showcase-phantom",
+          "title": "Phantom Wallet Transactions and Approvals",
+          "content": "All payments and listings are signed with Phantom. Prior to confirmation, users can review the amount, network fee, and estimated SOL value. Once approved, the transaction is written to the blockchain and cannot be rolled back. Any losses due to incorrect approvals or addresses remain solely the user's responsibility.\n![Phantom Flow](/doc/en/showcase/be369e5d-2c45-4357-a1f7-64c7ae3b2b48.png \"Showcase page\"){w=wide}"
+        },
+        {
+          "id": "showcase-analytics",
+          "title": "Bot Listing and Performance Analytics",
+          "content": "Showcase entries are listed with sale and rental prices. For each bot, total return, Spot/Futures type, and performance history are displayed. Users can filter by bot name or developer via the search box.\n![Showcase List](/doc/en/showcase/617d2738-9d7a-4767-a268-837863938e78.png \"Showcase page\"){w=wide}"
+        },
+        {
+          "id": "showcase-rental",
+          "title": "Bot Rental Process",
+          "content": "For rentals, the total amount is calculated based on the daily rate and paid via Phantom. When the rental period ends, the bot shuts down automatically and any open positions are safely closed by the system.\n![Showcase Rent](/doc/en/showcase/86b267e1-9522-40bc-b62d-5c3675a4207d.png \"Showcase page\"){w=wide}"
+        },
+        {
+          "id": "showcase-live-monitoring",
+          "title": "Live Performance and Monitoring",
+          "content": "Purchased or rented bots can be monitored in real time from the user panel. P/L charts, trade history, open positions, and performance ratios are presented transparently.\n![Showcase Detail](/doc/en/showcase/4d9a94db-1f60-4be0-891b-d292c2d3b18b.png \"Showcase page\"){w=wide}"
+        },
+        {
+          "id": "showcase-responsibilities",
+          "title": "User Responsibilities",
+          "content": "• Entering the correct wallet address and verifying Phantom approvals are solely the user's responsibility.\n• Incorrect addresses or approvals are irreversible; Whaleer assumes no liability.\n• The performance and risk profile of bots listed in the marketplace are the responsibility of their developers; users must carefully review details before transacting."
+        }
+      ]
+    },
+    {
+      "id": "api-connection",
+      "title": "7. Connecting an API (Binance, etc.)",
+      "content": "To run bots live on Whaleer, you must securely connect your exchange accounts via API. This connection should include **trading and balance read** permissions only; **withdrawal** permission must never be granted. This ensures your API keys can be used without compromising fund safety. Added APIs are listed in your profile and can be set as default for convenience. The default selection is provided only to streamline initial setup and can be changed at any time. ![API Connection](/doc/en/api_keys/085727ae-b225-4caa-871d-b4367ed3f298.png \"API Connection page\"){w=wide}",
+      "sub": [
+        {
+          "id": "api-add",
+          "title": "Add a New API",
+          "content": "To connect, enter the **API Key** and **Secret Key** provided by your exchange. After validation, the system checks your balance and account information and activates the connection. \n ![API Connection Form](/doc/en/api_keys/4899d79d-7875-47dd-b890-deeacc08c57d.png \"API Connection page\"){w=wide}"
+        },
+        {
+          "id": "api-management",
+          "title": "API Management and Defaults",
+          "content": "You can list, edit, or delete all API keys you have added. A default API may be pre-selected for convenience on your profile page; however, this is only for ease of use. You can manually select any API when starting your bots."
+        },
+        {
+          "id": "api-delete",
+          "title": "Deleting an API and Its Impact on Bots",
+          "content": "When an API is deleted, all bots linked to this API are automatically disabled. If there are active bots, they are safely shut down before the key is removed. This operation is irreversible.\n![API List](/doc/en/api_keys/768db800-be2e-4f70-afcc-22efbec06029.png \"API Connection page\"){w=wide}"
+        },
+        {
+          "id": "api-video",
+          "title": "Step-by-Step Training Video",
+          "content": "A detailed training video explains how to create Binance API keys and connect them to Whaleer. It provides step-by-step guidance to ensure a secure setup.\n![Training Video](/doc/en/api_keys/KayitApi.mp4 \"API Connection page\"){w=wide}"
+        },
+        {
+          "id": "api-responsibilities",
+          "title": "User Responsibilities",
+          "content": "• **Never** share your API keys publicly or with third parties.\n• Grant only the necessary permissions; withdrawal must remain disabled at all times.\n• Your API keys must be active and valid; revoked keys will prevent bots from operating.\n"
+        }
+      ]
+    },
+    {
+      "id": "api-permissions",
+      "title": "8. API Authorizations",
+      "content": "For Whaleer bots to operate properly with Binance API, certain permissions must be enabled. When creating the API, grant only **trading and balance read** permissions. Withdrawal must remain disabled. Enable the following based on your use case: ![API Permissions](/doc/en/api_keys/5dc7c6c1-89b9-414e-b0e0-327c51351764.png \"API permissions page\"){w=wide}",
+      "sub": [
+        {
+          "id": "perm-reading",
+          "title": "Enable Reading (Required)",
+          "content": "The **Enable Reading** option is mandatory for all bots to function. This permission only allows viewing balances and market information and does not permit any fund transfers."
+        },
+        {
+          "id": "perm-spot",
+          "title": "Enable Spot & Margin Trading",
+          "content": "Users who wish to trade on the Spot market must enable this permission. It allows the bot to submit buy/sell orders. If you do not intend to use Margin, keep scope limited to Spot."
+        },
+        {
+          "id": "perm-futures",
+          "title": "Enable Futures",
+          "content": "This permission is required for bots that operate on the Futures market. Without it, futures-based strategies will not run."
+        },
+        {
+          "id": "perm-universal-transfer",
+          "title": "Permit Universal Transfer",
+          "content": "Enable this if your bots need to transfer funds between Spot and Futures accounts. Without it, the system cannot transition balances across accounts automatically."
+        },
+        {
+          "id": "perm-recommendations",
+          "title": "Recommended Security Restrictions",
+          "content": "• **Enable Withdrawals** must remain **disabled at all times**.\n"
+        }
+      ]
+    },
+    {
+      "id": "examples",
+      "title": "9. Examples",
+      "content": "The following examples combine input usage, indicator generation, strategy rules, TP/SL, and plotting calls.",
+      "sub": [
+        {
+          "id": "example-sma-rsi-macd",
+          "title": "SMA + RSI + MACD Strategy (Basic)",
+          "content": "```python\n# --- Parameters ---\nlength_sma = input.int(50, title=\"SMA Period\", minval=1)\nrsi_len    = input.int(14, title=\"RSI Period\", minval=2)\nmacd_fast  = input.int(12, title=\"MACD Fast\", minval=1)\nmacd_slow  = input.int(26, title=\"MACD Slow\", minval=1)\nmacd_sig   = input.int(9,  title=\"MACD Signal\", minval=1)\ncommission = input.float(0.001, title=\"Commission\")\ncolor_sma  = input.color(\"#1E88E5\", title=\"SMA Color\")\n\n# --- Type casting ---\nfor col in ['open','high','low','close','volume']:\n    if col in df.columns:\n        df[col] = df[col].astype(float)\n\n# --- Indicators ---\ndf['sma'] = df['close'].rolling(window=length_sma, min_periods=1).mean()\n\n# RSI (guarded)\ndelta = df['close'].diff()\ngain  = delta.clip(lower=0)\nloss  = (-delta).clip(lower=0)\nrs    = (gain.rolling(rsi_len, min_periods=rsi_len).mean()) / (loss.rolling(rsi_len, min_periods=rsi_len).mean().replace(0.0, 1e-10))\ndf['rsi'] = 100 - (100 / (1 + rs))\n\n# MACD\nema_fast   = df['close'].ewm(span=macd_fast, adjust=False).mean()\nema_slow   = df['close'].ewm(span=macd_slow, adjust=False).mean()\ndf['macd'] = ema_fast - ema_slow\n\ndf['signal'] = df['macd'].ewm(span=macd_sig, adjust=False).mean()\n\n# Plot (price and subpanels)\nplot_indicator(\"SMA\",    \"line\", True,  list(zip(df['timestamp'], df['sma'])),    color=color_sma,  line_width=1)\nplot_indicator(\"MACD\",   \"line\", False, list(zip(df['timestamp'], df['macd'])),   color=\"#00BFA5\", line_width=1)\nplot_indicator(\"Signal\", \"line\", False, list(zip(df['timestamp'], df['signal'])), color=\"#FDD835\", line_width=1)\n\n# --- Rules ---\nlong_cond  = (df['close'] > df['sma']) & (df['macd'] > df['signal']) & (df['rsi'] < 70)\nshort_cond = (df['close'] < df['sma']) & (df['macd'] < df['signal']) & (df['rsi'] > 30)\n\ndf['percentage'] = 100.0\ndf['position']   = 0.0\n\ndf.loc[long_cond,  'position'] = 1.0\n\ndf.loc[short_cond, 'position'] = -1.0\n\n# Price-based TP/SL\ntp_pct = input.float(2.0, title=\"TP (%)\", minval=0.1, step=0.1)\nsl_pct = input.float(1.0, title=\"SL (%)\", minval=0.1, step=0.1)\n\ndf['take_profit'] = df['close'] * (1 + tp_pct/100.0)\ndf['stop_loss']   = df['close'] * (1 - sl_pct/100.0)\n```\n\nThe strategy above produces buy/sell signals, but to visualize the indicators used, you should implement a separate indicator script as below.\n\n```python\n# --- INDICATOR (VISUALIZATION) ---\n# Note: Computes visuals only; does not produce positions.\nlength_sma = input.int(50, title=\"SMA Period\", minval=1)\nrsi_len    = input.int(14, title=\"RSI Period\", minval=2)\nmacd_fast  = input.int(12, title=\"MACD Fast\", minval=1)\nmacd_slow  = input.int(26, title=\"MACD Slow\", minval=1)\nmacd_sig   = input.int(9,  title=\"MACD Signal\", minval=1)\ncolor_sma  = input.color(\"#1E88E5\", title=\"SMA Color\")\n\nfor col in ['open','high','low','close','volume']:\n    if col in df.columns:\n        df[col] = df[col].astype(float)\n\n# Calculations\ndf['sma'] = df['close'].rolling(window=length_sma, min_periods=1).mean()\n\ndelta = df['close'].diff()\ngain  = delta.clip(lower=0)\nloss  = (-delta).clip(lower=0)\nrs    = (gain.rolling(rsi_len, min_periods=rsi_len).mean()) / (loss.rolling(rsi_len, min_periods=rsi_len).mean().replace(0.0, 1e-10))\ndf['rsi'] = 100 - (100 / (1 + rs))\n\nema_fast     = df['close'].ewm(span=macd_fast, adjust=False).mean()\nema_slow     = df['close'].ewm(span=macd_slow, adjust=False).mean()\ndf['macd']   = ema_fast - ema_slow\n\ndf['signal'] = df['macd'].ewm(span=macd_sig, adjust=False).mean()\n\n# Plots\nplot_indicator(\"SMA\",    \"line\", True,  list(zip(df['timestamp'], df['sma'])),    color=color_sma,  line_width=1)\n\nplot_indicator(\"RSI\",    \"line\", False, list(zip(df['timestamp'], df['rsi'])),    color=\"#9E9E9E\", line_width=1)\nplot_indicator(\"RSI-70\", \"line\", False, [(ts,70.0) for ts in df['timestamp']],    color=\"#EF5350\", line_width=1)\nplot_indicator(\"RSI-30\", \"line\", False, [(ts,30.0) for ts in df['timestamp']],    color=\"#42A5F5\", line_width=1)\n\nplot_indicator(\"MACD\",   \"line\", False, list(zip(df['timestamp'], df['macd'])),   color=\"#00BFA5\", line_width=1)\nplot_indicator(\"Signal\", \"line\", False, list(zip(df['timestamp'], df['signal'])), color=\"#FDD835\", line_width=1)\nplot_indicator(\"Zero\",   \"line\", False, [(ts,0.0) for ts in df['timestamp']],     color=\"#BDBDBD\", line_width=1)\n```\n ![Example](/doc/en/example/1.png \"Example\"){w=wide}"
+        },
+        {
+          "id": "example-leverage-ladder",
+          "title": "Gradual and Leveraged Example",
+          "content": "```python\ncommission = input.float(0.001, title=\"Commission\")\nbase_pct   = input.float(20.0, title=\"Base Percentage\")\n\n# Increase leverage and percentage as distance from EMA200 grows\nfor col in ['open','high','low','close','volume']:\n    if col in df.columns:\n        df[col] = df[col].astype(float)\n\ndf['sma200'] = df['close'].ewm(span=200, adjust=False).mean()\ndist = (df['close'] - df['sma200']) / df['sma200']\n\n# Strategy outputs\ndf['position']   = 0.0\ndf['percentage'] = base_pct\n\n# 0–2% → 1x, 2–4% → 2x, >4% → 3x\ncond1 = dist.between(0.00, 0.02)\ncond2 = dist.between(0.02, 0.04)\ncond3 = dist > 0.04\n\ndf.loc[cond1, 'position'] = 1.0\n\ndf.loc[cond2, 'position'] = 2.0\n\ndf.loc[cond3, 'position'] = 3.0\n\n# Increase percentage gradually when in position (platform helper assumed)\nprev_pct = get_percentage()\nopen_pos = df['position'] != 0\n\ndf.loc[open_pos, 'percentage'] = prev_pct + 5.0\n```\n\nDistance-based logic: as price rises above EMA200, leverage increases stepwise; near/below EMA200, neutral or lower leverage is preferred. The strategy above produces signals; to visualize metrics, use an indicator script as follows.\n\n```python\n# --- INDICATOR (VISUALIZATION) ---\n# Note: Visualization-only metrics; no signals.\nfor col in ['open','high','low','close','volume']:\n    if col in df.columns:\n        df[col] = df[col].astype(float)\n\n# Core measures\ndf['sma200'] = df['close'].ewm(span=200, adjust=False).mean()\ndist = (df['close'] - df['sma200']) / df['sma200']\n\n# Derive leverage level (1–3) for drawing only\nlev = (\n    (dist > 0.04).astype(float) * 3.0 +\n    (dist.between(0.02, 0.04)).astype(float) * 2.0 +\n    (dist.between(0.00, 0.02)).astype(float) * 1.0\n)\n\n# Plots\n# Price panel: EMA200\nplot_indicator(\"EMA200\", \"line\", True, list(zip(df['timestamp'], df['sma200'])), color=\"#42A5F5\", line_width=1)\n\n# Subpanel 1: Distance to EMA200 (%)\nplot_indicator(\"Dist%\",  \"line\", False, list(zip(df['timestamp'], (dist*100.0))), color=\"#90CAF9\", line_width=1)\nplot_indicator(\"0%\",     \"line\", False, [(ts,0.0)   for ts in df['timestamp']],     color=\"#BDBDBD\", line_width=1)\nplot_indicator(\"2%\",     \"line\", False, [(ts,2.0)   for ts in df['timestamp']],     color=\"#BDBDBD\", line_width=1)\nplot_indicator(\"4%\",     \"line\", False, [(ts,4.0)   for ts in df['timestamp']],     color=\"#BDBDBD\", line_width=1)\n\n# Subpanel 2: Derived leverage level (1–3)\nplot_indicator(\"Leverage\", \"line\", False, list(zip(df['timestamp'], lev)), color=\"#00BFA5\", line_width=1)\n```\n ![Example](/doc/en/example/2.png \"Example\"){w=wide}"
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "title": "8. Security and Best Practices",
+      "content": "• **Never** enable withdrawal permissions for API keys.\n• Backtest over sufficiently long data before going live.\n• As leverage (absolute value of `df['position']`) increases, risk compounds; use SL/TP.\n• When running multiple coins, consider that `df['percentage']` allocations may trigger simultaneously.\n• Set `commission` close to your exchange’s actual trading fees.\n"
+    },
+    {
+      "id": "faq",
+      "title": "9. FAQ",
+      "content": "",
+      "sub": [
+        {
+          "id": "faq-position-vs-percentage",
+          "title": "What is the difference between Position and Percentage?",
+          "content": "`position` determines direction and leverage magnitude (1, -1, 2, -3, etc.). `percentage` represents order size as a percentage. Together, they determine the actual position sizing."
+        },
+        {
+          "id": "faq-tp-sl-price-or-percent",
+          "title": "Should TP/SL be price or percentage?",
+          "content": "In Whaleer, TP/SL are **price levels**. If you prefer a percentage, convert it to a price first and write it to `df` (e.g., `df['take_profit'] = df['close'] * (1 + 0.02)`)."
+        },
+        {
+          "id": "faq-commission",
+          "title": "How should I set the commission?",
+          "content": "It is a decimal in the range 0–1 (e.g., 0.001 = 0.1%). Align it with your exchange's actual fee schedule for best backtest fidelity."
+        },
+        {
+          "id": "faq-min-candle",
+          "title": "How do I determine the minimum candle count?",
+          "content": "Consider the window sizes of your indicators (e.g., EMA 200 + buffer). If unsure, using 5,000 as an upper bound is acceptable, noting the potential performance impact."
+        },
+        {
+          "id": "faq-multi-coin",
+          "title": "How should I manage percentages when adding multiple coins?",
+          "content": "If signals may fire at the same time, the total should not exceed 100%. For five equally weighted coins, keep `df['percentage'] ≤ 20`."
+        },
+        {
+          "id": "faq-rented-bot-end",
+          "title": "What happens when a rented bot's term ends?",
+          "content": "All open positions are automatically closed, and the bot shuts down."
+        }
+      ]
+    },
+    {
+      "id": "support",
+      "title": "10. Support",
+      "content": "For inquiries and requests, you can reach us 24/7 through the support page. We are available to assist with your roadmap, strategy reviews, and integration questions.\n\n"
+    }
+  ]
+}

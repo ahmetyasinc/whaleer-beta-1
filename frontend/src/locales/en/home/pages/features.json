@@ -1,0 +1,23 @@
+{
+  "title": "Algorithmic Trading with Whaleer",
+  "subtitle": "Create, test, run, and share strategies with Whaleer. Follow the steps below to get started!",
+  "cta": "Get Started Now",
+  "steps": {
+    "1": {
+      "title": "1. Create Your Strategy",
+      "desc": "Easily build your own algorithmic strategy using the Python-based editor. Define your rules with indicators like RSI, MACD."
+    },
+    "2": {
+      "title": "2. Test with Backtest",
+      "desc": "Test your strategy on historical data. Instantly see the results and analyze its performance."
+    },
+    "3": {
+      "title": "3. Run the Bot",
+      "desc": "Execute your strategy in real-time with live market data. Let the system trade on your behalf."
+    },
+    "4": {
+      "title": "4. Archive and Market",
+      "desc": "Archive your strategies, compare their past performance. Rent or sell them if you like."
+    }
+  }
+}

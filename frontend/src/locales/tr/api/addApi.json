@@ -4,8 +4,7 @@
     "addNew": "Yeni API Ekle"
   },
   "steps": {
-    "step1": "Adım 1/2 — ED Key ile doğrula (Binance'e doğrudan)",
-    "step2": "Adım 2/2 — HMAC Anahtarlarıyla doğrula (Binance'e doğrudan)"
+    "step2": "HMAC Anahtarlarıyla doğrula (Binance'e doğrudan)"
   },
   "fields": {
     "apiName": "API Adı",

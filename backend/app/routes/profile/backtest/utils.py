@@ -4,7 +4,7 @@ def calculate_performance(
     df: pd.DataFrame,
     commission: float = 0.0,
     risk_free_rate: float = 0.02,
-    debug: bool = False,
+    debug: bool = True,
     initial_balance: float = 10000.0,
     fifo_scaleout: bool = True,   # scale-out dağıtım kuralı: True=FIFO, False=LIFO
 ):
@@ -19,17 +19,53 @@ def calculate_performance(
         if debug:
             print(*args, **kwargs)
 
-    def pnl_pct_from(entry_price: float, exit_price: float, side: float) -> float:
+    def pnl_pct_from(
+        entry_price: float,
+        exit_price: float,
+        side: float,
+        lev: float = 1.0
+    ) -> float:
+        """
+        Yüzdesel PnL hesaplar.
+        - entry_price: giriş fiyatı
+        - exit_price: çıkış fiyatı
+        - side: +1 (long) veya -1 (short)
+        - lev: kaldıraç (varsayılan=1.0)
+
+        PnL% = ((exit - entry) / entry) * 100 * lev   (long için)
+             = ((entry - exit) / entry) * 100 * lev   (short için)
+        """
         if entry_price == 0:
             return 0.0
-        raw = (exit_price - entry_price) / entry_price
-        return (raw * 100.0) if side > 0 else (-raw * 100.0)
 
-    def pnl_amount_from(entry_price: float, exit_price: float, side: float, qty: float) -> float:
+        raw = (exit_price - entry_price) / entry_price
+        return (raw * 100.0 * lev) if side > 0 else (-raw * 100.0 * lev)
+
+
+    def pnl_amount_from(
+        entry_price: float,
+        exit_price: float,
+        side: float,
+        qty: float,
+        lev: float = 1.0
+    ) -> float:
+        """
+        Parasal PnL hesaplar.
+        - entry_price: giriş fiyatı
+        - exit_price: çıkış fiyatı
+        - side: +1 (long) veya -1 (short)
+        - qty: işlem miktarı (kaldıraçsız)
+        - lev: kaldıraç (varsayılan=1.0)
+
+        PnL = (exit - entry) * qty * lev (long için)
+             = (entry - exit) * qty * lev (short için)
+        """
         if qty <= 0 or entry_price == 0:
             return 0.0
-        diff = (exit_price - entry_price)
+
+        diff = (exit_price - entry_price) * lev
         return diff * qty if side > 0 else (-diff * qty)
+
 
     def pct_change_str(old_p01: float, new_p01: float) -> str:
         def pct_str(p01: float) -> str:
@@ -182,7 +218,7 @@ def calculate_performance(
                 used_change_str = pct_change_str(used_before, used_after)
 
                 #log(f"Tranche kapandı: {trade_type} @ {exit_price}, qty={qty}, pnl_pct={pnl_pct:.2f}, used={used_change_str}")
-                log(f"Amount: {qty}")
+                #log(f"Amount: {qty}")
                 trades.append({
                     "id": len(trades) + 1,
                     "date": ts,
@@ -374,8 +410,8 @@ def calculate_performance(
                             close_qty  = t['qty'] * close_frac
 
                             # PnL ve VWAP bileşenleri
-                            pnl_pct_t  = pnl_pct_from(t['entry'], price, t['side'])
-                            pnl_amt_t  = pnl_amount_from(t['entry'], price, t['side'], close_qty)
+                            pnl_pct_t  = pnl_pct_from(t['entry'], price, t['side'], t['lev'])
+                            pnl_amt_t  = pnl_amount_from(t['entry'], price, t['side'], close_qty, t['lev'])
 
                             total_close_pct   += take
                             total_close_qty   += close_qty
@@ -393,7 +429,7 @@ def calculate_performance(
                         # Toplu trade kaydı: herhangi bir kapanış olduysa yaz
                         if total_close_qty > 1e-12 and total_close_pct > 1e-12:
                             vwap_entry_closed = (weighted_entry_value / total_close_qty) if total_close_qty > 0 else 0.0
-                            pnl_pct_agg = pnl_pct_from(vwap_entry_closed, price, side_all)
+                            pnl_pct_agg = total_pnl_amount/(vwap_entry_closed*total_close_qty)*100.0 if vwap_entry_closed > 0 and total_close_qty > 0 else 0.0
 
                             trade_type = "LONG_CLOSE" if side_all > 0 else "SHORT_CLOSE"  # öncekiyle uyumlu isim
                             trade_volume  = abs(total_close_qty * price)
@@ -411,6 +447,7 @@ def calculate_performance(
                                 "leverage": (tranches[0]['lev'] if tranches else 0.0),
                                 "usedPercentage": used_change_str,   # <-- %Toplam -> %Hedef
                                 "amount": total_close_qty,
+                                "value": total_pnl_amount+(vwap_entry_closed*total_close_qty),
                                 "price": price,
                                 "commission": round(commission_fee, 6),
                                 "pnlPercentage": round(pnl_pct_agg, 2),
@@ -463,8 +500,8 @@ def calculate_performance(
             total_pct = sum(t['pct'] for t in tranches)              # 0..1
             total_qty = sum(t['qty'] for t in tranches)
             
-            log(f"Amount: {total_qty}")
-            log(f"Tranches: {tranches}")
+            #log(f"Amount: {total_qty}")
+            #log(f"Tranches: {tranches}")
 
             # Yön kontrolü (tasarım gereği hepsi aynı yönde)
             side_all = tranches[0]['side'] if tranches else 0.0
@@ -494,7 +531,7 @@ def calculate_performance(
             used_before = total_pct
             used_after  = 0.0
             used_change_str = pct_change_str(used_before, used_after)
-            #log(f"amoun: {total_qty}, used: {used_change_str}, pnl_pct: {pnl_pct:.2f}")
+            #log(f"amount: {total_qty}, used: {used_change_str}, pnl_pct: {pnl_pct:.2f}")
             trades.append({
                 "id": len(trades) + 1,
                 "date": ts,
@@ -520,8 +557,8 @@ def calculate_performance(
             ret_val = (balance - balance_prev) / balance_prev * 100.0
 
         # Görselleştirme için anlık yön ve yüzde (toplam)
-        viz_side = current_side()
-        viz_pct  = total_used_pct() * 100.0
+        viz_pos = float(df.at[i, 'position'])          # <-- asıl istediğin değer
+        viz_pct = total_used_pct() * 100.0
 
         # (YENİ) Bir sonraki aralık için: bu bar SONUNDA kullanılan yüzdeyi kaydet
         used_pct_after_prev = total_used_pct()
@@ -530,7 +567,7 @@ def calculate_performance(
         returns.append((
             int(ts.timestamp()) if pd.notna(ts) else 0,
             round(ret_val, 4),
-            viz_side,
+            viz_pos,
             round(viz_pct, 6),
         ))
 
@@ -588,7 +625,7 @@ def calculate_performance(
     total_period_seconds = (df['timestamp'].iloc[-1] - df['timestamp'].iloc[0]).total_seconds()
 
     duration_ratio = (time_in_trade_seconds / total_period_seconds) if total_period_seconds > 0 else 0.0
-    log(f"Total time in trade: {time_in_trade_seconds,total_period_seconds} seconds, duration ratio: {duration_ratio:.4f}")
+    #log(f"Total time in trade: {time_in_trade_seconds,total_period_seconds} seconds, duration ratio: {duration_ratio:.4f}")
 
     buy_hold_return = ((last_close / first_close) - 1.0) * 100.0 if first_close > 0 else 0.0
 

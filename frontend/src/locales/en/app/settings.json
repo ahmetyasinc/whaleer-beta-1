@@ -4,30 +4,81 @@
   "save": "Save",
   "reset": "Reset to defaults",
   "saved": "Saved",
+  "myprofile": "My Profile",
+
   "language": "Language",
   "language_hint": "Your selection is applied immediately and stored in a cookie.",
-  "languages": {
-    "tr": "Turkish",
-    "en": "English"
-  },
+  "languages": { "tr": "Turkish", "en": "English" },
+
   "theme": "Theme",
   "theme_system": "System",
   "theme_light": "Light",
   "theme_dark": "Dark",
+
   "timezone": "Time Zone",
   "current_timezone": "Current value:",
   "timezone_search": "Search region… (e.g. Istanbul, Tokyo, New_York)",
   "selected": "Selected",
   "no_results": "No results found.",
   "timezone_hint": "Only the GMT offset value is stored in the cookie (e.g. GMT+03:00).",
-  "notifications": "Notifications",
-  "email_reports": "Email reports",
-  "email_reports_hint": "Receive weekly performance reports via email.",
-  "on": "On",
-  "off": "Off",
+
   "loading": "Loading…",
+
+  "profile": {
+    "title": "Profile Information",
+    "name": "First Name",
+    "last_name": "Last Name",
+    "username": "Username",
+    "email": "Email",
+    "phone": "Phone",
+    "location": "Location",
+    "bio": "Bio",
+    "bio_ph": "A short description about yourself…"
+  },
+
+  "social": { "title": "Social Links" },
+
+  "security": {
+    "title": "Account Security",
+    "current": "Current Password",
+    "new": "New Password",
+    "confirm": "Confirm New Password",
+    "hint": "To change your password, verify your current password.",
+    "no_new_pw": "Please enter a new password.",
+    "mismatch": "New passwords do not match.",
+    "changed": "Password updated."
+  },
+
+  "validation": {
+    "required": "This field is required.",
+    "email": "Please enter a valid email.",
+    "fix_fields": "Please fix the highlighted fields."
+  },
+
+  "telegram": {
+    "title": "Telegram Notifications",
+    "connected": "Connected",
+    "connected_hint": "Your Telegram account is linked. You will receive notifications.",
+    "connect_hint": "Link your Telegram to receive notifications.",
+    "account": "Account",
+    "connect": "Connect",
+    "connecting": "Connecting…",
+    "disconnect": "Disconnect",
+    "disconnecting": "Disconnecting…",
+    "refresh": "Refresh",
+    "refresh_status": "Refresh status",
+    "errors": {
+      "status": "Couldn't fetch Telegram status.",
+      "link": "Couldn't create Telegram link.",
+      "unlink": "Couldn't disconnect Telegram."
+    }
+  },
+
   "errors": {
     "load": "There was a problem while loading settings.",
+    "loadProfile": "Unable to load profile information.",
     "save": "An error occurred while saving."
-  }
+  },
+
+  "notifications": "Notifications"
 }

@@ -25,6 +25,7 @@ from app.models.user import User
 from app.models.profile.bots.bot_follow import BotFollow
 from app.schemas.showcase.bot_follow import FollowCreate 
 
+from app.routes.profile.telegram.telegram_service import notify_user_by_telegram  
 
 protected_router = APIRouter()
 
@@ -45,6 +46,14 @@ async def create_bot(bot: BotsCreate, db: AsyncSession = Depends(get_db), user_i
     db.add(new_bot)
     await db.commit()
     await db.refresh(new_bot)
+    await notify_user_by_telegram(
+        int(user_id),
+        f"""🤖 <b>Yeni botunuz hazır!</b>
+        Bot adı: <b>{new_bot.name}</b> ✅
+        🔔 Bundan sonra bu botun yaptığı işlemler hakkında Telegram üzerinden anlık bildirimler alacaksınız.  
+        🌐 Daha fazla detay ve performans grafikleri için <a href="https://whaleer.com">whaleer.com</a> adresini ziyaret edebilirsiniz.
+        İyi kazançlar dileriz 🚀"""
+        )
     return new_bot
 
 # PATCH update bot (sadece kendi botunu güncelleyebilir)
@@ -209,7 +218,11 @@ async def follow_bot(follow_data: FollowCreate, db: Session = Depends(get_db), u
     user_id = int(user_data)
 
     # 1. Bot var mı?
-    result = await db.execute(select(Bots).where(Bots.id == follow_data.bot_id),Bots.deleted.is_(False))
+    stmt = select(Bots).where(
+        Bots.id == follow_data.bot_id,
+        Bots.deleted.is_(False)
+    )
+    result = await db.execute(stmt)
     bot = result.scalar_one_or_none()
     if not bot:
         raise HTTPException(status_code=404, detail="Bot not found")
@@ -247,7 +260,11 @@ async def unfollow_bot(
     user_id = int(user_data)
 
     # 1. Bot var mı?
-    result = await db.execute(select(Bots).where(Bots.id == follow_data.bot_id),Bots.deleted.is_(False))
+    stmt = select(Bots).where(
+        Bots.id == follow_data.bot_id,
+        Bots.deleted.is_(False)
+    )
+    result = await db.execute(stmt)
     bot = result.scalar_one_or_none()
     if not bot:
         raise HTTPException(status_code=404, detail="Bot not found")

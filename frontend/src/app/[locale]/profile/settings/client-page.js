@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import i18n from '@/i18n';
 import { IoReturnDownBackOutline } from "react-icons/io5";
 import { FiSave, FiRefreshCcw } from "react-icons/fi";
-
+import { toast } from 'react-toastify';
 
 import {
   readSettingsCookie,
@@ -14,15 +14,21 @@ import {
   mergeSettingsCookie,
 } from '@/utils/cookies/settingsCookie';
 
+import TelegramConnect from '@/components/profile_component/(settings)/TelegramConnect';
+
+// 🔹 Yeni kartlar
+import ProfileBasicsCard from '@/components/profile_component/(settings)/ProfileBasicsCard';
+import SocialLinksCard from '@/components/profile_component/(settings)/SocialLinksCard';
+import AccountSecurityCard from '@/components/profile_component/(settings)/AccountSecurityCard';
+
 /* =========================
    Defaults & Utilities
    ========================= */
-const LOCALES = ['en', 'tr']; // i18n’de desteklediklerin
+const LOCALES = ['en', 'tr'];
 const DEFAULTS = {
   language: 'tr',
   theme: 'dark',
-  timezone: 'GMT+00:00', // Cookie’de tutulacak değer (offset string)
-  emailReports: false,
+  timezone: 'GMT+00:00',
 };
 
 // lang cookie set
@@ -33,7 +39,6 @@ function setLangCookie(lng) {
 }
 
 // "/en/profile/edit" -> { locale:"en", rest:"profile/edit" }
-// "/profile"         -> { locale:null, rest:"profile" }
 function splitLocalePath(pathname, locales = LOCALES) {
   const parts = pathname.replace(/^\/+/, '').split('/');
   const maybe = parts[0];
@@ -61,25 +66,25 @@ function getAllTimezones() {
   ];
 }
 
-// IANA time zone -> "GMT+03:00" gibi offset string
+// IANA -> "GMT+03:00"
 function ianaToGmtOffset(tz) {
   try {
     const now = new Date();
     const parts = new Intl.DateTimeFormat('en-US', {
       timeZone: tz,
-      timeZoneName: 'shortOffset', // "UTC+03:00"
+      timeZoneName: 'shortOffset',
       hour12: false,
       year: 'numeric', month: '2-digit', day: '2-digit',
       hour: '2-digit', minute: '2-digit',
     }).formatToParts(now);
     const name = parts.find(p => p.type === 'timeZoneName')?.value || 'UTC+00:00';
-    return name.replace(/^UTC/, 'GMT'); // "UTC+03:00" -> "GMT+03:00"
+    return name.replace(/^UTC/, 'GMT');
   } catch {
     return 'GMT+00:00';
   }
 }
 
-// Cookie’de timezone değeri IANA olarak gelmişse "GMT±HH:MM"’e migrate et
+// Cookie migrate
 function normalizeTimezoneCookieValue(tzValue) {
   if (!tzValue) return 'GMT+00:00';
   if (/^GMT[+-]\d{2}:\d{2}$/.test(tzValue) || tzValue === 'GMT+00:00') return tzValue;
@@ -87,7 +92,7 @@ function normalizeTimezoneCookieValue(tzValue) {
   return 'GMT+00:00';
 }
 
-// UI etiketi: "(GMT+03:00) Europe/Istanbul"
+// UI etiketi
 function labelForIana(tz) {
   return `${ianaToGmtOffset(tz)} ${tz}`;
 }
@@ -106,38 +111,33 @@ export default function SettingsPage() {
   const [error, setError] = useState(null);
   const [savedAt, setSavedAt] = useState(null);
 
-  // Timezone UI: IANA listesi + arama + seçili IANA (cookie’ye yalnızca GMT yazıyoruz)
+  // TZ UI state
   const [allTimezones, setAllTimezones] = useState([]);
   const [tzQuery, setTzQuery] = useState('');
   const [selectedIana, setSelectedIana] = useState('Europe/Istanbul');
 
-  // İlk yükleme
   useEffect(() => {
     let mounted = true;
     try {
-      const fromCookie = readSettingsCookie(); // { language, theme, timezone(GMT±HH:MM ya da IANA), emailReports }
+      const fromCookie = readSettingsCookie();
       const initial = { ...DEFAULTS, ...(fromCookie || {}) };
 
-      // i18n dil senkronizasyonu
       if (initial.language && i18n.language !== initial.language) {
         i18n.changeLanguage(initial.language).catch(console.error);
         setLangCookie(initial.language);
       }
 
-      // timezone’u normalize et ve gerekirse cookie’yi migrate et
       const normalizedTz = normalizeTimezoneCookieValue(initial.timezone);
       initial.timezone = normalizedTz;
       if (fromCookie && fromCookie.timezone !== normalizedTz) {
         mergeSettingsCookie({ timezone: normalizedTz });
       }
 
-      // IANA listesi
       const tzs = getAllTimezones();
 
       if (mounted) {
         setAllTimezones(tzs);
         setForm(initial);
-        // GMT+03:00 ise Istanbul’u highlight et
         if (normalizedTz === 'GMT+03:00' && tzs.includes('Europe/Istanbul')) {
           setSelectedIana('Europe/Istanbul');
         } else if (tzs.includes('UTC')) {
@@ -155,7 +155,6 @@ export default function SettingsPage() {
 
   const update = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
-  // Dil değişimi: i18n + wh_settings.language + lang cookie + URL locale replace
   const onChangeLanguage = async (lng) => {
     update('language', lng);
     try { await i18n.changeLanguage(lng); } catch {}
@@ -167,13 +166,13 @@ export default function SettingsPage() {
     router.replace(next || `/${lng}`);
   };
 
-  // Kaydet: tüm formu wh_settings cookie’ye yaz
   const onSave = async () => {
     setSaving(true);
     setError(null);
     try {
       writeSettingsCookie(form);
       setSavedAt(new Date());
+      toast.success(t('saved'));
     } catch (e) {
       console.error(e);
       setError(t('errors.save'));
@@ -201,14 +200,12 @@ export default function SettingsPage() {
     return `✔ ${t('saved')} • ${hh}:${mm}`;
   }, [savedAt, t]);
 
-  // TZ arama filtresi
   const filteredTimezones = useMemo(() => {
     const q = tzQuery.trim().toLowerCase();
     if (!q) return allTimezones;
     return allTimezones.filter((tz) => tz.toLowerCase().includes(q));
   }, [tzQuery, allTimezones]);
 
-  // IANA seç → cookie’ye yalnızca GMT±HH:MM yaz, UI için IANA’yı state’te tut
   const selectTimezoneIana = (tz) => {
     const gmt = ianaToGmtOffset(tz);
     setSelectedIana(tz);
@@ -220,17 +217,16 @@ export default function SettingsPage() {
     <div className="w-full h-screen flex flex-col bg-zinc-950/60 text-white">
       <div className="flex-1 overflow-hidden">
         <div className="h-full p-6 overflow-y-auto">
-          <div className="max-w-5xl mx-auto flex flex-col gap-6">
+          <div className="max-w-6xl mx-auto flex flex-col gap-6">
 
             {/* Title + Actions */}
             <div className="flex items-center justify-between">
               <h1 className="text-2xl font-semibold">
-        {t("title")}
+                {t("title")}
               </h1>
               <div className="flex items-center gap-3">
                 {savedInfo && <span className="text-sm text-emerald-300/90">{savedInfo}</span>}
-        
-                {/* Profile Button */}
+
                 <button
                   onClick={() => router.push("/profile")}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors duration-200 hover:scale-[1.02]"
@@ -238,8 +234,7 @@ export default function SettingsPage() {
                   <IoReturnDownBackOutline className="text-xl" />
                   {t("myprofile")}
                 </button>
-        
-                {/* Save Button */}
+
                 <button
                   onClick={onSave}
                   disabled={saving || loading}
@@ -248,8 +243,7 @@ export default function SettingsPage() {
                   <FiSave className="text-lg" />
                   {saving ? t("saving") : t("save")}
                 </button>
-        
-                {/* Reset Button */}
+
                 <button
                   onClick={onResetDefaults}
                   disabled={saving}
@@ -267,6 +261,11 @@ export default function SettingsPage() {
                 {error}
               </div>
             )}
+
+            {/* 🔹 Yeni: Profil düzenleme kartları (Whaleer tarzı) */}
+            <ProfileBasicsCard t={t} />
+            <SocialLinksCard  t={t} />
+            <AccountSecurityCard t={t} />
 
             {/* Dil */}
             <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
@@ -323,19 +322,17 @@ export default function SettingsPage() {
               </div>
             </section>
 
-            {/* Zaman Dilimi (cookie: GMT±HH:MM) */}
+            {/* Zaman Dilimi */}
             <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
               <h2 className="text-lg font-medium mb-4">
                 {t('timezone')}
               </h2>
 
-              {/* Mevcut cookie değeri */}
               <div className="mb-2 text-sm text-zinc-300">
                 {t('current_timezone')}{' '}
                 <span className="font-medium">{form.timezone}</span>
               </div>
 
-              {/* Arama */}
               <div className="mb-3">
                 <input
                   type="text"
@@ -346,7 +343,6 @@ export default function SettingsPage() {
                 />
               </div>
 
-              {/* Liste */}
               <div className="max-h-64 overflow-y-auto border border-zinc-800 rounded-xl">
                 <ul className="divide-y divide-zinc-800">
                   {filteredTimezones.map((tz) => {
@@ -380,36 +376,8 @@ export default function SettingsPage() {
               </p>
             </section>
 
-            {/* Bildirimler */}
-            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
-              <h2 className="text-lg font-medium mb-4">
-                {t('notifications')}
-              </h2>
-
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <p className="font-medium">
-                    {t('email_reports')}
-                  </p>
-                  <p className="text-sm text-zinc-400">
-                    {t('email_reports_hint')}
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    const next = !form.emailReports;
-                    setForm((f) => ({ ...f, emailReports: next }));
-                    mergeSettingsCookie({ emailReports: next });
-                  }}
-                  className={`px-3 py-1.5 rounded-xl border transition
-                    ${form.emailReports
-                      ? 'bg-emerald-800/40 text-emerald-200 border-emerald-700/60'
-                      : 'bg-zinc-800/60 text-zinc-200 border-zinc-700 hover:bg-zinc-800'}`}
-                >
-                  {form.emailReports ? t('on') : t('off')}
-                </button>
-              </div>
-            </section>
+            {/* Bildirimler - Telegram (component) */}
+            <TelegramConnect className="" />
 
             {loading && (
               <div className="text-sm text-zinc-400">

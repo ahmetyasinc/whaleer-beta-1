@@ -12,6 +12,7 @@ from app.routes.profile.indicator.indicator_release import protected_router as i
 from app.routes.profile.indicator.indicator_run import protected_router as indicator_run_router
 from app.routes.profile.indicator.indicator_adjustment import protected_router as indicator_adjustment_router
 from app.routes.profile.indicator.websocket_binance import websocket_router as websocket_binance_router
+from app.routes.profile.settings.settings import router as settings_router
 from app.routes.profile.binance_coins.binance_coins import protected_router as binance_coins_router
 from app.routes.profile.strategy.strategy import protected_router as strategy_router
 from app.routes.profile.strategy.strategy_release import protected_router as strategy_release
@@ -28,6 +29,9 @@ from app.routes.profile.showcase.showcase import protected_router as showcase
 from app.routes.profile.profile.profile import protected_router as profile
 from app.routes.mobile.profile.profile import protected_router as profileMobile
 from app.routes.admin.admin import protected_router as admin
+from app.routes.profile.support.support import protected_router as support_router
+from app.routes import google_auth
+from app.routes.profile.telegram.telegram_bot import protected_router as tg_protected, public_router as tg_public
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -35,6 +39,10 @@ app = FastAPI()
 
 
 # USER ROUTES
+app.include_router(tg_protected)
+app.include_router(settings_router)
+app.include_router(tg_public)
+app.include_router(google_auth.router, prefix="/api")
 app.include_router(user_router)
 app.include_router(auth_router)
 app.include_router(auth_router_mobile)
@@ -73,6 +81,7 @@ app.include_router(showcase_router_mobile)
 # PROFİLE ROUTES
 app.include_router(profile)
 app.include_router(profileMobile)
+app.include_router(support_router)
 # ADMİN ROUTES
 app.include_router(admin)
 
@@ -92,28 +101,37 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func, distinct
 
-
-@app.get("/ping")
-def ping():
-    return {"status": "ok"}
-
+from app.database import get_db
+from app.models import User
+from app.models.profile.strategy.strategy import Strategy
+from app.models.profile.bots.bots import Bots
 
 @app.get("/api/hero-infos/")
-def get_hero_infos():
-    user_count = 8
-    trader_count = 3
-    strategy_count = 5
-    bot_count = 2
-    hero_infos = {
+async def get_hero_infos(db: AsyncSession = Depends(get_db)):
+    # toplam kullanıcı
+    user_count_result = await db.execute(select(func.count()).select_from(User))
+    user_count = user_count_result.scalar_one()
+
+    # toplam strateji
+    strategy_count_result = await db.execute(select(func.count()).select_from(Strategy))
+    strategy_count = strategy_count_result.scalar_one()
+
+    # toplam bot
+    bot_count_result = await db.execute(select(func.count()).select_from(Bots))
+    bot_count = bot_count_result.scalar_one()
+
+    # toplam trader (botu olan farklı kullanıcı sayısı)
+    trader_count_result = await db.execute(select(func.count(distinct(Bots.user_id))))
+    trader_count = trader_count_result.scalar_one()
+
+    return {
         "user_count": user_count,
         "trader_count": trader_count,
         "strategy_count": strategy_count,
         "bot_count": bot_count
     }
-    return hero_infos
 
-# test için
-@app.get("/api/fake-unauthorized/")
-def fake_unauthorized():
-    raise HTTPException(status_code=401, detail="Unauthorized")

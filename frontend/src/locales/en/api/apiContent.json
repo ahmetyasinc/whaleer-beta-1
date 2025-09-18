@@ -29,5 +29,8 @@
   },
   "errors": {
     "saveFailed": "Failed to save API key."
-  }
+  },
+  "save": "Save",
+  "saved": "Key saved ✅",
+  "settings": "Settings"
 }

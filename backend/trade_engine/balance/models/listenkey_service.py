@@ -38,85 +38,94 @@ BASE_URL = "https://fapi.binance.com"
 # BASE_URL = "https://fapi.binance.com"
 
 class ListenKeyManager:
-    # 1. __init__ metodunu market_config alacak şekilde güncelliyoruz.
     def __init__(self, pool, api_id, api_key, user_id, market_config: dict):
         self.pool = pool
         self.api_id = api_id
         self.api_key = api_key
         self.user_id = user_id
-        
-        # 2. Gerekli tüm değişkenleri market_config sözlüğünden alıyoruz.
         self.base_url = market_config['rest_url']
         self.listenkey_path = market_config['listenkey_path']
         self.connection_type = market_config['connection_type']
-        
         self.listen_key = None
 
     async def create(self, retries: int = 3, delay: float = 0.5):
-        """Binance'ten listenKey alır, gerekirse retry eder ve DB'ye upsert eder."""
-        # 3. Hardcoded URL'leri dinamik değişkenlerle değiştiriyoruz.
         url = f"{self.base_url}{self.listenkey_path}"
         headers = {"X-MBX-APIKEY": self.api_key}
-
+        data = {}
         for attempt in range(1, retries + 1):
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, headers=headers) as resp:
-                    # ... (metodun geri kalanı aynı kalabilir)
                     data = await resp.json()
                     self.listen_key = data.get("listenKey")
 
             if self.listen_key:
                 await upsert_stream_key(
-                    self.pool,
-                    self.user_id,
-                    self.api_id,
-                    self.connection_type,
-                    self.listen_key,
-                    "new",
+                    self.pool, self.user_id, self.api_id,
+                    self.connection_type, self.listen_key, "new",
                 )
-                print(f"✅ api_id={self.api_id} listenKey oluşturuldu: {self.listen_key}")
+                logging.info(f"✅ api_id={self.api_id} listenKey oluşturuldu: {self.listen_key}")
                 return
-
-            print(f"❌ api_id={self.api_id} listenKey alınamadı (attempt {attempt}) → {data}")
-            if attempt < retries:
-                await asyncio.sleep(delay)
-
+            logging.warning(f"❌ api_id={self.api_id} listenKey alınamadı (attempt {attempt}) → {data}")
+            if attempt < retries: await asyncio.sleep(delay)
         await update_streamkey_status(self.pool, self.api_id, "error")
-        print(f"🚨 api_id={self.api_id} listenKey oluşturma başarısız (tüm denemeler bitti).")
-
-    async def refresh(self):
-        """Binance'te listenKey’i refresh eder, başarılıysa DB expire süresini uzatır."""
-        # 3. Hardcoded URL'leri dinamik değişkenlerle değiştiriyoruz.
-        url = f"{self.base_url}{self.listenkey_path}"
-        headers = {"X-MBX-APIKEY": self.api_key}
-
-        async with aiohttp.ClientSession() as session:
-            async with session.put(url, headers=headers) as resp:
-                if resp.status == 200:
-                    await refresh_stream_key_expiration(self.pool, self.api_id, self.connection_type)
-                    print(f"🔄 api_id={self.api_id} listenKey başarıyla refresh edildi.")
-                else:
-                    data = await resp.json()
-                    print(f"⚠️ api_id={self.api_id} listenKey refresh başarısız → {data}")
-                    await update_streamkey_status(self.pool, self.api_id, "error")
+        logging.error(f"🚨 api_id={self.api_id} listenKey oluşturma başarısız (tüm denemeler bitti).")
 
     async def refresh_or_create(self):
-        """Binance'te refresh dene, başarısızsa yeni listenKey oluştur."""
-        # 3. Hardcoded URL'leri dinamik değişkenlerle değiştiriyoruz.
         url = f"{self.base_url}{self.listenkey_path}"
         headers = {"X-MBX-APIKEY": self.api_key}
-
         async with aiohttp.ClientSession() as session:
             async with session.put(url, headers=headers) as resp:
                 if resp.status == 200:
                     await refresh_stream_key_expiration(self.pool, self.api_id, self.connection_type)
-                    print(f"🔄 api_id={self.api_id} listenKey refresh edildi.")
+                    logging.info(f"🔄 api_id={self.api_id} listenKey refresh edildi.")
                     return
                 else:
                     data = await resp.json()
-                    print(f"⚠️ api_id={self.api_id} refresh başarısız → {data}")
-
+                    logging.warning(f"⚠️ api_id={self.api_id} refresh başarısız → {data}")
         await self.create()
+
+        
+async def create_missing_futures_keys(pool):
+    """
+    'is_futures_enabled=true' olan ancak 'stream_keys' tablosunda 'futures' türünde
+    kaydı bulunmayan API anahtarlarını tespit eder ve onlar için 'new' statüsünde
+    bir kayıt oluşturur. Bu, listenkey oluşturma döngüsünün onları yakalamasını sağlar.
+    """
+    logging.info("🔧 Eksik futures stream_key kayıtları kontrol ediliyor...")
+    
+    # 'is_futures_enabled=true' olan ancak stream_keys'de karşılığı olmayanları bul
+    query = """
+        SELECT ak.id as api_id, ak.user_id
+        FROM public.api_keys ak
+        LEFT JOIN public.stream_keys sk 
+            ON ak.id = sk.api_id AND sk.connection_type = 'futures'
+        WHERE ak.is_active = TRUE 
+          AND ak.is_futures_enabled = TRUE
+          AND sk.id IS NULL;
+    """
+    async with pool.acquire() as conn:
+        missing_records = await conn.fetch(query)
+
+    if not missing_records:
+        logging.info("✅ Eksik futures stream_key kaydı bulunamadı. Her şey güncel.")
+        return
+
+    logging.warning(f"🔍 {len(missing_records)} adet eksik futures stream_key kaydı bulundu. 'new' olarak ekleniyor...")
+    
+    # Bulunan eksikler için stream_keys tablosuna yeni kayıtlar ekle
+    insert_query = """
+        INSERT INTO public.stream_keys 
+        (user_id, api_id, connection_type, status, is_futures_enabled)
+        VALUES ($1, $2, 'futures', 'new', TRUE)
+        ON CONFLICT (api_id, connection_type) DO NOTHING;
+    """
+    
+    records_to_insert = [(r['user_id'], r['api_id']) for r in missing_records]
+    
+    async with pool.acquire() as conn:
+        await conn.executemany(insert_query, records_to_insert)
+    
+    logging.info(f"✅ {len(records_to_insert)} adet eksik kayıt 'stream_keys' tablosuna 'new' olarak eklendi.")
 
 
 async def create_all_listenkeys(pool, connection_type="futures"):
@@ -152,18 +161,24 @@ async def bulk_upsert_listenkeys(pool, records):
 
 async def refresh_or_create_all(pool, market_config):
     """
-    Tüm uygun listenKey'leri (SADECE FUTURES ETKİN OLANLAR) EŞ ZAMANLI olarak yeniler veya yeniden oluşturur.
+    'is_futures_enabled=true' olan ve listenKey'e ihtiyaç duyan (yeni, aktif, süresi dolmuş
+    veya stream_key'i NULL olan) tüm kayıtlar için EŞ ZAMANLI olarak işlem yapar.
     """
     connection_type = market_config['connection_type']
     
-    # "sk.is_futures_enabled = TRUE" KONTROLÜ EKLENDİ
+    # ### HATA DÜZELTMESİ: SQL SORGUSU GÜNCELLENDİ ###
+    # Sorgu artık `is_futures_enabled = TRUE` olan ve durumu uygun VEYA
+    # `stream_key`'i hiç olmayan (NULL) kayıtları da getirecek.
     query = """
         SELECT ak.id, ak.api_key, ak.user_id, sk.status
         FROM public.api_keys ak
         JOIN public.stream_keys sk ON sk.api_id = ak.id
         WHERE sk.connection_type = $1
-          AND sk.is_futures_enabled = TRUE   -- <-- EN ÖNEMLİ GÜNCELLEME
-          AND sk.status IN ('active', 'new', 'expired');
+          AND sk.is_futures_enabled = TRUE
+          AND (
+               sk.status IN ('active', 'new', 'expired') 
+               OR sk.stream_key IS NULL
+          );
     """
     async with pool.acquire() as conn:
         records = await conn.fetch(query, connection_type)
@@ -175,10 +190,11 @@ async def refresh_or_create_all(pool, market_config):
     tasks = []
     for r in records:
         mgr = ListenKeyManager(pool, r["id"], r["api_key"], r["user_id"], market_config)
-        if r["status"] == "expired":
-            tasks.append(mgr.create())
-        else:
+        # Durumu 'active' olanlar hariç hepsi için yeni anahtar oluşturulmalı.
+        if r["status"] == "active":
             tasks.append(mgr.refresh_or_create())
+        else: # new, expired, closed, error veya stream_key'i NULL olanlar
+            tasks.append(mgr.create())
 
     logging.info(f"🚀 [{connection_type.upper()}] {len(tasks)} adet listenKey için toplu işlem başlatılıyor...")
     results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -189,17 +205,15 @@ async def refresh_or_create_all(pool, market_config):
     logging.info(f"✅ [{connection_type.upper()}] Toplu işlem tamamlandı. Başarılı: {success_count}, Hatalı: {error_count}")
     return results
 
-# Düzeltilmiş, Doğru Çalışan Kod
 async def main():
     pool = await config.get_async_pool()
     if not pool:
         print("❌ DB bağlantısı yok")
         return
 
-    # ÇÖZÜM: Test için futures ayarlarını config dosyasından alıp fonksiyona iletiyoruz.
-    # Bu dosya sadece futures ile ilgili olduğu için doğrudan futures'ı seçebiliriz.
     futures_market_config = BINANCE_CONFIG['futures']
     await refresh_or_create_all(pool, futures_market_config)
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     asyncio.run(main())

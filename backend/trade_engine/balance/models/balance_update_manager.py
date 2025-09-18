@@ -24,10 +24,12 @@ logging.basicConfig(
 
 # balance_update_manager.py içindeki bu fonksiyonu güncelle
 
-async def get_api_keys_from_db(user_ids: Optional[List[int]] = None) -> List[Dict[str, Any]]:
+async def get_api_keys_from_db(stream_key_ids: Optional[List[int]] = None) -> List[Dict[str, Any]]:
     """
     Veritabanından stream_key ID'sini, user_id'yi ve bunlarla ilişkili ASIL api_id'yi çeker.
+    Artık stream_key_ids listesine göre filtreleme yapabilir.
     """
+    # get_async_connection fonksiyonu dosyanızda zaten mevcut.
     async with await get_async_connection() as conn:
         if not conn:
             logging.error("get_api_keys_from_db: Veritabanı bağlantısı alınamadı.")
@@ -47,9 +49,10 @@ async def get_api_keys_from_db(user_ids: Optional[List[int]] = None) -> List[Dic
             WHERE 
                 ak.is_active = TRUE
         """
-        if user_ids:
-            sql += f" AND sk.id = ANY($1::int[])"
-            records = await conn.fetch(sql, user_ids)
+        # Parametre adı 'stream_key_ids' olarak güncellendi ve sorgu düzeltildi.
+        if stream_key_ids:
+            sql += " AND sk.id = ANY($1::int[])"
+            records = await conn.fetch(sql, stream_key_ids)
         else:
             records = await conn.fetch(sql)
         
@@ -199,6 +202,9 @@ async def process_user(api_key_data: Dict[str, Any]):
 
 async def main(args):
     """Komut satırı argümanlarına göre ana iş akışını yönetir."""
+    # ### HATA DÜZELTMESİ: pool.close() KALDIRILDI ###
+    # Pool'u burada oluşturup işimizi yapıyoruz ancak kapatmıyoruz.
+    # Kapatma işini bizi çağıran ana uygulama (run_services.py) yapacak.
     pool = await get_async_pool()
     
     if not pool:
@@ -209,7 +215,8 @@ async def main(args):
         logging.info("Bakiye güncelleme döngüsü başlıyor...")
         start_time = asyncio.get_event_loop().time()
         
-        api_keys = await get_api_keys_from_db(args.user_ids)
+        # user_ids argümanı None olabilir, bu yüzden args.user_ids olarak düzeltildi
+        api_keys = await get_api_keys_from_db(args.user_ids if hasattr(args, 'user_ids') else None)
         
         if not api_keys:
             logging.warning("Veritabanında işlenecek aktif API anahtarı bulunamadı.")
@@ -221,9 +228,9 @@ async def main(args):
         end_time = asyncio.get_event_loop().time()
         logging.info(f"Bakiye güncelleme döngüsü {end_time - start_time:.2f} saniyede tamamlandı.")
 
-    # --- DÜZELTİLMİŞ KONTROL BLOGU ---
-    # Önce args.periodic'in None olup olmadığını kontrol et, sonra > 0 kontrolü yap.
-    if args.periodic is not None and args.periodic > 0:
+    # periodic None olabilir, bu yüzden hasattr ile kontrol etmek daha güvenli
+    is_periodic = hasattr(args, 'periodic') and args.periodic is not None and args.periodic > 0
+    if is_periodic:
         logging.info(f"Periyodik mod aktif. Her {args.periodic} dakikada bir güncelleme yapılacak.")
         while True:
             await run_update()
@@ -233,8 +240,9 @@ async def main(args):
         # Eğer periyodik değilse, --all veya --user-ids modudur, bu yüzden sadece bir kez çalıştır.
         await run_update()
     
-    await pool.close()
-    logging.info("Veritabanı bağlantı havuzu kapatıldı.")
+    # ### HATA DÜZELTMESİ: BU SATIR KALDIRILDI ###
+    # await pool.close()
+    # logging.info("Veritabanı bağlantı havuzu kapatıldı.")
 
 
 if __name__ == "__main__":
@@ -244,10 +252,22 @@ if __name__ == "__main__":
     group.add_argument('--all', action='store_true', help="Tüm aktif kullanıcıların bakiyesini bir kez günceller.")
     group.add_argument('--user-ids', nargs='+', type=int, help="Sadece belirtilen API ID'lere sahip kullanıcıları günceller.")
     group.add_argument('--periodic', type=int, metavar='MINUTES', help="Tüm kullanıcıları belirtilen dakika aralığıyla periyodik olarak günceller.")
-    #--all   --user-ids 26 30 112    --periodic 15
+    
     args = parser.parse_args()
     
     try:
-        asyncio.run(main(args))
+        # Bu script tek başına çalıştırıldığında havuzun kapatılması gerekir.
+        # Bu yüzden try...finally bloğu ekliyoruz.
+        loop = asyncio.get_event_loop()
+        try:
+            loop.run_until_complete(main(args))
+        finally:
+            # main'den çağrılmadığında pool'u kapatmak için
+            # config'deki global pool'a erişip kapatabiliriz.
+            from backend.trade_engine.config import _pool
+            if _pool and not _pool._closed:
+                 loop.run_until_complete(_pool.close())
+                 logging.info("Veritabanı bağlantı havuzu kapatıldı (__main__).")
+
     except KeyboardInterrupt:
         logging.info("Script kullanıcı tarafından sonlandırıldı.")

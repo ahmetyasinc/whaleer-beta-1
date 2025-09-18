@@ -10,10 +10,13 @@
 - ed_public_pem (text)
 - is_test_api (boolean)
 - ed_private_pem (text)
+- ed_private (text)
 - spot_balance (numeric)
 - futures_balance (numeric)
 - default (boolean)
 - is_active (boolean)
+- spot_usdt_balance (numeric)
+- futures_usdt_balance (numeric)
 
 ## public.api_snapshots
 - id (integer)
@@ -34,7 +37,6 @@
 - symbol (character varying)
 - created_at (timestamp without time zone)
 - binance_symbol (character varying)
-- tick_size (numeric)
 
 ## public.binance_coins_pinned
 - id (integer)
@@ -53,12 +55,6 @@
 - close (numeric)
 - volume (numeric)
 
-## public.binance_last_price
-- coin_id (character varying)
-- timestamp (timestamp without time zone)
-- close (numeric)
-- interval (text)
-
 ## public.bot_follow
 - user_id (integer)
 - bot_id (integer)
@@ -71,9 +67,7 @@
 - amount (numeric)
 - average_cost (numeric)
 - percentage (numeric)
-- open_cost (numeric)
-- realized_pnl (numeric)
-- unrealized_pnl (numeric)
+- profit_loss (numeric)
 
 ## public.bot_logs
 - id (bigint)
@@ -93,12 +87,11 @@
 - symbol (character varying)
 - average_cost (numeric)
 - amount (numeric)
+- profit_loss (numeric)
+- status (character varying)
 - position_side (character varying)
 - leverage (numeric)
 - percentage (numeric)
-- open_cost (numeric)
-- realized_pnl (numeric)
-- unrealized_pnl (numeric)
 
 ## public.bot_snapshots
 - id (integer)
@@ -106,7 +99,11 @@
 - timestamp (timestamp without time zone)
 - balance_usdt (numeric)
 - total_profit (numeric)
+- open_positions_count (integer)
+- open_positions (jsonb)
 - pnl_ratio (numeric)
+- held_assets (jsonb)
+- held_assets_count (integer)
 - fullness (numeric)
 - active (boolean)
 
@@ -143,6 +140,7 @@
 - initial_usd_value (numeric)
 - current_usd_value (numeric)
 - name (character varying)
+- balance (numeric)
 - fullness (numeric)
 - for_rent (boolean)
 - for_sale (boolean)
@@ -154,42 +152,6 @@
 - profit_factor (integer)
 - risk_factor (integer)
 - bot_type (character varying)
-- revenue_wallet (text)
-- parent_bot_id (integer)
-- acquisition_type (USER-DEFINED)
-- acquired_from_user_id (integer)
-- acquired_at (timestamp with time zone)
-- rent_expires_at (timestamp with time zone)
-- acquisition_price (numeric)
-- acquisition_tx (character varying)
-- deleted (boolean)
-- rent_expiry_closed (boolean)
-- enter_on_start (boolean)
-
-## public.ed25519_stock
-- id (bigint)
-- public_key (text)
-- private_key (text)
-- is_used (boolean)
-
-## public.indicator_releases
-- id (bigint)
-- indicator_id (bigint)
-- release_no (integer)
-- allow_code_view (boolean)
-- allow_chart_view (boolean)
-- description (character varying)
-- status (USER-DEFINED)
-- reviewed_by (bigint)
-- reviewed_at (timestamp without time zone)
-- review_note (text)
-- code_snapshot (text)
-- code_hash (character)
-- published_at (timestamp without time zone)
-- unpublished_at (timestamp without time zone)
-- created_by (bigint)
-- created_at (timestamp without time zone)
-- views_count (bigint)
 
 ## public.indicators
 - id (integer)
@@ -199,46 +161,12 @@
 - created_at (timestamp without time zone)
 - public (boolean)
 - tecnic (boolean)
-- parent_indicator_id (bigint)
-- version (integer)
 
 ## public.indicators_favorite
 - id (integer)
 - user_id (integer)
 - indicator_id (integer)
 - created_at (timestamp without time zone)
-
-## public.payment_intents
-- id (bigint)
-- user_id (bigint)
-- purpose (character varying)
-- bot_id (bigint)
-- seller_wallet (text)
-- platform_fee_usd (numeric)
-- buyer_pays_usd (numeric)
-- quote_sol (numeric)
-- quote_lamports (bigint)
-- quote_rate_usd_per_sol (numeric)
-- recipient_json (text)
-- reference (text)
-- status (smallint)
-- created_at (timestamp with time zone)
-- expires_at (timestamp with time zone)
-- tx_sig (text)
-
-## public.siws_nonces
-- id (bigint)
-- chain (character varying)
-- address (text)
-- nonce (text)
-- status (smallint)
-- expires_at (timestamp with time zone)
-- created_at (timestamp with time zone)
-- consumed_at (timestamp with time zone)
-- request_ip (inet)
-- user_agent (text)
-- user_id (bigint)
-- purpose (character varying)
 
 ## public.strategies
 - id (integer)
@@ -249,8 +177,6 @@
 - public (boolean)
 - tecnic (boolean)
 - indicator_ids (ARRAY)
-- parent_strategy_id (bigint)
-- version (integer)
 
 ## public.strategies_favorite
 - id (integer)
@@ -258,27 +184,18 @@
 - strategy_id (integer)
 - created_at (timestamp without time zone)
 
-## public.strategy_releases
-- id (bigint)
-- strategy_id (bigint)
-- release_no (integer)
-- allow_code_view (boolean)
-- allow_chart_view (boolean)
-- allow_scanning (boolean)
-- allow_backtesting (boolean)
-- allow_bot_execution (boolean)
-- description (character varying)
-- status (USER-DEFINED)
-- reviewed_by (bigint)
-- reviewed_at (timestamp without time zone)
-- review_note (text)
-- code_snapshot (text)
-- code_hash (character)
-- published_at (timestamp without time zone)
-- unpublished_at (timestamp without time zone)
-- created_by (bigint)
-- created_at (timestamp without time zone)
-- views_count (bigint)
+## public.stream_keys
+- id (integer)
+- user_id (integer)
+- api_id (integer)
+- connection_type (character varying)
+- stream_key (text)
+- stream_key_expires_at (timestamp without time zone)
+- ws_id (integer)
+- status (character varying)
+- sub_id (bigint)
+- is_futures_enabled (boolean)
+- spot_status (character varying)
 
 ## public.symbol_filters
 - id (integer)
@@ -290,11 +207,34 @@
 - updated_at (timestamp without time zone)
 - is_isolated (boolean)
 
+## public.user_api_balances
+- id (integer)
+- user_id (integer)
+- coin_symbol (character varying)
+- amount (numeric)
+- updated_at (timestamp with time zone)
+- api_id (integer)
+- account_type (text)
+- free_amount (numeric)
+- locked_amount (numeric)
+
 ## public.user_futures_json_settings
 - id (integer)
 - api_id (integer)
 - margin_leverage_infos (jsonb)
 - updated_at (timestamp without time zone)
+
+## public.user_symbol_settings
+- id (bigint)
+- user_id (bigint)
+- api_id (bigint)
+- symbol (text)
+- margin_type (boolean)
+- leverage (integer)
+- trade_type (text)
+- exchange (text)
+- created_at (timestamp with time zone)
+- updated_at (timestamp with time zone)
 
 ## public.users
 - id (bigint)
@@ -320,25 +260,12 @@
 - total_rented (integer)
 - last_login (timestamp without time zone)
 
-## public.wallet_signins
-- id (bigint)
-- wallet_id (bigint)
-- nonce_id (bigint)
-- signature (text)
-- verified (boolean)
-- remote_ip (inet)
-- user_agent (text)
+## public.websocket_connections
+- id (integer)
+- name (character varying)
+- exchange (character varying)
+- url (text)
+- is_connected (boolean)
 - created_at (timestamp with time zone)
-
-## public.wallets
-- id (bigint)
-- user_id (bigint)
-- chain (character varying)
-- address (text)
-- label (text)
-- is_primary (boolean)
-- is_verified (boolean)
-- verified_at (timestamp with time zone)
-- last_sign_in_at (timestamp with time zone)
-- created_at (timestamp with time zone)
-- updated_at (timestamp with time zone)
+- reactivated_at (timestamp with time zone)
+- listenkey_count (integer)

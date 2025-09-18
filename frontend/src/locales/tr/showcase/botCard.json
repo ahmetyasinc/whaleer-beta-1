@@ -29,9 +29,9 @@
     "totalMargin": "Toplam Marj",
     "profitFactor": "Profit Factor",
     "riskFactor": "Risk Factor",
-    "avgFullness": "Ort. Dolu Luk",
-    "tradesDWM": "İşlem (G/H/A)",
-    "plDWM": "K/Z (G/H/A)"
+    "avgFullness": "Ortalama Doluluk Oranı",
+    "tradesDWM": "İşlem (Gün/Hafta/Ay)",
+    "plDWM": "K/Z (Gün/Hafta/Ay)"
   },
   "strategy": {
     "title": "Kullanılan Strateji"

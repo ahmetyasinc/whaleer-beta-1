@@ -8,7 +8,9 @@
   "actions": {
     "panicButton": "Panik Butonu!",
     "panicButtonTitle": "Tüm botları durdur ve pozisyonları kapat",
-    "createNewBot": "Yeni Bot Oluştur"
+    "createNewBot": "Yeni Bot Oluştur",
+    "createLocked": "Yeni Bot Oluştur (Kilitli)",
+    "planInsufficient": "Planınız Botlarım bölümünde en fazla {{limit}} bot’a izin veriyor."
   },
   "empty": {
     "original": "Henüz orijinal botunuz yok.",

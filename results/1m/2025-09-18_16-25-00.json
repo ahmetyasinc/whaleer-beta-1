@@ -1,0 +1,14 @@
+{
+    "157": [
+        {
+            "coin_id": "BTCUSDT",
+            "trade_type": "futures",
+            "positionside": "short",
+            "side": "sell",
+            "status": "success",
+            "order_type": "market",
+            "leverage": -2.0,
+            "value": 20.0
+        }
+    ]
+}

@@ -26,6 +26,7 @@
   },
   "hints": {
     "dailyPayment": "Günlük ödeme",
+    "info": "🚨 Satışlarınızın %10'u platform ücreti olarak alınacaktır.",
     "walletWarning": "⚠️ Lütfen doğru cüzdan adresini girdiğinizden emin olun. Sorumluluk tamamen size aittir.",
     "detailedAttracts": "Detaylı açıklamalar daha fazla dikkat çeker",
     "terms": "Devam ederek Şartlar’ı kabul etmiş ve kripto işlemlerinin geri alınamaz olduğunu onaylamış olursunuz."

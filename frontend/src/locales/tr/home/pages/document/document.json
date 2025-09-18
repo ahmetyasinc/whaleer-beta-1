@@ -229,7 +229,7 @@
     {
       "id": "izin-futures",
       "title": "Enable Futures",
-      "content": "Vadeli işlemler (Futures) kullanan botlar için bu izin zorunludur. Etkinleştirilmediği takdirde futures tabanlı stratejiler çalışmaz."
+      "content": "Futures işlemler (Futures) kullanan botlar için bu izin zorunludur. Etkinleştirilmediği takdirde futures tabanlı stratejiler çalışmaz."
     },
     {
       "id": "izin-transfer",

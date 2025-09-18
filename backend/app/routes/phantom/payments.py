@@ -338,7 +338,7 @@ async def confirm_payment(
               "🌐 Daha fazla detay ve takibiniz için <a href=\"https://whaleer.com\">whaleer.com</a> adresini ziyaret edebilirsiniz. 🚀"
         )
 
-        await notify_user_by_telegram(int(user_id), text)
+        await notify_user_by_telegram(text, int(user_id), db=db)
     except Exception:
         # Bildirim hatasını sessiz yutuyoruz; ödeme akışını etkilemesin.
         pass

@@ -58,7 +58,7 @@ const UserProfileCard = ({ userData, isAnimating = false, onUserClick }) => {
         />
         <StatBox
           title={t('stats.avgMargin')}
-          value={`${userData.avg_bots_profit_lifetime}%`}
+          value={`${(userData.avg_bots_profit_lifetime*100).toFixed(2)}%`}
           color={userData.avg_bots_profit_lifetime >= 0 ? 'text-green-400' : 'text-red-400'}
         />
         <StatBox title={t('stats.followers')} value={userData.totalFollowers} color="text-blue-500" />

@@ -2,7 +2,7 @@
 
 from backend.trade_engine.process.library.allowed_globals import allowed_globals_ 
 from backend.trade_engine.control.control_the_results import control_the_results
-from backend.trade_engine.log import log_info, log_warning, log_error  # 🔹 eklendi
+from backend.trade_engine.log.log import log_info, log_warning, log_error  # 🔹 eklendi
 
 def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
 
@@ -70,7 +70,7 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
             exec(strategy_code, allowed_globals)
 
             result_df = allowed_globals['df']
-            print(result_df)
+            #print(result_df)
             last_positions = (
                 result_df['position'].iloc[-2:].tolist()
                 if 'position' in result_df.columns and len(result_df) >= 2 else None
@@ -117,7 +117,7 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
             }
             result_entry.update(order_info)
             results.append(result_entry)
-
+        print("results:", results)
         results = control_the_results(bot.get('user_id'), bot['id'], results, min_usd=10.0)
         return {
             "bot_id": bot['id'],

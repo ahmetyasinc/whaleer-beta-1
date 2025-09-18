@@ -7,6 +7,7 @@ from backend.trade_engine.config import get_db_connection
 from psycopg2.extras import RealDictCursor
 from backend.trade_engine.taha_part.utils.price_cache_new import start_connection_pool, wait_for_cache_ready
 from binance.helpers import round_step_size
+from backend.trade_engine.log.telegram.telegram_service import notify_user_by_telegram
 
 # DB fonksiyonları - sıfırdan ekle
 from backend.trade_engine.taha_part.db.db_config import (
@@ -125,17 +126,12 @@ async def calculate_order_params(
             "leverage": int(leverage) if leverage else 1
         }
 
-
-
 async def send_order(prepared_orders: dict) -> dict:
     """
     Hazırlanan emirleri Binance API'ye gönderir ve başarılı olanları DB'ye kaydeder
-    
-    Args:
-        prepared_orders (dict): Trade type bazında hazırlanmış emirler
-        
-    Returns:
-        dict: API yanıtları
+    Ayrıca her emir için Telegram bildirimi atar:
+      - Başarılı: işlem detayı
+      - Hatalı: hata olduğunu bildirir, ham hata içeriğini paylaşmaz
     """
     try:
         responses = {
@@ -148,36 +144,30 @@ async def send_order(prepared_orders: dict) -> dict:
         for trade_type, orders in prepared_orders.items():
             if not orders:
                 continue
-                
+
             for order in orders:
                 try:
-                    # API bilgilerini al
+                    # API bilgileri ve parametreler
                     api_key = order["api_key"]
                     private_key = order["private_key"]
                     params = order.get("params", {}).copy()
                     order_trade_type = order.get("trade_type")
-                    original_order = order.get("original_order", {})  # Orijinal order datası
-                    bot_id = order.get("bot_id")  # Bot ID'yi order'dan al
-                    
-                    # ✅ API'ye gönderilmeden önce DB/internal parametrelerini temizle
-                    api_params = params.copy()
-                    
-                    # Internal parametreler - API'ye gönderilmemeli
-                    internal_params = ["bot_id", "original_order", "trade_type"]
-                    for param in internal_params:
-                        if param in api_params:
-                            del api_params[param]
-                            logger.debug(f"🔧 API parametrelerinden {param} kaldırıldı")
-                    
-                    # Timestamp güncelle
-                    api_params["timestamp"] = int(time.time() * 1000)
+                    original_order = order.get("original_order", {})  # Orijinal (DB/log) veri
+                    bot_id = order.get("bot_id")  # Bildirim için gerekli
 
-                    # İmza oluştur
+                    # API'ye gitmeyecek dahili anahtarları temizle
+                    api_params = params.copy()
+                    for k in ["bot_id", "original_order", "trade_type"]:
+                        if k in api_params:
+                            del api_params[k]
+
+                    # Timestamp ve imza
+                    api_params["timestamp"] = int(time.time() * 1000)
                     payload = "&".join(f"{k}={v}" for k, v in api_params.items())
                     signature = await _create_signature(private_key, payload, order_trade_type)
                     api_params["signature"] = signature
 
-                    # API isteği gönder
+                    # URL/Headers
                     api_url = API_URLS.get(order_trade_type)
                     if not api_url:
                         raise ValueError(f"Geçersiz trade_type: {order_trade_type}")
@@ -192,17 +182,16 @@ async def send_order(prepared_orders: dict) -> dict:
                             if response.status == 200:
                                 trade_result = await response.json()
                                 responses[trade_type].append(trade_result)
-                                
-                                # Konsol çıktısı
+
+                                # Konsol bilgi
                                 symbol = trade_result.get('symbol', 'N/A')
                                 side = trade_result.get('side', 'N/A')
                                 order_id = trade_result.get('orderId', 'N/A')
                                 status = trade_result.get('status', 'N/A')
                                 print(f"    💰 {symbol} {side} - Order ID: {order_id} - Status: {status}")
-                                
-                                # ✅ DB kayıt işlemi - temizlenmiş parametrelerle
+
+                                # DB kayıt (mevcut akış)
                                 if bot_id:
-                                    # DB için orijinal order bilgilerini kullan
                                     db_params = original_order.copy()
                                     db_params.update({
                                         "symbol": symbol,
@@ -210,31 +199,109 @@ async def send_order(prepared_orders: dict) -> dict:
                                         "quantity": api_params.get("quantity"),
                                         "price": api_params.get("price")
                                     })
-                                    
                                     db_saved = await save_successful_trade(
                                         bot_id=int(bot_id),
                                         trade_result=trade_result,
                                         order_params=db_params
                                     )
-                                    
                                     if db_saved:
                                         print(f"      💾 DB'ye kaydedildi")
                                     else:
                                         print(f"      ❌ DB kayıt başarısız")
-                                
+
                                 print(f"✅ {trade_type} emri başarıyla gönderildi")
-                                
+
+                                # ✅ Telegram: Başarı bildirimi (gizli olmayan bilgiler)
+                                try:
+                                    if bot_id:
+                                        price_line = ""
+                                        if api_params.get("price"):
+                                            price_line = f"\n💵 Fiyat: <b>{api_params.get('price')}</b>"
+                                        qty_line = f"<b>{api_params.get('quantity','N/A')}</b>" if api_params.get("quantity") else "N/A"
+                                        order_type = (original_order.get('order_type') or api_params.get('type') or 'N/A')
+                                        msg = (
+                                            f"✅ <b>Emir Başarıyla Gerçekleşti</b>\n\n"
+                                            f"🤖 Bot: <b>#{bot_id}</b>\n"
+                                            f"📈 Sembol: <b>{symbol}</b>\n"
+                                            f"↔️ Yön: <b>{side}</b>\n"
+                                            f"🧾 Tür: <b>{str(order_type).upper()}</b>\n"
+                                            f"🔢 Miktar: {qty_line}"
+                                            f"{price_line}\n"
+                                            f"🆔 Order ID: <code>{order_id}</code>\n"
+                                            f"📊 Durum: <b>{status}</b>\n\n"
+                                            f"ℹ️ Detayları Whaleer panelinden görüntüleyebilirsiniz."
+                                        )
+                                        await notify_user_by_telegram(text=msg, bot_id=int(bot_id))
+                                except Exception as _tel_err:
+                                    logger.warning(f"Telegram başarı bildirimi gönderilemedi: {str(_tel_err)}")
+
                             else:
                                 error_text = await response.text()
                                 logger.error(f"❌ {trade_type} API hatası: {response.status} - {error_text}")
                                 responses[trade_type].append({
                                     "error": f"HTTP {response.status}: {error_text}"
                                 })
-                                
+
+                                # ❗ Telegram: Hata bildirimi (ham hata içeriği paylaşmadan)
+                                try:
+                                    if bot_id:
+                                        # Oluşturulmak istenen emir bilgisi
+                                        symbol = original_order.get("coin_id", "N/A")
+                                        side = str(original_order.get("side", "N/A")).upper()
+                                        order_type = str(original_order.get("order_type", "N/A")).upper()
+                                        qty = api_params.get("quantity") or original_order.get("value", "N/A")
+                                        price_line = ""
+                                        # LIMIT/STOP gibi durumlarda kullanıcıya fiyatı da gösterebiliriz
+                                        p = api_params.get("price") or original_order.get("price")
+                                        if p:
+                                            price_line = f"\n💵 Hedef Fiyat: <b>{p}</b>"
+
+                                        msg = (
+                                            f"⚠️ <b>Emir İşlenemedi</b>\n\n"
+                                            f"🤖 Bot: <b>#{bot_id}</b>\n"
+                                            f"📈 Sembol: <b>{symbol}</b>\n"
+                                            f"↔️ Yön: <b>{side}</b>\n"
+                                            f"🧾 Tür: <b>{order_type}</b>\n"
+                                            f"🔢 Hedef Miktar: <b>{qty}</b>"
+                                            f"{price_line}\n\n"
+                                            f"❗ Bir hata oluştu. Lütfen emrinizi ve bakiye/izin ayarlarınızı kontrol edin."
+                                            f" Gerekirse <a href=\"https://whaleer.com/support\">Destek</a> kanalımızdan bize ulaşabilirsiniz. 🙏"
+                                        )
+                                        await notify_user_by_telegram(text=msg, bot_id=int(bot_id))
+                                except Exception as _tel_err:
+                                    logger.warning(f"Telegram hata bildirimi gönderilemedi: {str(_tel_err)}")
+
                 except Exception as e:
                     logger.error(f"❌ {trade_type} emri işlenirken hata: {str(e)}")
                     responses[trade_type].append({"error": str(e)})
 
+                    # ❗ Telegram: Beklenmeyen exception - kullanıcıya ham hata vermeden bildir
+                    try:
+                        bot_id = order.get("bot_id")
+                        if bot_id:
+                            symbol = (order.get("original_order") or {}).get("coin_id") or (order.get("params") or {}).get("symbol") or "N/A"
+                            side = (order.get("original_order") or {}).get("side") or (order.get("params") or {}).get("side") or "N/A"
+                            order_type = (order.get("original_order") or {}).get("order_type") or (order.get("params") or {}).get("type") or "N/A"
+                            qty = (order.get("params") or {}).get("quantity") or (order.get("original_order") or {}).get("value") or "N/A"
+                            price_line = ""
+                            p = (order.get("params") or {}).get("price") or (order.get("original_order") or {}).get("price")
+                            if p:
+                                price_line = f"\n💵 Hedef Fiyat: <b>{p}</b>"
+
+                            msg = (
+                                f"⚠️ <b>Emir İşleme Alınamadı</b>\n\n"
+                                f"🤖 Bot: <b>#{bot_id}</b>\n"
+                                f"📈 Sembol: <b>{symbol}</b>\n"
+                                f"↔️ Yön: <b>{str(side).upper()}</b>\n"
+                                f"🧾 Tür: <b>{str(order_type).upper()}</b>\n"
+                                f"🔢 Hedef Miktar: <b>{qty}</b>"
+                                f"{price_line}\n\n"
+                                f"❗ Bir hata oluştu. Lütfen emrinizi ve bakiye/izin ayarlarınızı kontrol edin."
+                                f" Gerekirse <a href=\"https://whaleer.com/profile/support\">Destek</a> kanalımızdan bize ulaşabilirsiniz. 🙏"
+                            )
+                            await notify_user_by_telegram(text=msg, bot_id=int(bot_id))
+                    except Exception as _tel_err:
+                        logger.warning(f"Telegram exception bildirimi gönderilemedi: {str(_tel_err)}")
         return responses
 
     except Exception as e:

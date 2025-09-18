@@ -8,7 +8,7 @@
   "menu": {
     "moreActions": "Diğer işlemler",
     "edit": "Düzenle",
-    "deleteDev": "Sil (Geliştirici)",
+    "deleteDev": "Sil",
     "examine": "İncele",
     "shutdown": "Kapat",
     "shutdownTitle": "Botu ve tüm açık işlemleri kapatır"

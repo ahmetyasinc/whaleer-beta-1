@@ -219,9 +219,9 @@ async def run_all_bots_async(bots, strategies_with_indicators, coin_data_dict, l
         # TAHANIN PARTI (AÇILMALI!)
         result = await send_order(await prepare_order_data(result_dict))
         # print(result)
-        print("result_dict1: ", result_dict)
-        if result_dict:
-            print("result_dict2: ", result_dict)
-            await save_result_to_json(result_dict, last_time, interval)
+        #print("result_dict1: ", result_dict)
+        #if result_dict:
+            #print("result_dict: ", result_dict)
+            #await save_result_to_json(result_dict, last_time, interval)
 
         return all_results

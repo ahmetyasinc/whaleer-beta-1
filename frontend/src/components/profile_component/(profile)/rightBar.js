@@ -261,7 +261,7 @@ export default function RightBar() {
   return (
     <div className="w-[260px] h-[calc(100vh-60px)] bg-black text-white shrink-0 flex flex-col">
       {/* Üst Aksiyon Butonları */}
-      <div className="p-3 border-b border-neutral-800">
+      {/*<div className="p-3 border-b border-neutral-800">
         <div className="grid grid-cols-1 gap-[10px]">
           <button className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-pink-700 hover:from-pink-700 hover:to-orange-500 duration-200 text-white px-3 py-2 rounded-lg text-xs font-medium hover:shadow-lg transition">
             <FaBolt className="text-[16px]" /> {t("buttons.quickActions")}
@@ -276,7 +276,7 @@ export default function RightBar() {
             <FaHistory className="text-[16px]" /> {t("buttons.purchaseHistory")}
           </button>
         </div>
-      </div>
+      </div>*/}
 
       {/* İçerik */}
       <div className="flex-1 overflow-y-auto p-3">

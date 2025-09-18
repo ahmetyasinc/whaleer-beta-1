@@ -88,7 +88,6 @@ async def send_telegram_message(chat_id: int, text: str) -> None:
         try:
             await client.post(url, json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"})
         except Exception:
-            # prod’da burayı loglayabilirsin
             pass
 
 # =========================================================

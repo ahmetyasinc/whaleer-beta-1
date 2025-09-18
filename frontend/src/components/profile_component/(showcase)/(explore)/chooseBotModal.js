@@ -17,9 +17,13 @@ function formatUSD(n, locale = "en-US") {
 function getPnlPct(initial, current) {
   const i = Number(initial ?? 0);
   const c = Number(current ?? 0);
-  if (!(i > 0)) return null; // initial yoksa veya 0/negatifse yüzde hesaplama yok
+  if (!(i > 0)) return null;
   return ((c - i) / i) * 100;
 }
+
+// ❗ Gizlenecek acquisition_type'lar
+const EXCLUDED_ACQ = new Set(["RENTED", "PURCHASED"]);
+const isExcludedAcquisition = (v) => v && EXCLUDED_ACQ.has(String(v).toUpperCase());
 
 export default function ChooseBotModal({ open, onClose, onSelectBot }) {
   const { t, i18n } = useTranslation("chooseBotModal");
@@ -36,16 +40,24 @@ export default function ChooseBotModal({ open, onClose, onSelectBot }) {
   const newListBots = useMemo(
     () =>
       (bots || [])
+        // ⛔ acquisition_type filtresi eklendi
+        .filter((b) => !isExcludedAcquisition(b?.acquisition_type))
         .filter((b) => !Boolean(b?.for_sale) && !Boolean(b?.for_rent))
-        .filter((b) => (search ? (b?.name || "").toLowerCase().includes(search.toLowerCase()) : true)),
+        .filter((b) =>
+          search ? (b?.name || "").toLowerCase().includes(search.toLowerCase()) : true
+        ),
     [bots, search]
   );
 
   const updateListBots = useMemo(
     () =>
       (bots || [])
+        // ⛔ acquisition_type filtresi eklendi
+        .filter((b) => !isExcludedAcquisition(b?.acquisition_type))
         .filter((b) => Boolean(b?.for_sale) || Boolean(b?.for_rent))
-        .filter((b) => (search ? (b?.name || "").toLowerCase().includes(search.toLowerCase()) : true)),
+        .filter((b) =>
+          search ? (b?.name || "").toLowerCase().includes(search.toLowerCase()) : true
+        ),
     [bots, search]
   );
 
@@ -154,7 +166,9 @@ export default function ChooseBotModal({ open, onClose, onSelectBot }) {
                     </div>
 
                     <button
-                      onClick={() => onSelectBot?.(b)}
+                      onClick={() => {console.log("Selected in ChooseBotModal:", b, Object.keys(b));
+                        onSelectBot?.(b);
+                      }}
                       className="px-3 py-1.5 rounded-lg bg-cyan-500 text-black text-sm hover:bg-cyan-400 shrink-0"
                       type="button"
                       title={isListed ? t("actions.selectUpdate") : t("actions.selectNew")}

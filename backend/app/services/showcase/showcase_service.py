@@ -12,6 +12,8 @@ class ShowcaseService:
 
     async def _build_showcase_response(self, bot) -> ShowcaseBotResponse:
         user_summary = await self.user_repo.get_user_by_id(bot.user_id)
+        if bot.description:
+            user_summary.description = bot.description
         trades = await self.bot_repo.get_recent_trades(bot.id)
         positions = await self.bot_repo.get_current_positions(bot.id)
         chart_data = await self.bot_repo.get_chart_data(bot.id)

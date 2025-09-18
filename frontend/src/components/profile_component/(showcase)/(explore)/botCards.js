@@ -239,10 +239,10 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
               title={t('stats.uptime')}
               value={formatRunningTime(botData.runningTime)}
             />
-            <StatBox icon={<FiTrendingUp />} title={t('stats.winRate')} value={`${botData.winRate}%`} />
             <StatBox icon={<LuChartNoAxesCombined />} title={t('stats.totalMargin')} value={`${botData.totalMargin}%`} />
+            {/*<StatBox icon={<FiTrendingUp />} title={t('stats.winRate')} value={`${botData.winRate}%`} />
             <StatBox icon={<GiCharging />} title={t('stats.profitFactor')} value={botData.profitFactor} />
-            <StatBox icon={<IoMdWarning />} title={t('stats.riskFactor')} value={botData.riskFactor} />
+            <StatBox icon={<IoMdWarning />} title={t('stats.riskFactor')} value={botData.riskFactor} />*/}
             <StatBox icon={<LiaChargingStationSolid />} title={t('stats.avgFullness')} value={`${botData.avg_fullness}%`} />
             <StatBoxTrades icon={<FiBarChart />} title={t('stats.plDWM')} value={`${botData.dayMargin}% / ${botData.weekMargin}% / ${botData.monthMargin}%`} />
           </div>

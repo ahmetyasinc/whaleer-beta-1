@@ -26,6 +26,7 @@
   },
   "hints": {
     "dailyPayment": "Daily payment",
+    "info": "🚨 10% of your sales will be taken as a platform fee.",
     "walletWarning": "⚠️ Please make sure you enter the correct wallet address. The responsibility is entirely yours.",
     "detailedAttracts": "Detailed descriptions attract more attention",
     "terms": "By continuing, you agree to our Terms and acknowledge that crypto transactions are irreversible."

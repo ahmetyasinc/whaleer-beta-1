@@ -36,23 +36,21 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
 
   const apiList = useApiStore((state) => state.apiList);
 
-  // --- Acquisition lock kontrolü ---
+  // --- Edit/Kilit durumları ---
   const isEdit = mode === 'edit' && !!bot;
   const acquisitionType = (bot?.acquisition_type || '').toUpperCase();
   const isAcquiredLocked =
     isEdit && (acquisitionType === 'PURCHASED' || acquisitionType === 'RENTED');
 
-  // Strateji alanı kilidi (edit veya satın/kirala)
   const isStrategyLocked = isEdit || isAcquiredLocked;
-
-  // Statik alan kilidi (Mum Sayısı ve enterOnCurrentSignal)
-  const isLockedStatic = isEdit || isAcquiredLocked;
+  const isLockedStatic = isEdit || isAcquiredLocked; // candleCount + enterOnCurrentSignal
+  const lockAllButCore = isEdit; // edit modunda core dışı kilit
 
   const displayStrategyName = bot?.strategy || selectedStrategy?.name || '';
 
   const availableCoins = [
     'BTCUSDT','ETHUSDT','BNBUSDT','SOLUSDT','ADAUSDT','XRPUSDT','DOGEUSDT',
-    'TONUSDT','TRXUSDT','LINKUSDT','MATICUSDT','DOTUSDT','LTCUSDT','SHIBUSDT','AVAXUSDT',
+    'TONUSDT','TRXUSDT','LINKUSDT','PEPEUSDT','DOTUSDT','LTCUSDT','SHIBUSDT','AVAXUSDT',
   ];
 
   const filteredCoins = useMemo(
@@ -73,12 +71,27 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
     [apiList, api]
   );
 
+  // ---- Kaydet'e kadar kilidi ertele ----
+  // Modal ilk açıldığında api yoksa, API + Bakiye kilidi Kaydet'e kadar kalksın.
+  const [deferLockApiAndBalance, setDeferLockApiAndBalance] = useState(false);
+  useEffect(() => {
+    if (isEdit) {
+      const initiallyNoApi = !(bot?.api && String(bot.api).trim().length > 0);
+      setDeferLockApiAndBalance(initiallyNoApi);
+    } else {
+      setDeferLockApiAndBalance(false);
+    }
+  }, [isEdit, bot]);
+
+  // Editte API seçili değilse normalde serbest; ayrıca deferLock true ise her hâlükârda serbest.
+  const canEditApiAndBalance = isEdit && (!api || !selectedApiObj);
+  const lockApiAndBalance = lockAllButCore && !canEditApiAndBalance && !deferLockApiAndBalance;
+
   // Edit modunda başlangıç değerleri yükle
   useEffect(() => {
     if (isEdit) {
       setBotName(bot.name || '');
       setApi(bot.api || '');
-      // Strateji adı satın alınan/kiralanan bottaysa gizli → UI'da boş
       setStrategy(isAcquiredLocked ? '' : (bot.strategy || ''));
       setPeriod(bot.period || '');
       setIsActive(bot.isActive ?? true);
@@ -88,7 +101,6 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
       setCryptoList(bot.cryptos || []);
       setCandleCount(bot.candleCount || 0);
 
-      // NEW: edit ilk değeri (camelCase/snake_case her ikisini de destekle)
       setEnterOnCurrentSignal(
         bot.enterOnCurrentSignal ?? bot.enter_on_current_signal ?? false
       );
@@ -96,7 +108,7 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
       setAllocatedAmount(
         bot.initial_usd_value != null ? bot.initial_usd_value : (bot.balance || 0)
       );
-      setType(bot.type === 'futures' ? 'futures' : 'spot');
+      setType(((bot && (bot.bot_type || bot.type)) === 'futures') ? 'futures' : 'spot');
     }
   }, [isEdit, bot, isAcquiredLocked]);
 
@@ -134,6 +146,7 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
   };
 
   const removeCrypto = (symbol) => {
+    if (lockAllButCore) return; // edit modunda kaldıramasın
     setCryptoList((prev) => prev.filter((c) => c !== symbol));
   };
 
@@ -144,22 +157,36 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
     const errors = [];
 
     if (!botName.trim()) errors.push(t('errors.nameRequired'));
-    if (!api) errors.push(t('errors.apiRequired'));
 
-    // Strateji sadece CREATE modunda istenir (edit'te zorunlu değil)
-    const shouldRequireStrategy = mode !== 'edit' && !isAcquiredLocked;
-    if (shouldRequireStrategy) {
-      if (!selectedStrategy || !selectedStrategy.name) {
-        errors.push(t('errors.strategyRequired'));
+    if (!isEdit) {
+      if (!api) errors.push(t('errors.apiRequired'));
+
+      const shouldRequireStrategy = !isAcquiredLocked;
+      if (shouldRequireStrategy) {
+        if (!selectedStrategy || !selectedStrategy.name) {
+          errors.push(t('errors.strategyRequired'));
+        }
+      }
+
+      if (!period) errors.push(t('errors.periodRequired'));
+      if (!candleCount || candleCount <= 0) errors.push(t('errors.candleInvalid'));
+      if (!allocatedAmount || Number(allocatedAmount) <= 10) errors.push(t('errors.amountMin'));
+      if (cryptoList.length === 0) errors.push(t('errors.cryptoRequired'));
+      if (Number(allocatedAmount) > Number(balance)) {
+        errors.push(t('errors.amountGtBalance'));
+      }
+    } else {
+      // EDIT: Başlangıçta api yoktuysa (deferLock) veya bot.api boşsa -> api seçilmesi zorunlu
+      if (deferLockApiAndBalance || !bot?.api) {
+        if (!api) errors.push(t('errors.apiRequired'));
+        if (Number(allocatedAmount) > Number(balance)) {
+          errors.push(t('errors.amountGtBalance'));
+        }
       }
     }
 
-    if (!period) errors.push(t('errors.periodRequired'));
-    if (!candleCount || candleCount <= 0) errors.push(t('errors.candleInvalid'));
     if (days.length === 0) errors.push(t('errors.dayRequired'));
     if (!startTime || !endTime) errors.push(t('errors.hoursRequired'));
-    if (!allocatedAmount || Number(allocatedAmount) <= 10) errors.push(t('errors.amountMin'));
-    if (cryptoList.length === 0) errors.push(t('errors.cryptoRequired'));
 
     // çalışma aralığı en az 1 saat
     const [startH, startM] = (startTime || '0:0').split(':').map(Number);
@@ -174,16 +201,52 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
       return;
     }
 
-    if (Number(allocatedAmount) > Number(balance)) {
-      toast.error(t('errors.amountGtBalance'), { autoClose: 2000 });
+    // Kayıt verisi
+    if (isEdit) {
+      // 🔧 Kritik: Eğer deferLock aktifse (veya bot.api hiç yoksa),
+      // API ve (ilk bakiye ayırma akışıysa) initial/balance değerleri STATE'ten gönderilir.
+      const useStateApiBlock = (deferLockApiAndBalance || !bot?.api);
+
+      const effectiveApi = useStateApiBlock ? api : bot.api;
+      const effectiveInitialUsd = useStateApiBlock
+        ? Number(allocatedAmount)
+        : (bot.initial_usd_value ?? bot.balance ?? 0);
+      const effectiveBalance = useStateApiBlock ? Number(balance) : bot.balance;
+      //console.log("bot:", bot);
+      const botData = {
+        id: bot?.id,
+        name: botName,
+        isActive,
+        days,
+        startTime,
+        endTime,
+
+        // 🔧 yeni/etkin alanlar
+        api: effectiveApi,
+        initial_usd_value: effectiveInitialUsd,
+        balance: effectiveBalance,
+
+        // Diğerleri dokunulmaz (backend uyumu için mevcutları taşıyoruz)
+        period: bot.period,
+        cryptos: bot.cryptos,
+        candleCount: bot.candleCount,
+        bot_type: bot.type,
+        enterOnCurrentSignal: bot.enterOnCurrentSignal ?? bot.enter_on_current_signal ?? false,
+        ...(isAcquiredLocked ? {} : { strategy: bot.strategy }),
+      };
+      console.log("Updating bot with data (before API):", botData);
+      updateBot(botData);
+      setDeferLockApiAndBalance(false);
+      toast.success(t('toast.updated'), { autoClose: 2000 });
+      onClose();
       return;
     }
 
+    // CREATE
     const botData = {
       id: bot?.id,
       name: botName,
       api,
-      // Satın alınan/kiralanan botta strateji gönderilmez (backend'de saklı)
       ...(isStrategyLocked ? {} : { strategy: selectedStrategy?.name }),
       period,
       isActive: false,
@@ -198,14 +261,8 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
       enterOnCurrentSignal,
     };
 
-    if (mode === 'edit') {
-      updateBot(botData);
-      toast.success(t('toast.updated'), { autoClose: 2000 });
-    } else {
-      addBot(botData);
-      toast.success(t('toast.created'), { autoClose: 2000 });
-    }
-
+    addBot(botData);
+    toast.success(t('toast.created'), { autoClose: 2000 });
     onClose();
   };
 
@@ -214,7 +271,7 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
       <div className="bg-gray-900 p-6 rounded-xl w-full max-w-4xl shadow-2xl relative border-y border-x h-[85vh] overflow-y-auto border-gray-950 flex gap-6">
         {/* SOL - FORM */}
         <div className="w-2/3 pr-4">
-          <h2 className="text-2xl font-bold text-white mb-6">
+          <h2 className="text-2xl font-bold text-white mb-2">
             {mode === 'edit' ? t('titles.edit') : t('titles.create')}
           </h2>
 
@@ -236,10 +293,10 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
               <label className="block mb-2 text-gray-200 font-medium">{t('labels.type')}</label>
               <div className="relative">
                 <select
-                  className={`w-40 p-2 bg-gray-800 text-white rounded ${isAcquiredLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  className={`w-40 p-2 bg-gray-800 text-white rounded ${lockAllButCore ? 'opacity-60 cursor-not-allowed' : ''}`}
                   value={type}
                   onChange={(e) => setType(e.target.value)}
-                  disabled={isAcquiredLocked}
+                  disabled={lockAllButCore}
                 >
                   <option value="spot">{t('types.spot')}</option>
                   <option value="futures">{t('types.futures')}</option>
@@ -252,9 +309,10 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
             <div>
               <label className="block mb-1 text-gray-300">{t('labels.api')}</label>
               <select
-                className="w-full p-2 bg-gray-800 text-white rounded"
+                className={`w-full p-2 bg-gray-800 text-white rounded ${lockApiAndBalance ? 'opacity-60 cursor-not-allowed' : ''}`}
                 value={api}
                 onChange={(e) => setApi(e.target.value)}
+                disabled={lockApiAndBalance}
               >
                 <option value="" disabled hidden>
                   {t('labels.select')}
@@ -270,16 +328,13 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
             <div>
               <label className="block mb-1 text-gray-300">{t('labels.strategy')}</label>
               {!isStrategyLocked ? (
-                // Oluşturma modunda veya tamamen serbestse: buton aktif
                 <StrategyButton onSelect={(selected) => setStrategy(selected)} />
               ) : isAcquiredLocked ? (
-                // Satın alınan/kiralanan bottaysa: strateji gizli
                 <div className="w-full p-2 bg-gray-800 text-gray-300 rounded flex items-center gap-2">
                   <FiLock className="shrink-0" />
                   <span className="text-sm">{t('labels.hidden')}</span>
                 </div>
               ) : (
-                // Edit modunda (normal bot): strateji adı kilitli/readonly göster
                 <div className="w-full p-2 bg-gray-800 text-gray-300 rounded flex items-center gap-2 opacity-70 cursor-not-allowed">
                   <FiLock className="shrink-0" />
                   <span className="text-sm">{displayStrategyName || t('labels.hidden')}</span>
@@ -290,9 +345,10 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
             <div>
               <label className="block mb-1 text-gray-300">{t('labels.period')}</label>
               <select
-                className="w-full p-2 bg-gray-800 text-white rounded"
+                className={`w-full p-2 bg-gray-800 text-white rounded ${lockAllButCore ? 'opacity-60 cursor-not-allowed' : ''}`}
                 value={period}
                 onChange={(e) => setPeriod(e.target.value)}
+                disabled={lockAllButCore}
               >
                 <option value="" disabled hidden>
                   {t('labels.select')}
@@ -364,7 +420,7 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
           <div className="mb-6">
             <label className="block mb-2 text-gray-200 font-medium">{t('labels.allocateBalance')}</label>
 
-            <div className="flex items-center gap-3 mb-2">
+            <div className={`flex items-center gap-3 mb-2 ${lockApiAndBalance ? 'opacity-60' : ''}`}>
               <input
                 type="range"
                 min={0}
@@ -377,11 +433,12 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
                   setAllocatedAmount(next);
                 }}
                 className="w-full accent-blue-500"
+                disabled={lockApiAndBalance}
               />
               <span className="text-gray-300 text-sm w-12 text-right">{percentage}%</span>
             </div>
 
-            <div className="flex justify-between items-center">
+            <div className={`flex justify-between items-center ${lockApiAndBalance ? 'opacity-60' : ''}`}>
               <span className="text-gray-400 text-sm">{t('labels.totalBalance')}: ${balance}</span>
               <div className="flex items-center gap-2">
                 <input
@@ -397,6 +454,7 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
                     setPercentage(Math.min(100, pct));
                   }}
                   className="w-24 px-2 py-1 bg-gray-800 text-white rounded text-sm"
+                  disabled={lockApiAndBalance}
                 />
                 <span className="text-gray-400 text-sm">$</span>
               </div>
@@ -453,10 +511,11 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
             <div className="relative w-full">
               <input
                 type="text"
-                className="w-full p-2 pr-10 mb-2 bg-gray-900 text-white rounded-sm"
+                className={`w-full p-2 pr-10 mb-2 bg-gray-900 text-white rounded-sm ${lockAllButCore ? 'opacity-60 cursor-not-allowed' : ''}`}
                 placeholder={t('labels.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                disabled={lockAllButCore}
               />
               <FiSearch
                 className="absolute right-3 top-[40%] transform -translate-y-1/2 text-gray-400 pointer-events-none"
@@ -464,7 +523,7 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
               />
             </div>
 
-            {searchQuery && (
+            {searchQuery && !lockAllButCore && (
               <div className="bg-gray-900 rounded max-h-48 overflow-y-auto scrollbar-hide">
                 {filteredCoins.length > 0 ? (
                   filteredCoins.map((coin) => (
@@ -490,11 +549,12 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
 
           <div className="flex flex-col gap-2 max-h-[350px] overflow-y-auto scrollbar-hide">
             {cryptoList.map((crypto) => (
-              <div key={crypto} className="flex justify-between items-center bg-gray-900 px-3 py-2 rounded">
+              <div key={crypto} className={`flex justify-between items-center bg-gray-900 px-3 py-2 rounded ${lockAllButCore ? 'opacity-60' : ''}`}>
                 <span className="text-white">{crypto}</span>
                 <button
                   onClick={() => removeCrypto(crypto)}
                   className="text-red-500 hover:text-red-600 text-sm"
+                  disabled={lockAllButCore}
                 >
                   {t('labels.remove')}
                 </button>

@@ -8,7 +8,9 @@
   "actions": {
     "panicButton": "Panic Button!",
     "panicButtonTitle": "Stop All Bots and Close Positions",
-    "createNewBot": "Create New Bot"
+    "createNewBot": "Create New Bot",
+    "createLocked": "Create New Bot (Locked)",
+    "planInsufficient": "Your plan allows up to {{limit}} bots in My Bots."
   },
   "empty": {
     "original": "You don't have any original bots yet.",

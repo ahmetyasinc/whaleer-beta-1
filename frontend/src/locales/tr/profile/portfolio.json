@@ -29,7 +29,7 @@
       "price": "Fiyat",
       "amount": "Miktar"
     },
-    "open": "Açık",
-    "close": "Kapalı"
+    "open": "Alım",
+    "close": "Satım"
   }
 }

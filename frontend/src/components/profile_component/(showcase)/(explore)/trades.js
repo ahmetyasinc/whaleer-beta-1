@@ -90,13 +90,31 @@ function makeFormatter(offsetMinutes) {
   };
 }
 
+// utils/formatPrice.js (ya da aynı dosyada üstte tanımlayabilirsiniz)
+function formatPrice(value) {
+  const n = Number(value);
+  const abs = Math.abs(n);
+
+  // Basit dinamik ondalık: büyük fiyatlar 2, daha küçükler 4-6 hane
+  let frac = 2;
+  if (abs < 1) frac = 4;
+  if (abs < 0.01) frac = 6;
+
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: frac,
+    maximumFractionDigits: frac,
+  }).format(n);
+}
+
 /* =========================
    Component
    ========================= */
 
 const Trades = ({ trades = [], positions = [] }) => {
   const { t } = useTranslation('trades');
-
+  console.log('Trades component rendered:', trades);
   const [tzOffsetMin, setTzOffsetMin] = useState(0);
 
   useEffect(() => {
@@ -124,32 +142,58 @@ const Trades = ({ trades = [], positions = [] }) => {
             </span>
           </div>
           <div className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-xl p-4">
-            <div className="space-y-2">
-              {trades.map((trade) => (
-                <div
-                  key={trade.id}
-                  className="flex items-center justify-between py-2 border-b border-gray-600 last:border-b-0"
-                >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <span className="text-sm font-medium text-white">{trade.pair}</span>
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${
-                        trade.type === 'LONG'
-                          ? 'bg-green-900 text-green-300'
-                          : 'bg-red-900 text-red-300'
-                      }`}
+            <div className="divide-y divide-gray-700">
+              {trades.map((trade) => {
+                const isBuy = trade.action === 'buy';
+                return (
+                  <div
+                    key={trade.id}
+                    className="
+                      grid items-center py-2
+                      /* Sütun düzeni: [time] [orta alan] [price] */
+                      grid-cols-[8.5rem,1fr,9.5rem]
+                      gap-3
+                    "
+                  >
+                    {/* SOL: Timestamp (baz alınan sabit genişlik) */}
+                    <div className="text-xs text-gray-400 tabular-nums">
+                      {renderTradeTime(trade.time)}
+                    </div>
+                
+                    {/* ORTA: pair + type + action */}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="text-sm font-medium text-white truncate">
+                        {trade.pair}
+                      </span>
+                
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-medium ${
+                          isBuy ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'
+                        }`}
+                        title={trade.type}
+                      >
+                        {trade.type}
+                      </span>
+                      
+                      <span className="text-xs text-gray-400 hidden sm:inline truncate">
+                        {trade.action}
+                      </span>
+                    </div>
+                      
+                    {/* SAĞ: Fiyat (sabit genişlik + sağa hizalı + tabular) */}
+                    <div
+                      className="
+                        justify-self-end w-[9.5rem]
+                        text-sm font-medium text-white
+                        text-right tabular-nums
+                      "
+                      title={`${trade.price} USD`}
                     >
-                      {trade.type}
-                    </span>
-                    <span className="text-xs text-gray-400 hidden sm:inline truncate">
-                      {trade.action}
-                    </span>
+                      {formatPrice(trade.price)}
+                    </div>
                   </div>
-                  <span className="text-xs text-gray-400 hidden sm:inline">
-                    {renderTradeTime(trade.time)}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

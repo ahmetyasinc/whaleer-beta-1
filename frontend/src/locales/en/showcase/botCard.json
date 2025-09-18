@@ -29,9 +29,9 @@
     "totalMargin": "Total Margin",
     "profitFactor": "Profit Factor",
     "riskFactor": "Risk Factor",
-    "avgFullness": "Avg. Fullness",
-    "tradesDWM": "Trades (D/W/M)",
-    "plDWM": "P/L (D/W/M)"
+    "avgFullness": "Average Fullness",
+    "tradesDWM": "Trades (Day/Week/Month)",
+    "plDWM": "P/L (Day/Week/Month)"
   },
   "strategy": {
     "title": "Strategy Used"

@@ -91,7 +91,7 @@ const BotDiscoveryApp = () => {
         </div>
 
         <div className="col-span-2 mt-[-41px]">
-          <BotterGuide username={botData.bot.creator} />
+          <BotterGuide username={botData.bot.creator} bot={botData} />
         </div>
       </div>
 

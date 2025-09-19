@@ -31,7 +31,7 @@
   },
   "types": {
     "spot": "Spot",
-    "futures": "Vadeli"
+    "futures": "Futures"
   },
   "periods": {
     "1m": "1 dk",

@@ -48,6 +48,6 @@ class User(Base):
     pinned_coins = relationship("BinanceCoinsPinned", back_populates="user", cascade="all, delete-orphan")
     favorite_indicators = relationship("IndicatorsFavorite", back_populates="user", cascade="all, delete-orphan")
     favorite_strategies = relationship("StrategiesFavorite", back_populates="user", cascade="all, delete-orphan")
-
+    plans = relationship("UserPlan", back_populates="user", cascade="all, delete-orphan")
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username}, email={self.email}, role={self.role})>"

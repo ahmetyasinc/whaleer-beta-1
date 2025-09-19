@@ -7,7 +7,7 @@
     "activeBots": "Active Bots",
     "soldRented": "Sold / Rented",
     "successRate": "Success Rate",
-    "avgMargin": "Avg. Margin",
+    "avgMargin": "Average Margin",
     "followers": "Followers"
   },
   "contact": {
@@ -22,10 +22,17 @@
     "winRate": "Win Rate",
     "moreCoins": "+{{count}}"
   },
-  "runtime": {
-    "startedToday": "Started today",
-    "hoursOnly": "{{hours}} hours",
-    "daysOnly": "{{days}} days",
-    "daysHours": "{{days}} days {{hours}} hours"
-  }
+"runtime": {
+  "justNow": "Started just now",
+  "minutesOnly": "{{minutes}} min",
+  "hoursOnly": "{{hours}} hours",
+  "hoursMinutes": "{{hours}} hours {{minutes}} min",
+  "daysOnly": "{{days}} days",
+  "daysHours": "{{days}} days {{hours}} hours",
+  "weeksOnly": "{{weeks}} weeks",
+  "weeksDays": "{{weeks}} weeks {{days}} days",
+  "yearsOnly": "{{years}} years",
+  "yearsWeeks": "{{years}} years {{weeks}} weeks"
+}
+
 }

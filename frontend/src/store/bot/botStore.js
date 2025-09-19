@@ -124,6 +124,7 @@ export const useBotStore = create((set) => ({
 
   updateBot: async (updatedBot) => {
     try {
+      //console.log("Updating bot with data:", updatedBot);
       const result = await updateBot(updatedBot.id, updatedBot);
       if (!result || !result.id) return;
 
@@ -131,7 +132,7 @@ export const useBotStore = create((set) => ({
       const strategies = useStrategyStore.getState().all_strategies || [];
       const matchedApi = apiList.find((api) => api.id === result.api_id);
       const matchedStrategy = strategies.find((s) => s.id === result.strategy_id);
-
+      //console.log("result:", result);
       const newBot = {
         id: result.id,
         name: result.name,
@@ -147,7 +148,7 @@ export const useBotStore = create((set) => ({
         initial_usd_value: result.initial_usd_value,
         total_balance: matchedApi?.balance || 0,
         acquisition_type: result.acquisition_type,
-        bot_type: result.bot_type,
+        type: result.bot_type,
         rent_expires_at: result.rent_expires_at,
         current_usd_value: result.current_usd_value,
       };

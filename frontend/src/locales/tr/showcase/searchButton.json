@@ -14,7 +14,7 @@
   },
   "type": {
     "spot": "Spot",
-    "futures": "Vadeli"
+    "futures": "Futures"
   },
   "labels": {
     "totalProfit": "Toplam Kâr:",

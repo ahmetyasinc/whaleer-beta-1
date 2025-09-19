@@ -39,7 +39,8 @@ export const getBots = async () => {
         revenue_wallet : item.revenue_wallet,
         acquisition_type: item.acquisition_type,
         rent_expires_at: item.rent_expires_at,
-        enterOnCurrentSignal: item.enter_on_start
+        enterOnCurrentSignal: item.enter_on_start,
+        description: item.description,
       };
     });
 
@@ -116,7 +117,7 @@ export const updateBot = async (id, botData) => {
     if(selectedStrategy) {
       selected_strategy_id = selectedStrategy.id
     }
-
+    //console.log("botData:", botData);
     const payload = {
       name: botData.name,
       strategy_id: selected_strategy_id,
@@ -128,7 +129,7 @@ export const updateBot = async (id, botData) => {
       active_days: botData.days,
       active_hours: `${botData.startTime}-${botData.endTime}`,
       initial_usd_value: Number(botData.initial_usd_value),
-      bot_type: botData.type || {},  // Yeni alan
+      bot_type: botData.bot_type || {}, 
     };
 
     const response = await axios.put(
@@ -145,7 +146,7 @@ export const updateBot = async (id, botData) => {
 
 export const deleteBot = async (id) => {// GELİŞTİRİCİ MODU
   try {
-    const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/bots/${id}`); //const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/bots/delete/${id}`);
+    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/bots/delete/${id}`); //const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/bots/${id}`);
     return response.data;
   } catch (error) {
     console.error("Error occured while deleting:", error);

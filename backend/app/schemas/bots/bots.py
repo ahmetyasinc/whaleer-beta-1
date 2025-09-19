@@ -46,6 +46,7 @@ class BotsOut(BotsBase):
     acquisition_type: Optional[str] = None
     rent_expires_at: Optional[datetime] = None
     enter_on_start: Optional[bool] = None
+    description: Optional[str] = None
     
     class Config:
         orm_mode = True
@@ -57,6 +58,7 @@ class BotListingUpdate(BaseModel):
     sell_price: Optional[float] = None
     rent_price: Optional[float] = None
     revenue_wallet: Optional[str] = None
+    listing_description: Optional[str] = Field(None, max_length=1000)
 
 
 class CheckoutSummaryOut(BaseModel):

@@ -5,8 +5,8 @@
     "priceRangeSale": "Fiyat Aralığı ($) (Satış)",
     "priceRangeRent": "Fiyat Aralığı ($) (Kiralama)",
     "onlyActive": "Sadece Aktif Botlar",
-    "profitFactor": "Profit Factor (min): {{value}}",
-    "riskFactor": "Risk Factor (maks): {{value}}",
+    "profitFactor": "Kâr Faktörü (min): {{value}}",
+    "riskFactor": "Risk Faktörü (maks): {{value}}",
     "creationTime": "Oluşturulma Süresi",
     "profitMargin": "Kâr Marjı (min)",
     "transactionFrequency": "Ortalama İşlem Sıklığı (dk)",
@@ -16,7 +16,7 @@
   "options": {
     "all": "Tümü",
     "spot": "Spot",
-    "futures": "Vadeli"
+    "futures": "Futures"
   },
   "units": {
     "day": "Gün",

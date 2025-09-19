@@ -61,3 +61,4 @@ class Bots(Base):
     enter_on_start = Column(Boolean, nullable=False, server_default=text("false"))
     deleted = Column(Boolean, nullable=False, server_default=text("false"))
 
+    description = Column(Text, nullable=True)

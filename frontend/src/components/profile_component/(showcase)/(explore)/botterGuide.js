@@ -5,16 +5,11 @@ import React from 'react';
 import useBotDataStore from '@/store/showcase/botDataStore';
 import { useTranslation } from 'react-i18next';
 
-const BotterGuide = ({ username }) => {
+const BotterGuide = ({ username, bot }) => {
   const { t } = useTranslation('botterGuide');
-  const { getUserData } = useBotDataStore();
-  const userData = getUserData();
-
+  console.log("BotterGuide userData:", bot);
   // Store'daki açıklama varsa onu kullan; yoksa i18n'deki varsayılan metne düş
-  const guideText =
-    userData?.description && String(userData.description).trim().length > 0
-      ? userData.description
-      : t('defaults.description');
+  const guideText = bot?.user?.description || t('defaultGuideText');
 
   return (
     <div className="mt-6 p-4 bg-gray-800 rounded-xl border border-gray-700">

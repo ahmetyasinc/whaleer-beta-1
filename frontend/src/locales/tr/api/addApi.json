@@ -35,10 +35,10 @@
     "continue": "Devam Et"
   },
   "confirmHmac": {
-    "title": "Bakiye Onayı (Spot + Vadeli)",
+    "title": "Bakiye Onayı (Spot + Futures)",
     "total": "Toplam USD:",
     "spot": "Spot:",
-    "futures": "Vadeli:"
+    "futures": "Futures:"
   },
   "warning": {
     "title": "Uyarı:",

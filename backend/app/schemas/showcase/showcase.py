@@ -60,6 +60,7 @@ class Trade(BaseModel):
     type: str
     action: str
     time: str
+    price: float
 
 class Position(BaseModel):
     id: int

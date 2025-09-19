@@ -1,6 +1,6 @@
 from collections import defaultdict
 from backend.trade_engine.data.bot_features import load_bot_context
-from backend.trade_engine.log import log_info, log_warning, log_error
+from backend.trade_engine.log.log import log_info, log_warning, log_error
 
 def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
     """
@@ -124,7 +124,8 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
                 t["short"]["lev"] = curr_pos
 
     actions = []
-
+    #print("bot_type:", bot_type)
+    #print("targets:", targets)
     # Leverage değişimi kapatması min_usd’a takılırsa ilgili bacağı açmayı engellemek için:
     blocked_open = defaultdict(lambda: {"long": False, "short": False})
 

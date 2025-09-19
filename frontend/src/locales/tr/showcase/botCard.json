@@ -17,11 +17,18 @@
     "notAvailable": "Mevcut değil"
   },
   "runtime": {
-    "startedToday": "Bugün başladı",
-    "hoursOnly": "{{hours}} saat",
-    "daysOnly": "{{days}} gün",
-    "daysHours": "{{days}} gün {{hours}} saat"
-  },
+  "justNow": "Az önce başladı",
+  "minutesOnly": "{{minutes}} dk",
+  "hoursOnly": "{{hours}} saat",
+  "hoursMinutes": "{{hours}} saat {{minutes}} dk",
+  "daysOnly": "{{days}} gün",
+  "daysHours": "{{days}} gün {{hours}} saat",
+  "weeksOnly": "{{weeks}} hafta",
+  "weeksDays": "{{weeks}} hafta {{days}} gün",
+  "yearsOnly": "{{years}} yıl",
+  "yearsWeeks": "{{years}} yıl {{weeks}} hafta"
+}
+,
   "stats": {
     "createdOn": "Oluşturulma",
     "uptime": "Çalışma Süresi",
@@ -29,9 +36,9 @@
     "totalMargin": "Toplam Marj",
     "profitFactor": "Profit Factor",
     "riskFactor": "Risk Factor",
-    "avgFullness": "Ort. Dolu Luk",
-    "tradesDWM": "İşlem (G/H/A)",
-    "plDWM": "K/Z (G/H/A)"
+    "avgFullness": "Ortalama Doluluk Oranı",
+    "tradesDWM": "İşlem (Gün/Hafta/Ay)",
+    "plDWM": "K/Z (Gün/Hafta/Ay)"
   },
   "strategy": {
     "title": "Kullanılan Strateji"

@@ -17,11 +17,18 @@
     "notAvailable": "Not available"
   },
   "runtime": {
-    "startedToday": "Started today",
-    "hoursOnly": "{{hours}} hours",
-    "daysOnly": "{{days}} days",
-    "daysHours": "{{days}} days {{hours}} hours"
-  },
+  "justNow": "Started just now",
+  "minutesOnly": "{{minutes}} min",
+  "hoursOnly": "{{hours}} hours",
+  "hoursMinutes": "{{hours}} hours {{minutes}} min",
+  "daysOnly": "{{days}} days",
+  "daysHours": "{{days}} days {{hours}} hours",
+  "weeksOnly": "{{weeks}} weeks",
+  "weeksDays": "{{weeks}} weeks {{days}} days",
+  "yearsOnly": "{{years}} years",
+  "yearsWeeks": "{{years}} years {{weeks}} weeks"
+}
+,
   "stats": {
     "createdOn": "Created on",
     "uptime": "Uptime",
@@ -29,9 +36,9 @@
     "totalMargin": "Total Margin",
     "profitFactor": "Profit Factor",
     "riskFactor": "Risk Factor",
-    "avgFullness": "Avg. Fullness",
-    "tradesDWM": "Trades (D/W/M)",
-    "plDWM": "P/L (D/W/M)"
+    "avgFullness": "Average Fullness",
+    "tradesDWM": "Trades (Day/Week/Month)",
+    "plDWM": "P/L (Day/Week/Month)"
   },
   "strategy": {
     "title": "Strategy Used"

@@ -151,7 +151,8 @@ class BotRepository:
                 BotTrades.symbol,
                 BotTrades.trade_type,
                 BotTrades.side,
-                BotTrades.created_at
+                BotTrades.created_at,
+                BotTrades.price,
             )
             .where(BotTrades.bot_id == bot_id)
             .order_by(BotTrades.created_at.desc())
@@ -166,7 +167,8 @@ class BotRepository:
                 pair=row.symbol,
                 type=row.trade_type,
                 action=row.side,
-                time=row.created_at.strftime("%Y-%m-%d %H:%M:%S")
+                time=row.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                price=float(row.price)
             )
             trades.append(trade)
         return trades
@@ -180,6 +182,7 @@ class BotRepository:
                 BotPositions.id,
                 BotPositions.symbol,
                 BotPositions.position_side,
+                BotPositions.open_cost,
                 BotPositions.realized_pnl,
                 BotPositions.unrealized_pnl
             ).where(
@@ -194,7 +197,7 @@ class BotRepository:
                 id=row.id,
                 pair=row.symbol,
                 type=pos_type,
-                profit=float(row.realized_pnl+row.unrealized_pnl)
+                profit=float((row.realized_pnl+row.unrealized_pnl)/(row.open_cost) * 100 if row.open_cost > 0 else 0)
             ))
 
         # 2. bot_holdings'den spot pozisyonlar
@@ -202,6 +205,7 @@ class BotRepository:
             select(
                 BotHoldings.id,
                 BotHoldings.symbol,
+                BotHoldings.open_cost,
                 BotHoldings.realized_pnl,
                 BotHoldings.unrealized_pnl,
             ).where(
@@ -215,7 +219,7 @@ class BotRepository:
                 id=row.id,
                 pair=row.symbol,
                 type="spot",
-                profit=float(row.realized_pnl + row.unrealized_pnl)
+                profit=float((row.realized_pnl + row.unrealized_pnl)/(row.open_cost) * 100 if row.open_cost > 0 else 0)
             ))
 
         return positions

@@ -18,6 +18,8 @@ const TABS = [
   { key: 'RENTED' },
 ];
 
+const MAX_ORIGINAL_BOTS = 3; // Plan limiti: "My Bots" (ORIGINAL) >= 3 ise yeni bot oluşturma kilitlenir
+
 function TabButton({ active, disabled, label, disabledTitle, count, onClick }) {
   return (
     <button
@@ -68,6 +70,12 @@ export default function BotsPageClient() {
     PURCHASED: counts.PURCHASED > 0,
     RENTED: counts.RENTED > 0,
   };
+
+  // Create limiti (“My Bots/ORIGINAL” için)
+  const canCreateBot = counts.ORIGINAL < MAX_ORIGINAL_BOTS;
+  const createTooltip = canCreateBot
+    ? t('actions.createNewBot')
+    : t('actions.planInsufficient', { limit: MAX_ORIGINAL_BOTS });
 
   // --- Aktif sekme (önce ORIGINAL, yoksa var olan ilk kategori)
   const pickDefaultTab = () => {
@@ -205,15 +213,28 @@ export default function BotsPageClient() {
 
           {/* Create New Bot */}
           <button
-            onClick={() => setModalOpen(true)}
-            className="group/button relative inline-flex items-center justify-center overflow-hidden rounded-md bg-gray-800/90 backdrop-blur-lg px-6 py-1 text-sm font-semibold text-white transition-all duration-300 ease-in-out hover:shadow-md hover:shadow-gray-600/50"
-            title={t('actions.createNewBot')}
+            onClick={() => {
+              if (!canCreateBot) return; // kilitliyken hiçbir şey yapma
+              setModalOpen(true);
+            }}
+            aria-disabled={!canCreateBot}
+            title={createTooltip}
+            className={[
+              "group/button relative inline-flex items-center justify-center overflow-hidden rounded-md px-6 py-1 text-sm font-semibold transition-all duration-300 ease-in-out",
+              canCreateBot
+                ? "bg-gray-800/90 text-white backdrop-blur-lg hover:shadow-md hover:shadow-gray-600/50 cursor-pointer"
+                : "bg-gray-700/60 text-white/60 cursor-not-allowed ring-1 ring-white/10"
+            ].join(" ")}
           >
-            <span className="text-[13px]">{t('actions.createNewBot')}</span>
-            <HiPlusSmall className="text-2xl relative font-semibold" />
-            <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-13deg)_translateX(-100%)] group-hover/button:duration-1000 group-hover/button:[transform:skew(-13deg)_translateX(100%)]">
-              <div className="relative h-full w-10 bg-white/20"></div>
-            </div>
+            <span className="text-[13px]">
+              {canCreateBot ? t('actions.createNewBot') : t('actions.createLocked')}
+            </span>
+            <HiPlusSmall className="text-2xl relative font-semibold ml-1" />
+            {canCreateBot && (
+              <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-13deg)_translateX(-100%)] group-hover/button:duration-1000 group-hover/button:[transform:skew(-13deg)_translateX(100%)]">
+                <div className="relative h-full w-10 bg-white/20"></div>
+              </div>
+            )}
           </button>
         </div>
       </header>

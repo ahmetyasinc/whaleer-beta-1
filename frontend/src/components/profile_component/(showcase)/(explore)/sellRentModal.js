@@ -60,6 +60,7 @@ export default function SellRentModal({ open, onClose }) {
   // Bot seçimi değişince formu doldur
   useEffect(() => {
     if (!selectedBot) return;
+    console.log("Selected bot:", selectedBot);
     const isListed = Boolean(selectedBot?.for_sale) || Boolean(selectedBot?.for_rent);
 
     if (isListed) {
@@ -68,12 +69,14 @@ export default function SellRentModal({ open, onClose }) {
       setSellPrice(selectedBot?.sell_price ?? "");
       setRentPrice(selectedBot?.rent_price ?? "");
       setWalletAddress(selectedBot?.revenue_wallet ?? "");
+      setDescription((selectedBot?.listing_description ?? selectedBot?.description ?? "").toString());
     } else {
       setSellChecked(false);
       setRentChecked(false);
       setSellPrice("");
       setRentPrice("");
       setWalletAddress("");
+      setDescription((selectedBot?.listing_description ?? selectedBot?.description ?? "").toString());
     }
   }, [selectedBot]);
 
@@ -114,9 +117,16 @@ export default function SellRentModal({ open, onClose }) {
       payload.revenue_wallet = walletAddress;
     }
 
+    // ➕ İlan açıklaması (listing_description): textarea → trim; boş ise null
+    const descTrim = (description ?? "").trim();
+    const prevDesc = (selectedBot?.listing_description ?? "") + "";
+    if (descTrim !== prevDesc) {
+      payload.listing_description = descTrim.length ? descTrim : null;
+    }
+
     const diff = Object.keys(payload).length > 0;
     return { diffPayload: payload, hasDiff: diff };
-  }, [selectedBot, sellChecked, rentChecked, sellPrice, rentPrice, walletAddress]);
+  }, [selectedBot, sellChecked, rentChecked, sellPrice, rentPrice, walletAddress, description]);
 
   const canSubmit =
     !!selectedBot &&
@@ -272,7 +282,8 @@ export default function SellRentModal({ open, onClose }) {
       const payload = {
         for_sale: false,
         for_rent: false,
-        revenue_wallet: DEFAULT_PAYOUT, // İstediğin default adres
+        revenue_wallet: DEFAULT_PAYOUT,
+        listing_description: null,
       };
       await patchBotListing(selectedBot.id, payload);
 
@@ -455,7 +466,10 @@ export default function SellRentModal({ open, onClose }) {
           </div>
 
           {/* Wallet Address */}
-          <div className="mb-6">
+          <p className="text-xs text-gray-400">
+              {t("hints.info")}
+          </p>
+          <div className="mb-6 mt-3">
             <label className="block text-base font-medium mb-2 text-gray-300">
               {t("labels.revenueWallet")} <span className="text-red-400">*</span>
             </label>

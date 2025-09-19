@@ -1,6 +1,4 @@
 {
   "title": "{{username}} tarafından:",
-  "defaults": {
-    "description": "Bu bot, gelişmiş algoritmalar kullanarak otomatik alım-satım işlemleri gerçekleştirir."
-  }
+  "defaultGuideText": "Bu bot, gelişmiş algoritmalar kullanarak otomatik alım-satım işlemleri gerçekleştirir."
 }

@@ -31,7 +31,7 @@ const LeftMenu = ({ locale }) => {
     { href: "/profile", icon: <BiUser />, label: t("profile") },
     //{ href: "/profile/whaleerai", label: t("ai") },
     { href: "/profile/strategies", icon: <BiCandles />, label: t("strategies") },
-    { href: "/profile/sift", icon: <BiSearchAlt />, label: t("scanner") },
+    //{ href: "/profile/sift", icon: <BiSearchAlt />, label: t("scanner") },
     { href: "/profile/backtest", icon: <BiLineChart />, label: t("backtest") },
     { href: "/profile/bot", icon: <LuBot />, label: t("bots") },
     { href: "/profile/showcase", icon: <BsGrid1X2 />, label: t("showcase") },

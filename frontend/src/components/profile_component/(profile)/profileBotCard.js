@@ -170,12 +170,12 @@ export default function ModernBotList({ bots = [] }) {
                                 <IoSearch size={16} />
                                 {examineLoadingId === bot.id ? t("menu.loading") : t("menu.examine")}
                               </button>
-                              <button
+                              {/*<button
                                 onClick={() => handlePreviewBot(bot.id)}
                                 className="flex items-center gap-2 w-full px-4 py-2 text-sm text-violet-400 hover:bg-stone-800 rounded-b-lg transition-colors duration-200"
                               >
                                 <FaEye size={16} /> {t("menu.preview")}
-                              </button>
+                              </button>*/}
                             </div>
                           )}
                         </div>

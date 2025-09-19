@@ -41,51 +41,149 @@ async def get_all_bots(db: AsyncSession = Depends(get_db), user_id: dict = Depen
 
 # POST new bot (otomatik user_id eklenir)
 @protected_router.post("/api/create-bots", response_model=BotsOut)
-async def create_bot(bot: BotsCreate, db: AsyncSession = Depends(get_db), user_id: dict = Depends(verify_token)):
+async def create_bot(
+    bot: BotsCreate,
+    db: AsyncSession = Depends(get_db),
+    user_id: dict = Depends(verify_token),
+):
     new_bot = Bots(**bot.dict(), user_id=int(user_id))
     db.add(new_bot)
     await db.commit()
     await db.refresh(new_bot)
+
     await notify_user_by_telegram(
-        int(user_id),
-        f"""🤖 <b>Yeni botunuz hazır!</b>
-        Bot adı: <b>{new_bot.name}</b> ✅
-        🔔 Bundan sonra bu botun yaptığı işlemler hakkında Telegram üzerinden anlık bildirimler alacaksınız.  
-        🌐 Daha fazla detay ve performans grafikleri için <a href="https://whaleer.com">whaleer.com</a> adresini ziyaret edebilirsiniz.
-        İyi kazançlar dileriz 🚀"""
-        )
+        text=(
+            f"""🤖 <b>Yeni botunuz hazır!</b>
+Bot adı: <b>{new_bot.name}</b> ✅
+🔔 Bundan sonra bu botun yaptığı işlemler hakkında Telegram üzerinden anlık bildirimler alacaksınız.  
+🌐 Daha fazla detay ve performans grafikleri için <a href="https://whaleer.com">whaleer.com</a> adresini ziyaret edebilirsiniz.
+İyi kazançlar dileriz 🚀"""
+        ),
+        user_id=int(user_id),  # veya bot_id=new_bot.id
+        db=db,                  # mevcut session’ı yeniden kullan
+    )
+
     return new_bot
 
-# PATCH update bot (sadece kendi botunu güncelleyebilir)
+
+from decimal import Decimal, InvalidOperation
+
 @protected_router.put("/api/update-bot/{bot_id}", response_model=BotsOut)
 async def update_bot(
     bot_id: int,
     bot_data: BotsUpdate,
     db: AsyncSession = Depends(get_db),
-    user_id: dict = Depends(verify_token)
+    user_id: dict = Depends(verify_token),
 ):
+    # — Botu yetki ve silinmemişlik kontrolü ile getir
     result = await db.execute(
-        select(Bots).where(Bots.id == bot_id, Bots.user_id == int(user_id),Bots.deleted.is_(False))
+        select(Bots).where(
+            Bots.id == bot_id,
+            Bots.user_id == int(user_id),
+            Bots.deleted.is_(False),
+        )
     )
     bot = result.scalar_one_or_none()
-
     if not bot:
         raise HTTPException(status_code=404, detail="Bot not found or unauthorized")
 
-    data_dict = bot_data.dict(exclude_unset=True)
+    # Frontend tüm alanları gönderebilir; sadece izinlileri al
+    raw = bot_data.dict(exclude_unset=False)
+    ALLOWED = {"name", "active_days", "active_hours"}
+    payload = {k: v for k, v in raw.items() if k in ALLOWED}
 
-    for field, value in data_dict.items():
-        # strategy_id None gelirse güncellemeyi atla
-        if field == "strategy_id" and value is None:
-            continue
-        setattr(bot, field, value)
+    # — Doğrulayıcılar
+    import re
+    HOURS_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d$")
 
-        # Eğer initial_usd_value güncelleniyorsa current_usd_value da eşitlensin
-        if field == "initial_usd_value" and value is not None:
-            bot.current_usd_value = value
+    EN_VALID = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"}
 
-    await db.commit()
-    await db.refresh(bot)
+    def validate_days(days_list):
+        if not isinstance(days_list, list) or not days_list:
+            raise HTTPException(status_code=422, detail="active_days must be a non-empty list.")
+        normalized, seen = [], set()
+        for d in days_list:
+            if not isinstance(d, str):
+                raise HTTPException(status_code=422, detail="active_days items must be strings.")
+            d = d.strip()
+            if d not in EN_VALID:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"Invalid day '{d}'. Use one of {sorted(list(EN_VALID))}."
+                )
+            if d not in seen:
+                seen.add(d)
+                normalized.append(d)
+        return normalized
+
+    def validate_hours(s):
+        if not isinstance(s, str):
+            raise HTTPException(status_code=422, detail="active_hours must be a string.")
+        s = s.strip()
+        if not HOURS_RE.match(s):
+            raise HTTPException(
+                status_code=422,
+                detail="active_hours must match HH:MM-HH:MM (e.g., '00:00-23:59')."
+            )
+        return s
+
+    changed = False
+
+    # — name
+    if "name" in payload:
+        new_name = (payload["name"] or "").strip()
+        if not new_name:
+            raise HTTPException(status_code=422, detail="name cannot be empty.")
+        if len(new_name) > 100:
+            raise HTTPException(status_code=422, detail="name length must be ≤ 100 characters.")
+        if new_name != bot.name:
+            bot.name = new_name
+            changed = True
+
+    # — active_days (EN gelir; geleni aynen sakla, sadece doğrula & dedupe)
+    if "active_days" in payload and payload["active_days"] is not None:
+        new_days = validate_days(payload["active_days"])
+        if bot.active_days is None or list(new_days) != list(bot.active_days):
+            bot.active_days = new_days
+            changed = True
+
+    # — active_hours
+    if "active_hours" in payload and payload["active_hours"] is not None:
+        new_hours = validate_hours(payload["active_hours"])
+        if (bot.active_hours or "") != new_hours:
+            bot.active_hours = new_hours
+            changed = True
+
+    # — conditional seed fields (sadece DB'de boşsa doldur)
+    # initial_usd_value -> hem initial hem current aynı değer
+    if bot.initial_usd_value is None and raw.get("initial_usd_value") is not None:
+        try:
+            val = Decimal(str(raw["initial_usd_value"]))
+        except (InvalidOperation, ValueError):
+            raise HTTPException(status_code=422, detail="initial_usd_value must be a valid decimal number.")
+        if val < 0:
+            raise HTTPException(status_code=422, detail="initial_usd_value must be ≥ 0.")
+        bot.initial_usd_value = val
+        # current_usd_value da ilk değerle başlasın (boşsa veya zorunlu olarak eşitlemek isterseniz)
+        if bot.current_usd_value is None:
+            bot.current_usd_value = val
+        changed = True
+
+    # api_id -> sadece DB'de null ise set et
+    if bot.api_id is None and raw.get("api_id") is not None:
+        try:
+            new_api_id = int(raw["api_id"])
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=422, detail="api_id must be an integer.")
+        if new_api_id <= 0:
+            raise HTTPException(status_code=422, detail="api_id must be a positive integer.")
+        bot.api_id = new_api_id
+        changed = True
+
+    if changed:
+        await db.commit()
+        await db.refresh(bot)
+
     return bot
 
 
@@ -345,24 +443,25 @@ async def update_bot_listing(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token),
 ):
-    # Bot sahiplik kontrolü
     result = await db.execute(
-        select(Bots).where(Bots.id == bot_id, Bots.user_id == int(user_id),Bots.deleted.is_(False))
+        select(Bots).where(Bots.id == bot_id, Bots.user_id == int(user_id), Bots.deleted.is_(False))
     )
     bot = result.scalar_one_or_none()
     if not bot:
         raise HTTPException(status_code=404, detail="Bot not found or unauthorized")
 
-    # Kısmi güncelleme (yalnızca gönderilen alanlar)
     data = payload.dict(exclude_unset=True)
 
-    # (İsteğe bağlı) iş kuralları:
-    # for_sale False ise sell_price'ı sıfırlamak isterseniz: 
+    # İş kuralları
     if data.get("for_sale") is False:
         data["sell_price"] = None
-    # for_rent False ise rent_price'ı sıfırlamak isterseniz:
     if data.get("for_rent") is False:
         data["rent_price"] = None
+
+    # Açıklamayı normalize et (trim + boşsa None)
+    if "listing_description" in data:
+        desc = (data["listing_description"] or "").strip()
+        data["listing_description"] = desc if desc else None
 
     for field, value in data.items():
         setattr(bot, field, value)
@@ -370,6 +469,7 @@ async def update_bot_listing(
     await db.commit()
     await db.refresh(bot)
     return bot
+
 
 @protected_router.get(
     "/api/bots/{bot_id}/checkout-summary",

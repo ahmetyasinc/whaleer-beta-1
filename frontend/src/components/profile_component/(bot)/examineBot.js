@@ -352,13 +352,13 @@ export default function ExamineBot({ isOpen, onClose, botId }) {
                 return (
                   <div key={i} className={`mb-3 py-3 px-4 rounded-lg bg-gradient-to-tr to-gray-950 ${profitColor} shadow-inner`}>
                     <div className="flex items-center flex-wrap gap-1 text-sm font-bold text-neutral-200">
-                      {bot.pos.symbol}
-                      {bot.pos.leverage > 0 && (
+                      {pos.symbol}
+                      {pos.leverage > 0 && (
                         <span className="mb-1 inline-block text-xs font-semibold bg-gradient-to-r from-orange-700 to-yellow-600 text-neutral-950 px-2 py-0.5 mx-2 rounded shadow-sm">
                           {pos.leverage}x
                         </span>
                       )}
-                      {bot.pos.position_side && (
+                      {pos.position_side && (
                         <span
                           className={`mb-1 inline-block text-xs font-semibold px-2 py-0.5 rounded shadow-sm ${
                             String(pos.position_side).toLowerCase() === "long"
@@ -374,15 +374,15 @@ export default function ExamineBot({ isOpen, onClose, botId }) {
                     </div>
 
                     <div className="text-xs text-zinc-300">
-                      {t("positions.amount")}: {Number(bot.pos.amount).toFixed(6)}
+                      {t("positions.amount")}: {Number(pos.amount).toFixed(6)}
                     </div>
 
                     <div
                       className={`text-xs font-semibold ${
-                        bot.pos.profit > 0 ? "text-green-400" : bot.pos.profit < 0 ? "text-red-400" : "text-zinc-300"
+                        pos.profit > 0 ? "text-green-400" : pos.profit < 0 ? "text-red-400" : "text-zinc-300"
                       }`}
                     >
-                      {t("positions.profit")}: {Number(bot.pos.profit).toFixed(3)} $
+                      {t("positions.profit")}: {Number(pos.profit).toFixed(3)} $
                     </div>
                   </div>
                 );

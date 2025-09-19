@@ -1342,9 +1342,8 @@ async def save_successful_trade(bot_id: int, trade_result: dict, order_params: d
 
 async def save_trade_to_db(bot_id: int, user_id: int, trade_result: dict, order_params: dict) -> bool:
     """
-    Trade'i DB'ye kaydeder - bot_trades schema'sına uygun
-    amount: kullanıcı tarafından gönderilen miktar
-    amount_state: gerçekleşen miktar (executedQty)
+    Trade'i DB'ye kaydeder.
+    Komisyonu her zaman USDT'ye çevirerek kaydeder.
     """
     try:
         if "error" in trade_result:
@@ -1355,17 +1354,11 @@ async def save_trade_to_db(bot_id: int, user_id: int, trade_result: dict, order_
         side = trade_result.get("side", "").lower()
         order_id = str(trade_result.get("orderId", ""))
         status = trade_result.get("status", "FILLED")
-
-        # ✅ Kullanıcının istediği miktar
         requested_qty = float(order_params.get("amount", 0))
-
-        # ✅ Gerçekleşen miktar
         executed_qty = float(trade_result.get("executedQty", 0) or trade_result.get("origQty", 0))
-
         trade_type = order_params.get("trade_type", "spot")
         normalized_trade_type = "spot" if trade_type in ["spot", "test_spot"] else "futures"
 
-        # Güncel fiyat
         current_price = await get_price(symbol, normalized_trade_type)
         if not current_price or current_price <= 0:
             current_price = float(
@@ -1375,9 +1368,43 @@ async def save_trade_to_db(bot_id: int, user_id: int, trade_result: dict, order_
             )
             logger.warning(f"⚠ {symbol} için price cache fallback: {current_price}")
 
-        # Commission
-        commission = sum(float(fill.get("commission", 0)) for fill in trade_result.get("fills", [])) \
-            if trade_result.get("fills") else float(trade_result.get("commission", 0) or 0.0)
+        # ================================================================= #
+        # YENİ EKLENEN KOMİSYON DÖNÜŞTÜRME BÖLÜMÜ BAŞLANGICI                  #
+        # ================================================================= #
+
+        # 1. Komisyon miktarını ve birimini al
+        commission_amount = 0.0
+        commission_asset = ""
+
+        if trade_result.get("fills"):
+            # 'fills' varsa, içindeki tüm komisyonları topla ve ilk birimi baz al
+            commission_amount = sum(float(fill.get("commission", 0)) for fill in trade_result.get("fills", []))
+            if trade_result["fills"]:
+                commission_asset = trade_result["fills"][0].get("commissionAsset", "")
+        else:
+            # 'fills' yoksa, ana yanıttan al
+            commission_amount = float(trade_result.get("commission", 0) or 0.0)
+            commission_asset = trade_result.get("commissionAsset", "")
+
+        commission_in_usdt = commission_amount
+
+        # 2. Eğer birim USDT değilse ve komisyon miktarı sıfırdan büyükse, çevir
+        if commission_asset and commission_asset.upper() != "USDT" and commission_amount > 0:
+            try:
+                # Örn: BNB ise "BNBUSDT" paritesinin fiyatını al
+                conversion_symbol = f"{commission_asset.upper()}USDT"
+                
+                # Fiyatı price_cache'den al (market_type='spot' çünkü komisyon varlıkları spot'ta işlem görür)
+                price = await get_price(conversion_symbol, "spot")
+
+                if price and price > 0:
+                    commission_in_usdt = commission_amount * price
+                    logger.info(f"💰 Komisyon dönüştürüldü: {commission_amount} {commission_asset} -> {commission_in_usdt:.6f} USDT (Fiyat: {price})")
+                else:
+                    logger.warning(f"⚠️ {conversion_symbol} için fiyat alınamadı. Komisyon orijinal değeriyle kaydedilecek.")
+            except Exception as e:
+                logger.error(f"❌ Komisyon dönüştürme hatası: {str(e)}. Komisyon orijinal değeriyle kaydedilecek.")
+        
 
         db_trade_type = trade_type.replace("test_", "")
         position_side = None
@@ -1386,19 +1413,21 @@ async def save_trade_to_db(bot_id: int, user_id: int, trade_result: dict, order_
         if normalized_trade_type == "futures":
             user_position_side = order_params.get("positionside", "both").lower()
             position_side = user_position_side
-            logger.info(f"📝 Kullanıcı positionside DB'ye kaydediliyor: {position_side}")
-
-            # DB'den leverage çek (override)
-            conn = get_db_connection()
-            with conn:
-                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                    cursor.execute("""
-                        SELECT leverage FROM user_symbol_settings
-                        WHERE user_id=%s AND api_id=%s AND symbol=%s AND trade_type=%s
-                    """, (user_id, order_params.get("api_id"), symbol, db_trade_type))
-                    row = cursor.fetchone()
-                    if row:
-                        leverage = row["leverage"]
+            
+            # API ID'sini almak için api_credentials'a erişim gerekebilir.
+            # Bu örnekte order_params içinde olduğunu varsayıyoruz.
+            api_id = order_params.get("api_id") 
+            if api_id:
+                conn = get_db_connection()
+                with conn:
+                    with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                        cursor.execute("""
+                            SELECT leverage FROM user_symbol_settings
+                            WHERE user_id=%s AND api_id=%s AND symbol=%s AND trade_type=%s
+                        """, (user_id, api_id, symbol, db_trade_type))
+                        row = cursor.fetchone()
+                        if row:
+                            leverage = row["leverage"]
 
         conn = get_db_connection()
         if not conn:
@@ -1423,14 +1452,14 @@ async def save_trade_to_db(bot_id: int, user_id: int, trade_result: dict, order_
                     datetime.now(),
                     symbol,
                     side,
-                    requested_qty,   # ✅ kullanıcı istediği (amount)
-                    commission,
+                    requested_qty,
+                    commission_in_usdt, # <-- BURASI GÜNCELLENDİ
                     order_id,
                     status,
                     db_trade_type,
                     position_side,
                     current_price,
-                    executed_qty,    # ✅ gerçekleşen (amount_state)
+                    executed_qty,
                     leverage
                 )
 
@@ -1439,7 +1468,7 @@ async def save_trade_to_db(bot_id: int, user_id: int, trade_result: dict, order_
 
         logger.info(
             f"✅ Trade kaydedildi: {symbol} | {side} | Amount: {requested_qty} "
-            f"| Executed: {executed_qty} | Price: {current_price} | Order ID: {order_id}"
+            f"| Fee (USDT): {commission_in_usdt:.6f} | Order ID: {order_id}"
         )
         return True
 

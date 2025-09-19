@@ -9,7 +9,9 @@ from backend.trade_engine.taha_part.utils.price_cache_new import (
 
 from backend.trade_engine.data.last_data_load import load_last_data
 from backend.trade_engine.process.trade_engine import run_trade_engine
-from backend.trade_engine.process.process import run_all_bots_async
+# listen_service.py (üst importlara ekle)
+from backend.trade_engine.process.process import run_all_bots_async, handle_rent_expiry_closures  # NEW
+from backend.trade_engine.process.save import save_result_to_json, aggregate_results_by_bot_id    # NEW
 
 if sys.platform.startswith('win'):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -56,6 +58,7 @@ async def handle_new_data(payload):
     # İş bittikten sonra sıradan çıkar
     queued_intervals.discard(interval)
 
+# listen_service.py (execute_bot_logic'i tamamen değiştir)
 async def execute_bot_logic(interval):
     lock = interval_locks[interval]
 
@@ -69,14 +72,37 @@ async def execute_bot_logic(interval):
 
         try:
             last_time = load_last_data(interval)
+
+            # 1) Strateji + veri + bot listesi
             strategies_with_indicators, coin_data_dict, bots = await run_trade_engine(interval)
 
-            if not strategies_with_indicators or not coin_data_dict or not bots:
-                print(f"❌ {interval} için aktif bot bulunamadı.")
-                return
-            await run_all_bots_async(bots, strategies_with_indicators, coin_data_dict, last_time, interval)
+            # 2) Önce kiralık kapanışlarını HER KOŞULDA çalıştır (bot olsa da olmasa da)
+            #    Boş bir results listesi ile başla, handle_rent_expiry_closures içine merge ettir.
+            results = []
+            results = await handle_rent_expiry_closures(results)
+
+            # 3) Botlar varsa, normal çalıştırmaları ekle
+            if strategies_with_indicators and coin_data_dict and bots:
+                bot_results = await run_all_bots_async(
+                    bots, strategies_with_indicators, coin_data_dict, last_time, interval
+                )
+                # flatten edilmiş liste bekliyoruz; birleştir
+                if bot_results:
+                    results.extend(bot_results)
+            else:
+                print(f"ℹ {interval}: Bot çalıştırma atlandı (eksik veri ya da aktif bot yok).")
+
+            # 4) Sonuçları grupla + JSON'a kaydet (sadece varsa)
+            if results:
+                result_dict = aggregate_results_by_bot_id(results)
+                if result_dict:
+                    await save_result_to_json(result_dict, last_time, interval)
+
+            #result = await send_order(await prepare_order_data(result_dict))
+            
             elapsed = time.time() - start_time
-            print(f"✅ {last_time}, {interval} için botlar tamamlandı. Süre: {elapsed:.2f} saniye.")
+            print(f"✅ {last_time}, {interval} tamamlandı. Süre: {elapsed:.2f} sn. (toplam sonuç: {len(results)})")
+
         except Exception as e:
             print(f"❌ {interval} için bot çalıştırılırken hata: {e}")
 

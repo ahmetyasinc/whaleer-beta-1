@@ -126,17 +126,17 @@ async def calculate_order_params(
         }
 
 
-
+"""
 async def send_order(prepared_orders: dict) -> dict:
-    """
-    Hazırlanan emirleri Binance API'ye gönderir ve başarılı olanları DB'ye kaydeder
     
-    Args:
-        prepared_orders (dict): Trade type bazında hazırlanmış emirler
+    #Hazırlanan emirleri Binance API'ye gönderir ve başarılı olanları DB'ye kaydeder
+    
+    #Args:
+    #    prepared_orders (dict): Trade type bazında hazırlanmış emirler
         
-    Returns:
-        dict: API yanıtları
-    """
+    #Returns:
+    #    dict: API yanıtları
+    
     try:
         responses = {
             "spot": [],
@@ -240,6 +240,61 @@ async def send_order(prepared_orders: dict) -> dict:
     except Exception as e:
         logger.error(f"❌ Emir gönderme işlemi sırasında hata: {str(e)}")
         return {}
+"""
+
+async def send_order(prepared_orders: dict) -> dict:
+    """
+    Hazırlanan emirleri Binance API'ye gönderir ve başarılı olanları DB'ye kaydeder.
+    Tüm emirler HMAC imzası ile gönderilir.
+    """
+    try:
+        responses = { "spot": [], "test_spot": [], "futures": [], "test_futures": [] }
+        for trade_type, orders in prepared_orders.items():
+            if not orders: continue
+            for order in orders:
+                try:
+                    api_key = order["api_key"]
+                    private_key = order["private_key"]
+                    params = order.get("params", {}).copy()
+                    order_trade_type = order.get("trade_type")
+                    
+                    api_params = params.copy()
+                    internal_params = ["bot_id", "original_order", "trade_type"]
+                    for param in internal_params:
+                        if param in api_params: del api_params[param]
+                    
+                    api_params["timestamp"] = int(time.time() * 1000)
+
+                    # İMZA OLUŞTURMA (Her zaman HMAC)
+                    payload = "&".join(f"{k}={v}" for k, v in api_params.items())
+                    signature = await _create_signature(private_key, payload, order_trade_type)
+                    api_params["signature"] = signature
+
+                    # API isteği
+                    api_url = API_URLS.get(order_trade_type)
+                    if not api_url: raise ValueError(f"Geçersiz trade_type: {order_trade_type}")
+
+                    headers = { "X-MBX-APIKEY": api_key, "Content-Type": "application/x-www-form-urlencoded" }
+
+                    async with aiohttp.ClientSession() as session:
+                        async with session.post(api_url, headers=headers, data=api_params) as response:
+                            if response.status == 200:
+                                trade_result = await response.json()
+                                responses[trade_type].append(trade_result)
+                                print(f"✅ {trade_type} emri başarıyla gönderildi (HMAC ile)")
+                                # ... (DB kayıt ve loglama kısımları aynı kalır)
+                            else:
+                                error_text = await response.text()
+                                logger.error(f"❌ {trade_type} API hatası: {response.status} - {error_text}")
+                                responses[trade_type].append({"error": f"HTTP {response.status}: {error_text}"})
+                except Exception as e:
+                    logger.error(f"❌ {trade_type} emri işlenirken hata: {str(e)}")
+                    responses[trade_type].append({"error": str(e)})
+        return responses
+    except Exception as e:
+        logger.error(f"❌ Emir gönderme işlemi sırasında hata: {str(e)}")
+        return {}
+    
 
 async def prepare_order_data(order_data: dict) -> dict:
     """
@@ -334,7 +389,7 @@ def _normalize_position_side(order: dict, trade_type: str) -> tuple:
     user_position_side = str(order.get("positionside", "both")).lower()
     api_position_side = "BOTH" if trade_type in ["futures", "test_futures"] else None
     return api_position_side, user_position_side
-
+"""
 async def _prepare_single_order(bot_id: int, order: dict, api_credentials: dict, filters: dict):
     try:
         # ✅ Önce status kontrolü
@@ -344,6 +399,14 @@ async def _prepare_single_order(bot_id: int, order: dict, api_credentials: dict,
             return None
         if "status" in order:
             del order["status"]  # ✅ API'ye gitmesin
+
+        if not api_key or not private_key:
+            logger.error(f"Bot {bot_id} ({api_credentials.get('id')}) için HMAC anahtarları veritabanında bulunamadı. Emir atlanıyor.")
+            return None # Fonksiyondan erken çık ve bu emri atla
+        # =======================================
+
+        api_id = api_credentials.get("id")
+        user_id = await get_user_id_by_bot_id(int(bot_id))
 
         trade_type = order.get("trade_type")
         coin_id = order["coin_id"]
@@ -445,6 +508,128 @@ async def _prepare_single_order(bot_id: int, order: dict, api_credentials: dict,
     except Exception as e:
         logger.error(f"❌ Emir hazırlama hatası: {str(e)}")
         return None
+"""
+async def _prepare_single_order(bot_id: int, order: dict, api_credentials: dict, filters: dict):
+    try:
+        # ✅ Önce status kontrolü
+        status = str(order.get("status", "success")).lower()
+        if status == "error":
+            logger.warning(f"⚠ Bot {bot_id} için {order.get('coin_id')} emri atlandı (status=error)")
+            return None
+        if "status" in order:
+            del order["status"]  # ✅ API'ye gitmesin
+
+        # ✅ API keyleri al
+        api_key, private_key = _extract_api_keys(api_credentials, order.get("trade_type"))
+        if not api_key or not private_key:
+            logger.error(f"Bot {bot_id} ({api_credentials.get('id')}) için HMAC anahtarları bulunamadı. Emir atlanıyor.")
+            return None
+
+        api_id = api_credentials.get("id")
+        user_id = await get_user_id_by_bot_id(int(bot_id))
+
+        trade_type = order.get("trade_type")
+        coin_id = order["coin_id"]
+        side = order["side"].upper()
+        order_type = order["order_type"].upper()
+        value = Decimal(str(order["value"]))  # ✅ Decimal ile güvenli
+
+        leverage = Decimal("1")
+
+        # ✅ Futures setup
+        if trade_type in ["futures", "test_futures"]:
+            conn = get_db_connection()
+            settings = await sync_margin_leverage(
+                user_id=user_id,
+                api_id=api_id,
+                api_key=api_key,
+                private_key=private_key,
+                symbol=coin_id,
+                trade_type=trade_type,
+                order=order,
+                conn=conn
+            )
+
+            if not settings:
+                logger.error(f"❌ {coin_id} için margin/leverage ayarları alınamadı")
+                return None
+
+            leverage = Decimal(str(settings.get("leverage", 1)))
+            margin_type_bool = settings.get("margin_type", True)
+            margin_type_str = "ISOLATED" if margin_type_bool else "CROSSED"
+            print(f"✅ DB ayarları - {coin_id}: margin_type={margin_type_str}, leverage={leverage}x")
+
+        # ✅ Güncel fiyat
+        current_price = await get_price(coin_id, "futures" if "futures" in trade_type else "spot")
+
+        # ✅ Quantity hesaplama
+        calc_result = await calculate_order_params(
+            filters=filters,
+            coin_id=coin_id,
+            trade_type=trade_type,
+            value=value,
+            current_price=current_price,
+            price=order.get("price"),
+            stop_price=order.get("stopPrice"),
+            activation_price=order.get("activationPrice"),
+            leverage=int(leverage)
+        )
+
+        if calc_result["status"] == "error":
+            logger.error(f"❌ {coin_id} için hesaplama hatası: {calc_result['message']}")
+            return None
+
+        api_position_side, user_position_side = _normalize_position_side(order, trade_type)
+
+        params = {
+            "symbol": coin_id,
+            "side": side,
+            "type": order_type,
+            "quantity": calc_result["quantity"],
+            "timestamp": int(time.time() * 1000),
+        }
+
+        for key in ["price", "stopPrice", "activationPrice"]:
+            if calc_result.get(key):
+                params[key] = calc_result[key]
+
+        if api_position_side:
+            params["positionSide"] = api_position_side
+
+        # Ek parametreler
+        blacklist = {"coin_id", "side", "order_type", "value", "trade_type", "price", "stopPrice", "activationPrice"}
+        for key, val in order.items():
+            if key not in blacklist:
+                if key.lower() == "timeinforce":
+                    params["timeInForce"] = str(val).upper()
+                elif key.lower() == "reduce_only":
+                    params["reduceOnly"] = str(val).lower()
+                elif key.lower() == "positionside":
+                    params["positionSide"] = "BOTH"
+                else:
+                    params[key] = str(val)
+
+        if order_type == "LIMIT" and "timeInForce" not in params:
+            params["timeInForce"] = "GTC"
+
+        return {
+            "api_key": api_key,
+            "private_key": private_key,
+            "trade_type": trade_type,
+            "params": params,
+            "bot_id": bot_id,
+            "original_order": {
+                **order,
+                "positionside": user_position_side,
+                "leverage": int(leverage),
+                "amount": calc_result["quantity"]
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"❌ Emir hazırlama hatası: {str(e)}")
+        return None
+
 async def _get_api_credentials(bot_id: str, trade_type: str) -> Optional[dict]:
     """
     API kimlik bilgilerini getirir - reusable function
@@ -467,18 +652,18 @@ async def _get_api_credentials(bot_id: str, trade_type: str) -> Optional[dict]:
     except Exception as e:
         logger.error(f"❌ Bot ID {bot_id} için API kimlik bilgileri alınamadı: {str(e)}")
         return None
-
+"""
 def _extract_api_keys(api_credentials: dict, trade_type: str) -> tuple:
-    """
-    Trade type'a göre doğru API anahtarlarını seçer
     
-    Args:
-        api_credentials (dict): API kimlik bilgileri
-        trade_type (str): Trade type
+    #Trade type'a göre doğru API anahtarlarını seçer
+    
+    #Args:
+    #    api_credentials (dict): API kimlik bilgileri
+    #    trade_type (str): Trade type
         
-    Returns:
-        tuple: (api_key, private_key)
-    """
+    #Returns:
+    #    tuple: (api_key, private_key)
+    
     if trade_type in ["futures", "test_futures"]:
         return (
             api_credentials.get("api_key"),
@@ -491,6 +676,22 @@ def _extract_api_keys(api_credentials: dict, trade_type: str) -> tuple:
         )
     
     return None, None
+"""
+
+def _extract_api_keys(api_credentials: dict, trade_type: str) -> tuple:
+    """
+    Tüm trade type'ları için standart HMAC API anahtarlarını seçer.
+    Ed25519 anahtarları (`ed_public`, `ed_private_pem`) artık kullanılmaz.
+    """
+    # DEĞİŞİKLİK: Spot ve Futures için her zaman HMAC anahtarlarını kullan
+    api_key = api_credentials.get("api_key")
+    api_secret = api_credentials.get("api_secret")
+    
+    if not api_key or not api_secret:
+        logger.error(f"API credentials içinde 'api_key' veya 'api_secret' bulunamadı.")
+        return None, None
+        
+    return api_key, api_secret
 
 async def _handle_futures_position_setup(api_key: str, private_key: str, symbol: str, 
                                         trade_type: str, api_id: int, user_id: int) -> None:
@@ -522,26 +723,36 @@ async def _handle_futures_position_setup(api_key: str, private_key: str, symbol:
 
     except Exception as e:
         logger.error(f"❌ API ID {api_id} - {symbol} pozisyon ayarlama hatası: {str(e)}")
-
+"""
 async def _create_signature(private_key: str, payload: str, trade_type: str) -> str:
-    """
-    Trade type'a göre doğru imzayı oluşturur
     
-    Args:
-        private_key (str): Private key
-        payload (str): Payload
-        trade_type (str): Trade type
+    #Trade type'a göre doğru imzayı oluşturur
+    
+    #Args:
+        #private_key (str): Private key
+        #payload (str): Payload
+        #trade_type (str): Trade type
         
-    Returns:
-        str: İmza
-    """
+    #Returns:
+        #str: İmza
+    
     if trade_type in ["futures", "test_futures"]:
         return await hmac_sign(private_key, payload)
     elif trade_type in ["spot", "test_spot"]:
         return await ed25519_sign(private_key, payload)
     else:
         raise ValueError(f"Geçersiz trade_type: {trade_type}")
-        
+"""
+async def _create_signature(private_key: str, payload: str, trade_type: str) -> str:
+    """
+    Tüm trade type'ları için HMAC imzası oluşturur.
+    'private_key' parametresi bu context'te api_secret'tır.
+    """
+    # Önceki konuşmamızda kararlaştırdığımız gibi,
+    # tüm piyasa türleri (spot, futures vb.) için HMAC kullanıyoruz.
+    # Bu nedenle trade_type'ı kontrol eden if/elif bloğuna artık gerek yok.
+    return await hmac_sign(private_key, payload)
+   
 def _build_order_params(coin_id: str, side: str, order_type: str, quantity: str, 
                        price_validation: dict, order: dict) -> dict:
     """
@@ -1174,11 +1385,15 @@ async def last_trial():
     testttt= {
         "112": [
             {
-                "trade_type": "test_spot",
+                "trade_type": "test_futures",
                 "coin_id": "BTCUSDT",
                 "side": "buy",
-                "order_type": "MARKET",
-                "value": 300.0
+                "order_type": "LIMIT",
+                "value": 108700,
+                "price": 3000,
+                "positionside": "long",  # ✅ Kullanıcı "long" gönderdi, DB'ye "long" kaydedilir, Binance'e "BOTH"
+                "timeInForce": "GTC",
+                "leverage": 3,
             },
             {
                 "trade_type": "test_futures",
@@ -1224,15 +1439,12 @@ async def last_trial():
     test_one ={"99": [
             
               {
-                "trade_type": "test_futures",
+                "trade_type": "spot",
                 "coin_id": "BTCUSDT",
                 "side": "buy",
-                "order_type": "LIMIT",
-                "value": 108700,
-                "price": 3000,
-                "positionside": "long",  # ✅ Kullanıcı "long" gönderdi, DB'ye "long" kaydedilir, Binance'e "BOTH"
-                "timeInForce": "GTC",
-                "leverage": 3,
+                "order_type": "MARKET",
+                "value": 18.0
+                
             }
         ]
         

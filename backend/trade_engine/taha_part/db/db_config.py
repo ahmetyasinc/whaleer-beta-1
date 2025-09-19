@@ -114,7 +114,8 @@ async def save_trade_to_db(bot_id: int, user_id: int, trade_result: dict, order_
 
 async def get_api_credentials_by_bot_id(bot_id: int, trade_type: str = "spot") -> Dict:
     """
-    Bot ID'den API kimlik bilgilerini getirir - API ID'yi de dahil eder.
+    Bot ID'den API kimlik bilgilerini getirir - her zaman HMAC (api_key + api_secret) döndürür.
+    Ed25519 desteklenmez.
     """
     try:
         conn = get_db_connection()
@@ -134,22 +135,12 @@ async def get_api_credentials_by_bot_id(bot_id: int, trade_type: str = "spot") -
                 
                 api_id = bot_result["api_id"]
                 
-                # Trade type'a göre API bilgilerini al
-                if trade_type.lower() in ["futures", "test_futures"]:
-                    cursor.execute("""
-                        SELECT id, api_key, api_secret 
-                        FROM api_keys 
-                        WHERE id = %s
-                    """, (api_id,))
-                elif trade_type.lower() in ["spot", "test_spot"]:
-                    cursor.execute("""
-                        SELECT id, ed_public, ed_private_pem 
-                        FROM api_keys 
-                        WHERE id = %s
-                    """, (api_id,))
-                else:
-                    logger.error(f"❌ Geçersiz trade_type: {trade_type}")
-                    return {}
+                # ✅ Her zaman HMAC keylerini getir
+                cursor.execute("""
+                    SELECT id, api_key, api_secret
+                    FROM api_keys
+                    WHERE id = %s
+                """, (api_id,))
                 
                 api_result = cursor.fetchone()
                 
@@ -157,7 +148,6 @@ async def get_api_credentials_by_bot_id(bot_id: int, trade_type: str = "spot") -
                     print(f"⚠️ API ID {api_id} için kimlik bilgileri bulunamadı")
                     return {}
                 
-                # API ID'yi de dahil et
                 result = dict(api_result)
                 print(f"✅ Bot {bot_id} için {trade_type} API bilgileri alındı (API ID: {api_id})")
                 return result

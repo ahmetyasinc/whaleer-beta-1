@@ -1,6 +1,4 @@
 {
   "title": "By {{username}}:",
-  "defaults": {
-    "description": "This bot performs automated trading operations using advanced algorithms."
-  }
+  "defaultGuideText": "This bot performs automated trading operations using advanced algorithms."
 }

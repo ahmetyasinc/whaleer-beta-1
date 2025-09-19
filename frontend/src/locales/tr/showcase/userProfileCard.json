@@ -23,9 +23,15 @@
     "moreCoins": "+{{count}}"
   },
   "runtime": {
-    "startedToday": "Bugün başladı",
+    "justNow": "Az önce başladı",
+    "minutesOnly": "{{minutes}} dk",
     "hoursOnly": "{{hours}} saat",
+    "hoursMinutes": "{{hours}} saat {{minutes}} dk",
     "daysOnly": "{{days}} gün",
-    "daysHours": "{{days}} gün {{hours}} saat"
+    "daysHours": "{{days}} gün {{hours}} saat",
+    "weeksOnly": "{{weeks}} hafta",
+    "weeksDays": "{{weeks}} hafta {{days}} gün",
+    "yearsOnly": "{{years}} yıl",
+    "yearsWeeks": "{{years}} yıl {{weeks}} hafta"
   }
 }

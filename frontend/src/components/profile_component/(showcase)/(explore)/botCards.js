@@ -97,6 +97,35 @@ function formatDateOnly(value, offsetMinutes) {
   return `${D}.${M}.${Y}`;
 }
 
+// ---- helpers for TypeBadge ----
+const getTypeBadgeClasses = (type) => {
+  const t = String(type || '').toLowerCase();
+  // renkleri sade ve okunur tut
+  switch (t) {
+    case 'futures':
+    case 'future':
+    case 'perp':
+    case 'perpetual':
+      return 'bg-purple-900/30 text-purple-200 border border-purple-500/40';
+    case 'spot':
+    default:
+      return 'bg-emerald-900/30 text-emerald-200 border border-emerald-500/40';
+  }
+};
+
+function TypeBadge({ type }) {
+  const { t: tr } = useTranslation('showcaseBotCard'); // aynı namespace'i kullanalım
+  const label = (type || 'spot').toString().toUpperCase();
+  return (
+    <span
+      className={`px-5 py-[8px] rounded-full uppercase tracking-wide text-[12px] ${getTypeBadgeClasses(type)} shrink-0`}
+      title={tr ? tr('typeBadgeTitle', { type: label }) : label}
+    >
+      {label}
+    </span>
+  );
+}
+
 const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
   if (!botData) return null;
 
@@ -110,25 +139,56 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
     setTzOffsetMin(readTimezoneOffsetMinutesFromCookie());
   }, []);
 
-  // runningTime: saat cinsinden gelebilir (float/int). Gün-saat metni.
-  const formatRunningTime = (hoursInput) => {
-    const h = Math.max(0, Math.floor(Number(hoursInput) || 0)); // negatif/NaN koruması + tam saat
-    if (h < 1) return t('runtime.startedToday'); // <1 saat
+  // minutesInput: dakika cinsinden toplam süre
+  const formatRunningTime = (minutesInput) => {
+    const m = Math.max(0, Math.floor(Number(minutesInput) || 0)); // negatif/NaN koruması
+    if (m < 1) return t("runtime.justNow"); // 1 dakikadan az
 
-    const days = Math.floor(h / 24);
-    const remainingHours = h % 24;
+    const minutes = m % 60;
+    const totalHours = Math.floor(m / 60);
 
-    if (days === 0) {
-      // sadece saat
-      return t('runtime.hoursOnly', { hours: h });
+    const hours = totalHours % 24;
+    const totalDays = Math.floor(totalHours / 24);
+
+    const days = totalDays % 7;
+    const totalWeeks = Math.floor(totalDays / 7);
+
+    const weeks = totalWeeks % 52;
+    const years = Math.floor(totalWeeks / 52);
+
+    // --- Mantıklı formatlar ---
+    if (years > 0) {
+      if (weeks === 0 && days === 0 && hours === 0) {
+        return t("runtime.yearsOnly", { years });
+      }
+      return t("runtime.yearsWeeks", { years, weeks });
     }
-    if (remainingHours === 0) {
-      // tam gün
-      return t('runtime.daysOnly', { days });
+
+    if (weeks > 0) {
+      if (days === 0 && hours === 0) {
+        return t("runtime.weeksOnly", { weeks });
+      }
+      return t("runtime.weeksDays", { weeks, days });
     }
-    // gün + saat
-    return t('runtime.daysHours', { days, hours: remainingHours });
+
+    if (days > 0) {
+      if (hours === 0) {
+        return t("runtime.daysOnly", { days });
+      }
+      return t("runtime.daysHours", { days, hours });
+    }
+
+    if (totalHours > 0) {
+      if (minutes === 0) {
+        return t("runtime.hoursOnly", { hours: totalHours });
+      }
+      return t("runtime.hoursMinutes", { hours: totalHours, minutes });
+    }
+
+    // sadece dakika
+    return t("runtime.minutesOnly", { minutes });
   };
+
 
   const coins = useMemo(() => {
     if (typeof botData.coins === 'string') {
@@ -143,11 +203,15 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
   return (
     <>
       <motion.div
-        className="bg-gray-800 rounded-2xl shadow-2xl border border-gray-700"
+        className="relative bg-gray-800 rounded-2xl shadow-2xl border border-gray-700"
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: isAnimating ? -20 : 0, opacity: isAnimating ? 0.8 : 1 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
+        {/* Type Badge (spot/futures) */}
+        <div className="absolute top-3 right-3 z-10">
+          <TypeBadge type={botData.bot_type || botData.type || 'spot'} />
+        </div>
         <div className="p-4 sm:p-6">
           {/* Header */}
           <div className="mb-6">

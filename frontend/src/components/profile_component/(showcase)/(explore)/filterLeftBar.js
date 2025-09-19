@@ -149,7 +149,7 @@ const BotFilterSidebar = () => {
         </div>
 
         {/* Only Active Bots */}
-        <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md mt-3">
+        {/*<div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md mt-3">
           <label className="inline-flex items-center space-x-2 text-sm text-gray-100">
             <input
               type="checkbox"
@@ -159,10 +159,10 @@ const BotFilterSidebar = () => {
             />
             <span>{t('fields.onlyActive')}</span>
           </label>
-        </div>
+        </div>*/}
 
         {/* Profit Factor */}
-        <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
+        {/* <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
           <label className="block text-sm font-medium text-gray-100 mb-2">
             {t('fields.profitFactor', { value: filters.profitFactor.toFixed(0) })}
           </label>
@@ -179,10 +179,10 @@ const BotFilterSidebar = () => {
             <span>0</span>
             <span>10</span>
           </div>
-        </div>
+        </div>*/}
 
         {/* Risk Factor */}
-        <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
+        {/*<div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
           <label className="block text-sm font-medium text-gray-100 mb-2">
             {t('fields.riskFactor', { value: filters.riskFactor.toFixed(0) })}
           </label>
@@ -199,10 +199,10 @@ const BotFilterSidebar = () => {
             <span>0</span>
             <span>10</span>
           </div>
-        </div>
+        </div>*/}
 
         {/* Creation Time */}
-        <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
+        {/*<div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
           <label className="block text-sm font-medium text-gray-100 mb-2">
             {t('fields.creationTime')}
           </label>
@@ -219,13 +219,12 @@ const BotFilterSidebar = () => {
               onChange={(e) => handleInputChange('creationUnit', e.target.value)}
               className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none"
             >
-              {/* Not: value alanlarını orijinal dosyadaki gibi bıraktım (işlev değişmesin diye) */}
               <option value="gün">{t('units.day')}</option>
               <option value="hafta">{t('units.week')}</option>
               <option value="ay">{t('units.month')}</option>
             </select>
           </div>
-        </div>
+        </div>*/}
 
         {/* Profit Margin */}
         <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
@@ -254,7 +253,7 @@ const BotFilterSidebar = () => {
         </div>
 
         {/* Transaction Frequency */}
-        <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
+        {/*<div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
           <label className="block text-sm font-medium text-gray-100 mb-2">
             {t('fields.transactionFrequency')}
           </label>
@@ -267,7 +266,7 @@ const BotFilterSidebar = () => {
               className="w-full px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none"
             />
           </div>
-        </div>
+        </div>*/}
 
         {/* Usage Time */}
         <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">

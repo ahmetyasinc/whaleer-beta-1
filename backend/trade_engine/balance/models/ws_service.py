@@ -5,6 +5,7 @@ from backend.trade_engine import config
 from backend.trade_engine.balance.db.stream_key_db import attach_listenkeys_to_ws
 from backend.trade_engine.balance.db import ws_db
 from backend.trade_engine.balance.db.futures_writer_db import batch_upsert_futures_balances, batch_upsert_futures_orders
+from backend.trade_engine.taha_part.utils.price_cache_new import get_price
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -135,10 +136,10 @@ class WebSocketRedundantManager:
             if event_type == 'ACCOUNT_UPDATE':
                 self._handle_account_update(event_data, user_info)
             elif event_type == 'ORDER_TRADE_UPDATE':
-                self._handle_order_update(event_data, user_info)
+                # Artık async olduğu için await ile çağırıyoruz
+                await self._handle_order_update(event_data, user_info)
         except Exception as e:
             logging.error(f"❌ Olay işlenirken hata (event_type: {event_type}): {e}", exc_info=True)
-
     # YENİ: Bakiye güncelleme olayını işler ve kuyruğa atar
     def _handle_account_update(self, data: dict, user_info: dict):
         update_info = data.get('a', {})
@@ -152,29 +153,48 @@ class WebSocketRedundantManager:
         logging.debug(f"Futures bakiye güncellemesi kuyruğa eklendi: user_id={user_id}")
 
     # YENİ: Emir güncelleme olayını işler ve kuyruğa atar
-    def _handle_order_update(self, data: dict, user_info: dict):
+    async def _handle_order_update(self, data: dict, user_info: dict):
         order_info = data.get('o', {})
+
+        # 1. Komisyon miktarını ve birimini al
+        commission_amount = Decimal(order_info.get("n", "0"))
+        commission_asset = order_info.get("N")  # Komisyon birimi (örn: "BNB", "USDT")
+        commission_in_usdt = commission_amount
+
+        # 2. Eğer birim USDT değilse ve miktar sıfırdan büyükse çevir
+        if commission_asset and commission_asset.upper() != "USDT" and commission_amount > 0:
+            try:
+                conversion_symbol = f"{commission_asset.upper()}USDT"
+                # Fiyatı price_cache'den al (komisyon varlıkları spot'ta işlem görür)
+                price = await get_price(conversion_symbol, "spot")
+
+                if price and price > 0:
+                    commission_in_usdt = commission_amount * Decimal(str(price))
+                    logging.info(f"💰 [Futures WS] Komisyon dönüştürüldü: {commission_amount} {commission_asset} -> {commission_in_usdt:.6f} USDT")
+                else:
+                    logging.warning(f"⚠️ [Futures WS] {conversion_symbol} için fiyat alınamadı. Komisyon orijinal değeriyle kaydedilecek.")
+            except Exception as e:
+                logging.error(f"❌ [Futures WS] Komisyon dönüştürme hatası: {e}. Komisyon orijinal değeriyle kaydedilecek.")
+
+        # 3. Veritabanına yazılacak veriyi hazırla
         order_data = {
-            "user_id": user_info['user_id'], 
+            "user_id": user_info['user_id'],
             "api_id": user_info['api_id'],
-            "symbol": order_info.get("s"), 
+            "symbol": order_info.get("s"),
             "client_order_id": order_info.get("c"),
-            "side": order_info.get("S"), 
+            "side": order_info.get("S"),
             "position_side": order_info.get("ps"),
-            "status": order_info.get("X"), 
-            
-            # --- DÜZELTİLMESİ GEREKEN ALAN ---
+            "status": order_info.get("X"),
             "price": Decimal(order_info.get("p", "0")),
             "executed_quantity": Decimal(order_info.get("z", "0")),
-            "commission": Decimal(order_info.get("n", "0")),
+            "commission": commission_in_usdt,  # <-- GÜNCELLENDİ
             "realized_profit": Decimal(order_info.get("rp", "0")),
-            # --- DÜZELTME BİTTİ ---
-
-            "order_id": order_info.get("i"), 
+            "order_id": order_info.get("i"),
             "event_time": order_info.get("T")
         }
         self.order_update_queue.append(order_data)
         logging.debug(f"Futures emir güncellemesi kuyruğa eklendi: user_id={user_info['user_id']}, order_id={order_data['order_id']}")
+
 
 
     # YENİ: Bakiye kuyruğunu DB'ye yazar

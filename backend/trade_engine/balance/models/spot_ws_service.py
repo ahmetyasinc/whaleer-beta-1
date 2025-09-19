@@ -4,7 +4,8 @@ from decimal import Decimal
 from backend.trade_engine import config
 from backend.trade_engine.balance.db import stream_key_db
 from backend.trade_engine.balance.db.balance_writer_db import batch_upsert_balances, batch_insert_orders
-
+# spot_ws_service.py dosyasının başına ekleyin
+from backend.trade_engine.taha_part.utils.price_cache_new import get_price
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 ORDER_SAVE_MODE = 'COMPREHENSIVE'  #  'COMPREHENSIVE' 'SELECTIVE'
@@ -234,7 +235,7 @@ class SpotWsApiManager:
     # Lütfen spot_ws_service.py dosyanızdaki _handle_stream_event fonksiyonunu bu blokla değiştirin.
 
     async def _handle_stream_event(self, data: dict):
-        """Gelen tüm kullanıcı veri akışı olaylarını işler, Decimal'e çevirir ve kuyruğa atar."""
+        """Gelen tüm kullanıcı veri akışı olaylarını işler, komisyonu USDT'ye çevirir, Decimal'e çevirir ve kuyruğa atar."""
         sub_id = data.get("subscriptionId")
         if sub_id is None: return
 
@@ -252,13 +253,8 @@ class SpotWsApiManager:
                 for balance in event.get("B", []):
                     asset = balance.get("a")
                     if asset:
-                        # Gelen veriyi hassas hesaplama için Decimal'e çeviriyoruz.
                         free_balance = Decimal(balance.get("f", "0"))
                         locked_balance = Decimal(balance.get("l", "0"))
-                        
-                        # Veriyi, biriktirme havuzuna (queue) atıyoruz.
-                        # (user_id, api_id, asset) anahtarı, aynı varlığın 
-                        # sadece en son durumunun saklanmasını sağlar.
                         self.balance_update_queue[(user_id, api_id, asset)] = {
                             "user_id": user_id,
                             "api_id": api_id,
@@ -266,10 +262,9 @@ class SpotWsApiManager:
                             "free": free_balance,
                             "locked": locked_balance,
                         }
-                logging.info(f"ℹ️ [Bakiye] user_id={user_id} için {len(event.get('B', []))} varlık güncellemesi kuyruğa eklendi.")
+                logging.debug(f"ℹ️ [Bakiye] user_id={user_id} için {len(event.get('B', []))} varlık güncellemesi kuyruğa eklendi.")
             
             elif event_type == "executionReport":
-                # (Emir işleme mantığı burada yer alır, bu kısım değişmedi)
                 client_order_id = event.get("c")
                 should_save_order = False
                 if self.order_save_mode == 'COMPREHENSIVE':
@@ -278,6 +273,25 @@ class SpotWsApiManager:
                     should_save_order = True
                 
                 if should_save_order:
+                    # --- YENİ: KOMİSYON DÖNÜŞTÜRME MANTIĞI ---
+                    commission_amount = Decimal(event.get("n", "0"))
+                    commission_asset = event.get("N")  # Commission Asset
+                    commission_in_usdt = commission_amount
+
+                    if commission_asset and commission_asset.upper() != "USDT" and commission_amount > 0:
+                        try:
+                            conversion_symbol = f"{commission_asset.upper()}USDT"
+                            price = await get_price(conversion_symbol, "spot")
+
+                            if price and price > 0:
+                                commission_in_usdt = commission_amount * Decimal(str(price))
+                                logging.info(f"💰 [Spot WS] Komisyon dönüştürüldü: {commission_amount} {commission_asset} -> {commission_in_usdt:.6f} USDT")
+                            else:
+                                logging.warning(f"⚠️ [Spot WS] {conversion_symbol} için fiyat alınamadı. Komisyon orijinal değeriyle kaydedilecek.")
+                        except Exception as e:
+                            logging.error(f"❌ [Spot WS] Komisyon dönüştürme hatası: {e}. Komisyon orijinal değeriyle kaydedilecek.")
+                    # --- DÖNÜŞTÜRME MANTIĞI SONU ---
+                    
                     order_data = {
                         "user_id": user_id, "api_id": api_id,
                         "symbol": event.get("s"), "client_order_id": client_order_id,
@@ -285,7 +299,8 @@ class SpotWsApiManager:
                         "status": event.get("X"), "price": Decimal(event.get("p", "0")),
                         "quantity": Decimal(event.get("q", "0")), "executed_quantity": Decimal(event.get("z", "0")),
                         "cummulative_quote_qty": Decimal(event.get("Z", "0")), "order_id": event.get("i"),
-                        "trade_id": event.get("t"), "event_time": event.get("E")
+                        "trade_id": event.get("t"), "event_time": event.get("E"),
+                        "commission": commission_in_usdt # <-- GÜNCELLENDİ
                     }
                     self.order_update_queue.append(order_data)
                     logging.info(f"✅ [Emir Kaydedilecek] user_id={user_id}, id={client_order_id}, durum={order_data['status']}")
@@ -294,7 +309,6 @@ class SpotWsApiManager:
 
         except Exception as e:
             logging.error(f"❌ Olay işlenirken hata (event_type: {event_type}): {e}", exc_info=True)
-
 
     async def _balance_batch_writer(self):
         """Bakiye güncelleme havuzunu her 5 saniyede bir toplu olarak DB'ye yazar."""

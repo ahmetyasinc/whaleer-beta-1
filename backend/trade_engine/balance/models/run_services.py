@@ -36,6 +36,14 @@ try:
 except ImportError:
     futures_main = None
 
+# YENİ EKLENEN IMPORT
+try:
+    from backend.trade_engine.taha_part.utils.price_cache_new import start_connection_pool, wait_for_cache_ready
+except ImportError:
+    start_connection_pool = None
+    wait_for_cache_ready = None
+
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('ServiceRunner')
 
@@ -253,6 +261,18 @@ async def shutdown_gracefully(listenkey_task, apikey_task):
 # --- ANA KOMUT DÖNGÜSÜ ---
 async def command_loop():
     loop = asyncio.get_running_loop()
+    
+    # YENİ: Price Cache'i başlat
+    if start_connection_pool and wait_for_cache_ready:
+        logger.info("Fiyat Akışı (Price Cache) başlatılıyor...")
+        await start_connection_pool()
+        cache_ready = await wait_for_cache_ready(timeout_seconds=15)
+        if cache_ready:
+            logger.info("✅ Fiyat Akışı (Price Cache) başarıyla başlatıldı ve hazır.")
+        else:
+            logger.error("❌ Fiyat Akışı (Price Cache) başlatılamadı veya zaman aşımına uğradı!")
+    else:
+        logger.warning("Price Cache fonksiyonları import edilemediği için başlatma atlandı.")
     
     if balance_manager_main:
         logger.info("============= BAŞLANGIÇ SENKRONİZASYONU =============")

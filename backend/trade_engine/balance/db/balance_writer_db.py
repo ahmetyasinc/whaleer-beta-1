@@ -63,6 +63,8 @@ async def batch_upsert_balances(pool, balance_data: list):
     except Exception as e:
         logging.error(f"❌ [DB] Spot bakiye yazma hatası: {e}", exc_info=True)
 
+# balance_writer_db.py dosyasındaki fonksiyon
+
 async def batch_insert_orders(pool, order_data: list):
     """
     Gelen SPOT emir listesini bot_trades tablosuna toplu olarak ekler.
@@ -78,7 +80,7 @@ async def batch_insert_orders(pool, order_data: list):
             data['symbol'],
             data['side'].lower(),
             data['executed_quantity'], # Gerçekleşen miktar
-            None, # fee bilgisi için ek mantık gerekebilir
+            data.get('commission'), # <-- GÜNCELLENDİ (Artık komisyon verisini alıyor)
             str(data['order_id']),
             data['status'],
             'spot', # Bu fonksiyon spot verisi için
@@ -91,8 +93,6 @@ async def batch_insert_orders(pool, order_data: list):
     try:
         async with pool.acquire() as conn:
             async with conn.transaction():
-                # Lütfen bot_trades tablonuzda client_order_id sütunu olduğundan emin olun.
-                # Önceki adımlarda eklenmesini önermiştim.
                 await conn.executemany("""
                     INSERT INTO public.bot_trades 
                     (user_id, bot_id, created_at, symbol, side, amount, fee, order_id, status, trade_type, position_side, price, client_order_id)
@@ -101,10 +101,3 @@ async def batch_insert_orders(pool, order_data: list):
         logging.info(f"✅ [DB] {len(records_to_insert)} adet SPOT EMİR başarıyla yazıldı.")
     except Exception as e:
         logging.error(f"❌ [DB] Spot emir yazma hatası: {e}", exc_info=True)
-
-# TODO: Gelecekte futures_ws_service için benzer fonksiyonlar buraya eklenebilir.
-# async def batch_upsert_futures_balances(pool, balance_data: list):
-#     pass
-
-# async def batch_insert_futures_orders(pool, order_data: list):
-#     pass

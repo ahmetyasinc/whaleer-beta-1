@@ -12,7 +12,11 @@ from backend.trade_engine.process.trade_engine import run_trade_engine
 # listen_service.py (üst importlara ekle)
 from backend.trade_engine.process.process import run_all_bots_async, handle_rent_expiry_closures  # NEW
 from backend.trade_engine.process.save import save_result_to_json, aggregate_results_by_bot_id    # NEW
-
+# Emir gönderim sistemi (ileride aktif edeceksin)
+from backend.trade_engine.taha_part.utils.order_final_optimized import (
+    prepare_order_data,
+    send_order
+)
 if sys.platform.startswith('win'):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
@@ -93,12 +97,13 @@ async def execute_bot_logic(interval):
                 print(f"ℹ {interval}: Bot çalıştırma atlandı (eksik veri ya da aktif bot yok).")
 
             # 4) Sonuçları grupla + JSON'a kaydet (sadece varsa)
-            if results:
-                result_dict = aggregate_results_by_bot_id(results)
-                if result_dict:
-                    await save_result_to_json(result_dict, last_time, interval)
+            
+            result_dict = aggregate_results_by_bot_id(results)
+            if result_dict:
+                await save_result_to_json(result_dict, last_time, interval)
 
-            #result = await send_order(await prepare_order_data(result_dict))
+            #TAHANIN PARTI
+            result = await send_order(await prepare_order_data(result_dict))
             
             elapsed = time.time() - start_time
             print(f"✅ {last_time}, {interval} tamamlandı. Süre: {elapsed:.2f} sn. (toplam sonuç: {len(results)})")

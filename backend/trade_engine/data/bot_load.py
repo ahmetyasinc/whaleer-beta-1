@@ -37,7 +37,7 @@ def load_active_bots(interval):
     """
     sql = """
         SELECT
-            id, user_id, strategy_id, api_id, period, stocks, active, candle_count, enter_on_start,
+            id, user_id, strategy_id, api_id, period, stocks, active, candle_count, enter_on_start, bot_type,
             acquisition_type, rent_expires_at,
             active_days, active_hours
         FROM bots

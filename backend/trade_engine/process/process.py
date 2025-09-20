@@ -14,11 +14,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from backend.trade_engine.config import DB_CONFIG
 
-# Emir gönderim sistemi (ileride aktif edeceksin)
-from backend.trade_engine.taha_part.utils.order_final_optimized import (
-    prepare_order_data,
-    send_order
-)
+
 
 
 def _get_conn():
@@ -173,7 +169,7 @@ async def handle_rent_expiry_closures(_: list) -> list:
 
     # 1) Kapatılacak botları çek
     bot_ids = await loop.run_in_executor(None, _fetch_rent_not_closed_bot_ids)
-    print(f"Kapatma gerektiren kiralık botlar: {bot_ids}")
+    #print(f"Kapatma gerektiren kiralık botlar: {bot_ids}")
     if not bot_ids:
         return []  # düz liste
 
@@ -223,11 +219,11 @@ async def run_all_bots_async(bots, strategies_with_indicators, coin_data_dict, l
             )
             tasks.append(task)
 
-        print("tasks oluşturuldu:", tasks)
+        #print("tasks oluşturuldu:", tasks)
 
         # 1) Normal bot sonuçları
         results_per_bot = await asyncio.gather(*tasks)
-        print("results_per_bot:", results_per_bot)
+        #print("results_per_bot:", results_per_bot)
 
         # 2) Normal sonuçları FLAT listeye indir
         all_results = []

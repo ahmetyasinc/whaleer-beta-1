@@ -1445,6 +1445,7 @@ async def save_trade_to_db(bot_id: int, user_id: int, trade_result: dict, order_
                         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                     )
                 """
+                unlevered_qty = float(requested_qty) / float(leverage or 1)
 
                 params = (
                     user_id,
@@ -1452,14 +1453,14 @@ async def save_trade_to_db(bot_id: int, user_id: int, trade_result: dict, order_
                     datetime.now(),
                     symbol,
                     side,
-                    requested_qty,
+                    unlevered_qty,
                     commission_in_usdt, # <-- BURASI GÜNCELLENDİ
                     order_id,
                     status,
                     db_trade_type,
                     position_side,
                     current_price,
-                    executed_qty,
+                    unlevered_qty, # BURAYI WEBSOCKET DÜZENLEYECEK
                     leverage
                 )
 

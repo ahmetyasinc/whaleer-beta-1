@@ -67,6 +67,8 @@ async def save_trade_to_db(bot_id: int, user_id: int, trade_result: dict, order_
                     if row:
                         leverage = row["leverage"]
 
+        unlevered_qty = executed_qty / float(leverage or 1)
+
         conn = get_db_connection()
         if not conn:
             logger.error("❌ Veritabanı bağlantısı alınamadı")
@@ -90,7 +92,7 @@ async def save_trade_to_db(bot_id: int, user_id: int, trade_result: dict, order_
                     datetime.now(),
                     symbol,
                     side,
-                    executed_qty,
+                    unlevered_qty,
                     commission,
                     order_id,
                     status,
@@ -185,6 +187,8 @@ async def save_trade_to_db(bot_id: int, user_id: int, trade_result: dict, order_
     try:
         normalized_trade_type = "spot" if order_params["trade_type"] in ["spot", "test_spot"] else "futures"
         user_position_side = order_params.get("positionside", "both")
+        executed_qty = float(trade_result.get("executedQty", 0) or trade_result.get("origQty", 0))
+        unlevered_qty = executed_qty / float(order_params.get("leverage", 1) or 1)
 
         conn = get_db_connection()
         with conn:
@@ -204,7 +208,7 @@ async def save_trade_to_db(bot_id: int, user_id: int, trade_result: dict, order_
                     datetime.now(),
                     trade_result.get("symbol"),
                     trade_result.get("side"),
-                    float(trade_result.get("executedQty", 0) or trade_result.get("origQty", 0)),
+                    unlevered_qty,
                     float(trade_result.get("commission", 0) or 0.0),
                     str(trade_result.get("orderId", "")),
                     trade_result.get("status", "FILLED"),

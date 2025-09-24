@@ -235,7 +235,7 @@ class SpotWsApiManager:
     # Lütfen spot_ws_service.py dosyanızdaki _handle_stream_event fonksiyonunu bu blokla değiştirin.
 
     async def _handle_stream_event(self, data: dict):
-        """Gelen tüm kullanıcı veri akışı olaylarını işler, komisyonu USDT'ye çevirir, Decimal'e çevirir ve kuyruğa atar."""
+        """Gelen tüm kullanıcı veri akışı olaylarını işler, doğru fiyatı hesaplar ve kuyruğa atar."""
         sub_id = data.get("subscriptionId")
         if sub_id is None: return
 
@@ -256,56 +256,54 @@ class SpotWsApiManager:
                         free_balance = Decimal(balance.get("f", "0"))
                         locked_balance = Decimal(balance.get("l", "0"))
                         self.balance_update_queue[(user_id, api_id, asset)] = {
-                            "user_id": user_id,
-                            "api_id": api_id,
-                            "asset": asset,
-                            "free": free_balance,
-                            "locked": locked_balance,
+                            "user_id": user_id, "api_id": api_id, "asset": asset,
+                            "free": free_balance, "locked": locked_balance,
                         }
                 logging.debug(f"ℹ️ [Bakiye] user_id={user_id} için {len(event.get('B', []))} varlık güncellemesi kuyruğa eklendi.")
             
             elif event_type == "executionReport":
                 client_order_id = event.get("c")
-                should_save_order = False
-                if self.order_save_mode == 'COMPREHENSIVE':
-                    should_save_order = True
-                elif self.order_save_mode == 'SELECTIVE' and client_order_id and client_order_id.startswith(CLIENT_ORDER_ID_PREFIX):
-                    should_save_order = True
+                should_save_order = (self.order_save_mode == 'COMPREHENSIVE') or \
+                                    (self.order_save_mode == 'SELECTIVE' and client_order_id and client_order_id.startswith(CLIENT_ORDER_ID_PREFIX))
                 
                 if should_save_order:
-                    # --- YENİ: KOMİSYON DÖNÜŞTÜRME MANTIĞI ---
                     commission_amount = Decimal(event.get("n", "0"))
-                    commission_asset = event.get("N")  # Commission Asset
+                    commission_asset = event.get("N")
                     commission_in_usdt = commission_amount
-
                     if commission_asset and commission_asset.upper() != "USDT" and commission_amount > 0:
                         try:
-                            conversion_symbol = f"{commission_asset.upper()}USDT"
-                            price = await get_price(conversion_symbol, "spot")
-
+                            price = await get_price(f"{commission_asset.upper()}USDT", "spot")
                             if price and price > 0:
                                 commission_in_usdt = commission_amount * Decimal(str(price))
-                                logging.info(f"💰 [Spot WS] Komisyon dönüştürüldü: {commission_amount} {commission_asset} -> {commission_in_usdt:.6f} USDT")
-                            else:
-                                logging.warning(f"⚠️ [Spot WS] {conversion_symbol} için fiyat alınamadı. Komisyon orijinal değeriyle kaydedilecek.")
-                        except Exception as e:
-                            logging.error(f"❌ [Spot WS] Komisyon dönüştürme hatası: {e}. Komisyon orijinal değeriyle kaydedilecek.")
-                    # --- DÖNÜŞTÜRME MANTIĞI SONU ---
+                        except Exception: pass
+
+                    # --- !!! SORUNU ÇÖZEN FİYAT HESAPLAMA MANTIĞI BURADA !!! ---
+                    cummulative_quote_qty = Decimal(event.get("Z", "0"))  # Toplam ödenen (USDT)
+                    executed_quantity = Decimal(event.get("z", "0"))      # Toplam alınan (Coin)
                     
+                    execution_price = Decimal("0")
+                    if executed_quantity > 0:
+                        # Gerçekleşen ortalama fiyatı hesapla (en doğru yöntem)
+                        execution_price = cummulative_quote_qty / executed_quantity
+                    else:
+                        # Henüz gerçekleşme yoksa, emrin kendi fiyatını al (LIMIT emirleri için)
+                        execution_price = Decimal(event.get("p", "0"))
+                    # --- HESAPLAMA SONU ---
+
                     order_data = {
                         "user_id": user_id, "api_id": api_id,
-                        "symbol": event.get("s"), "client_order_id": client_order_id,
-                        "side": event.get("S"), "order_type": event.get("o"),
-                        "status": event.get("X"), "price": Decimal(event.get("p", "0")),
-                        "quantity": Decimal(event.get("q", "0")), "executed_quantity": Decimal(event.get("z", "0")),
-                        "cummulative_quote_qty": Decimal(event.get("Z", "0")), "order_id": event.get("i"),
-                        "trade_id": event.get("t"), "event_time": event.get("E"),
-                        "commission": commission_in_usdt # <-- GÜNCELLENDİ
+                        "symbol": event.get("s"), "side": event.get("S"),
+                        "status": event.get("X"),
+                        "price": execution_price,  # <-- DÜZELTİLDİ
+                        "quantity": Decimal(event.get("q", "0")),
+                        "executed_quantity": executed_quantity,
+                        "order_id": event.get("i"),
+                        "event_time": event.get("E"),
+                        "commission": commission_in_usdt
                     }
+
                     self.order_update_queue.append(order_data)
-                    logging.info(f"✅ [Emir Kaydedilecek] user_id={user_id}, id={client_order_id}, durum={order_data['status']}")
-                else:
-                    logging.info(f"➡️ [Emir Atlandı ({self.order_save_mode} Mod)] id={client_order_id}")
+                    logging.info(f"✅ [Emir Güncellemesi Kuyruğa Eklendi] user_id={user_id}, id={event.get('i')}, durum={order_data['status']}")
 
         except Exception as e:
             logging.error(f"❌ Olay işlenirken hata (event_type: {event_type}): {e}", exc_info=True)

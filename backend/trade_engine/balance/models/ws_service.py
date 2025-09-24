@@ -158,44 +158,47 @@ class WebSocketRedundantManager:
 
         # 1. Komisyon miktarını ve birimini al
         commission_amount = Decimal(order_info.get("n", "0"))
-        commission_asset = order_info.get("N")  # Komisyon birimi (örn: "BNB", "USDT")
+        commission_asset = order_info.get("N")
         commission_in_usdt = commission_amount
 
         # 2. Eğer birim USDT değilse ve miktar sıfırdan büyükse çevir
         if commission_asset and commission_asset.upper() != "USDT" and commission_amount > 0:
             try:
                 conversion_symbol = f"{commission_asset.upper()}USDT"
-                # Fiyatı price_cache'den al (komisyon varlıkları spot'ta işlem görür)
                 price = await get_price(conversion_symbol, "spot")
 
                 if price and price > 0:
                     commission_in_usdt = commission_amount * Decimal(str(price))
                     logging.info(f"💰 [Futures WS] Komisyon dönüştürüldü: {commission_amount} {commission_asset} -> {commission_in_usdt:.6f} USDT")
                 else:
-                    logging.warning(f"⚠️ [Futures WS] {conversion_symbol} için fiyat alınamadı. Komisyon orijinal değeriyle kaydedilecek.")
+                    logging.warning(f"⚠️ [Futures WS] {conversion_symbol} için fiyat alınamadı.")
             except Exception as e:
-                logging.error(f"❌ [Futures WS] Komisyon dönüştürme hatası: {e}. Komisyon orijinal değeriyle kaydedilecek.")
+                logging.error(f"❌ [Futures WS] Komisyon dönüştürme hatası: {e}.")
 
+        # --- DEĞİŞİKLİK BURADA ---
+        # Gerçekleşme fiyatını alırken 'ap' (ortalama fiyat) alanına öncelik ver.
+        # Eğer 'ap' yoksa veya 0 ise 'p' (emir fiyatı) alanını kullan.
+        execution_price = Decimal(order_info.get("ap", "0")) or Decimal(order_info.get("p", "0"))
+        
         # 3. Veritabanına yazılacak veriyi hazırla
         order_data = {
             "user_id": user_info['user_id'],
             "api_id": user_info['api_id'],
             "symbol": order_info.get("s"),
-            "client_order_id": order_info.get("c"),
             "side": order_info.get("S"),
             "position_side": order_info.get("ps"),
             "status": order_info.get("X"),
-            "price": Decimal(order_info.get("p", "0")),
-            "executed_quantity": Decimal(order_info.get("z", "0")),
-            "commission": commission_in_usdt,  # <-- GÜNCELLENDİ
+            "price": execution_price, # <-- DÜZELTİLDİ
+            "executed_quantity": Decimal(order_info.get("z", "0")), # amount_state için bu kullanılır
+            "quantity": Decimal(order_info.get("q", "0")), # bot_trades.amount için bu kullanılır
+            "commission": commission_in_usdt,
             "realized_profit": Decimal(order_info.get("rp", "0")),
             "order_id": order_info.get("i"),
             "event_time": order_info.get("T")
         }
+
         self.order_update_queue.append(order_data)
         logging.debug(f"Futures emir güncellemesi kuyruğa eklendi: user_id={user_info['user_id']}, order_id={order_data['order_id']}")
-
-
 
     # YENİ: Bakiye kuyruğunu DB'ye yazar
     async def _balance_batch_writer(self):

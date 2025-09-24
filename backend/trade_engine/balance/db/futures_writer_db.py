@@ -51,52 +51,50 @@ async def batch_upsert_futures_balances(pool, balance_data: list):
 
 async def batch_upsert_futures_orders(pool, order_data: list):
     """
-    Gelen FUTURES emir listesini (ORDER_TRADE_UPDATE event) bot_trades tablosuna
-    toplu olarak ekler/günceller (UPSERT). Güncellemeyi (user_id, order_id) üzerinden yapar.
+    Gelen FUTURES emir listesini (ORDER_TRADE_UPDATE event) bot_trades tablosunda GÜNCeller.
+    Eğer emir sistemde mevcut değilse, hiçbir işlem yapmaz (atlar).
+    updated_at kolonunu KULLANMAZ.
     """
     if not order_data:
         return
 
-    records_to_upsert = []
-    for data in order_data:
-        records_to_upsert.append(
-            (
-                data['user_id'],
-                None, # bot_id
-                datetime.datetime.fromtimestamp(data['event_time'] / 1000, tz=datetime.timezone.utc),
-                data['symbol'],
-                data['side'].lower(),
-                Decimal(data.get('executed_quantity', '0')),
-                Decimal(data.get('commission', '0')),
-                str(data['order_id']),
-                data['status'],
-                'futures',
-                data['position_side'].lower(),
-                Decimal(data.get('price', '0')),
-                data.get('client_order_id'),
-                Decimal(data.get('realized_profit', '0'))
-                # api_id buradan kaldırıldı
-            )
-        )
-
-    if not records_to_upsert: return
-
+    updated_count = 0
+    skipped_count = 0
     try:
         async with pool.acquire() as conn:
             async with conn.transaction():
-                # DEĞİŞİKLİK: ON CONFLICT (user_id, order_id) olarak güncellendi ve sorgudan api_id kaldırıldı.
-                await conn.executemany("""
-                    INSERT INTO public.bot_trades 
-                    (user_id, bot_id, created_at, symbol, side, amount, fee, order_id, status, trade_type, position_side, price, client_order_id, realized_profit)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-                    ON CONFLICT (user_id, order_id)
-                    DO UPDATE SET
-                        status = EXCLUDED.status,
-                        amount = EXCLUDED.amount,
-                        fee = EXCLUDED.fee,
-                        realized_profit = EXCLUDED.realized_profit,
-                        created_at = EXCLUDED.created_at;
-                """, records_to_upsert)
-        logging.info(f"✅ [DB] {len(records_to_upsert)} adet FUTURES EMIR başarıyla yazıldı/güncellendi.")
+                for data in order_data:
+                    exists = await conn.fetchval(
+                        "SELECT 1 FROM public.bot_trades WHERE user_id=$1 AND order_id=$2",
+                        data['user_id'], str(data['order_id'])
+                    )
+
+                    if exists:
+                        # DEĞİŞİKLİK: 'updated_at' sorgudan ve parametrelerden çıkarıldı.
+                        await conn.execute("""
+                            UPDATE public.bot_trades
+                            SET 
+                                status = $1,
+                                fee = bot_trades.fee + $2,
+                                price = $3,
+                                amount_state = $4
+                            WHERE user_id = $5 AND order_id = $6
+                        """,
+                        data['status'],
+                        data.get('commission', Decimal('0')),
+                        data['price'],
+                        data.get('executed_quantity'),
+                        data['user_id'],
+                        str(data['order_id'])
+                        )
+                        updated_count += 1
+                    else:
+                        skipped_count += 1
+        
+        if updated_count > 0:
+            logging.info(f"✅ [DB] {updated_count} adet mevcut FUTURES EMRİ başarıyla güncellendi.")
+        if skipped_count > 0:
+            logging.info(f"ℹ️ [DB] {skipped_count} adet sistem dışı futures emri atlandı.")
+
     except Exception as e:
-        logging.error(f"❌ [DB] Futures emir yazma/güncelleme hatası: {e}", exc_info=True)
+        logging.error(f"❌ [DB] Futures emir güncelleme hatası: {e}", exc_info=True)

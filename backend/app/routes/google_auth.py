@@ -19,7 +19,7 @@ from app.models import User
 from app.core.auth import create_access_token, create_refresh_token  # senin JWT üreticilerin
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/auth/google", tags=["auth:google"])
+router = APIRouter(tags=["auth:google"])
 
 # ── ÇEVRE DEĞİŞKENLERİ ──────────────────────────────────────────────────────────
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
@@ -153,7 +153,7 @@ async def verify_google_id_token(id_token: str, nonce_expected: str) -> dict:
 
 
 # ── ROUTES ─────────────────────────────────────────────────────────────────────
-@router.get("/start")
+@router.get("/api/auth/google/start")
 async def google_start(redirect_uri: str):
     """
     Frontend popup'ı buraya gelir:
@@ -180,7 +180,7 @@ async def google_start(redirect_uri: str):
     url = f"{GOOGLE_AUTH_URL}?{qs}"
     return RedirectResponse(url, status_code=302)
 
-@router.get("/callback")
+@router.get("/auth/google/callback")
 async def google_callback(
     response: Response,
     code: str = "",

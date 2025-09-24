@@ -1,6 +1,6 @@
 import logging
 import datetime
-
+from decimal import Decimal
 # Not: Bu fonksiyonlar artık kendi dosyalarında.
 # Spot ve Futures için veri yazma mantığını burada merkezileştireceğiz.
 
@@ -67,37 +67,50 @@ async def batch_upsert_balances(pool, balance_data: list):
 
 async def batch_insert_orders(pool, order_data: list):
     """
-    Gelen SPOT emir listesini bot_trades tablosuna toplu olarak ekler.
+    Gelen SPOT emir listesini bot_trades tablosunda GÜNCeller.
+    Eğer emir sistemde mevcut değilse, hiçbir işlem yapmaz (atlar).
+    updated_at kolonunu KULLANMAZ.
     """
     if not order_data:
         return
 
-    records_to_insert = [
-        (
-            data['user_id'],
-            None, # bot_id bilgisi genel kullanıcı veri akışından gelmez.
-            datetime.datetime.fromtimestamp(data['event_time'] / 1000),
-            data['symbol'],
-            data['side'].lower(),
-            data['executed_quantity'], # Gerçekleşen miktar
-            data.get('commission'), # <-- GÜNCELLENDİ (Artık komisyon verisini alıyor)
-            str(data['order_id']),
-            data['status'],
-            'spot', # Bu fonksiyon spot verisi için
-            None, # position_side spot emirlerinde olmaz
-            data['price'],
-            data['client_order_id'] # Yeni eklediğimiz client_order_id sütunu için
-        ) for data in order_data
-    ]
-
+    updated_count = 0
+    skipped_count = 0
     try:
         async with pool.acquire() as conn:
             async with conn.transaction():
-                await conn.executemany("""
-                    INSERT INTO public.bot_trades 
-                    (user_id, bot_id, created_at, symbol, side, amount, fee, order_id, status, trade_type, position_side, price, client_order_id)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-                """, records_to_insert)
-        logging.info(f"✅ [DB] {len(records_to_insert)} adet SPOT EMİR başarıyla yazıldı.")
+                for data in order_data:
+                    exists = await conn.fetchval(
+                        "SELECT 1 FROM public.bot_trades WHERE user_id=$1 AND order_id=$2",
+                        data['user_id'], str(data['order_id'])
+                    )
+
+                    if exists:
+                        # DEĞİŞİKLİK: 'updated_at' sorgudan ve parametrelerden çıkarıldı.
+                        await conn.execute("""
+                            UPDATE public.bot_trades
+                            SET 
+                                status = $1,
+                                fee = bot_trades.fee + $2,
+                                price = $3,
+                                amount_state = $4
+                            WHERE user_id = $5 AND order_id = $6
+                        """,
+                        data['status'],
+                        data.get('commission', Decimal('0')),
+                        data['price'],
+                        data['executed_quantity'],
+                        data['user_id'],
+                        str(data['order_id'])
+                        )
+                        updated_count += 1
+                    else:
+                        skipped_count += 1
+
+        if updated_count > 0:
+            logging.info(f"✅ [DB] {updated_count} adet mevcut SPOT EMRİ başarıyla güncellendi.")
+        if skipped_count > 0:
+            logging.info(f"ℹ️ [DB] {skipped_count} adet sistem dışı spot emri atlandı.")
+
     except Exception as e:
-        logging.error(f"❌ [DB] Spot emir yazma hatası: {e}", exc_info=True)
+        logging.error(f"❌ [DB] Spot emir güncelleme hatası: {e}", exc_info=True)

@@ -940,15 +940,13 @@ async def get_or_create_symbol_settings(user_id: int, api_id: int, symbol: str, 
 async def sync_margin_leverage(user_id: int, api_id: int, api_key: str, private_key: str,
                                symbol: str, trade_type: str, order: dict, conn) -> dict:
     """
-    prepare_order_data içinde çağrılır.
-    DB tablosu (user_symbol_settings) üzerinden margin_type ve leverage senkronizasyonu yapar.
-    Eğer kayıt yoksa ekler, varsa değişiklikleri uygular.
+    Emirde gelen leverage ve DB'deki leverage aynı mı kontrol eder.
+    - Farklıysa önce Binance üzerinde düzeltir, sonra DB günceller.
+    - Margin type için de aynı kontrol yapılır.
     """
-
     try:
         with conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                # DB'den kontrol et
                 cursor.execute("""
                     SELECT * FROM user_symbol_settings
                     WHERE user_id=%s AND api_id=%s AND symbol=%s AND trade_type=%s
@@ -956,10 +954,10 @@ async def sync_margin_leverage(user_id: int, api_id: int, api_key: str, private_
                 row = cursor.fetchone()
 
                 desired_margin_type = order.get("margin_type", True)
-                desired_leverage = order.get("leverage", 10)
+                desired_leverage = int(order.get("leverage", 10))
 
                 if not row:
-                    # Kayıt yoksa ekle
+                    # İlk kez işlem yapılıyorsa kayıt oluştur
                     cursor.execute("""
                         INSERT INTO user_symbol_settings 
                             (user_id, api_id, symbol, margin_type, leverage, trade_type, exchange, created_at, updated_at)
@@ -968,19 +966,23 @@ async def sync_margin_leverage(user_id: int, api_id: int, api_key: str, private_
                     """, (user_id, api_id, symbol, desired_margin_type, desired_leverage, trade_type))
                     row = cursor.fetchone()
                     conn.commit()
-                    print(f"✅ Yeni kayıt eklendi: {symbol} {desired_margin_type=} {desired_leverage=}")
+                    print(f"✅ Yeni kayıt: {symbol}, lev={desired_leverage}, margin={desired_margin_type}")
 
-                    # Binance sync
                     await _apply_binance_sync(api_key, private_key, symbol, trade_type, desired_margin_type, desired_leverage)
 
                 else:
                     update_needed = False
+
+                    # Margin değişti mi?
                     if row["margin_type"] != desired_margin_type:
-                        update_needed = True
                         row["margin_type"] = desired_margin_type
-                    if row["leverage"] != desired_leverage:
                         update_needed = True
+
+                    # Leverage değişti mi?
+                    if row["leverage"] != desired_leverage:
+                        print(f"🔄 {symbol} için leverage DB={row['leverage']} → Emir={desired_leverage}")
                         row["leverage"] = desired_leverage
+                        update_needed = True
 
                     if update_needed:
                         cursor.execute("""
@@ -991,9 +993,8 @@ async def sync_margin_leverage(user_id: int, api_id: int, api_key: str, private_
                         """, (row["margin_type"], row["leverage"], row["id"]))
                         row = cursor.fetchone()
                         conn.commit()
-                        print(f"🔄 DB güncellendi: {symbol} {row['margin_type']=} {row['leverage']=}")
 
-                        # Binance sync
+                        # Binance üzerinde güncelle
                         await _apply_binance_sync(api_key, private_key, symbol, trade_type, row["margin_type"], row["leverage"])
 
                 return row
@@ -1002,22 +1003,59 @@ async def sync_margin_leverage(user_id: int, api_id: int, api_key: str, private_
         logger.error(f"❌ sync_margin_leverage hatası: {str(e)}")
         return {}
 
+
 async def _apply_binance_sync(api_key: str, private_key: str, symbol: str, trade_type: str,
-                              margin_type: bool, leverage: int):
+                              margin_type: bool, leverage: int, conn=None, row_id=None):
     """
-    Binance üzerinde margin_type ve leverage günceller
+    Binance üzerinde margin_type ve leverage günceller.
+    Eğer Binance güncellemesi başarısız olursa DB eski haline döndürülür.
     """
     try:
         margin_result = await update_margin_type(api_key, private_key, symbol, trade_type, margin_type)
         leverage_result = await update_leverage(api_key, private_key, symbol, trade_type, leverage)
 
-        if margin_result["success"] and leverage_result["success"]:
+        if margin_result.get("success") and leverage_result.get("success"):
             print(f"✅ Binance sync başarılı: {symbol} margin={margin_type}, leverage={leverage}")
+            return True
         else:
-            print(f"⚠️ Binance sync hatalı: {symbol} - "
-                  f"Margin: {margin_result['message']} / Leverage: {leverage_result['message']}")
+            error_msg = f"⚠️ Binance sync hatalı: {symbol} - " \
+                        f"Margin: {margin_result.get('message')} / Leverage: {leverage_result.get('message')}"
+            logger.error(error_msg)
+
+            # Eğer DB bağlantısı ve satır id'si verilmişse rollback yap
+            if conn and row_id:
+                with conn:
+                    with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                        cursor.execute("""
+                            UPDATE user_symbol_settings
+                            SET updated_at=now()
+                            WHERE id=%s
+                        """, (row_id,))
+                        conn.commit()
+                logger.warning(f"↩️ DB rollback yapıldı (id={row_id})")
+
+            return False
+
     except Exception as e:
-        logger.error(f"❌ Binance sync hatası: {str(e)}")
+        logger.error(f"❌ Binance sync exception: {str(e)}")
+
+        # Rollback fallback
+        if conn and row_id:
+            try:
+                with conn:
+                    with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                        cursor.execute("""
+                            UPDATE user_symbol_settings
+                            SET updated_at=now()
+                            WHERE id=%s
+                        """, (row_id,))
+                        conn.commit()
+                logger.warning(f"↩️ DB rollback yapıldı (id={row_id})")
+            except Exception as db_err:
+                logger.error(f"❌ Rollback sırasında hata: {db_err}")
+
+        return False
+
 
 # ✅ Test verisi - status ile
 async def last_trial():
@@ -1533,14 +1571,15 @@ async def last_trial():
            
         
     }
-    test_one ={"99": [
+    test_one ={"120": [
             
               {
-                "trade_type": "spot",
-                "coin_id": "BTCUSDT",
+                "trade_type": "futures",
+                "coin_id": "SOLUSDT",
                 "side": "buy",
                 "order_type": "MARKET",
-                "value": 18.0
+                "value": 15.0,
+                "leverage": 4
                 
             }
         ]

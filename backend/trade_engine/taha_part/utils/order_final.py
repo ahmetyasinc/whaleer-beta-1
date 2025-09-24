@@ -820,198 +820,101 @@ async def update_margin_type(api_key: str, private_key: str, symbol: str, trade_
                            margin_type: Union[bool, str] = True) -> Dict[str, Union[bool, str]]:
     """
     Futures pozisyonu için margin type'ı günceller.
-    
-    Args:
-        api_key (str): Binance API anahtarı
-        private_key (str): Binance private key (HMAC için)
-        symbol (str): Sembol (örn: BTCUSDT)
-        trade_type (str): "futures" veya "test_futures"
-        margin_type (Union[bool, str]): True/False veya "ISOLATED"/"CROSSED"
-        
-    Returns:
-        dict: Güncelleme sonucu
+    True -> ISOLATED, False -> CROSSED
     """
     try:
         # Boolean değeri string'e çevir
         if isinstance(margin_type, bool):
             margin_type_str = "ISOLATED" if margin_type else "CROSSED"
-        elif isinstance(margin_type, str) and margin_type in ["ISOLATED", "CROSSED"]:
-            margin_type_str = margin_type
+        elif isinstance(margin_type, str) and margin_type.upper() in ["ISOLATED", "CROSSED"]:
+            margin_type_str = margin_type.upper()
         else:
-            print(f"⚠️ Geçersiz margin_type: {margin_type}, True (ISOLATED) kullanılacak")
+            print(f"⚠️ Geçersiz margin_type: {margin_type}, default ISOLATED kullanılacak")
             margin_type_str = "ISOLATED"
         
         print(f"🔧 Margin type güncelleniyor - {symbol} -> {margin_type_str}")
         
         # Trade type kontrolü
         if trade_type not in ["futures", "test_futures"]:
-            return {
-                "success": False,
-                "message": f"Geçersiz trade_type: {trade_type}",
-                "margin_type": margin_type_str
-            }
+            return {"success": False, "message": f"Geçersiz trade_type: {trade_type}", "margin_type": margin_type_str}
         
-        # URL'yi al
         urls = MARGIN_LEVERAGE_URLS.get(trade_type)
         if not urls:
-            return {
-                "success": False,
-                "message": f"{trade_type} için URL bulunamadı",
-                "margin_type": margin_type_str
-            }
+            return {"success": False, "message": f"{trade_type} için URL bulunamadı", "margin_type": margin_type_str}
         
         margin_url = urls["marginType"]
         
-        # Headers ayarları
-        headers = {
-            "X-MBX-APIKEY": api_key,
-            "Content-Type": "application/x-www-form-urlencoded"
-        }
+        headers = {"X-MBX-APIKEY": api_key, "Content-Type": "application/x-www-form-urlencoded"}
+        margin_params = {"symbol": symbol, "marginType": margin_type_str, "timestamp": int(time.time() * 1000)}
         
-        # Parametreler
-        margin_params = {
-            "symbol": symbol,
-            "marginType": margin_type_str,
-            "timestamp": int(time.time() * 1000)
-        }
+        payload = "&".join(f"{k}={v}" for k, v in margin_params.items())
+        margin_params["signature"] = await hmac_sign(private_key, payload)
         
-        # HMAC imzası oluştur
-        margin_payload = "&".join(f"{k}={v}" for k, v in margin_params.items())
-        margin_signature = await hmac_sign(private_key, margin_payload)
-        margin_params["signature"] = margin_signature
-        
-        # API isteği gönder
         async with aiohttp.ClientSession() as session:
             async with session.post(margin_url, headers=headers, data=margin_params) as response:
                 if response.status == 200:
-                    margin_response = await response.json()
                     print(f"✅ Margin type başarıyla güncellendi: {symbol} -> {margin_type_str}")
-                    
-                    return {
-                        "success": True,
-                        "message": f"Margin type {margin_type_str} başarıyla ayarlandı",
-                        "margin_type": margin_type_str
-                    }
+                    return {"success": True, "message": f"Margin type {margin_type_str} ayarlandı", "margin_type": margin_type_str}
                 else:
                     error_text = await response.text()
                     print(f"⚠️ Margin type API hatası: {response.status} - {error_text}")
-                    
-                    # Zaten doğru margin type'ta ise başarılı say
-                    if "No need to change margin type" in error_text:
+
+                    if "No need to change" in error_text:
                         print(f"✅ Margin type zaten {margin_type_str}: {symbol}")
-                        return {
-                            "success": True,
-                            "message": f"Margin type zaten {margin_type_str}",
-                            "margin_type": margin_type_str
-                        }
-                    
-                    return {
-                        "success": False,
-                        "message": f"HTTP {response.status}: {error_text}",
-                        "margin_type": margin_type_str
-                    }
+                        return {"success": True, "message": f"Margin type zaten {margin_type_str}", "margin_type": margin_type_str}
+
+                    return {"success": False, "message": f"HTTP {response.status}: {error_text}", "margin_type": margin_type_str}
         
     except Exception as e:
         logger.error(f"❌ Margin type güncelleme hatası: {str(e)}")
-        return {
-            "success": False,
-            "message": f"Margin type hatası: {str(e)}",
-            "margin_type": margin_type_str if 'margin_type_str' in locals() else "ISOLATED"
-        }
-    
+        return {"success": False, "message": f"Margin type hatası: {str(e)}", "margin_type": "ISOLATED"}
+
+
 async def update_leverage(api_key: str, private_key: str, symbol: str, trade_type: str, 
                          leverage: int) -> Dict[str, Union[bool, str, int]]:
     """
-    Futures pozisyonu için leverage'ı günceller.
-    
-    Args:
-        api_key (str): Binance API anahtarı
-        private_key (str): Binance private key (HMAC için)
-        symbol (str): Sembol (örn: BTCUSDT)
-        trade_type (str): "futures" veya "test_futures"
-        leverage (int): Leverage değeri (1-125 arası)
-        
-    Returns:
-        dict: Güncelleme sonucu
+    Futures pozisyonu için leverage'ı günceller (1–125 arası).
     """
     try:
         print(f"📊 Leverage güncelleniyor - {symbol} -> {leverage}x")
         
-        # Trade type kontrolü
         if trade_type not in ["futures", "test_futures"]:
-            return {
-                "success": False,
-                "message": f"Geçersiz trade_type: {trade_type}",
-                "leverage": leverage
-            }
+            return {"success": False, "message": f"Geçersiz trade_type: {trade_type}", "leverage": leverage}
         
-        # Leverage değeri kontrolü
         if not isinstance(leverage, int) or leverage < 1 or leverage > 125:
-            return {
-                "success": False,
-                "message": f"Geçersiz leverage değeri: {leverage} (1-125 arası olmalı)",
-                "leverage": leverage
-            }
+            return {"success": False, "message": f"Geçersiz leverage: {leverage} (1-125)", "leverage": leverage}
         
-        # URL'yi al
         urls = MARGIN_LEVERAGE_URLS.get(trade_type)
         if not urls:
-            return {
-                "success": False,
-                "message": f"{trade_type} için URL bulunamadı",
-                "leverage": leverage
-            }
+            return {"success": False, "message": f"{trade_type} için URL bulunamadı", "leverage": leverage}
         
         leverage_url = urls["leverage"]
         
-        # Headers ayarları
-        headers = {
-            "X-MBX-APIKEY": api_key,
-            "Content-Type": "application/x-www-form-urlencoded"
-        }
+        headers = {"X-MBX-APIKEY": api_key, "Content-Type": "application/x-www-form-urlencoded"}
+        leverage_params = {"symbol": symbol, "leverage": leverage, "timestamp": int(time.time() * 1000)}
         
-        # Parametreler
-        leverage_params = {
-            "symbol": symbol,
-            "leverage": leverage,
-            "timestamp": int(time.time() * 1000)
-        }
+        payload = "&".join(f"{k}={v}" for k, v in leverage_params.items())
+        leverage_params["signature"] = await hmac_sign(private_key, payload)
         
-        # HMAC imzası oluştur
-        leverage_payload = "&".join(f"{k}={v}" for k, v in leverage_params.items())
-        leverage_signature = await hmac_sign(private_key, leverage_payload)
-        leverage_params["signature"] = leverage_signature
-        
-        # API isteği gönder
         async with aiohttp.ClientSession() as session:
             async with session.post(leverage_url, headers=headers, data=leverage_params) as response:
                 if response.status == 200:
-                    leverage_response = await response.json()
                     print(f"✅ Leverage başarıyla güncellendi: {symbol} -> {leverage}x")
-                    
-                    return {
-                        "success": True,
-                        "message": f"Leverage {leverage}x başarıyla ayarlandı",
-                        "leverage": leverage
-                    }
+                    return {"success": True, "message": f"Leverage {leverage}x ayarlandı", "leverage": leverage}
                 else:
                     error_text = await response.text()
                     print(f"⚠️ Leverage API hatası: {response.status} - {error_text}")
-                    
-                    return {
-                        "success": False,
-                        "message": f"HTTP {response.status}: {error_text}",
-                        "leverage": leverage
-                    }
+
+                    if "not modified" in error_text or "No need to change" in error_text:
+                        print(f"✅ Leverage zaten {leverage}x: {symbol}")
+                        return {"success": True, "message": f"Leverage zaten {leverage}x", "leverage": leverage}
+
+                    return {"success": False, "message": f"HTTP {response.status}: {error_text}", "leverage": leverage}
         
     except Exception as e:
         logger.error(f"❌ Leverage güncelleme hatası: {str(e)}")
-        return {
-            "success": False,
-            "message": f"Leverage hatası: {str(e)}",
-            "leverage": leverage
-        }
-    
+        return {"success": False, "message": f"Leverage hatası: {str(e)}", "leverage": leverage}
+
 def update_margin_leverage_config(api_id: int, symbol: str, new_margin_type: bool, 
                                  new_leverage: int) -> bool:
     """

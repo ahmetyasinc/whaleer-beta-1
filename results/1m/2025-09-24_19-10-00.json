@@ -1,13 +1,15 @@
 {
-    "163": [
+    "166": [
         {
             "coin_id": "SOLUSDT",
             "trade_type": "futures",
-            "side": "sell",
             "positionside": "long",
+            "side": "sell",
+            "reduceOnly": true,
             "status": "success",
             "order_type": "market",
-            "value": 24.087000000000003
+            "take_profit": 214.36787999999999,
+            "value": 13.471293000000001
         }
     ]
 }

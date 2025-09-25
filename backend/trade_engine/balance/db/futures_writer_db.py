@@ -65,8 +65,8 @@ async def batch_upsert_futures_orders(pool, order_data: list):
             async with conn.transaction():
                 for data in order_data:
                     exists = await conn.fetchval(
-                        "SELECT 1 FROM public.bot_trades WHERE user_id=$1 AND order_id=$2",
-                        data['user_id'], str(data['order_id'])
+                        "SELECT 1 FROM public.bot_trades WHERE order_id=$1",
+                        str(data['order_id'])
                     )
 
                     if exists:
@@ -78,13 +78,12 @@ async def batch_upsert_futures_orders(pool, order_data: list):
                                 fee = bot_trades.fee + $2,
                                 price = $3,
                                 amount_state = $4
-                            WHERE user_id = $5 AND order_id = $6
+                            WHERE order_id = $5
                         """,
                         data['status'],
                         data.get('commission', Decimal('0')),
                         data['price'],
                         data.get('executed_quantity'),
-                        data['user_id'],
                         str(data['order_id'])
                         )
                         updated_count += 1

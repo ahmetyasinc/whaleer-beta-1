@@ -148,13 +148,13 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
                 result_df['percentage'].iloc[-2:].tolist()
                 if 'percentage' in result_df.columns and len(result_df) >= 2 else None
             )
-            
+            print(f"Bot {bot['id']} / {coin_id}: last_positions={last_positions}, last_percentage={last_percentage}")
             both_same = not two_vals_differ(last_positions) and not two_vals_differ(last_percentage)
             both_zero_positions = all(v == 0 for v in last_positions)
             both_zero_percentage = all(v == 0 for v in last_percentage)
 
             should_append = ( # True ise normal çalışacak. False ise sadece değişimlerde işlem yapcak.
-                not enter_on_start # enter_on_start true ise should_append false olmalı
+                enter_on_start # enter_on_start true ise should_append false olmalı
             )
             if not should_append and (both_zero_positions or both_zero_percentage): # both_zero_positions yada both_zero_percentage true ise should_append false olacak
                 should_append = True
@@ -187,7 +187,6 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
             result_entry.update(order_info)
             results.append(result_entry)
         print("results:", results)
-        print("Bot:", bot)
         bot_type = (bot.get('bot_type') or '').lower()
         trade_type = 'spot' if bot_type == 'spot' else 'futures'  # default: futures dışı her şey spot sayılmaz; yine de güvenli
 

@@ -147,10 +147,12 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
 
     # ---------- hedef kurulumu ----------
     targets = {}
+    print("results:", results)
 
     for res in (results or []):
         lp = res.get("last_positions")
         lper = res.get("last_percentage")
+        print("last_positions:", lp, "last_percentage:", lper)
         if not (isinstance(lp, (list, tuple)) and isinstance(lper, (list, tuple)) and len(lp) == 2 and len(lper) == 2):
             continue
 
@@ -210,14 +212,14 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
         usd = current_value * frac if current_value > 0 else 0.0
     
         if local_min_frac is None or frac < local_min_frac:
-            log_warning(
-                bot_id=bot_id,
-                message="Minimum USD altı işlem engellendi",
-                symbol=act.get("coin_id"),
-                details={"frac": frac, "min_frac": local_min_frac, "action": act, "usd": usd, "required_usd": required_usd}
-            )
             # Telegram bildirimi (usd>10 ve eşik altı) aynı kaldı
             if usd > 10 and usd < required_usd:
+                log_warning(
+                    bot_id=bot_id,
+                    message="Minimum USD altı işlem engellendi",
+                    symbol=act.get("coin_id"),
+                    details={"frac": frac, "min_frac": local_min_frac, "action": act, "usd": usd, "required_usd": required_usd}
+                )
                 _msg = (
                     f"⚠️ <b>Emir Eşik Altında Kaldı</b>\n\n"
                     f"🤖 Bot: <b>#{bot_id}</b>\n"

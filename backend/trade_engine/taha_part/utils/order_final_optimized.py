@@ -293,9 +293,6 @@ async def send_order(prepared_orders: dict) -> dict:
         return {}
 
 
-
-
-
 """
 
 async def send_order(prepared_orders: dict) -> dict:

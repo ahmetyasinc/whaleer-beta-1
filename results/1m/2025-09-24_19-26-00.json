@@ -1,5 +1,5 @@
 {
-    "165": [
+    "166": [
         {
             "coin_id": "SOLUSDT",
             "trade_type": "futures",
@@ -7,8 +7,9 @@
             "side": "buy",
             "status": "success",
             "order_type": "market",
-            "leverage": 2.0,
-            "value": 40.0
+            "take_profit": 214.00716,
+            "leverage": 10.0,
+            "value": 1.5
         }
     ]
 }

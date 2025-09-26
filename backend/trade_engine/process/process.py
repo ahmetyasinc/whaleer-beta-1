@@ -1,49 +1,36 @@
+# backend/trade_engine/process/process.py
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
 from os import cpu_count
 
-# Var olan importların:
+from psycopg2.extras import RealDictCursor
+
+# Projedeki mevcut API'ler
 from backend.trade_engine.process.save import save_result_to_json, aggregate_results_by_bot_id
 from backend.trade_engine.process.run_bot import run_bot
-
-# (İstersen doğrudan bu ikisini kullanabiliriz, şema bağımlılığını azaltır)
 from backend.trade_engine.data.bot_features import load_bot_holding, load_bot_positions
 
-# DB bağlantısı (senin projendeki konfige göre)
-import psycopg2
-from psycopg2.extras import RealDictCursor
-from backend.trade_engine.config import DB_CONFIG
+# DB bağlantısı (fork-safe, config'ten)
+from backend.trade_engine.config import psycopg2_connection
 
 
-
-
-def _get_conn():
-    return psycopg2.connect(
-        dbname=DB_CONFIG["dbname"],
-        user=DB_CONFIG["user"],
-        password=DB_CONFIG["password"],
-        host=DB_CONFIG["host"],
-        port=DB_CONFIG.get("port", 5432),
-        cursor_factory=RealDictCursor
-    )
-
-# process.py (üst kısma ekle)
 def _get_last_price_1m(symbol: str):
     """
-    binance_last_price tablosundan, verilen sembol için
+    public.binance_last_price tablosundan, verilen sembol için
     interval='1m' olan en güncel 'close' değerini döndürür.
     """
     sql = """
         SELECT close
-        FROM binance_last_price
+        FROM public.binance_last_price
         WHERE coin_id = %s AND "interval" = '1m'
         ORDER BY "timestamp" DESC
         LIMIT 1
     """
-    with _get_conn() as conn, conn.cursor() as cur:
-        cur.execute(sql, (symbol,))
-        row = cur.fetchone()
-        return float(row["close"]) if row and row.get("close") is not None else None
+    with psycopg2_connection() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(sql, (symbol,))
+            row = cur.fetchone()
+            return float(row["close"]) if row and row.get("close") is not None else None
 
 
 def _fetch_rent_not_closed_bot_ids():
@@ -53,14 +40,15 @@ def _fetch_rent_not_closed_bot_ids():
     """
     sql = """
         SELECT id
-        FROM bots
+        FROM public.bots
         WHERE acquisition_type = 'RENTED'
-          AND COALESCE(rent_expiry_closed, false) = false
+          AND COALESCE(rent_expiry_closed, FALSE) = FALSE
     """
-    with _get_conn() as conn, conn.cursor() as cur:
-        cur.execute(sql)
-        rows = cur.fetchall()
-        return [r["id"] for r in rows]
+    with psycopg2_connection() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(sql)
+            rows = cur.fetchall() or []
+            return [r["id"] for r in rows]
 
 
 def _mark_rent_closed(bot_id: int):
@@ -68,23 +56,25 @@ def _mark_rent_closed(bot_id: int):
     Kiralık süresi dolan botu işaretler:
       - rent_expiry_closed = TRUE
       - active TRUE ise FALSE yapar (aksi halde olduğu gibi bırakır)
-    Not: Tek bir UPDATE ile yapılır; fonksiyonun adı ve çağrıları aynı kalır.
+    Tek UPDATE ile yapılır.
     """
     sql = """
-        UPDATE bots
+        UPDATE public.bots
         SET
             rent_expiry_closed = TRUE,
             active = CASE WHEN active THEN FALSE ELSE active END
         WHERE id = %s
     """
-    with _get_conn() as conn, conn.cursor() as cur:
-        cur.execute(sql, (bot_id,))
+    with psycopg2_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, (bot_id,))
         conn.commit()
+
 
 def _build_close_orders_for_bot(bot_id: int):
     """
-    ...
-    Dönüş: order dict listesi (flat). Artık amount yerine **value** dönüyoruz.
+    Botun tüm varlık/pozisyonlarını kapatmak için emir listesi üretir.
+    Dönüş: order dict listesi (flat). Amount yerine USD 'value' döner.
     """
     orders = []
 
@@ -98,22 +88,20 @@ def _build_close_orders_for_bot(bot_id: int):
 
         last_price = _get_last_price_1m(symbol)
         if last_price is None:
-            # Fiyat bulunamadıysa bu emri atla (istersen log bas)
             print(f"[rent-close][{bot_id}] {symbol} için 1m fiyat bulunamadı, emir atlandı.")
             continue
 
         value_usd = amount * last_price
-
         orders.append({
             "coin_id": symbol,
             "trade_type": "spot",
-            "side": "sell",                 # spot eldeki coini kapat: SELL
+            "side": "sell",                # spot eldeki coini kapat: SELL
             "bot_id": bot_id,
             "status": "success",
             "order_type": "market",
-            # "amount": amount,              # (ÖNCEKİ YAPI) — korunuyor, artık kullanılmıyor
-            "value": value_usd,              # (YENİ) amount × last_price
-            "price": last_price              # (opsiyonel) şeffaflık için ekledim
+            # "amount": amount,            # eski alan (artık kullanılmıyor)
+            "value": value_usd,            # yeni: amount × last_price
+            "price": last_price            # opsiyonel: şeffaflık
         })
 
     # --- Positions (FUTURES) ---
@@ -136,27 +124,26 @@ def _build_close_orders_for_bot(bot_id: int):
             orders.append({
                 "coin_id": symbol,
                 "trade_type": "futures",
-                "side": "sell",              # long kapat: SELL
+                "side": "sell",             # long kapat: SELL
                 "positionside": "long",
                 "bot_id": bot_id,
                 "status": "success",
                 "order_type": "market",
-                # "amount": abs(pos),         # (ÖNCEKİ YAPI) — korunuyor, artık kullanılmıyor
-                "value": value_usd,           # (YENİ)
+                "value": value_usd,
             })
         elif position_side == "short":
             orders.append({
                 "coin_id": symbol,
                 "trade_type": "futures",
-                "side": "buy",               # short kapat: BUY
+                "side": "buy",              # short kapat: BUY
                 "positionside": "short",
                 "bot_id": bot_id,
                 "status": "success",
                 "order_type": "market",
-                # "amount": abs(pos),         # (ÖNCEKİ YAPI)
-                "value": value_usd,           # (YENİ)
+                "value": value_usd,
             })
     return orders
+
 
 async def handle_rent_expiry_closures(_: list) -> list:
     """
@@ -169,9 +156,8 @@ async def handle_rent_expiry_closures(_: list) -> list:
 
     # 1) Kapatılacak botları çek
     bot_ids = await loop.run_in_executor(None, _fetch_rent_not_closed_bot_ids)
-    #print(f"Kapatma gerektiren kiralık botlar: {bot_ids}")
     if not bot_ids:
-        return []  # düz liste
+        return []
 
     # 2) Her bot için kapatma emirlerini paralelde üret
     close_tasks = [
@@ -181,13 +167,11 @@ async def handle_rent_expiry_closures(_: list) -> list:
     print(f"Kapatma görevleri oluşturuldu: {len(close_tasks)}")
     all_new_orders_per_bot = await asyncio.gather(*close_tasks)  # list[list[order]]
 
-    # 3) Flat listeye dök + botları işaretle
+    # 3) Flat liste + botları işaretle
     flat_orders = []
     for bot_id, new_orders in zip(bot_ids, all_new_orders_per_bot):
         if new_orders:
-            # new_orders zaten {coin_id,..., bot_id, ...} objeleri içeriyor
             flat_orders.extend(new_orders)
-
         # Emir olsun/olmasın işaretle
         await loop.run_in_executor(None, _mark_rent_closed, bot_id)
 
@@ -198,9 +182,7 @@ async def run_all_bots_async(bots, strategies_with_indicators, coin_data_dict, l
     print("bots:", bots)
     loop = asyncio.get_running_loop()
 
-    max_workers = min(len(bots), max(1, int(cpu_count() / 2)))  # En az 1
-
-    from concurrent.futures import ProcessPoolExecutor
+    max_workers = min(len(bots), max(1, int(cpu_count() / 2)))  # En az 1 worker
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         tasks = []
         for bot, strategy_info in zip(bots, strategies_with_indicators):
@@ -219,11 +201,8 @@ async def run_all_bots_async(bots, strategies_with_indicators, coin_data_dict, l
             )
             tasks.append(task)
 
-        #print("tasks oluşturuldu:", tasks)
-
         # 1) Normal bot sonuçları
         results_per_bot = await asyncio.gather(*tasks)
-        #print("results_per_bot:", results_per_bot)
 
         # 2) Normal sonuçları FLAT listeye indir
         all_results = []
@@ -241,7 +220,7 @@ async def run_all_bots_async(bots, strategies_with_indicators, coin_data_dict, l
         if rent_close_orders:
             all_results.extend(rent_close_orders)
 
-        # 4) Grupla -> { "<bot_id>": [ {order}, {order2} ... ] }
+        # 4) Grupla -> { "<bot_id>": [ {order}, ... ] }
         result_dict = aggregate_results_by_bot_id(all_results)
 
         # 5) Kaydet

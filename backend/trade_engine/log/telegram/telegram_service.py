@@ -1,15 +1,12 @@
 # backend/trade_engine/log/telegram/telegram_service.py
-
 from __future__ import annotations
 
 import asyncio
 from typing import Optional, Dict, Any
 
 from psycopg2.extras import RealDictCursor
-
-from backend.trade_engine.config import get_db_connection
-from backend.trade_engine.log.telegram.send_mesage import send_telegram_message
-
+from backend.trade_engine.config import psycopg2_connection
+from backend.trade_engine.log.telegram.send_mesage import send_telegram_message  # mevcut dosya adı korunuyor
 
 # -------------------------------
 # İç yardımcılar (SYNC, to_thread ile çağrılır)
@@ -18,64 +15,45 @@ from backend.trade_engine.log.telegram.send_mesage import send_telegram_message
 def _sync_resolve_user_id_by_bot(bot_id: int) -> Optional[int]:
     """
     SYNC: Bot ID'den user_id döndürür.
-    'deleted' kolonu yoksa ilgili satırı kaldırabilirsiniz.
+    'deleted' kolonu varsa false/NULL olanları aktif sayar.
     """
-    conn = get_db_connection()
-    if conn is None:
-        return None
-    try:
-        with conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                cur.execute(
-                    """
-                    SELECT user_id
-                    FROM bots
-                    WHERE id = %s
-                      AND (deleted IS FALSE OR deleted IS NULL)
-                    """,
-                    (int(bot_id),),
-                )
-                row = cur.fetchone()
-                return row["user_id"] if row else None
-    finally:
-        try:
-            conn.close()
-        except Exception:
-            pass
+    with psycopg2_connection() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                """
+                SELECT user_id
+                FROM public.bots
+                WHERE id = %s
+                  AND COALESCE(deleted, FALSE) = FALSE
+                """,
+                (int(bot_id),),
+            )
+            row = cur.fetchone()
+            return row["user_id"] if row else None
 
 
 def _sync_find_active_telegram_account(user_id: int) -> Optional[Dict[str, Any]]:
     """
     SYNC: Kullanıcının aktif telegram hesabını döndürür (chat_id ile).
     Birden fazla varsa updated_at DESC ile en güncel olanı seçer.
-    'updated_at' kolonu yoksa ORDER BY satırını kaldırabilirsiniz.
+    (updated_at kolonu yoksa ORDER BY yine de zarar vermez; yoksa kaldırabilirsiniz.)
     """
-    conn = get_db_connection()
-    if conn is None:
-        return None
-    try:
-        with conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                cur.execute(
-                    """
-                    SELECT id, user_id, chat_id
-                    FROM telegram_accounts
-                    WHERE user_id = %s
-                      AND is_active = TRUE
-                      AND chat_id IS NOT NULL
-                    ORDER BY updated_at DESC NULLS LAST
-                    LIMIT 1
-                    """,
-                    (int(user_id),),
-                )
-                row = cur.fetchone()
-                return dict(row) if row else None
-    finally:
-        try:
-            conn.close()
-        except Exception:
-            pass
-
+    with psycopg2_connection() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                """
+                SELECT id, user_id, chat_id
+                FROM public.telegram_accounts
+                WHERE user_id = %s
+                  AND is_active = TRUE
+                  AND chat_id IS NOT NULL
+                ORDER BY updated_at DESC NULLS LAST
+                LIMIT 1
+                """,
+                (int(user_id),),
+            )
+            row = cur.fetchone()
+            return dict(row) if row else None
 
 # -------------------------------
 # Async sarmalayıcılar (event loop'u bloklamaz)
@@ -84,10 +62,8 @@ def _sync_find_active_telegram_account(user_id: int) -> Optional[Dict[str, Any]]
 async def _resolve_user_id_by_bot(bot_id: int) -> Optional[int]:
     return await asyncio.to_thread(_sync_resolve_user_id_by_bot, bot_id)
 
-
 async def _find_active_telegram_account(user_id: int) -> Optional[Dict[str, Any]]:
     return await asyncio.to_thread(_sync_find_active_telegram_account, user_id)
-
 
 # -------------------------------
 # Ana API
@@ -173,7 +149,6 @@ async def notify_user_by_telegram(
             "bot_id": bot_id,
         }
 
-
 # -------------------------------
 # Geriye dönük kısa yollar (opsiyonel)
 # -------------------------------
@@ -181,7 +156,6 @@ async def notify_user_by_telegram(
 async def notify_user_by_telegram_with_user(user_id: int, text: str) -> bool:
     result = await notify_user_by_telegram(text=text, user_id=user_id)
     return bool(result.get("ok", False))
-
 
 async def notify_user_by_telegram_with_bot(bot_id: int, text: str) -> bool:
     result = await notify_user_by_telegram(text=text, bot_id=bot_id)

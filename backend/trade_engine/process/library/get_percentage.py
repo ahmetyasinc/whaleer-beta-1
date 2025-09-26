@@ -1,3 +1,9 @@
+# get_percentage.py
+from decimal import Decimal, InvalidOperation
+from sqlalchemy import text
+from backend.trade_engine.config import get_engine
+
+
 def get_percentage(bot_id: int) -> float:
     """
     bots.fullness ve bots.current_usd_value alanlarından
@@ -5,26 +11,23 @@ def get_percentage(bot_id: int) -> float:
     Hata / veri yoksa 0.0 döndürür.
     """
     try:
-        from decimal import Decimal, InvalidOperation
-        from sqlalchemy import text
-        from backend.trade_engine.config import engine
-
-        # DB'den metrikleri çek
-        with engine.connect() as conn:
+        eng = get_engine()
+        with eng.connect() as conn:
             row = conn.execute(
-                text("""
+                text(
+                    """
                     SELECT fullness, current_usd_value
                     FROM bots
                     WHERE id = :id
                     LIMIT 1
-                """),
-                {"id": bot_id}
+                    """
+                ),
+                {"id": bot_id},
             ).mappings().first()
 
         if not row:
             return 0.0
 
-        # Güvenli Decimal dönüşümleri
         fullness = row.get("fullness")
         current = row.get("current_usd_value")
 
@@ -38,7 +41,6 @@ def get_percentage(bot_id: int) -> float:
         except (InvalidOperation, ValueError, TypeError):
             current_dec = Decimal("0")
 
-        # 0 veya negatif current_usd_value koruması
         if current_dec <= 0:
             return 0.0
 
@@ -46,5 +48,4 @@ def get_percentage(bot_id: int) -> float:
         return float(pct)
 
     except Exception:
-        # İstersen logging'e yaz
         return 0.0

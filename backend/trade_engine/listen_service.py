@@ -6,6 +6,8 @@ from backend.trade_engine.taha_part.utils.price_cache_new import (
     start_connection_pool,
     wait_for_cache_ready
 )
+import asyncpg
+import os
 
 from backend.trade_engine.data.last_data_load import load_last_data
 from backend.trade_engine.process.trade_engine import run_trade_engine
@@ -99,8 +101,8 @@ async def execute_bot_logic(interval):
             # 4) Sonuçları grupla + JSON'a kaydet (sadece varsa)
             
             result_dict = aggregate_results_by_bot_id(results)
-            if result_dict:
-                await save_result_to_json(result_dict, last_time, interval)
+            #if result_dict:
+            #    await save_result_to_json(result_dict, last_time, interval)
 
             # TAHANIN PARTI
             result = await send_order(await prepare_order_data(result_dict))
@@ -113,16 +115,29 @@ async def execute_bot_logic(interval):
 
 async def listen_for_notifications():
     conn_str = "postgresql://postgres:admin@localhost/balina_db"
-    async with await psycopg.AsyncConnection.connect(conn_str, autocommit=True) as conn:
-        async with conn.cursor() as cur:
-            await cur.execute("LISTEN new_data;")
-            await start_connection_pool()
-            await wait_for_cache_ready()
-            print("📡 PostgreSQL'den tetikleme bekleniyor...")
 
-            async for notify in conn.notifies():
-                print(f"🔔 Tetikleme: {notify.payload}")
-                asyncio.create_task(handle_new_data(notify.payload))
+    # Pool ve cache'i önce başlat
+    await start_connection_pool()
+    await wait_for_cache_ready()
+
+    while True:
+        try:
+            async with await psycopg.AsyncConnection.connect(conn_str, autocommit=True) as conn:
+                async with conn.cursor() as cur:
+                    await cur.execute("LISTEN new_data;")
+                    print("📡 PostgreSQL'den tetikleme bekleniyor...")
+
+                    async for notify in conn.notifies():
+                        print(f"🔔 Tetikleme: {notify.payload}")
+                        asyncio.create_task(handle_new_data(notify.payload))
+
+        except (asyncio.CancelledError, KeyboardInterrupt):
+            print("⛔ Dinleyici durduruluyor...")
+            break
+        except Exception as e:
+            print(f"❌ Dinleyicide hata: {e}. 5 sn sonra yeniden denenecek...")
+            await asyncio.sleep(5)
+
 
 if __name__ == "__main__":
     asyncio.run(listen_for_notifications())

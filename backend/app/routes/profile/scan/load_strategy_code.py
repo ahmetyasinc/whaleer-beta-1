@@ -1,14 +1,18 @@
-from trade_engine.config import engine
+# backend/trade_engine/data/strategy_code.py (örnek konum)
+from sqlalchemy import text
+from trade_engine.config import get_engine
 
 def load_strategy_code(strategy_id: int) -> str | None:
     try:
-        conn = engine.raw_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT code FROM strategies WHERE id = %s", (strategy_id,))
-        row = cursor.fetchone()
-        cursor.close()
-        conn.close()
-        return row[0] if row else None
+        eng = get_engine()
+        with eng.connect() as conn:
+            row = conn.execute(
+                text("SELECT code FROM strategies WHERE id = :strategy_id"),
+                {"strategy_id": strategy_id}
+            ).fetchone()
+
+            return row[0] if row else None
+
     except Exception as e:
         print(f"Veri çekme hatası: {e}")
         return None

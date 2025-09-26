@@ -1,5 +1,6 @@
 # run_services.py
-
+import asyncpg
+import os
 import asyncio
 import logging
 import argparse
@@ -81,32 +82,40 @@ async def _api_key_event_callback(conn, pid, channel, payload):
 
 
 async def listen_for_api_key_events():
-    """Yeni 'api_key_events' kanalını dinleyen ana döngü."""
+    """
+    API anahtarı olaylarını dinler.
+    Pool yerine dedicated asyncpg connection kullanır.
+    """
     logger.info("API anahtarı olay dinleyicisi başlatılıyor...")
-    pool = await config.get_async_pool()
-    if not pool:
-        logger.critical("API olay dinleyicisi için DB havuzu oluşturulamadı.")
-        return
-
     conn = None
-    channel_name = 'api_key_events'
+    channel_name = "api_key_events"
+
     while True:
         try:
-            conn = await pool.acquire()
+            conn = await asyncpg.connect(
+                user=os.getenv("PGUSER", "postgres"),
+                password=os.getenv("PGPASSWORD", "admin"),
+                database=os.getenv("PGDATABASE", "balina_db"),
+                host=os.getenv("PGHOST", "127.0.0.1"),
+                port=os.getenv("PGPORT", "5432"),
+            )
             await conn.add_listener(channel_name, _api_key_event_callback)
             logger.info(f"✅ API olay dinleyicisi aktif. '{channel_name}' kanalı dinleniyor.")
+
+            # Bağlantıyı açık tut
             while True:
                 await asyncio.sleep(3600)
+
         except (asyncio.CancelledError, ConnectionAbortedError):
             logger.info("API olay dinleyicisi durduruluyor.")
             break
         except Exception as e:
-            logger.error(f"❌ API olay dinleyicisinde hata: {e}. 5 saniye sonra yeniden denenecek.")
+            logger.error(f"❌ API olay dinleyicisinde hata: {e}. 5 sn sonra yeniden denenecek.")
         finally:
-            if conn:
+            if conn and not conn.is_closed():
                 try:
                     await conn.remove_listener(channel_name, _api_key_event_callback)
-                    await pool.release(conn)
+                    await conn.close()
                 except Exception:
                     pass
         await asyncio.sleep(5)
@@ -120,31 +129,39 @@ async def notification_handler(conn, pid, channel, payload):
 
 
 async def listen_for_db_triggers():
-    """'run_listenkey_refresh' kanalını dinleyen ana döngü."""
+    """
+    ListenKey yenileme trigger olaylarını dinler.
+    Pool yerine dedicated asyncpg connection kullanır.
+    """
     logger.info("ListenKey yenileme trigger dinleyicisi başlatılıyor...")
-    pool = await config.get_async_pool()
-    if not pool:
-        logger.critical("DB bağlantı havuzu oluşturulamadı. Trigger dinlenemiyor.")
-        return
     conn = None
-    channel_name = 'run_listenkey_refresh'
+    channel_name = "run_listenkey_refresh"
+
     while True:
         try:
-            conn = await pool.acquire()
+            conn = await asyncpg.connect(
+                user=os.getenv("PGUSER", "postgres"),
+                password=os.getenv("PGPASSWORD", "admin"),
+                database=os.getenv("PGDATABASE", "balina_db"),
+                host=os.getenv("PGHOST", "127.0.0.1"),
+                port=os.getenv("PGPORT", "5432"),
+            )
             await conn.add_listener(channel_name, notification_handler)
             logger.info(f"✅ ListenKey trigger dinleyicisi aktif. '{channel_name}' kanalı dinleniyor.")
+
             while True:
                 await asyncio.sleep(3600)
+
         except (asyncio.CancelledError, ConnectionAbortedError):
             logger.info("ListenKey yenileme dinleyicisi durduruluyor.")
             break
         except Exception as e:
-            logger.error(f"❌ Trigger dinleyicisinde hata: {e}. 5 saniye sonra yeniden denenecek.")
+            logger.error(f"❌ Trigger dinleyicisinde hata: {e}. 5 sn sonra yeniden denenecek.")
         finally:
-            if conn:
+            if conn and not conn.is_closed():
                 try:
                     await conn.remove_listener(channel_name, notification_handler)
-                    await pool.release(conn)
+                    await conn.close()
                 except Exception:
                     pass
         await asyncio.sleep(5)

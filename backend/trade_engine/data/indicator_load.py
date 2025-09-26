@@ -1,37 +1,68 @@
-from sqlalchemy import text
-from backend.trade_engine.config import engine
+# backend/trade_engine/data/indicators_loader.py
+from typing import List, Dict, Any
+from sqlalchemy import text, bindparam, Integer
+from sqlalchemy.dialects.postgresql import ARRAY
+from backend.trade_engine.config import get_engine
 
-def load_indicators(strategy_id):
+def _parse_pg_array_text(val: str) -> List[int]:
+    """
+    Postgres array text ('{1,2,3}' veya '1,2,3') -> [1,2,3]
+    """
+    if not val:
+        return []
+    s = val.strip()
+    if s.startswith("{") and s.endswith("}"):
+        s = s[1:-1]
+    if not s:
+        return []
+    return [int(x.strip().strip('"').strip("'")) for x in s.split(",") if x.strip()]
+
+def load_indicators(strategy_id: int) -> List[Dict[str, Any]]:
     try:
-        with engine.connect() as conn:
-            # strategy_id'ye göre indicator_ids çek
-            result = conn.execute(
-                text("SELECT indicator_ids FROM strategies WHERE id = :strategy_id"),
-                {"strategy_id": strategy_id}
+        eng = get_engine()
+        with eng.connect() as conn:
+            # 1) strategy_id'ye göre indicator_ids al
+            row = conn.execute(
+                text("SELECT indicator_ids FROM public.strategies WHERE id = :sid"),
+                {"sid": strategy_id}
             ).fetchone()
 
-            if not result:
+            if not row:
                 return []
 
-            indicator_ids = result._mapping['indicator_ids']
+            indicator_ids = row._mapping.get("indicator_ids")
 
-            if not indicator_ids:
+            # 2) indicator_ids normalize: list[int] haline getir
+            if indicator_ids is None:
                 return []
 
-            # ARRAY ise direkt kullan, değilse string olarak parse et
-            if isinstance(indicator_ids, str):
-                indicator_ids = [int(id.strip()) for id in indicator_ids.split(',')]
+            if isinstance(indicator_ids, list):
+                ids: List[int] = [int(x) for x in indicator_ids if x is not None]
+            elif isinstance(indicator_ids, str):
+                ids = _parse_pg_array_text(indicator_ids)
+            else:
+                # Farklı bir tip dönerse ihtiyatlı ol
+                try:
+                    ids = [int(x) for x in indicator_ids]
+                except Exception:
+                    ids = []
 
-            # Şimdi indicators tablosundan verileri çek
-            indicators_result = conn.execute(
-                text("SELECT id, name, code FROM indicators WHERE id = ANY(:indicator_ids)"),
-                {"indicator_ids": indicator_ids}
-            ).fetchall()
+            if not ids:
+                return []
 
-            # SQLAlchemy Row nesnelerini dict'e çevir
-            indicators = [dict(row._mapping) for row in indicators_result]
+            # 3) indicators tablosundan verileri çek
+            stmt = (
+                text("""
+                    SELECT id, name, code
+                    FROM public.indicators
+                    WHERE id = ANY(:ids)
+                """)
+                # ANY(:ids) için Postgres ARRAY(int) tipini belirt
+                .bindparams(bindparam("ids", type_=ARRAY(Integer)))
+            )
 
-            return indicators
+            rows = conn.execute(stmt, {"ids": ids}).fetchall()
+            return [dict(r._mapping) for r in rows]
 
     except Exception as e:
         print(f"Veritabanı hatası: {e}")

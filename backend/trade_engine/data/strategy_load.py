@@ -1,15 +1,21 @@
+# backend/trade_engine/data/strategy_loader.py
 from sqlalchemy import text
-from backend.trade_engine.config import engine
+from backend.trade_engine.config import get_engine  # lazy & fork-safe engine
 
-def load_strategy(id):
+def load_strategy(strategy_id: int):
+    """
+    Belirtilen strategy_id için strategies.code alanını döndürür.
+    Bulunamazsa None döner.
+    """
     try:
-        with engine.connect() as conn:
+        eng = get_engine()
+        with eng.connect() as conn:
             result = conn.execute(
-                text("SELECT code FROM strategies WHERE id = :id"),
-                {"id": id}
-            ).scalar()  # sadece 'code' değerini alır
+                text("SELECT code FROM public.strategies WHERE id = :id"),
+                {"id": strategy_id}
+            ).scalar()
 
-            return result  # direkt string veya None
+            return result  # str veya None
 
     except Exception as e:
         print(f"Veritabanı hatası: {e}")

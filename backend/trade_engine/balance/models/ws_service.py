@@ -6,7 +6,9 @@ from backend.trade_engine.balance.db.stream_key_db import attach_listenkeys_to_w
 from backend.trade_engine.balance.db import ws_db
 from backend.trade_engine.balance.db.futures_writer_db import batch_upsert_futures_balances, batch_upsert_futures_orders
 from backend.trade_engine.taha_part.utils.price_cache_new import get_price
-
+import asyncpg
+import os
+from asyncpg import exceptions as apg_exc
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -242,37 +244,34 @@ class DynamicListenerManager:
         self.new_key_queue = asyncio.Queue()
 
     # ws_service.py DOSYASINA EKLENECEK KOD
-# DynamicListenerManager sınıfının içine ekleyin
+    # DynamicListenerManager sınıfının içine ekleyin
 
     async def _listen_for_db_events(self):
-        """
-        PostgreSQL'in LISTEN/NOTIFY mekanizmasını kullanarak veritabanı olaylarını
-        sürekli olarak dinler ve ilgili callback fonksiyonunu tetikler.
-        """
-        channel_name = "streamkey_events" # DB trigger'ınızın bildirim gönderdiği kanal
-        logging.info(f"👂 Veritabanı '{channel_name}' kanalı dinlenmeye başlanıyor...")
-        
-        # Bu metodun sürekli çalışması için bir sonsuz döngü gerekiyor.
-        # asyncpg, add_listener'ı bağlantı açık kaldığı sürece çalıştırır.
-        # Bu yüzden bağlantıyı açık tutmalıyız.
+        channel_name = "streamkey_events"
+        logging.info(f"👂 '{channel_name}' kanalı dinlenmeye başlanıyor...")
+
         while True:
+            conn = None
             try:
-                conn = await self.pool.acquire()
+                # Dedicated connection (pool’dan acquire ETME)
+                conn = await asyncpg.connect(
+                    user=os.getenv("PGUSER","postgres"),
+                    password=os.getenv("PGPASSWORD","admin"),
+                    database=os.getenv("PGDATABASE","balina_db"),
+                    host=os.getenv("PGHOST","127.0.0.1"),
+                    port=os.getenv("PGPORT","5432")
+                )
                 await conn.add_listener(channel_name, self._db_event_callback)
-                
-                # Bağlantıyı ve listener'ı aktif tutmak için bekliyoruz.
-                # Eğer bağlantı koparsa, döngü yeniden başlayacak ve
-                # yeni bir bağlantı ile listener tekrar kurulacak.
+                # bağlantıyı canlı tut
                 while True:
-                    await asyncio.sleep(3600) # Periyodik olarak bekle
+                    await asyncio.sleep(3600)
             except Exception as e:
-                logging.error(f"❌ Veritabanı dinleyicisinde hata: {e}. Yeniden bağlanılıyor...", exc_info=True)
-                # Bağlantıyı release et (eğer varsa) ve kısa bir süre sonra tekrar dene
-                if 'conn' in locals() and not conn.is_closed():
-                    try:
-                        await self.pool.release(conn)
-                    except Exception as release_error:
-                        logging.error(f"Bağlantı bırakılırken hata: {release_error}")
+                logging.error(f"❌ Listener bağlantı hatası: {e}. 5s sonra yeniden denenecek.", exc_info=True)
+                try:
+                    if conn and not conn.is_closed():
+                        await conn.close()
+                except Exception:
+                    pass
                 await asyncio.sleep(5)
 
     async def run(self):
@@ -282,43 +281,66 @@ class DynamicListenerManager:
     # GÜNCELLENDİ: Bu fonksiyon artık sahipsiz 'new' key'leri de başlatıyor.
     # ws_service.py içindeki DynamicListenerManager sınıfına ait fonksiyon
     async def _initialize_from_db(self):
-        """
-        Sistem başlangıcında temiz bir kurulum yapar.
-        1. Önceki çalıştırmadan kalma tüm 'futures' WS kayıtlarını temizler. (EN GÜVENİLİR YÖNTEM)
-        2. YENİ: Sadece 'new' veya 'active' durumundaki geçerli futures anahtarlarının ws_id'lerini sıfırlar.
-        3. Bu anahtarlar için sıfırdan WebSocket grupları oluşturur.
-        """
-        logging.info("🚀 Sistem başlangıcı: Temiz bir kurulum için veritabanı hazırlanıyor...")
-        
-        async with self.pool.acquire() as conn:
-            async with conn.transaction():
-                # 1. Adım: Eski ve geçersiz 'futures' WS kayıtlarını temizle
-                logging.info("  -> Eski 'futures' WebSocket kayıtları siliniyor...")
-                await conn.execute("DELETE FROM websocket_connections WHERE name LIKE '%futures%'")
-                
-                # 2. Adım: Futures anahtarlarının ws_id'lerini sıfırla (GÜNCELLENDİ)
-                logging.info("  -> 'new'/'active' durumundaki Futures anahtarlarının eski bağlantı ID'leri temizleniyor...")
-                await conn.execute("""
-                    UPDATE stream_keys 
-                    SET ws_id = NULL 
-                    WHERE status IN ('new', 'active') AND is_futures_enabled = TRUE
-                """)
+        logging.info("🚀 Sistem başlangıcı: Temiz kurulum...")
 
-                # 3. Adım: Kurulması gereken TÜM anahtarları topla
-                logging.info("  -> 'new' ve 'active' durumundaki tüm futures anahtarları toplanıyor...")
-                keys_to_start = await conn.fetch("""
-                    SELECT user_id, api_id, stream_key 
-                    FROM stream_keys 
-                    WHERE is_futures_enabled = TRUE AND status IN ('new', 'active')
-                """)
+        # Pool closing guard
+        #if getattr(self.pool, "_closing", False):
+        #    # Eski pool’u tamamen kapatıp yenisini iste
+        #    try:
+        #        await config.close_async_pool()
+        #    except Exception:
+        #        pass
+        #    self.pool = await config.get_async_pool()
 
+        try:
+            async with self.pool.acquire() as conn:
+                async with conn.transaction():
+                    logging.info("  -> Eski 'futures' WS kayıtları siliniyor...")
+                    await conn.execute("DELETE FROM websocket_connections WHERE name LIKE '%futures%'")
+
+                    logging.info("  -> 'new'/'active' futures anahtarlarının ws_id'leri temizleniyor...")
+                    await conn.execute("""
+                        UPDATE stream_keys
+                        SET ws_id = NULL
+                        WHERE status IN ('new','active') AND is_futures_enabled = TRUE
+                    """)
+
+                    logging.info("  -> 'new' ve 'active' futures anahtarları toplanıyor...")
+                    keys_to_start = await conn.fetch("""
+                        SELECT user_id, api_id, stream_key
+                        FROM stream_keys
+                        WHERE is_futures_enabled = TRUE AND status IN ('new','active')
+                    """)
+        except apg_exc.InterfaceError as ie:
+            # pool is closing → resetle ve tekrar dene (tek deneme yeter)
+            logging.warning(f"Pool closing saptandı, resetleniyor: {ie}")
+            try:
+                await config.close_async_pool()
+            except Exception:
+                pass
+            self.pool = await config.get_async_pool()
+            # bir kere daha dene
+            async with self.pool.acquire() as conn:
+                async with conn.transaction():
+                    await conn.execute("DELETE FROM websocket_connections WHERE name LIKE '%futures%'")
+                    await conn.execute("""
+                        UPDATE stream_keys
+                        SET ws_id = NULL
+                        WHERE status IN ('new','active') AND is_futures_enabled = TRUE
+                    """)
+                    keys_to_start = await conn.fetch("""
+                        SELECT user_id, api_id, stream_key
+                        FROM stream_keys
+                        WHERE is_futures_enabled = TRUE AND status IN ('new','active')
+                    """)
+        # devam aynı
         if not keys_to_start:
-            logging.info("✅ Başlatılacak aktif veya yeni futures anahtarı bulunamadı.")
+            logging.info("✅ Başlatılacak aktif veya yeni futures anahtarı yok.")
         else:
-            logging.info(f"➕ {len(keys_to_start)} adet futures anahtarı bulundu. WebSocket grupları oluşturulacak...")
+            logging.info(f"➕ {len(keys_to_start)} anahtar bulundu. WS grupları oluşturulacak...")
             events_to_add = [
-                {'stream_key': key['stream_key'], 'user_id': key['user_id'], 'api_id': key['api_id']}
-                for key in keys_to_start
+                {'stream_key': k['stream_key'], 'user_id': k['user_id'], 'api_id': k['api_id']}
+                for k in keys_to_start
             ]
             await self._place_new_keys_intelligently(events_to_add)
 
@@ -410,9 +432,6 @@ async def main():
     except Exception as e:
         # Hata oluşursa, tüm detaylarıyla logla
         logging.error("❌ FUTURES SERVİSİNDE BEKLENMEDİK BİR HATA OLUŞTU!", exc_info=True)
-
-if __name__ == "__main__":
-    asyncio.run(main())
 
 if __name__ == "__main__":
     asyncio.run(main())

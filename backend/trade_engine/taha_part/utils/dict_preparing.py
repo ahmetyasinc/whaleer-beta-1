@@ -1,256 +1,138 @@
+# dict_preparing.py (refactored)
 from typing import Dict, Optional
 import logging
 from psycopg2.extras import RealDictCursor
 import asyncio
-from backend.trade_engine.config import get_db_connection
-import logging
+from backend.trade_engine.config import psycopg2_connection
+
 logger = logging.getLogger(__name__)
 
+
 def extract_symbol_trade_types(order_data: dict) -> Dict[str, list]:
-    """
-    order_data'dan sembol ve trade_type bilgilerini çıkarır.
-    Aynı sembol için hem spot hem futures varsa ikisini de liste olarak ekler.
-    
-    Args:
-        order_data (dict): Bot ID'leri ve emir parametrelerini içeren veri.
-        
-    Returns:
-        dict: {
-            "BTCUSDT": ["spot", "futures"],  # ✅ Hem spot hem futures var
-            "ETHUSDT": ["spot"],             # ✅ Sadece spot var
-            "ADAUSDT": ["futures"],          # ✅ Sadece futures var
-            "BNBUSDT": ["spot", "futures"]   # ✅ Hem spot hem futures var
-        }
-    """
+    """(Değişmedi) order_data'dan sembol → [trade_type] çıkarır."""
     symbol_trade_types = {}
-    
     try:
         for bot_id, orders in order_data.items():
             for order in orders:
-                # Gerekli alanları al
                 coin_id = order.get("coin_id")
                 trade_type = order.get("trade_type")
-                
                 if not coin_id or not trade_type:
                     print(f"Bot ID {bot_id} için coin_id veya trade_type eksik")
                     continue
-                
-                # trade_type'ı spot/futures formatına dönüştür
+
                 if trade_type in ["spot", "test_spot"]:
-                    normalized_trade_type = "spot"
+                    normalized = "spot"
                 elif trade_type in ["futures", "test_futures"]:
-                    normalized_trade_type = "futures"
+                    normalized = "futures"
                 else:
                     print(f"Geçersiz trade_type: {trade_type}")
                     continue
-                
-                # ✅ YENİ: Symbol için liste oluştur veya genişlet
-                if coin_id not in symbol_trade_types:
-                    symbol_trade_types[coin_id] = []
-                
-                # ✅ YENİ: Aynı trade_type tekrarını engelle
-                if normalized_trade_type not in symbol_trade_types[coin_id]:
-                    symbol_trade_types[coin_id].append(normalized_trade_type)
-                    logger.debug(f"➕ {coin_id} -> {normalized_trade_type} eklendi")
+
+                symbol_trade_types.setdefault(coin_id, [])
+                if normalized not in symbol_trade_types[coin_id]:
+                    symbol_trade_types[coin_id].append(normalized)
+                    logger.debug(f"➕ {coin_id} -> {normalized} eklendi")
                 else:
-                    logger.debug(f"🔄 {coin_id} -> {normalized_trade_type} zaten mevcut")
-        
+                    logger.debug(f"🔄 {coin_id} -> {normalized} zaten mevcut")
+
         print(f"📊 Extract edilen semboller: {dict(symbol_trade_types)}")
-        
-        # ✅ YENİ: Detaylı analiz log'u
-        total_entries = sum(len(trade_types) for trade_types in symbol_trade_types.values())
-        mixed_symbols = [symbol for symbol, trade_types in symbol_trade_types.items() if len(trade_types) > 1]
-        spot_only = [symbol for symbol, trade_types in symbol_trade_types.items() if trade_types == ["spot"]]
-        futures_only = [symbol for symbol, trade_types in symbol_trade_types.items() if trade_types == ["futures"]]
-        
-        print(f"📊 Extract analizi:")
-        print(f"  📈 Toplam entry: {total_entries}")
-        print(f"  🔢 Unique semboller: {len(symbol_trade_types)}")
-        print(f"  🔵 Sadece spot: {len(spot_only)} -> {spot_only}")
-        print(f"  🟠 Sadece futures: {len(futures_only)} -> {futures_only}")
-        print(f"  🟣 Karışık (spot+futures): {len(mixed_symbols)} -> {mixed_symbols}")
-        
         return symbol_trade_types
-        
+
     except Exception as e:
         logger.error(f"❌ Sembol trade_type çıkarılırken hata: {str(e)}")
         return {}
 
 
 async def get_symbols_filters_dict(symbols_and_types: Dict[str, list]) -> Dict[str, list]:
-    """
-    Belirtilen sembollerin filtrelerini dict olarak getirir.
-    Aynı sembol için birden fazla trade_type varsa liste halinde döner.
-    
-    Args:
-        symbols_and_types (dict): {
-            "BTCUSDT": ["spot", "futures"],
-            "ETHUSDT": ["spot"],
-            "ADAUSDT": ["futures"]
-        }
-        
-    Returns:
-        dict: {
-            "BTCUSDT": [
-                {
-                    "step_size": 0.001,
-                    "min_qty": 0.001,
-                    "tick_size": 0.01,
-                    "trade_type": "spot"
-                },
-                {
-                    "step_size": 0.001,
-                    "min_qty": 0.001,
-                    "tick_size": 0.1,
-                    "trade_type": "futures"
-                }
-            ],
-            "ETHUSDT": [
-                {
-                    "step_size": 0.0001,
-                    "min_qty": 0.0001,
-                    "tick_size": 0.01,
-                    "trade_type": "spot"
-                }
-            ]
-        }
-    """
+    """Belirtilen sembollerin filtrelerini dict olarak getirir."""
     try:
         if not symbols_and_types:
             print("⚠️ Sembol listesi boş")
             return {}
-        
-        # Input format conversion: Liste'den tuple'a dönüştür
+
         flattened_requests = []
         for symbol, trade_types in symbols_and_types.items():
             if isinstance(trade_types, list):
                 for trade_type in trade_types:
                     flattened_requests.append((symbol, trade_type))
             else:
-                # Backward compatibility - string format desteği
                 flattened_requests.append((symbol, trade_types))
-        
+
         if not flattened_requests:
             print("⚠️ Flatten edilmiş sembol listesi boş")
             return {}
-            
-        print(f"🔄 Format conversion: {len(symbols_and_types)} symbols -> {len(flattened_requests)} requests")
-        
-        # Database connection - with statement kullan
-        conn = get_db_connection()
-        if not conn:
-            logger.error("❌ Veritabanı bağlantısı alınamadı")
-            return {}
-        
-        try:
-            with conn:
-                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                    # Batch sorgu için parametreleri hazırla
-                    conditions = []
-                    params = []
-                    
-                    for symbol, trade_type in flattened_requests:
-                        conditions.append("(binance_symbol = %s AND trade_type = %s)")
-                        params.extend([symbol, trade_type])
-                    
-                    symbols_query = f"""
+
+        with psycopg2_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                conditions = []
+                params = []
+                for symbol, trade_type in flattened_requests:
+                    conditions.append("(binance_symbol = %s AND trade_type = %s)")
+                    params.extend([symbol, trade_type])
+
+                symbols_query = f"""
                     SELECT binance_symbol, step_size, min_qty, tick_size, trade_type
                     FROM symbol_filters
                     WHERE {' OR '.join(conditions)}
                     ORDER BY binance_symbol, trade_type
-                    """
-                    
-                    cursor.execute(symbols_query, params)
-                    symbols_result = cursor.fetchall()
-        finally:
-            conn.close()
-        
+                """
+                cursor.execute(symbols_query, params)
+                symbols_result = cursor.fetchall()
+
         if not symbols_result:
             print("⚠️ Belirtilen semboller için filtreler bulunamadı")
             return {}
-        
-        # Dict formatına dönüştür - sembol bazında grupla
-        symbols_dict = {}
+
+        symbols_dict: Dict[str, list] = {}
         for row in symbols_result:
             symbol = row["binance_symbol"]
-            
-            # Sembol için liste oluştur
-            if symbol not in symbols_dict:
-                symbols_dict[symbol] = []
-            
-            # Filter bilgilerini ekle
-            filter_data = {
-                "step_size": float(row["step_size"]),
-                "min_qty": float(row["min_qty"]),
-                "tick_size": float(row["tick_size"]),
-                "trade_type": row["trade_type"]
-            }
-            
-            symbols_dict[symbol].append(filter_data)
-        
-        # Sonuç analizi
-        total_filters = sum(len(filters) for filters in symbols_dict.values())
-        mixed_symbols = [symbol for symbol, filters in symbols_dict.items() if len(filters) > 1]
-        
-        print(f"✅ {len(symbols_dict)} sembol için {total_filters} filtre yüklendi")
-        print(f"🟣 Karışık trade_type'lı semboller: {len(mixed_symbols)} -> {mixed_symbols}")
-        
+            symbols_dict.setdefault(symbol, [])
+            symbols_dict[symbol].append(
+                {
+                    "step_size": float(row["step_size"]),
+                    "min_qty": float(row["min_qty"]),
+                    "tick_size": float(row["tick_size"]),
+                    "trade_type": row["trade_type"],
+                }
+            )
+
         return symbols_dict
-        
+
     except Exception as e:
         logger.error(f"❌ Sembol filtreleri alınırken hata: {str(e)}")
         return {}
 
+
 async def get_single_symbol_filters(symbol: str, trade_type: str) -> Optional[Dict]:
-    """
-    Tek bir sembolün filtrelerini getirir - load_bot_holding pattern'i kullanılarak.
-    
-    Args:
-        symbol (str): Binance sembolü (örn: 'BTCUSDT')
-        trade_type (str): "spot" veya "futures"
-        
-    Returns:
-        dict: {
-            "step_size": 0.001,
-            "min_qty": 0.001,
-            "tick_size": 0.01,
-            "trade_type": "spot"
-        } veya None
-    """
+    """Tek bir sembolün filtrelerini getirir."""
     try:
         if not symbol or not trade_type:
             print("⚠️ Sembol veya trade_type boş")
             return None
-        
-        # Direct DB connection - load_bot_holding pattern'i gibi
-        conn = get_db_connection()
-        if not conn:
-            logger.error("❌ Veritabanı bağlantısı alınamadı")
-            return None
-            
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
-        
-        cursor.execute("""
-            SELECT binance_symbol, step_size, min_qty, tick_size, trade_type
-            FROM symbol_filters
-            WHERE binance_symbol = %s AND trade_type = %s
-        """, (symbol, trade_type))
-        
-        symbol_result = cursor.fetchone()
-        cursor.close()
-        conn.close()
-        
+
+        with psycopg2_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute(
+                    """
+                    SELECT binance_symbol, step_size, min_qty, tick_size, trade_type
+                    FROM symbol_filters
+                    WHERE binance_symbol = %s AND trade_type = %s
+                    """,
+                    (symbol, trade_type),
+                )
+                symbol_result = cursor.fetchone()
+
         if not symbol_result:
             print(f"⚠️ {symbol} sembolü için {trade_type} filtresi bulunamadı")
             return None
-        
+
         return {
             "step_size": float(symbol_result["step_size"]),
             "min_qty": float(symbol_result["min_qty"]),
             "tick_size": float(symbol_result["tick_size"]),
-            "trade_type": symbol_result["trade_type"]
+            "trade_type": symbol_result["trade_type"],
         }
-        
+
     except Exception as e:
         logger.error(f"❌ {symbol} sembol filtresi alınırken hata: {str(e)}")
         return None

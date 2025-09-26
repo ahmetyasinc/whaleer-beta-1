@@ -354,7 +354,7 @@ async def main():
         await manager.run()
     except (KeyboardInterrupt, asyncio.CancelledError): # CancelledError eklendi
         logging.info("🛑 Spot servisi durdurma sinyali aldi, kapatiliyor.")
-    finally:
-        if pool:
-            await pool.close()
-            logging.info("ℹ️ Spot servisi veritabani baglanti havuzu kapatildi.")
+    #finally:
+    #    if pool:
+    #        await pool.close()
+    #        logging.info("ℹ️ Spot servisi veritabani baglanti havuzu kapatildi.")

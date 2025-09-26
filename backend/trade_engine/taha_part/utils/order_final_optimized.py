@@ -3,7 +3,7 @@ from datetime import datetime
 import time, asyncio, aiohttp, logging, json, os, traceback
 from typing import Optional, Dict, List
 from decimal import Decimal
-from backend.trade_engine.config import get_db_connection, get_async_pool
+from backend.trade_engine.config import psycopg2_connection, get_async_pool
 from psycopg2.extras import RealDictCursor
 from backend.trade_engine.taha_part.utils.price_cache_new import start_connection_pool, wait_for_cache_ready
 from binance.helpers import round_step_size
@@ -436,12 +436,6 @@ async def prepare_order_data(order_data: dict) -> dict:
     """
     Gelen emir verisini Binance API formatına dönüştürür.
     Futures için margin/leverage ayarları user_symbol_settings tablosu üzerinden kontrol edilir.
-
-    Args:
-        order_data (dict): Bot ID bazında emirleri içeren veri
-
-    Returns:
-        dict: Hazırlanan emirler
     """
     try:
         prepared_orders = {
@@ -455,7 +449,6 @@ async def prepare_order_data(order_data: dict) -> dict:
         symbol_trade_types = extract_symbol_trade_types(order_data)
         filters = await get_symbols_filters_dict(symbol_trade_types)
         print(filters)
-
         print(f"✅ {len(filters)} sembol filtresi yüklendi")
 
         for bot_id, orders in order_data.items():
@@ -478,23 +471,24 @@ async def prepare_order_data(order_data: dict) -> dict:
 
                 api_key, private_key = _extract_api_keys(api_credentials, trade_type)
 
-                # Futures için margin/leverage DB kontrolü
+                # Futures için margin/leverage DB kontrolü (YENİ: psycopg2_connection kullan)
                 if trade_type in ["futures", "test_futures"]:
-                    conn = get_db_connection()
-                    settings = await sync_margin_leverage(
-                        user_id=user_id,
-                        api_id=api_id,
-                        api_key=api_key,
-                        private_key=private_key,
-                        symbol=order["coin_id"],
-                        trade_type=trade_type,
-                        order=order,
-                        conn=conn
-                    )
+                    # Bağlantıyı güvenli şekilde kirala & bırak
+                    with psycopg2_connection() as conn:
+                        settings = await sync_margin_leverage(
+                            user_id=user_id,
+                            api_id=api_id,
+                            api_key=api_key,
+                            private_key=private_key,
+                            symbol=order["coin_id"],
+                            trade_type=trade_type,
+                            order=order,
+                            conn=conn
+                        )
                     if not settings:
                         logger.error(f"❌ {order['coin_id']} için margin/leverage senkronizasyonu başarısız")
                         continue
-                    print(f"📊 DB ayarları - {order['coin_id']}: margin_type={settings['margin_type']} leverage={settings['leverage']}")
+                    print(f"📊 DB ayarları - {order['coin_id']}: margin_type={settings.get('margin_type')} leverage={settings.get('leverage')}")
 
                 # Emir parametrelerini hazırla
                 prepared_order = await _prepare_single_order(
@@ -515,7 +509,7 @@ async def prepare_order_data(order_data: dict) -> dict:
         return prepared_orders
 
     except Exception as e:
-        logger.error(f"❌ Emir verisi hazırlanırken hata: {str(e)}")
+        logger.error(f"❌ Emir verisi hazırlanırken hata: {str(e)}\n{traceback.format_exc()}")
         return {}
 
 def _normalize_position_side(order: dict, trade_type: str) -> tuple:
@@ -674,17 +668,18 @@ async def _prepare_single_order(bot_id: int, order: dict, api_credentials: dict,
 
         # ✅ Futures setup
         if trade_type in ["futures", "test_futures"]:
-            conn = get_db_connection()
-            settings = await sync_margin_leverage(
-                user_id=user_id,
-                api_id=api_id,
-                api_key=api_key,
-                private_key=private_key,
-                symbol=coin_id,
-                trade_type=trade_type,
-                order=order,
-                conn=conn
-            )
+            # YENİ: psycopg2_connection() context'i ile bağlantı kirala/kapat
+            with psycopg2_connection() as conn:
+                settings = await sync_margin_leverage(
+                    user_id=user_id,
+                    api_id=api_id,
+                    api_key=api_key,
+                    private_key=private_key,
+                    symbol=coin_id,
+                    trade_type=trade_type,
+                    order=order,
+                    conn=conn
+                )
 
             if not settings:
                 logger.error(f"❌ {coin_id} için margin/leverage ayarları alınamadı")
@@ -836,17 +831,18 @@ async def _handle_futures_position_setup(api_key: str, private_key: str, symbol:
     Futures emirleri için margin/leverage ayarlarını DB tabanlı yapar.
     """
     try:
-        conn = get_db_connection()
-        settings = await sync_margin_leverage(
-            user_id=user_id,
-            api_id=api_id,
-            api_key=api_key,
-            private_key=private_key,
-            symbol=symbol,
-            trade_type=trade_type,
-            order={"symbol": symbol},  # basit placeholder order
-            conn=conn
-        )
+        # YENİ: psycopg2_connection context
+        with psycopg2_connection() as conn:
+            settings = await sync_margin_leverage(
+                user_id=user_id,
+                api_id=api_id,
+                api_key=api_key,
+                private_key=private_key,
+                symbol=symbol,
+                trade_type=trade_type,
+                order={"symbol": symbol},  # basit placeholder order
+                conn=conn
+            )
 
         if not settings:
             print(f"⚠️ {symbol} için margin/leverage ayarları bulunamadı")
@@ -860,26 +856,8 @@ async def _handle_futures_position_setup(api_key: str, private_key: str, symbol:
 
     except Exception as e:
         logger.error(f"❌ API ID {api_id} - {symbol} pozisyon ayarlama hatası: {str(e)}")
-"""
-async def _create_signature(private_key: str, payload: str, trade_type: str) -> str:
-    
-    #Trade type'a göre doğru imzayı oluşturur
-    
-    #Args:
-        #private_key (str): Private key
-        #payload (str): Payload
-        #trade_type (str): Trade type
-        
-    #Returns:
-        #str: İmza
-    
-    if trade_type in ["futures", "test_futures"]:
-        return await hmac_sign(private_key, payload)
-    elif trade_type in ["spot", "test_spot"]:
-        return await ed25519_sign(private_key, payload)
-    else:
-        raise ValueError(f"Geçersiz trade_type: {trade_type}")
-"""
+
+
 async def _create_signature(private_key: str, payload: str, trade_type: str) -> str:
     """
     Tüm trade type'ları için HMAC imzası oluşturur.
@@ -947,65 +925,77 @@ async def get_or_create_symbol_settings(user_id: int, api_id: int, symbol: str, 
     - Varsa, farklıysa günceller ve Binance ile sync eder
     """
     try:
-        conn = get_db_connection()
-        with conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                # DB'den kontrol et
-                cursor.execute("""
-                    SELECT * FROM user_symbol_settings
-                    WHERE user_id = %s AND api_id = %s AND symbol = %s AND trade_type = %s
-                """, (user_id, api_id, symbol, trade_type))
-                
-                row = cursor.fetchone()
-                
-                if not row:
-                    # Yoksa ekle
+        # YENİ: psycopg2_connection context
+        with psycopg2_connection() as conn:
+            with conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                    # DB'den kontrol et
                     cursor.execute("""
-                        INSERT INTO user_symbol_settings (user_id, api_id, symbol, margin_type, leverage, trade_type, exchange, created_at, updated_at)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, now(), now())
-                        RETURNING *
-                    """, (user_id, api_id, symbol, desired_margin_type, desired_leverage, trade_type, exchange))
+                        SELECT * FROM user_symbol_settings
+                        WHERE user_id = %s AND api_id = %s AND symbol = %s AND trade_type = %s
+                    """, (user_id, api_id, symbol, trade_type))
                     
                     row = cursor.fetchone()
-                    conn.commit()
-                    print(f"✅ Yeni satır eklendi: {symbol}, margin_type={desired_margin_type}, leverage={desired_leverage}")
                     
-                    # Binance ile sync et
-                    await sync_margin_leverage(api_id, symbol, trade_type, desired_margin_type, desired_leverage)
-                
-                else:
-                    # Varsa, değerler farklı mı?
-                    update_needed = False
-                    
-                    if row["margin_type"] != desired_margin_type:
-                        update_needed = True
-                        row["margin_type"] = desired_margin_type
-                    
-                    if row["leverage"] != desired_leverage:
-                        update_needed = True
-                        row["leverage"] = desired_leverage
-                    
-                    if update_needed:
+                    if not row:
+                        # Yoksa ekle
                         cursor.execute("""
-                            UPDATE user_symbol_settings
-                            SET margin_type=%s, leverage=%s, updated_at=now()
-                            WHERE id=%s
+                            INSERT INTO user_symbol_settings (user_id, api_id, symbol, margin_type, leverage, trade_type, exchange, created_at, updated_at)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, now(), now())
                             RETURNING *
-                        """, (row["margin_type"], row["leverage"], row["id"]))
+                        """, (user_id, api_id, symbol, desired_margin_type, desired_leverage, trade_type, exchange))
                         
                         row = cursor.fetchone()
                         conn.commit()
-                        print(f"🔄 DB güncellendi: {symbol}, margin_type={row['margin_type']}, leverage={row['leverage']}")
+                        print(f"✅ Yeni satır eklendi: {symbol}, margin_type={desired_margin_type}, leverage={desired_leverage}")
                         
                         # Binance ile sync et
-                        await sync_margin_leverage(api_id, symbol, trade_type, row["margin_type"], row["leverage"])
+                        await sync_margin_leverage(
+                            user_id=user_id, api_id=api_id,
+                            api_key=None, private_key=None,  # burada doğrudan sync gerekirse üstten parametrelenebilir
+                            symbol=symbol, trade_type=trade_type,
+                            order={"margin_type": desired_margin_type, "leverage": desired_leverage},
+                            conn=conn
+                        )
+                    
+                    else:
+                        # Varsa, değerler farklı mı?
+                        update_needed = False
+                        
+                        if row["margin_type"] != desired_margin_type:
+                            update_needed = True
+                            row["margin_type"] = desired_margin_type
+                        
+                        if row["leverage"] != desired_leverage:
+                            update_needed = True
+                            row["leverage"] = desired_leverage
+                        
+                        if update_needed:
+                            cursor.execute("""
+                                UPDATE user_symbol_settings
+                                SET margin_type=%s, leverage=%s, updated_at=now()
+                                WHERE id=%s
+                                RETURNING *
+                            """, (row["margin_type"], row["leverage"], row["id"]))
+                            
+                            row = cursor.fetchone()
+                            conn.commit()
+                            print(f"🔄 DB güncellendi: {symbol}, margin_type={row['margin_type']}, leverage={row['leverage']}")
+                            
+                            # Binance ile sync et
+                            await sync_margin_leverage(
+                                user_id=user_id, api_id=api_id,
+                                api_key=None, private_key=None,
+                                symbol=symbol, trade_type=trade_type,
+                                order={"margin_type": row["margin_type"], "leverage": row["leverage"]},
+                                conn=conn
+                            )
                 
                 return row
                 
     except Exception as e:
         print(f"❌ get_or_create_symbol_settings hatası: {e}")
         return None
-
 
 async def sync_margin_leverage(user_id: int, api_id: int, api_key: str, private_key: str,
                                symbol: str, trade_type: str, order: dict, conn) -> dict:

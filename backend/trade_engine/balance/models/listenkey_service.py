@@ -29,16 +29,14 @@ BINANCE_CONFIG = {
 WS_MAX_KEYS_PER_GROUP = 100
 
 class ListenKeyManager:
-    # DEĞİŞİKLİK: __init__ artık 'pool' parametresi almıyor.
-    def __init__(self, api_id, api_key, user_id, market_config: dict):
-        # self.pool kaldırıldı.
+    def __init__(self, api_id, api_key, user_id, market_config: dict, stream_key: str = None):
         self.api_id = api_id
         self.api_key = api_key
         self.user_id = user_id
         self.base_url = market_config['rest_url']
         self.listenkey_path = market_config['listenkey_path']
         self.connection_type = market_config['connection_type']
-        self.listen_key = None
+        self.listen_key = stream_key
 
     async def create(self, retries: int = 3, delay: float = 0.5):
         url = f"{self.base_url}{self.listenkey_path}"
@@ -48,36 +46,43 @@ class ListenKeyManager:
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, headers=headers) as resp:
                     data = await resp.json()
-                    self.listen_key = data.get("listenKey")
+                    new_listen_key = data.get("listenKey")
 
-            if self.listen_key:
-                # DEĞİŞİKLİK: Fonksiyon artık pool parametresi almıyor.
+            if new_listen_key:
+                self.listen_key = new_listen_key
                 await upsert_stream_key(
                     self.user_id, self.api_id,
                     self.connection_type, self.listen_key, "new",
                 )
                 logging.info(f"✅ api_id={self.api_id} listenKey oluşturuldu: {self.listen_key}")
-                return
+                # --- DÜZELTME: Başarı durumunda True döndür ---
+                return True
             logging.warning(f"❌ api_id={self.api_id} listenKey alınamadı (attempt {attempt}) → {data}")
             if attempt < retries: await asyncio.sleep(delay)
-        # DEĞİŞİKLİK: Fonksiyon artık pool parametresi almıyor.
-        await update_streamkey_status(self.api_id, "error")
+        
+        await update_streamkey_status(self.api_id, self.connection_type, "error")
         logging.error(f"🚨 api_id={self.api_id} listenKey oluşturma başarısız (tüm denemeler bitti).")
+        raise ConnectionError(f"api_id={self.api_id} için ListenKey oluşturulamadı.")
 
     async def refresh_or_create(self):
+        if not self.listen_key:
+            logging.warning(f"⚠️ api_id={self.api_id} için mevcut listenKey bulunamadı, yeniden oluşturulacak.")
+            return await self.create() # create'in sonucunu döndür
+
         url = f"{self.base_url}{self.listenkey_path}"
         headers = {"X-MBX-APIKEY": self.api_key}
         async with aiohttp.ClientSession() as session:
             async with session.put(url, headers=headers) as resp:
                 if resp.status == 200:
-                    # DEĞİŞİKLİK: Fonksiyon artık pool parametresi almıyor.
-                    await refresh_stream_key_expiration(self.api_id, self.connection_type)
+                    await refresh_stream_key_expiration(self.listen_key)
                     logging.info(f"🔄 api_id={self.api_id} listenKey refresh edildi.")
-                    return
+                    # --- DÜZELTME: Başarı durumunda True döndür ---
+                    return True
                 else:
                     data = await resp.json()
-                    logging.warning(f"⚠️ api_id={self.api_id} refresh başarısız → {data}")
-        await self.create()
+                    logging.warning(f"⚠️ api_id={self.api_id} refresh başarısız ({resp.status}) → {data}")
+        
+        return await self.create() # create'in sonucunu döndür
 
 # DEĞİŞİKLİK: Fonksiyon artık pool parametresi almıyor ve asyncpg_connection kullanıyor.
 async def create_missing_futures_keys():
@@ -148,8 +153,9 @@ async def bulk_upsert_listenkeys(records):
 async def refresh_or_create_all(market_config):
     connection_type = market_config['connection_type']
     
+    # --- DÜZELTME 3: Sorguya sk.stream_key eklendi ---
     query = """
-        SELECT ak.id, ak.api_key, ak.user_id, sk.status
+        SELECT ak.id, ak.api_key, ak.user_id, sk.status, sk.stream_key
         FROM public.api_keys ak
         JOIN public.stream_keys sk ON sk.api_id = ak.id
         WHERE sk.connection_type = $1
@@ -168,9 +174,9 @@ async def refresh_or_create_all(market_config):
 
     tasks = []
     for r in records:
-        # DEĞİŞİKLİK: Manager'a 'pool' geçilmiyor.
-        mgr = ListenKeyManager(r["id"], r["api_key"], r["user_id"], market_config)
-        if r["status"] == "active":
+        # --- DÜZELTME 4: Manager oluşturulurken stream_key de veriliyor ---
+        mgr = ListenKeyManager(r["id"], r["api_key"], r["user_id"], market_config, r["stream_key"])
+        if r["status"] == "active" and r["stream_key"] is not None:
             tasks.append(mgr.refresh_or_create())
         else:
             tasks.append(mgr.create())
@@ -178,7 +184,7 @@ async def refresh_or_create_all(market_config):
     logging.info(f"🚀 [{connection_type.upper()}] {len(tasks)} adet listenKey için toplu işlem başlatılıyor...")
     results = await asyncio.gather(*tasks, return_exceptions=True)
     
-    success_count = sum(1 for res in results if not isinstance(res, Exception))
+    success_count = sum(1 for res in results if not isinstance(res, Exception) and res is not None)
     error_count = len(results) - success_count
     
     logging.info(f"✅ [{connection_type.upper()}] Toplu işlem tamamlandı. Başarılı: {success_count}, Hatalı: {error_count}")

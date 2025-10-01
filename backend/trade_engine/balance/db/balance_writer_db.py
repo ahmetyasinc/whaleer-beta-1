@@ -1,12 +1,13 @@
+# balance_writer_db.py
+# DEĞİŞİKLİK: Fonksiyonlar artık 'pool' parametresi almıyor ve
+# config.asyncpg_connection kullanarak kendi bağlantılarını yönetiyor.
+
 import logging
 import datetime
 from decimal import Decimal
-# Not: Bu fonksiyonlar artık kendi dosyalarında.
-# Spot ve Futures için veri yazma mantığını burada merkezileştireceğiz.
+from backend.trade_engine.config import asyncpg_connection
 
-# Lütfen batch_upsert_balances fonksiyonunu bu blokla tamamen değiştirin
-
-async def batch_upsert_balances(pool, balance_data: list):
+async def batch_upsert_balances(balance_data: list):
     """
     Gelen SPOT bakiye listesini (Decimal objeleri içerebilir) 
     user_api_balances tablosuna toplu olarak ekler/günceller (UPSERT).
@@ -16,27 +17,25 @@ async def batch_upsert_balances(pool, balance_data: list):
 
     records_to_upsert = []
     for data in balance_data:
-        # Gelen verinin Decimal olduğunu ve 'free'/'locked' anahtarlarını içerdiğini varsayıyoruz.
         free_val = data.get('free')
         locked_val = data.get('locked')
         
-        # Eğer veri eksikse bu kaydı atla
         if free_val is None or locked_val is None:
             logging.warning(f"Eksik bakiye verisi atlandı: {data}")
             continue
 
-        total_val = free_val + locked_val # Decimal objeleriyle hassas toplama
+        total_val = free_val + locked_val
         
         records_to_upsert.append(
             (
                 data['user_id'],
                 data['api_id'],
                 data['asset'],
-                total_val,      # amount sütunu
-                free_val,       # free_amount sütunu
-                locked_val,     # locked_amount sütunu
+                total_val,
+                free_val,
+                locked_val,
                 'spot',
-                datetime.datetime.now(datetime.timezone.utc) # Zaman dilimi bilgisi eklemek en iyisidir
+                datetime.datetime.now(datetime.timezone.utc)
             )
         )
 
@@ -44,9 +43,8 @@ async def batch_upsert_balances(pool, balance_data: list):
         return
 
     try:
-        async with pool.acquire() as conn:
+        async with asyncpg_connection() as conn:
             async with conn.transaction():
-                # "Varsa güncelle, yoksa ekle" mantığını bu SQL komutu sağlar.
                 await conn.executemany("""
                     INSERT INTO public.user_api_balances 
                     (user_id, api_id, coin_symbol, amount, free_amount, locked_amount, account_type, updated_at)
@@ -63,13 +61,10 @@ async def batch_upsert_balances(pool, balance_data: list):
     except Exception as e:
         logging.error(f"❌ [DB] Spot bakiye yazma hatası: {e}", exc_info=True)
 
-# balance_writer_db.py dosyasındaki fonksiyon
-
-async def batch_insert_orders(pool, order_data: list):
+async def batch_insert_orders(order_data: list):
     """
     Gelen SPOT emir listesini bot_trades tablosunda GÜNCeller.
     Eğer emir sistemde mevcut değilse, hiçbir işlem yapmaz (atlar).
-    updated_at kolonunu KULLANMAZ.
     """
     if not order_data:
         return
@@ -77,7 +72,7 @@ async def batch_insert_orders(pool, order_data: list):
     updated_count = 0
     skipped_count = 0
     try:
-        async with pool.acquire() as conn:
+        async with asyncpg_connection() as conn:
             async with conn.transaction():
                 for data in order_data:
                     exists = await conn.fetchval(
@@ -86,7 +81,6 @@ async def batch_insert_orders(pool, order_data: list):
                     )
 
                     if exists:
-                        # DEĞİŞİKLİK: 'updated_at' sorgudan ve parametrelerden çıkarıldı.
                         await conn.execute("""
                             UPDATE public.bot_trades
                             SET 

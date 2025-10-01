@@ -1331,14 +1331,14 @@ async def last_trial():
             
               {
                  "coin_id": "SOLUSDT",
-            "trade_type": "spot",
+            "trade_type": "futures",
             "side": "buy",
             "status": "success",
             "order_type": "market",
-            "take_profit": 212.15,
-            "value": 10,
-            #"leverage": 2,
-            #"positionside": "long",
+            "take_profit": 220.45,
+            "value": 16,
+            "leverage": 4,
+            "positionside": "long",
 
                 
             }

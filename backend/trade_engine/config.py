@@ -87,7 +87,7 @@ def get_engine() -> Engine:
 
     eng = create_engine(
         _sa_sync_url(),
-        pool_size=5,
+        pool_size=20,
         max_overflow=10,
         pool_pre_ping=True,
         pool_recycle=1800,     # 30 dk

@@ -255,31 +255,26 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
             print("Here 4")
             return False
 
-        # Yerel eşik (fraction): dict ise helper, değilse base_min_usd'den üret
+        # NOTIONAL karşılaştırması için:
+        # effective_frac = frac * leverage
+        effective_frac = frac * abs(act.get("leverage"))
+        # local_min_frac = min_usd / current_value  (her zaman NOTIONAL eşiği)
         if isinstance(min_usd, dict):
             local_min_frac = _get_min_frac_for_action(act)
         else:
-            # futures ise base_min_usd / lev; spot ise lev=1
-            if act.get("trade_type") == "futures":
-                lev = act.get("leverage")
-                try:
-                    lev = float(lev) if lev is not None else 1.0
-                except Exception:
-                    lev = 1.0
-            else:
-                lev = 1.0
+            # min_usd sabitse base_min_usd önceden hesaplanmıştı; lev ile bölme YOK
             if current_value > 0:
-                local_min_frac = (base_min_usd / lev) / current_value
+                local_min_frac = (base_min_usd / current_value)
             else:
                 local_min_frac = None  # hesaplanamaz
 
-        # required_usd / usd hesapları (None güvenliği)
+        # USD karşılıkları (gösterim/log için)
         usd = (current_value * frac) if current_value > 0 else None
         required_usd = (local_min_frac * current_value) if (local_min_frac is not None and current_value > 0) else None
 
         # eşik kontrolü
-        if (local_min_frac is None) or (frac < local_min_frac):
-            print("Here 3")
+        if (local_min_frac is None) or (effective_frac < local_min_frac):
+            print(local_min_frac, effective_frac, "Here 5")
             # Telegram bildirimi (usd > 10 ve eşik altı) → sadece sayısal ve hesaplanabilirse
             if (usd is not None) and (required_usd is not None) and (usd > 10) and (usd < required_usd):
                 log_warning(

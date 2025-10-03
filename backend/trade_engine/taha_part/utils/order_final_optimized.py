@@ -133,9 +133,7 @@ async def calculate_order_params(
 async def send_order(prepared_orders: dict) -> dict:
     """
     Hazırlanan emirleri Binance API'ye gönderir ve başarılı olanları DB'ye kaydeder.
-    Eğer original_order'da 'take_profit' varsa:
-      1) Önce MARKET/LIMIT ana emir gönderilir ve kaydedilir
-      2) Ardından TP emri (spot: LIMIT SELL, futures: TAKE_PROFIT_MARKET) açılır ve kaydedilir
+    Take-profit mantığı, futures SELL emirleri için özel olarak BUY yönlü çalışır.
     """
     try:
         responses = {"spot": [], "test_spot": [], "futures": [], "test_futures": []}
@@ -189,7 +187,7 @@ async def send_order(prepared_orders: dict) -> dict:
                                         "symbol": symbol,
                                         "side": side,
                                         "quantity": api_params.get("quantity"),
-                                        "price": api_params.get("price"),  # yoksa save_trade_to_db fallback hesaplar
+                                        "price": api_params.get("price"),
                                         "trade_type": order_trade_type,
                                         "api_id": order.get("api_id"),
                                     })
@@ -197,7 +195,6 @@ async def send_order(prepared_orders: dict) -> dict:
 
                                 try:
                                     if bot_id:
-                                        
                                         price_line = ""
                                         if api_params.get("price"):
                                             price_line = f"\n💵 Fiyat: <b>{api_params.get('price')}</b>"
@@ -234,13 +231,11 @@ async def send_order(prepared_orders: dict) -> dict:
                                         if executed_qty <= 0:
                                             raise ValueError("TP için geçerli quantity bulunamadı")
 
-                                        # Spotta bakiye yansıması için kısa bekleme
                                         if "spot" in order_trade_type:
                                             await asyncio.sleep(1)
 
                                         tp_price = float(original_order["take_profit"])
 
-                                        # Filtreler
                                         symbol_filters = (await get_symbols_filters_dict({symbol: [order_trade_type]})).get(symbol, [])
                                         normalized_type = "futures" if "futures" in order_trade_type else "spot"
                                         selected_filter = next((f for f in symbol_filters if f["trade_type"] == normalized_type), None)
@@ -256,21 +251,27 @@ async def send_order(prepared_orders: dict) -> dict:
                                         qty_str = str(qty)
                                         price_str = str(round_step_size(tp_price, tick_size))
 
+                                        # YENİ MANTIK: Varsayılan TP yönü SELL'dir.
+                                        tp_side = "SELL"
+                                        # Sadece futures ve SELL ise TP yönünü BUY yap (short pozisyonu kapatmak için).
+                                        if "futures" in order_trade_type and side.upper() == "SELL":
+                                            tp_side = "BUY"
+
                                         # TP parametreleri
                                         if "spot" in order_trade_type:
                                             tp_params = {
                                                 "symbol": symbol,
-                                                "side": "SELL",
+                                                "side": tp_side, # DEĞİŞİKLİK
                                                 "type": "LIMIT",
                                                 "price": price_str,
                                                 "quantity": qty_str,
                                                 "timeInForce": "GTC",
                                                 "timestamp": int(time.time() * 1000),
                                             }
-                                        else:
+                                        else: # futures
                                             tp_params = {
                                                 "symbol": symbol,
-                                                "side": "SELL",
+                                                "side": tp_side, # DEĞİŞİKLİK
                                                 "type": "TAKE_PROFIT_MARKET",
                                                 "stopPrice": price_str,
                                                 "quantity": qty_str,
@@ -287,14 +288,14 @@ async def send_order(prepared_orders: dict) -> dict:
                                                 if tp_resp.status == 200:
                                                     tp_result = await tp_resp.json()
                                                     responses[ttype].append(tp_result)
-                                                    print(f"📤 TP order gönderildi: {symbol} SELL {qty_str} @ {price_str}")
+                                                    print(f"📤 TP order gönderildi: {symbol} {tp_side} {qty_str} @ {price_str}")
 
                                                     # DB kaydı (TP)
                                                     if bot_id:
                                                         tp_db_params = original_order.copy()
                                                         tp_db_params.update({
                                                             "symbol": symbol,
-                                                            "side": "SELL",
+                                                            "side": tp_side, # DEĞİŞİKLİK
                                                             "quantity": qty_str,
                                                             "price": price_str,
                                                             "trade_type": order_trade_type,
@@ -313,28 +314,25 @@ async def send_order(prepared_orders: dict) -> dict:
                                 logger.error(f"❌ {order_trade_type} API hatası: {response.status} - {error_text}")
                                 responses[ttype].append({"error": f"HTTP {response.status}: {error_text}"})
                                 
-                                # ❗ Telegram: Hata bildirimi (ham hata içeriği paylaşmadan)
                                 try:
                                     if bot_id:
-                                        # Oluşturulmak istenen emir bilgisi
                                         symbol = original_order.get("coin_id", "N/A")
-                                        side = str(original_order.get("side", "N/A")).upper()
-                                        order_type = str(original_order.get("order_type", "N/A")).upper()
-                                        qty = api_params.get("quantity") or original_order.get("value", "N/A")
-                                        price_line = ""
-                                        # LIMIT/STOP gibi durumlarda kullanıcıya fiyatı da gösterebiliriz
-                                        p = api_params.get("price") or original_order.get("price")
-                                        if p:
-                                            price_line = f"\n💵 Hedef Fiyat: <b>{p}</b>"
+                                        side_err = str(original_order.get("side", "N/A")).upper()
+                                        order_type_err = str(original_order.get("order_type", "N/A")).upper()
+                                        qty_err = api_params.get("quantity") or original_order.get("value", "N/A")
+                                        price_line_err = ""
+                                        p_err = api_params.get("price") or original_order.get("price")
+                                        if p_err:
+                                            price_line_err = f"\n💵 Hedef Fiyat: <b>{p_err}</b>"
 
                                         msg = (
                                             f"⚠️ <b>Emir İşlenemedi</b>\n\n"
                                             f"🤖 Bot: <b>#{bot_id}</b>\n"
                                             f"📈 Sembol: <b>{symbol}</b>\n"
-                                            f"↔️ Yön: <b>{side}</b>\n"
-                                            f"🧾 Tür: <b>{order_type}</b>\n"
-                                            f"🔢 Hedef Miktar: <b>{qty}</b>"
-                                            f"{price_line}\n\n"
+                                            f"↔️ Yön: <b>{side_err}</b>\n"
+                                            f"🧾 Tür: <b>{order_type_err}</b>\n"
+                                            f"🔢 Hedef Miktar: <b>{qty_err}</b>"
+                                            f"{price_line_err}\n\n"
                                             f"❗ Bir hata oluştu. Lütfen emrinizi ve bakiye/izin ayarlarınızı kontrol edin."
                                             f" Gerekirse <a href=\"https://whaleer.com/support\">Destek</a> kanalımızdan bize ulaşabilirsiniz. 🙏"
                                         )
@@ -343,29 +341,31 @@ async def send_order(prepared_orders: dict) -> dict:
                                     logger.warning(f"Telegram hata bildirimi gönderilemedi: {str(_tel_err)}")
 
                 except Exception as e:
-                    logger.error(f"❌ {order_trade_type} emri işlenirken hata: {str(e)}")
+                    logger.error(f"❌ {order.get('trade_type', 'N/A')} emri işlenirken hata: {str(e)}")
                     responses[ttype].append({"error": str(e)})
-
+                    
                     try:
                         bot_id = order.get("bot_id")
                         if bot_id:
-                            symbol = (order.get("original_order") or {}).get("coin_id") or (order.get("params") or {}).get("symbol") or "N/A"
-                            side = (order.get("original_order") or {}).get("side") or (order.get("params") or {}).get("side") or "N/A"
-                            order_type = (order.get("original_order") or {}).get("order_type") or (order.get("params") or {}).get("type") or "N/A"
-                            qty = (order.get("params") or {}).get("quantity") or (order.get("original_order") or {}).get("value") or "N/A"
-                            price_line = ""
-                            p = (order.get("params") or {}).get("price") or (order.get("original_order") or {}).get("price")
-                            if p:
-                                price_line = f"\n💵 Hedef Fiyat: <b>{p}</b>"
-
+                            original_order_err = order.get("original_order", {})
+                            params_err = order.get("params", {})
+                            symbol = original_order_err.get("coin_id") or params_err.get("symbol") or "N/A"
+                            side_err = original_order_err.get("side") or params_err.get("side") or "N/A"
+                            order_type_err = original_order_err.get("order_type") or params_err.get("type") or "N/A"
+                            qty_err = params_err.get("quantity") or original_order_err.get("value") or "N/A"
+                            price_line_err = ""
+                            p_err = params_err.get("price") or original_order_err.get("price")
+                            if p_err:
+                                price_line_err = f"\n💵 Hedef Fiyat: <b>{p_err}</b>"
+                            
                             msg = (
                                 f"⚠️ <b>Emir İşleme Alınamadı</b>\n\n"
                                 f"🤖 Bot: <b>#{bot_id}</b>\n"
                                 f"📈 Sembol: <b>{symbol}</b>\n"
-                                f"↔️ Yön: <b>{str(side).upper()}</b>\n"
-                                f"🧾 Tür: <b>{str(order_type).upper()}</b>\n"
-                                f"🔢 Hedef Miktar: <b>{qty}</b>"
-                                f"{price_line}\n\n"
+                                f"↔️ Yön: <b>{str(side_err).upper()}</b>\n"
+                                f"🧾 Tür: <b>{str(order_type_err).upper()}</b>\n"
+                                f"🔢 Hedef Miktar: <b>{qty_err}</b>"
+                                f"{price_line_err}\n\n"
                                 f"❗ Bir hata oluştu. Lütfen emrinizi ve bakiye/izin ayarlarınızı kontrol edin."
                                 f" Gerekirse <a href=\"https://whaleer.com/profile/support\">Destek</a> kanalımızdan bize ulaşabilirsiniz. 🙏"
                             )
@@ -1335,13 +1335,14 @@ async def last_trial():
               {
                  "coin_id": "SOLUSDT",
             "trade_type": "futures",
-            "side": "sell",
+            "side": "buy",
             "status": "success",
             "order_type": "market",
-            "stop_loss": 220.15,
-            "value": 10,
-            "leverage": 2,
-            "positionside": "short",
+            "take_profit": 235,
+            "value": 14,
+            "leverage": 4,
+            "positionside": "long",
+
                 
             }
         ]

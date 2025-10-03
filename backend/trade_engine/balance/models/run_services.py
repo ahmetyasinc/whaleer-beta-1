@@ -10,7 +10,7 @@ from backend.trade_engine import config
 
 # ListenKey servisi import'ları
 try:
-    from backend.trade_engine.balance.models.listenkey_service import refresh_or_create_all, BINANCE_CONFIG
+    from .listenkey_service import refresh_or_create_all, BINANCE_CONFIG
 except ImportError:
     refresh_or_create_all = None
     BINANCE_CONFIG = None
@@ -37,7 +37,6 @@ try:
 except ImportError:
     futures_main = None
 
-# YENİ EKLENEN IMPORT
 try:
     from backend.trade_engine.taha_part.utils.price_cache_new import start_connection_pool, wait_for_cache_ready
 except ImportError:
@@ -54,11 +53,7 @@ managed_services = {
     "futures": {"func": futures_main, "task": None},
 }
 
-
-# --- TRIGGER DİNLEME VE YENİLEME MANTIĞI ---
-
 async def _api_key_event_callback(conn, pid, channel, payload):
-    """'api_key_events' kanalından gelen bildirimleri işler."""
     logger.info(f"🔥 API Anahtarı değişikliği sinyali alındı! (Kanal: {channel})")
     try:
         data = json.loads(payload)
@@ -66,46 +61,30 @@ async def _api_key_event_callback(conn, pid, channel, payload):
         if not stream_key_id or not process_user or not get_api_keys_from_db:
             logger.warning("Gerekli fonksiyonlar yüklenemediği için API olayı işlenemiyor.")
             return
-
         api_key_data_list = await get_api_keys_from_db([stream_key_id])
         if not api_key_data_list:
             logger.warning(f"Stream Key ID {stream_key_id} için veritabanında aktif kayıt bulunamadı.")
             return
-        
         api_key_data = api_key_data_list[0]
         logger.info(f"API ID {api_key_data['api_id']} için anlık bakiye ve izin güncellemesi başlatılıyor...")
-        
         asyncio.create_task(process_user(api_key_data))
-
     except Exception as e:
         logger.error(f"API anahtarı olayını işlerken hata: {e}", exc_info=True)
 
-
 async def listen_for_api_key_events():
-    """
-    API anahtarı olaylarını dinler.
-    Pool yerine dedicated asyncpg connection kullanır.
-    """
     logger.info("API anahtarı olay dinleyicisi başlatılıyor...")
     conn = None
     channel_name = "api_key_events"
-
     while True:
         try:
             conn = await asyncpg.connect(
-                user=os.getenv("PGUSER", "postgres"),
-                password=os.getenv("PGPASSWORD", "admin"),
-                database=os.getenv("PGDATABASE", "balina_db"),
-                host=os.getenv("PGHOST", "127.0.0.1"),
+                user=os.getenv("PGUSER", "postgres"), password=os.getenv("PGPASSWORD", "admin"),
+                database=os.getenv("PGDATABASE", "balina_db"), host=os.getenv("PGHOST", "127.0.0.1"),
                 port=os.getenv("PGPORT", "5432"),
             )
             await conn.add_listener(channel_name, _api_key_event_callback)
             logger.info(f"✅ API olay dinleyicisi aktif. '{channel_name}' kanalı dinleniyor.")
-
-            # Bağlantıyı açık tut
-            while True:
-                await asyncio.sleep(3600)
-
+            while True: await asyncio.sleep(3600)
         except (asyncio.CancelledError, ConnectionAbortedError):
             logger.info("API olay dinleyicisi durduruluyor.")
             break
@@ -116,42 +95,28 @@ async def listen_for_api_key_events():
                 try:
                     await conn.remove_listener(channel_name, _api_key_event_callback)
                     await conn.close()
-                except Exception:
-                    pass
+                except Exception: pass
         await asyncio.sleep(5)
 
-
 async def notification_handler(conn, pid, channel, payload):
-    """'run_listenkey_refresh' kanalından gelen bildirimleri işler."""
     logger.info(f"🔥 ListenKey yenileme sinyali alındı! (Kanal: {channel})")
     await asyncio.sleep(5)
     await run_refresh_logic()
 
-
 async def listen_for_db_triggers():
-    """
-    ListenKey yenileme trigger olaylarını dinler.
-    Pool yerine dedicated asyncpg connection kullanır.
-    """
     logger.info("ListenKey yenileme trigger dinleyicisi başlatılıyor...")
     conn = None
     channel_name = "run_listenkey_refresh"
-
     while True:
         try:
             conn = await asyncpg.connect(
-                user=os.getenv("PGUSER", "postgres"),
-                password=os.getenv("PGPASSWORD", "admin"),
-                database=os.getenv("PGDATABASE", "balina_db"),
-                host=os.getenv("PGHOST", "127.0.0.1"),
+                user=os.getenv("PGUSER", "postgres"), password=os.getenv("PGPASSWORD", "admin"),
+                database=os.getenv("PGDATABASE", "balina_db"), host=os.getenv("PGHOST", "127.0.0.1"),
                 port=os.getenv("PGPORT", "5432"),
             )
             await conn.add_listener(channel_name, notification_handler)
             logger.info(f"✅ ListenKey trigger dinleyicisi aktif. '{channel_name}' kanalı dinleniyor.")
-
-            while True:
-                await asyncio.sleep(3600)
-
+            while True: await asyncio.sleep(3600)
         except (asyncio.CancelledError, ConnectionAbortedError):
             logger.info("ListenKey yenileme dinleyicisi durduruluyor.")
             break
@@ -162,36 +127,24 @@ async def listen_for_db_triggers():
                 try:
                     await conn.remove_listener(channel_name, notification_handler)
                     await conn.close()
-                except Exception:
-                    pass
+                except Exception: pass
         await asyncio.sleep(5)
 
-
 async def initial_refresh():
-    """Başlangıçta ve `start futures/all` komutlarında çalışan listen key yenileme mantığı."""
     logger.info("🚀 Başlangıç listen key yenilemesi tetiklendi...")
     await run_refresh_logic()
 
-
 async def run_refresh_logic():
-    """Listen key yenileme işlemini yürüten merkezi fonksiyon."""
     if not refresh_or_create_all or not BINANCE_CONFIG:
         logger.error("Listenkey servisi import edilemediği için yenileme yapılamıyor.")
         return
     logger.info("⏳ Listen Key yenileme süreci başlatılıyor...")
-    pool = await config.get_async_pool()
-    if pool:
-        futures_config = BINANCE_CONFIG.get('futures')
-        if futures_config:
-            await refresh_or_create_all(pool, futures_config)
-            logger.info("✅ Listen Key yenileme süreci tamamlandı.")
-        else:
-            logger.error("Yenileme için 'futures' market ayarları bulunamadı!")
+    futures_config = BINANCE_CONFIG.get('futures')
+    if futures_config:
+        await refresh_or_create_all(futures_config)
+        logger.info("✅ Listen Key yenileme süreci tamamlandı.")
     else:
-        logger.error("Yenileme için DB havuzu alınamadı.")
-
-
-# --- SERVİS YÖNETİM FONKSİYONLARI ---
+        logger.error("Yenileme için 'futures' market ayarları bulunamadı!")
 
 async def start_service(name: str):
     if name not in managed_services:
@@ -212,7 +165,6 @@ async def start_service(name: str):
     else:
         logger.error(f"❌ '{name}' servisi başlatılamadı veya hemen sonlandı.")
 
-
 async def stop_service(name: str):
     if name not in managed_services:
         logger.error(f"'{name}' isminde bir servis tanimli degil.")
@@ -229,14 +181,12 @@ async def stop_service(name: str):
         logger.info(f"✅ '{name}' servisi basariyla durduruldu.")
     service["task"] = None
 
-
 def show_status():
     logger.info("--- Servis Durumu ---")
     for name, service in managed_services.items():
         status = "🟢 Calisiyor" if service["task"] and not service["task"].done() else "🔴 Duruyor"
         logger.info(f"- {name.ljust(10)}: {status}")
     logger.info("---------------------")
-
 
 def show_help():
     print("\n--- Komutlar ---")
@@ -249,37 +199,23 @@ def show_help():
     print("help          -> Bu yardim menusunu gosterir")
     print("----------------\n")
 
-
-# --- MERKEZİ KAPATMA FONKSİYONU ---
 async def shutdown_gracefully(listenkey_task, apikey_task):
-    """Tüm servisleri ve dinleyici görevlerini temiz bir şekilde kapatır."""
     logger.info("Temiz kapatma işlemi başlatılıyor... Tüm servisler ve dinleyiciler durdurulacak.")
-    
-    if listenkey_task:
-        listenkey_task.cancel()
-    if apikey_task:
-        apikey_task.cancel()
-    
+    if listenkey_task: listenkey_task.cancel()
+    if apikey_task: apikey_task.cancel()
     tasks_to_stop = [stop_service(name) for name, service in managed_services.items() if service.get("task") and not service["task"].done()]
-    if tasks_to_stop:
-        await asyncio.gather(*tasks_to_stop)
-    
+    if tasks_to_stop: await asyncio.gather(*tasks_to_stop)
     try:
         if listenkey_task: await listenkey_task
     except asyncio.CancelledError:
         logger.info("✅ ListenKey refresh dinleyicisi durduruldu.")
-    
     try:
         if apikey_task: await apikey_task
     except asyncio.CancelledError:
         logger.info("✅ API Key olay dinleyicisi durduruldu.")
 
-
-# --- ANA KOMUT DÖNGÜSÜ ---
 async def command_loop():
     loop = asyncio.get_running_loop()
-    
-    # YENİ: Price Cache'i başlat
     if start_connection_pool and wait_for_cache_ready:
         logger.info("Fiyat Akışı (Price Cache) başlatılıyor...")
         await start_connection_pool()
@@ -290,7 +226,6 @@ async def command_loop():
             logger.error("❌ Fiyat Akışı (Price Cache) başlatılamadı veya zaman aşımına uğradı!")
     else:
         logger.warning("Price Cache fonksiyonları import edilemediği için başlatma atlandı.")
-    
     if balance_manager_main:
         logger.info("============= BAŞLANGIÇ SENKRONİZASYONU =============")
         logger.info("Servisler başlamadan önce tüm kullanıcı bakiyeleri güncelleniyor...")
@@ -310,8 +245,11 @@ async def command_loop():
     logger.info("AUTO-START: 'start all' komutu otomatik olarak çalıştırılıyor...")
     await initial_refresh()
     logger.info("ListenKey işlemleri tamamlandı, şimdi tüm servisler başlatılıyor.")
+    
+    # DEĞİŞİKLİK: UnboundLocalError hatası düzeltildi. ('tasks' -> 'start_tasks')
     start_tasks = [start_service(name) for name in managed_services]
     await asyncio.gather(*start_tasks)
+    
     logger.info("✅ Otomatik başlatma tamamlandı. Komutlar için 'help' yazabilirsiniz.")
     
     try:
@@ -320,14 +258,11 @@ async def command_loop():
             parts = command.split()
             if not parts: continue
             action = parts[0]
-            
             if action == "exit":
                 await shutdown_gracefully(listenkey_refresh_listener, api_key_events_listener)
                 break
-            elif action == "status":
-                show_status()
-            elif action == "help":
-                show_help()
+            elif action == "status": show_status()
+            elif action == "help": show_help()
             elif action in ["start", "stop"] and len(parts) > 1:
                 service_name = parts[1]
                 if service_name == "all":
@@ -344,14 +279,12 @@ async def command_loop():
                     if action == "start" and service_name == "futures":
                         logger.info(f"'{service_name}' servisi için ön hazırlık: ListenKey yenilemesi yapılıyor...")
                         await initial_refresh()
-                    
                     await (start_service(service_name) if action == "start" else stop_service(service_name))
             else:
                 logger.warning(f"Gecersiz komut: '{command}'. Yardim icin 'help' yazin.")
     except (KeyboardInterrupt, asyncio.CancelledError):
         logger.info("\nProgram durdurma sinyali (Ctrl+C) alındı.")
         await shutdown_gracefully(listenkey_refresh_listener, api_key_events_listener)
-
 
 if __name__ == "__main__":
     try:

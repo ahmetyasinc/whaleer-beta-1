@@ -1,13 +1,17 @@
+# futures_writer_db.py
+# DEĞİŞİKLİK: Fonksiyonlar artık 'pool' parametresi almıyor ve
+# config.asyncpg_connection kullanarak kendi bağlantılarını yönetiyor.
+
 import logging
 import datetime
 from decimal import Decimal
+from backend.trade_engine.config import asyncpg_connection
 
-async def batch_upsert_futures_balances(pool, balance_data: list):
+async def batch_upsert_futures_balances(balance_data: list):
     """
     Gelen FUTURES bakiye listesini (ACCOUNT_UPDATE event) user_api_balances tablosuna
     toplu olarak ekler/günceller (UPSERT). Sadece cüzdan varlıklarını işler.
     """
-    # Bu fonksiyonda bir değişiklik yok.
     if not balance_data:
         return
 
@@ -31,7 +35,7 @@ async def batch_upsert_futures_balances(pool, balance_data: list):
     if not records_to_upsert: return
 
     try:
-        async with pool.acquire() as conn:
+        async with asyncpg_connection() as conn:
             async with conn.transaction():
                 await conn.executemany("""
                     INSERT INTO public.user_api_balances 
@@ -41,19 +45,18 @@ async def batch_upsert_futures_balances(pool, balance_data: list):
                     DO UPDATE SET
                         amount = EXCLUDED.amount,
                         free_amount = EXCLUDED.free_amount,
+                        locked_amount = EXCLUDED.locked_amount,
                         updated_at = EXCLUDED.updated_at,
                         user_id = EXCLUDED.user_id;
                 """, records_to_upsert)
-        logging.info(f"✅ [DB] {len(records_to_upsert)} adet FUTURES BAKIYE başarıyla yazıldı.")
+        logging.info(f"✅ [DB] {len(records_to_upsert)} adet FUTURES BAKIYE (WS) başarıyla yazıldı.")
     except Exception as e:
-        logging.error(f"❌ [DB] Futures bakiye yazma hatası: {e}", exc_info=True)
-
-
-async def batch_upsert_futures_orders(pool, order_data: list):
+        logging.error(f"❌ [DB] Futures bakiye yazma hatası (WS): {e}", exc_info=True)
+        
+async def batch_upsert_futures_orders(order_data: list):
     """
     Gelen FUTURES emir listesini (ORDER_TRADE_UPDATE event) bot_trades tablosunda GÜNCeller.
     Eğer emir sistemde mevcut değilse, hiçbir işlem yapmaz (atlar).
-    updated_at kolonunu KULLANMAZ.
     """
     if not order_data:
         return
@@ -61,7 +64,7 @@ async def batch_upsert_futures_orders(pool, order_data: list):
     updated_count = 0
     skipped_count = 0
     try:
-        async with pool.acquire() as conn:
+        async with asyncpg_connection() as conn:
             async with conn.transaction():
                 for data in order_data:
                     exists = await conn.fetchval(
@@ -70,7 +73,6 @@ async def batch_upsert_futures_orders(pool, order_data: list):
                     )
 
                     if exists:
-                        # DEĞİŞİKLİK: 'updated_at' sorgudan ve parametrelerden çıkarıldı.
                         await conn.execute("""
                             UPDATE public.bot_trades
                             SET 

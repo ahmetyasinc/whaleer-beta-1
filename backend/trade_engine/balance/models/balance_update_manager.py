@@ -1,4 +1,4 @@
-# balance_update_manager.py (Fork-safe / asyncpg_connection ile güncel)
+# balance_update_manager.py
 from decimal import Decimal
 import asyncio
 import logging
@@ -8,7 +8,6 @@ from typing import List, Dict, Optional, Any
 from binance import AsyncClient
 from binance.exceptions import BinanceAPIException
 
-# Yeni config API
 from backend.trade_engine.config import (
     get_async_pool,
     asyncpg_connection,
@@ -21,21 +20,14 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-# ---------------- DB Helpers ----------------
+# ---------------- DB Helpers (Değişiklik yok) ----------------
 
 async def get_api_keys_from_db(stream_key_ids: Optional[List[int]] = None) -> List[Dict[str, Any]]:
-    """
-    stream_keys.id, user_id ve ilişkili api_keys.id (api_id) + anahtarları döndürür.
-    stream_key_ids verilirse filtreler.
-    """
     async with asyncpg_connection() as conn:
         sql = """
             SELECT 
-                sk.id,              -- stream_keys.id (stream_key_id)
-                sk.user_id, 
-                ak.id AS api_id,    -- api_keys.id
-                ak.api_key, 
-                ak.api_secret
+                sk.id, sk.user_id, ak.id AS api_id,
+                ak.api_key, ak.api_secret
             FROM public.stream_keys sk
             JOIN public.api_keys ak ON sk.api_id = ak.id
             WHERE ak.is_active = TRUE
@@ -48,7 +40,6 @@ async def get_api_keys_from_db(stream_key_ids: Optional[List[int]] = None) -> Li
         return [dict(r) for r in records]
 
 async def update_permissions_in_db(stream_key_id: int, is_futures_enabled: bool):
-    """Kullanıcının futures izin durumunu stream_keys tablosunda günceller."""
     async with asyncpg_connection() as conn:
         await conn.execute(
             "UPDATE public.stream_keys SET is_futures_enabled = $1 WHERE id = $2",
@@ -57,11 +48,6 @@ async def update_permissions_in_db(stream_key_id: int, is_futures_enabled: bool)
     logging.info(f"Stream Key ID {stream_key_id} için futures izni güncellendi: {is_futures_enabled}")
 
 async def update_balances_in_db(api_id: int, user_id: int, balances: List[Dict[str, Any]]):
-    """
-    user_api_balances için tam senkronizasyon:
-    - upsert (api_id, coin_symbol, account_type) benzersiz olmalı (unique index şart)
-    - artık olmayan (coin_symbol, account_type) kombinasyonlarını siler
-    """
     async with asyncpg_connection() as conn:
         async with conn.transaction():
             if not balances:
@@ -83,23 +69,16 @@ async def update_balances_in_db(api_id: int, user_id: int, balances: List[Dict[s
             """
             data_to_insert = [
                 (
-                    api_id,
-                    user_id,
-                    b['asset'],
-                    b['amount'],
-                    b['free_amount'],
-                    b['locked_amount'],
-                    b['account_type'],
+                    api_id, user_id, b['asset'], b['amount'], b['free_amount'],
+                    b['locked_amount'], b['account_type'],
                 )
                 for b in balances
             ]
             await conn.executemany(insert_sql, data_to_insert)
 
-            # --- Silme: mevcut (asset, account_type) çiftleri dışındakileri kaldır ---
             existing_assets = [b['asset'] for b in balances]
             existing_accounts = [b['account_type'] for b in balances]
 
-            # Paralel UNNEST ile tuple karşılaştırma (uzunluklar eşit olmalı)
             delete_sql = """
                 DELETE FROM public.user_api_balances uab
                 WHERE uab.api_id = $1
@@ -112,15 +91,9 @@ async def update_balances_in_db(api_id: int, user_id: int, balances: List[Dict[s
 
     logging.info(f"API ID {api_id}: {len(balances)} bakiye upsert + eksikler silindi.")
 
-# ---------------- Core Flow ----------------
+# ---------------- Core Flow (Değişiklik burada) ----------------
 
 async def process_user(api_key_data: Dict[str, Any]):
-    """
-    Tek kullanıcı/stream_key için:
-    - Binance izni (futures/spot) kontrol
-    - Spot & futures bakiyelerini çek
-    - DB'ye yaz
-    """
     stream_key_id = api_key_data['id']
     api_id        = api_key_data['api_id']
     user_id       = api_key_data['user_id']
@@ -132,7 +105,6 @@ async def process_user(api_key_data: Dict[str, Any]):
     try:
         client = await AsyncClient.create(api_key, api_secret)
 
-        # İzinler
         restrictions = await client.get_account_api_permissions()
         is_futures_enabled = restrictions.get('enableFutures', False)
         is_spot_enabled    = restrictions.get('enableSpotAndMarginTrading', False)
@@ -140,7 +112,7 @@ async def process_user(api_key_data: Dict[str, Any]):
 
         all_balances: List[Dict[str, Any]] = []
 
-        # Spot
+        # Spot (Değişiklik yok)
         if is_spot_enabled:
             spot_account = await client.get_account()
             for b in spot_account.get('balances', []):
@@ -156,19 +128,44 @@ async def process_user(api_key_data: Dict[str, Any]):
                         'account_type':  'spot',
                     })
 
-        # Futures (cüzdan bakiyesi)
+        # ####################################################################
+        # ### DEĞİŞİKLİĞİN YAPILDIĞI BÖLÜM BURASI ###
+        # ####################################################################
         if is_futures_enabled:
-            futures_account_balance = await client.futures_account_balance()
-            for b in futures_account_balance:
-                balance = Decimal(b['balance'])
-                if balance != 0:
+            # Daha detaylı bilgi (varlıklar + pozisyonlar) için futures_account() kullanılıyor.
+            futures_account_info = await client.futures_account()
+            
+            # 1. Adım: Açık pozisyonlardaki toplam teminatı (marjin) hesapla
+            total_initial_margin = Decimal('0')
+            for pos in futures_account_info.get('positions', []):
+                # Sadece açık pozisyonları dikkate al
+                if Decimal(pos.get('positionAmt', '0')) != 0:
+                    total_initial_margin += Decimal(pos.get('initialMargin', '0'))
+
+            # 2. Adım: Cüzdandaki varlıkları işle
+            for asset in futures_account_info.get('assets', []):
+                wallet_balance = Decimal(asset.get('walletBalance', '0'))
+                
+                # Sadece bakiyesi olan varlıkları kaydet
+                if wallet_balance > 0:
+                    locked = Decimal('0')
+                    free = wallet_balance
+
+                    # Eğer varlık USDT ise, hesaplanan toplam marjini "kilitli" olarak ata
+                    if asset.get('asset') == 'USDT':
+                        locked = total_initial_margin
+                        free = wallet_balance - locked
+                    
                     all_balances.append({
-                        'asset':         b['asset'],
-                        'amount':        balance,
-                        'free_amount':   balance,           # wallet balance
-                        'locked_amount': Decimal('0'),      # bu endpoint 'locked' vermez
+                        'asset':         asset.get('asset'),
+                        'amount':        wallet_balance,  # Toplam cüzdan bakiyesi
+                        'free_amount':   free,            # Cüzdan bakiyesi - pozisyonlardaki teminat
+                        'locked_amount': locked,          # Pozisyonlardaki toplam teminat
                         'account_type':  'futures',
                     })
+        # ####################################################################
+        # ### DEĞİŞİKLİK SONU ###
+        # ####################################################################
 
         await update_balances_in_db(api_id, user_id, all_balances)
 
@@ -180,31 +177,20 @@ async def process_user(api_key_data: Dict[str, Any]):
         if client:
             await client.close_connection()
 
-async def main(args):
-    """
-    Argümanlara göre:
-      --all          : tüm aktif kullanıcıları bir kez güncelle
-      --user-ids ... : sadece belirtilen stream_key_id listesini güncelle
-      --periodic N   : her N dakikada bir herkesi güncelle (sonsuz döngü)
-    """
-    # Havuzun kurulmasını garanti etmek istersen:
-    await get_async_pool()
+# ---------------- Main Loop (Değişiklik yok) ----------------
 
+async def main(args):
+    await get_async_pool()
     async def run_update():
         logging.info("Bakiye güncelleme döngüsü başlıyor...")
         start = asyncio.get_event_loop().time()
-
         stream_key_ids = args.user_ids if hasattr(args, 'user_ids') else None
         api_keys = await get_api_keys_from_db(stream_key_ids)
-
         if not api_keys:
             logging.warning("İşlenecek aktif API anahtarı bulunamadı.")
             return
-
-        # İsterseniz eşzamanlılığı sınırlamak için semaphore kullanabilirsiniz.
         tasks = [process_user(k) for k in api_keys]
         await asyncio.gather(*tasks)
-
         dur = asyncio.get_event_loop().time() - start
         logging.info(f"Bakiye güncelleme döngüsü {dur:.2f} sn’de tamamlandı.")
 
@@ -220,21 +206,17 @@ async def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Binance Bakiye Güncelleme Yöneticisi")
-
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--all', action='store_true', help="Tüm aktif kullanıcıların bakiyesini bir kez günceller.")
     group.add_argument('--user-ids', nargs='+', type=int, help="Sadece belirtilen stream_key_id kayıtlarını günceller.")
     group.add_argument('--periodic', type=int, metavar='MINUTES', help="Tüm kullanıcıları periyodik olarak günceller.")
-
     args = parser.parse_args()
-
     try:
         loop = asyncio.get_event_loop()
         loop.run_until_complete(main(args))
     except KeyboardInterrupt:
         logging.info("Script kullanıcı tarafından sonlandırıldı.")
     finally:
-        # Havuzu temiz kapat
         try:
             loop.run_until_complete(close_async_pool())
             logging.info("Veritabanı bağlantı havuzu kapatıldı (__main__).")

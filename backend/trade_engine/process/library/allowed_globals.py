@@ -8,11 +8,9 @@ import asyncio
 import ta
 from backend.trade_engine.process.library.get_percentage import get_percentage
 
-
 def empty(*args, **kwargs):
     pass
     
-
 class EmptyClass:
     def int(self, default=0, **kwargs):
         return default

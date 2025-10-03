@@ -138,6 +138,7 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
     }
 
     pos_map = {}  # {sym: {...}}
+    print("positions:", positions)
     for p in positions:
         sym = p["symbol"]
         side = (p.get("position_side") or "").lower()
@@ -236,8 +237,10 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
     def maybe_append(act, frac):
         # temel kontroller
         if not isinstance(frac, (int, float)):
+            print("Here 1")
             return False
         if frac <= 0:
+            print("Here 2")
             return False
 
         # required alanlar
@@ -249,6 +252,7 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
                 symbol=act.get("coin_id"),
                 details={"reason": err_req, "action": act}
             )
+            print("Here 4")
             return False
 
         # Yerel eşik (fraction): dict ise helper, değilse base_min_usd'den üret
@@ -275,6 +279,7 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
 
         # eşik kontrolü
         if (local_min_frac is None) or (frac < local_min_frac):
+            print("Here 3")
             # Telegram bildirimi (usd > 10 ve eşik altı) → sadece sayısal ve hesaplanabilirse
             if (usd is not None) and (required_usd is not None) and (usd > 10) and (usd < required_usd):
                 log_warning(
@@ -301,6 +306,7 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
                     f"ℹ️ Bu emir, aracı kurumun minimum eşik değerinin altında kalması nedeniyle gönderilemedi."
                 )
                 _fire_and_forget(notify_user_by_telegram(text=_msg, bot_id=int(bot_id)))
+            print("Here 6")
             return False
 
         # ✅ eşik geçildi → normal akış
@@ -446,10 +452,13 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
                     act = {"coin_id": sym, "trade_type": "futures", "positionside": "short", "side": "sell", **meta}
                     if target_lev is not None:
                         act["leverage"] = target_lev
+                    print("action for short open:", act, "add_frac:", add_frac)
                     ok = maybe_append(act, add_frac)
                     if ok:
                         fulness = min(1.0, fulness + add_frac)
                         cur["short_pct"] = min(100.0, cur["short_pct"] + add_frac * 100.0)
                         cur["short_lev"] = target_lev if target_lev is not None else cur["short_lev"]
-
+                        print("after appending, fulness:", fulness, "cur:", cur)
+                
+    print("final actions:", actions)
     return actions

@@ -45,6 +45,7 @@ def get_percentage(bot_id: int) -> float:
             return 0.0
 
         pct = (fullness_dec / current_dec) * Decimal("100")
+        print("Percentage:", pct)
         return float(pct)
 
     except Exception:

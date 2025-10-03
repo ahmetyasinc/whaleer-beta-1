@@ -105,6 +105,7 @@ async def execute_bot_logic(interval):
             #    await save_result_to_json(result_dict, last_time, interval)
 
             # TAHANIN PARTI
+            print("result_dict:", result_dict)
             result = await send_order(await prepare_order_data(result_dict))
             
             elapsed = time.time() - start_time

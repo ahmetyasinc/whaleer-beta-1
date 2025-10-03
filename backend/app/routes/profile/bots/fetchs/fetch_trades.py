@@ -4,7 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.bots.bot_analysis import TradeOut
 
 async def fetch_trades_for_bot(bot_id: int, db: AsyncSession):
-    result = await db.execute(select(BotTrades).where(BotTrades.bot_id == bot_id))
+    result = await db.execute(
+        select(BotTrades).where(
+            BotTrades.bot_id == bot_id,
+            BotTrades.amount_state != 0
+        )
+    )
     trades = result.scalars().all()
 
     return [

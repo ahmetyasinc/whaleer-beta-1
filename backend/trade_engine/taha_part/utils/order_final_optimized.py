@@ -90,7 +90,10 @@ async def calculate_order_params(
         tick_size = Decimal(str(selected_filter["tick_size"]))
 
         # ✅ Notional = margin × leverage
-        notional = Decimal(str(value)) * leverage
+        lev = Decimal(str(leverage or 1))
+        if lev < 0:
+            lev = -lev
+        notional = Decimal(str(value)) * lev
         raw_qty = notional / Decimal(str(current_price))
 
         # Step kontrolü
@@ -1327,19 +1330,18 @@ async def last_trial():
            
         
     }
-    test_one ={"120": [
+    test_one ={"169": [
             
               {
                  "coin_id": "SOLUSDT",
-            "trade_type": "spot",
-            "side": "buy",
+            "trade_type": "futures",
+            "side": "sell",
             "status": "success",
             "order_type": "market",
-            "take_profit": 212.15,
+            "stop_loss": 220.15,
             "value": 10,
-            #"leverage": 2,
-            #"positionside": "long",
-
+            "leverage": 2,
+            "positionside": "short",
                 
             }
         ]

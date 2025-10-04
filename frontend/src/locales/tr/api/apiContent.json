@@ -32,5 +32,8 @@
   },
   "save": "Kaydet",
   "saved": "Anahtar kaydedildi ✅",
-  "settings": "Ayarlar"  
+  "settings": "Ayarlar" , 
+  "footer": {
+    "rights": "Tüm hakları saklıdır."
+  }
 }

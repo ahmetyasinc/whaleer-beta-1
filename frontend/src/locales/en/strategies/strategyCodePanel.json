@@ -5,7 +5,8 @@
     "addNewStrategy": "Add New Strategy"
   },
   "buttons": {
-    "save": "Save",
+    "save": "Save (Ctrl + S)",
+    "run": "Save & Run",
     "close": "Close",
     "newVersion": "New Version"
   },

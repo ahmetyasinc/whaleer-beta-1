@@ -5,8 +5,9 @@
     "addNewStrategy": "Yeni Strateji Ekle"
   },
   "buttons": {
-    "save": "Kaydet",
+    "save": "Kaydet (Ctrl + S)",
     "close": "Kapat",
+    "run": "Kaydet ve Derle",
     "newVersion": "Yeni Sürüm"
   },
   "tooltips": {

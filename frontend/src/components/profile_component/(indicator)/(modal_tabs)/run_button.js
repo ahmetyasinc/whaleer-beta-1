@@ -1,23 +1,24 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { forwardRef, useState, useCallback } from "react";
 import useIndicatorStore from "@/store/indicator/indicatorStore";
 import usePanelStore from "@/store/indicator/panelStore";
 import useCryptoStore from "@/store/indicator/cryptoPinStore";
 import useIndicatorDataStore from "@/store/indicator/indicatorDataStore";
 import axios from "axios";
-
+import { useTranslation } from "react-i18next";
 import { TbTriangleFilled } from "react-icons/tb";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 axios.defaults.withCredentials = true;
 
-const RunButton = ({ indicatorId, onBeforeRun }) => {
+const RunButton = forwardRef(({ indicatorId, onBeforeRun }, ref) => {
   const { toggleIndicator } = useIndicatorStore();
   const { addSyncedPanel, end } = usePanelStore();
   const { selectedCrypto, selectedPeriod } = useCryptoStore();
   const { insertOrReplaceLastSubIndicatorData } = useIndicatorDataStore();
   const [isLoading, setIsLoading] = useState(false);
+  const { t } = useTranslation("indicatorEditor");
 
   const fetchIndicatorData = useCallback(async () => {
     try {
@@ -39,7 +40,7 @@ const RunButton = ({ indicatorId, onBeforeRun }) => {
         indicator_name = "",
         prints = [],
         inputs = [],
-        status = "success", // ✅ backend’den gelirse hata/success al
+        status = "success",
         message = "",
       } = response.data || {};
 
@@ -50,12 +51,10 @@ const RunButton = ({ indicatorId, onBeforeRun }) => {
         prints,
         inputs,
         addSyncedPanel,
-        { status, message } // ✅ store’a hata/success bilgisi gönder
+        { status, message }
       );
     } catch (error) {
       console.error("Indicator verisi çekilirken hata oluştu:", error);
-
-      // ✅ hata durumunu store’a kaydet
       insertOrReplaceLastSubIndicatorData(
         indicatorId,
         "Hata",
@@ -92,8 +91,9 @@ const RunButton = ({ indicatorId, onBeforeRun }) => {
 
   return (
     <button
+      ref={ref} // 🔑 forwardRef ile dışarıdan erişilebilir
       className="absolute top-1 right-16 gap-1 px-[9px] py-[5px] mr-4 rounded font-medium transition-all"
-      title="Çalıştır"
+            title={t("buttons.run") + " (F5)"}
       onClick={handleClick}
     >
       {isLoading ? (
@@ -103,6 +103,8 @@ const RunButton = ({ indicatorId, onBeforeRun }) => {
       )}
     </button>
   );
-};
+});
+
+RunButton.displayName = "RunButton"; // forwardRef için zorunlu
 
 export default RunButton;

@@ -9,19 +9,12 @@ import dynamic from "next/dynamic";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
-/**
- * Props:
- * - isOpen: boolean
- * - onClose: () => void
- * - indicator: { id?: number, name: string, code: string }
- * - onSave: () => Promise<void> | void
- * - runIndicatorId?: number | null
- */
 const CodeModal = ({ isOpen, onClose, indicator, onSave, runIndicatorId }) => {
   const [mounted, setMounted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [localCode, setLocalCode] = useState(""); // sadece modal içinde local
+  const [localCode, setLocalCode] = useState("");
   const monacoRef = useRef(null);
+  const runButtonRef = useRef(null); // 🔑 RunButton için ref
 
   useEffect(() => setMounted(true), []);
 
@@ -30,7 +23,9 @@ const CodeModal = ({ isOpen, onClose, indicator, onSave, runIndicatorId }) => {
     if (isOpen) {
       const prev = document.body.style.overflow;
       document.body.style.overflow = "hidden";
-      return () => { document.body.style.overflow = prev; };
+      return () => {
+        document.body.style.overflow = prev;
+      };
     }
   }, [isOpen, mounted]);
 
@@ -64,20 +59,43 @@ const CodeModal = ({ isOpen, onClose, indicator, onSave, runIndicatorId }) => {
     });
   }
 
-  const handleSaveThenClose = async () => {
-    if (!onSave) return onClose?.();
+  const handleSave = async () => {
+    if (!onSave) return;
     try {
       setIsSaving(true);
-      await onSave(localCode); // paneldeki handleSaveIndicator(localCode) çağrılır
-      onClose?.();
+      await onSave(localCode);
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleBeforeRun = async () => {
-    await handleSaveThenClose();
+    await handleSave();
   };
+
+  // 🔑 Ctrl+S ve F5 kısayolu
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handler = (e) => {
+      // Ctrl+S
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        handleSave();
+      }
+
+      // F5
+      if (e.key === "F5") {
+        e.preventDefault(); // tarayıcı yenilemeyi engelle
+        if (runButtonRef.current) {
+          runButtonRef.current.click(); // RunButton tetikle
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [isOpen, localCode]);
 
   if (!mounted || !isOpen || !indicator) return null;
 
@@ -86,15 +104,20 @@ const CodeModal = ({ isOpen, onClose, indicator, onSave, runIndicatorId }) => {
       <div className="bg-gray-900 text-white rounded-md w-[900px] h-[600px] p-6 shadow-2xl relative">
         {runIndicatorId && (
           <div className="absolute top-5 right-4">
-            <RunButton indicatorId={runIndicatorId} onBeforeRun={handleBeforeRun} />
+            <RunButton
+              ref={runButtonRef} // 🔑 Ref eklendi
+              indicatorId={runIndicatorId}
+              onBeforeRun={handleBeforeRun}
+            />
           </div>
         )}
 
         <div className="absolute top-7 right-6 flex items-center gap-2">
+          {/* Save */}
           <button
             className="gap-1 px-[9px] py-[5px] bg-[rgb(16,45,100)] hover:bg-[rgb(27,114,121)] rounded text-xs font-medium flex items-center"
             title="Save"
-            onClick={handleSaveThenClose}
+            onClick={handleSave}
             disabled={isSaving}
           >
             {isSaving ? (
@@ -104,6 +127,7 @@ const CodeModal = ({ isOpen, onClose, indicator, onSave, runIndicatorId }) => {
             )}
           </button>
 
+          {/* Close */}
           <button
             className="gap-1 px-[9px] py-[5px] bg-[rgb(100,16,16)] hover:bg-[rgb(189,49,49)] rounded text-sm font-medium"
             onClick={onClose}
@@ -121,7 +145,7 @@ const CodeModal = ({ isOpen, onClose, indicator, onSave, runIndicatorId }) => {
             beforeMount={handleEditorWillMount}
             language="python-custom"
             value={localCode}
-            onChange={(value) => setLocalCode(value)} // sadece modal local state
+            onChange={(value) => setLocalCode(value)}
             theme="vs-dark"
             height="100%"
             options={{

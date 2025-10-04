@@ -26,7 +26,7 @@ export default function ConfirmDeleteModal({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -40,7 +40,7 @@ export default function ConfirmDeleteModal({
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 24, opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="w-full max-w-xl rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900 to-slate-850 p-5 text-white shadow-2xl"
+            className="w-full max-w-xl rounded-2xl border border-white/10 bg-gradient-to-b from-slate-950/70 to-transparent p-5 text-white shadow-2xl"
           >
             {/* Header */}
             <div className="mb-3 flex items-center gap-3">
@@ -137,20 +137,27 @@ export default function ConfirmDeleteModal({
             </div>
 
             {/* Actions */}
-            <div className="mt-5 flex justify-end gap-3">
-              <button
-                onClick={onCancel}
-                className="rounded-lg border border-white/10 bg-slate-700/60 px-4 py-2 text-sm text-slate-100 transition hover:bg-slate-600/70"
-              >
-                {t('buttons.cancel')}
-              </button>
-              <button
-                onClick={onConfirm}
-                className="rounded-lg border border-red-500/30 bg-gradient-to-r from-red-600 to-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:from-red-500 hover:to-red-400"
-              >
-                {t('buttons.confirm')}
-              </button>
-            </div>
+        <div className="mt-6 flex justify-end gap-3">
+          {/* Vazgeç Butonu */}
+          <button
+            onClick={onCancel}
+            className="rounded-md border border-gray-700/50 bg-gray-800/60 px-5 py-2.5 text-sm font-medium text-gray-200 backdrop-blur-sm transition-all duration-200 hover:text-white hover:border-gray-600 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-gray-600/40"
+          >
+            {t("buttons.cancel")}
+          </button>
+
+          {/* Sil / Onayla Butonu */}
+          <button
+            onClick={onConfirm}
+            className="relative rounded-md border border-transparent bg-gradient-to-r from-red-600 via-red-500 to-rose-500 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_5px_rgba(255,80,80,0.25)] transition-all duration-100 hover:shadow-[0_0_10px_rgba(255,80,80,0.45)] hover:scale-[1.01] active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-red-500/40"
+          >
+            <span className="relative z-10">{t("buttons.confirm")}</span>
+            {/* Shine efekti */}
+            <span className="absolute inset-0 rounded-md bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 transition-opacity duration-500 hover:opacity-100"></span>
+          </button>
+        </div>
+
+
           </motion.div>
         </motion.div>
       )}

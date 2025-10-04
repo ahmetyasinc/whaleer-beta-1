@@ -32,5 +32,8 @@
   },
   "save": "Save",
   "saved": "Key saved ✅",
-  "settings": "Settings"
+  "settings": "Settings",
+  "footer": {
+    "rights": "All rights reserved."
+  }
 }

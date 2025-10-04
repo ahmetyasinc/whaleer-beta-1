@@ -5,7 +5,8 @@
     "addNewIndicator": "Yeni İndikatör Ekle"
   },
   "buttons": {
-    "save": "Kaydet",
+    "save": "Kaydet (Ctrl + S)",
+    "run": "Kaydet ve Derle",
     "close": "Kapat"
   },
   "tooltips": {

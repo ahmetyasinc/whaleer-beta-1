@@ -1,4 +1,5 @@
 'use client'
+
 import React, { useState, useRef, useEffect } from 'react';
 import useIndicatorDataStore from "@/store/indicator/indicatorDataStore";
 import { useTranslation } from "react-i18next";
@@ -14,6 +15,10 @@ const TerminalIndicator = ({ id }) => {
   const { indicatorData } = useIndicatorDataStore();
 
   const lastPrintedRef = useRef([]);
+
+  // 🔹 Yeni state'ler
+  const [history, setHistory] = useState([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
 
   useEffect(() => {
     const indicator = indicatorData?.[id];
@@ -111,7 +116,7 @@ const TerminalIndicator = ({ id }) => {
 
       default:
         addOutput(`> ${cmd}`);
-        addOutput(t('unknown', { cmd }));
+        addOutput(t('unknown', { cmd }), 'warning');
     }
   };
 
@@ -120,7 +125,38 @@ const TerminalIndicator = ({ id }) => {
     const cmd = input.trim().toLowerCase();
     if (cmd) {
       handleCommand(cmd);
+
+      // 🔹 Komutu geçmişe ekle
+      setHistory((prev) => [...prev, cmd]);
+      setHistoryIndex(-1);
+
       setInput('');
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (history.length > 0) {
+        const newIndex = historyIndex === -1 
+          ? history.length - 1 
+          : Math.max(0, historyIndex - 1);
+        setHistoryIndex(newIndex);
+        setInput(history[newIndex]);
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (history.length > 0) {
+        if (historyIndex === -1) return;
+        const newIndex = historyIndex + 1;
+        if (newIndex < history.length) {
+          setHistoryIndex(newIndex);
+          setInput(history[newIndex]);
+        } else {
+          setHistoryIndex(-1);
+          setInput('');
+        }
+      }
     }
   };
 
@@ -137,6 +173,7 @@ const TerminalIndicator = ({ id }) => {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown} // 🔑 buraya eklendi
           className="bg-black text-white border-none outline-none w-full caret-[hsl(59,100%,60%)]"
           placeholder={t("placeholder")}
           spellCheck={false}

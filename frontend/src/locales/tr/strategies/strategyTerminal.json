@@ -33,7 +33,7 @@
     "list": "list imports - İçe aktarılan indikatörleri listele",
     "reset": "reset <indicator|imports> - Belirli veya tüm indikatörleri kaldır"
   },
-  "uptimeFormat": "⏱️ Sayfa çalışma süresi: {{seconds}} saniye",
+  "uptimeFormat": "⏱️ Sayfa açık kalma süresi: {{seconds}} saniye",
   "errorSample": "Bu bir hata mesajıdır!",
   "warningSample": "Bu bir uyarı mesajıdır!",
   "successSample": "Bu bir başarı mesajıdır!",

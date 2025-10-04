@@ -421,7 +421,6 @@ async def get_admin_ticket_detail(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching ticket: {str(e)}")
 
-
 @protected_router.get("/api/support/categories", response_model=List[SupportCategoryOut])
 async def get_support_categories(
     db: AsyncSession = Depends(get_db)
@@ -494,7 +493,6 @@ async def get_tickets(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching tickets: {str(e)}")
 
-# Ticket detaylarını getir
 # Ticket detaylarını getir
 @protected_router.get("/api/support/tickets/{ticket_id}", response_model=SupportTicketDetailOut)
 async def get_ticket(

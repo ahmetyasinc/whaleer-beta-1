@@ -6,13 +6,19 @@ from backend.trade_engine.taha_part.utils.price_cache_new import (
     start_connection_pool,
     wait_for_cache_ready
 )
+import asyncpg
+import os
 
 from backend.trade_engine.data.last_data_load import load_last_data
 from backend.trade_engine.process.trade_engine import run_trade_engine
 # listen_service.py (üst importlara ekle)
 from backend.trade_engine.process.process import run_all_bots_async, handle_rent_expiry_closures  # NEW
 from backend.trade_engine.process.save import save_result_to_json, aggregate_results_by_bot_id    # NEW
-
+# Emir gönderim sistemi (ileride aktif edeceksin)
+from backend.trade_engine.taha_part.utils.order_final_optimized import (
+    prepare_order_data,
+    send_order
+)
 if sys.platform.startswith('win'):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
@@ -93,12 +99,14 @@ async def execute_bot_logic(interval):
                 print(f"ℹ {interval}: Bot çalıştırma atlandı (eksik veri ya da aktif bot yok).")
 
             # 4) Sonuçları grupla + JSON'a kaydet (sadece varsa)
-            if results:
-                result_dict = aggregate_results_by_bot_id(results)
-                if result_dict:
-                    await save_result_to_json(result_dict, last_time, interval)
+            
+            result_dict = aggregate_results_by_bot_id(results)
+            #if result_dict:
+            #    await save_result_to_json(result_dict, last_time, interval)
 
-            #result = await send_order(await prepare_order_data(result_dict))
+            # TAHANIN PARTI
+            print("result_dict:", result_dict)
+            result = await send_order(await prepare_order_data(result_dict))
             
             elapsed = time.time() - start_time
             print(f"✅ {last_time}, {interval} tamamlandı. Süre: {elapsed:.2f} sn. (toplam sonuç: {len(results)})")
@@ -108,16 +116,29 @@ async def execute_bot_logic(interval):
 
 async def listen_for_notifications():
     conn_str = "postgresql://postgres:admin@localhost/balina_db"
-    async with await psycopg.AsyncConnection.connect(conn_str, autocommit=True) as conn:
-        async with conn.cursor() as cur:
-            await cur.execute("LISTEN new_data;")
-            await start_connection_pool()
-            await wait_for_cache_ready()
-            print("📡 PostgreSQL'den tetikleme bekleniyor...")
 
-            async for notify in conn.notifies():
-                print(f"🔔 Tetikleme: {notify.payload}")
-                asyncio.create_task(handle_new_data(notify.payload))
+    # Pool ve cache'i önce başlat
+    await start_connection_pool()
+    await wait_for_cache_ready()
+
+    while True:
+        try:
+            async with await psycopg.AsyncConnection.connect(conn_str, autocommit=True) as conn:
+                async with conn.cursor() as cur:
+                    await cur.execute("LISTEN new_data;")
+                    print("📡 PostgreSQL'den tetikleme bekleniyor...")
+
+                    async for notify in conn.notifies():
+                        print(f"🔔 Tetikleme: {notify.payload}")
+                        asyncio.create_task(handle_new_data(notify.payload))
+
+        except (asyncio.CancelledError, KeyboardInterrupt):
+            print("⛔ Dinleyici durduruluyor...")
+            break
+        except Exception as e:
+            print(f"❌ Dinleyicide hata: {e}. 5 sn sonra yeniden denenecek...")
+            await asyncio.sleep(5)
+
 
 if __name__ == "__main__":
     asyncio.run(listen_for_notifications())

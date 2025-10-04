@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, APIRouter
 from app.routes.user import router as user_router
 from app.routes.auth import router as auth_router
 from app.routes.phantom.auth import router as phantom_auth_router
@@ -38,55 +38,57 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+api_router = APIRouter(prefix="/api")
 
 # USER ROUTES
-app.include_router(tg_protected)
-app.include_router(plans_router)
-app.include_router(settings_router)
-app.include_router(tg_public)
-app.include_router(google_auth.router, prefix="/api")
-app.include_router(user_router)
-app.include_router(auth_router)
-app.include_router(auth_router_mobile)
-app.include_router(phantom_auth_router)
-app.include_router(phantom_purchase_router)
+api_router.include_router(tg_protected)
+api_router.include_router(plans_router)
+api_router.include_router(settings_router)
+api_router.include_router(tg_public)
+api_router.include_router(google_auth.router)
+api_router.include_router(user_router)
+api_router.include_router(auth_router)
+api_router.include_router(auth_router_mobile)
+api_router.include_router(phantom_auth_router)
+api_router.include_router(phantom_purchase_router)
 # COINS ROUTES
-app.include_router(binance_coins_router)
+api_router.include_router(binance_coins_router)
 # INDICATOR ROUTES
-app.include_router(websocket_binance_router)
-app.include_router(indicator_data_router)
-app.include_router(indicator_router) 
-app.include_router(indicator_release) 
-app.include_router(indicator_run_router) 
-app.include_router(indicator_adjustment_router) 
+api_router.include_router(websocket_binance_router)
+api_router.include_router(indicator_data_router)
+api_router.include_router(indicator_router) 
+api_router.include_router(indicator_release) 
+api_router.include_router(indicator_run_router) 
+api_router.include_router(indicator_adjustment_router) 
 # STRATEGY ROUTES
-app.include_router(strategy_router)
-app.include_router(strategy_release)
-app.include_router(strategy_adjustment_router)
-app.include_router(strategy_run_router)
-app.include_router(strategy_imports_router)
+api_router.include_router(strategy_router)
+api_router.include_router(strategy_release)
+api_router.include_router(strategy_adjustment_router)
+api_router.include_router(strategy_run_router)
+api_router.include_router(strategy_imports_router)
 # API KEYS ROUTES
-app.include_router(api_keys_router)
-app.include_router(api_keys_binance_router)
+api_router.include_router(api_keys_router)
+api_router.include_router(api_keys_binance_router)
 # BACKTEST ROUTES
-app.include_router(backtest_router)
+api_router.include_router(backtest_router)
 # BOT ROUTES
-app.include_router(bots_router)
-app.include_router(bot_router_mobile)
+api_router.include_router(bots_router)
+api_router.include_router(bot_router_mobile)
 # SCAN ROUTES
-app.include_router(scan_router)
+api_router.include_router(scan_router)
 # WHALEER AI ROUTES
-app.include_router(whaleer_ai_router)
+api_router.include_router(whaleer_ai_router)
 # SHOWCASE ROUTES
-app.include_router(showcase)
-app.include_router(showcase_router_mobile)
+api_router.include_router(showcase)
+api_router.include_router(showcase_router_mobile)
 # PROFİLE ROUTES
-app.include_router(profile)
-app.include_router(profileMobile)
-app.include_router(support_router)
+api_router.include_router(profile)
+api_router.include_router(profileMobile)
+api_router.include_router(support_router)
 # ADMİN ROUTES
-app.include_router(admin)
+api_router.include_router(admin)
 
+app.include_router(api_router)
 
 # CORS Middleware ekle
 app.add_middleware(
@@ -95,8 +97,8 @@ app.add_middleware(
         "http://localhost:3000",
         "http://localhost:3001",
         "http://13.60.185.143:3000",
-        "https://whaleer.com",           # ✅ bunu ekle
-        "https://www.whaleer.com"        # (opsiyonel) www varsa
+        "https://whaleer.com",          
+        "https://www.whaleer.com"       
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -112,7 +114,7 @@ from app.models import User
 from app.models.profile.strategy.strategy import Strategy
 from app.models.profile.bots.bots import Bots
 
-@app.get("/api/hero-infos/")
+@app.get("/api/api/hero-infos/")
 async def get_hero_infos(db: AsyncSession = Depends(get_db)):
     # toplam kullanıcı
     user_count_result = await db.execute(select(func.count()).select_from(User))

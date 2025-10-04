@@ -1,36 +1,47 @@
-from sqlalchemy import text
-from trade_engine.config import engine
+# backend/trade_engine/data/indicators.py (örnek konum)
+from sqlalchemy import text, bindparam, Integer
+from sqlalchemy.dialects.postgresql import ARRAY
+from trade_engine.config import get_engine
 
 def load_indicators(strategy_id):
     try:
-        with engine.connect() as conn:
+        eng = get_engine()
+        with eng.connect() as conn:
             # strategy_id'ye göre indicator_ids çek
-            result = conn.execute(
+            row = conn.execute(
                 text("SELECT indicator_ids FROM strategies WHERE id = :strategy_id"),
                 {"strategy_id": strategy_id}
             ).fetchone()
 
-            if not result:
+            if not row:
                 return []
 
-            indicator_ids = result._mapping['indicator_ids']
+            indicator_ids = row._mapping.get("indicator_ids")
 
             if not indicator_ids:
                 return []
 
-            # ARRAY ise direkt kullan, değilse string olarak parse et
+            # ARRAY ise direkt kullan, değilse string'i listeye çevir
             if isinstance(indicator_ids, str):
-                indicator_ids = [int(id.strip()) for id in indicator_ids.split(',')]
+                indicator_ids = [int(x.strip()) for x in indicator_ids.split(",") if x.strip()]
 
-            # Şimdi indicators tablosundan verileri çek
-            indicators_result = conn.execute(
-                text("SELECT id, name, code FROM indicators WHERE id = ANY(:indicator_ids)"),
-                {"indicator_ids": indicator_ids}
-            ).fetchall()
+            # Güvenlik: boş listeyi erken döndür
+            if not indicator_ids:
+                return []
 
-            # SQLAlchemy Row nesnelerini dict'e çevir
-            indicators = [dict(row._mapping) for row in indicators_result]
+            # PostgreSQL ANY(:indicator_ids) için parametreyi ARRAY(Integer) tipinde bağla
+            query = text("""
+                SELECT id, name, code
+                FROM indicators
+                WHERE id = ANY(:indicator_ids)
+            """).bindparams(
+                bindparam("indicator_ids", value=indicator_ids, type_=ARRAY(Integer))
+            )
 
+            result = conn.execute(query).fetchall()
+
+            # SQLAlchemy Row -> dict
+            indicators = [dict(r._mapping) for r in result]
             return indicators
 
     except Exception as e:

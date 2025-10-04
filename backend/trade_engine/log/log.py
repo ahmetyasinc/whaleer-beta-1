@@ -2,28 +2,75 @@
 from __future__ import annotations
 
 import json
+import math
+from decimal import Decimal
 from typing import Any, Dict, Optional
 
-import psycopg2
 from psycopg2.extras import RealDictCursor, Json
 from psycopg2 import OperationalError, InterfaceError, DatabaseError
 
-# Projendeki mevcut DB ayarlarını kullan
-from backend.trade_engine.config import DB_CONFIG
-# Örn: DB_CONFIG = {"dbname": "...", "user": "...", "password": "...", "host": "...", "port": 5432}
+# Merkezi DB yardımcıları (fork-safe, ssl/parametreler config'ten)
+from backend.trade_engine.config import get_db_connection  # her çağrıda taze bağlantı
 
 BOT_LOG_LEVELS = {"info", "warning", "error"}
 
-def _connect():
-    """Yeni bir DB bağlantısı açar."""
-    return psycopg2.connect(
-        dbname=DB_CONFIG["dbname"],
-        user=DB_CONFIG.get("user"),
-        password=DB_CONFIG.get("password"),
-        host=DB_CONFIG.get("host", "localhost"),
-        port=DB_CONFIG.get("port", 5432),
-        cursor_factory=RealDictCursor,
-    )
+
+# ------------------------------
+# JSON güvenliği: NaN/Inf temizliği
+# ------------------------------
+
+def _is_nan_or_inf(v: Any) -> bool:
+    if isinstance(v, float):
+        return (math.isnan(v) or math.isinf(v))
+    if isinstance(v, Decimal):
+        try:
+            return (v.is_nan() or (not v.is_finite()))
+        except Exception:
+            return False
+    return False
+
+
+def _sanitize_value(v: Any) -> Any:
+    """
+    JSON'e yazılmadan önce:
+      - float/Decimal NaN/Inf → None
+      - Decimal → float (veya str, istersen)
+      - dict/list/tuple → özyinelemeli temizlik
+    """
+    # float
+    if isinstance(v, float):
+        if math.isnan(v) or math.isinf(v):
+            return None
+        return v
+
+    # Decimal
+    if isinstance(v, Decimal):
+        try:
+            if v.is_nan() or (not v.is_finite()):
+                return None
+        except Exception:
+            pass
+        # log amaçlı float yeterli
+        return float(v)
+
+    # dict
+    if isinstance(v, dict):
+        return {k: _sanitize_value(x) for k, x in v.items()}
+
+    # list/tuple
+    if isinstance(v, (list, tuple)):
+        return [_sanitize_value(x) for x in v]
+
+    return v
+
+
+def sanitize_json_payload(obj: Any) -> Any:
+    return _sanitize_value(obj)
+
+
+# ------------------------------
+# Log yazıcı
+# ------------------------------
 
 def add_bot_log(
     *,
@@ -35,10 +82,10 @@ def add_bot_log(
     period: Optional[str] = None,
     details: Optional[Dict[str, Any] | str] = None,
     # Eğer hâlihazırda açık bir connection/cursor varsa gönderilebilir (örn. bir transaction içinde)
-    conn: Optional[psycopg2.extensions.connection] = None,
+    conn: Optional["psycopg2.extensions.connection"] = None,
 ) -> int:
     """
-    bot_logs tablosuna kayıt atar ve yeni kaydın id'sini döndürür.
+    public.bot_logs tablosuna kayıt atar ve yeni kaydın id'sini döndürür.
 
     Kullanım:
         add_bot_log(level="error", bot_id=120, message="Emir gönderimi başarısız",
@@ -50,21 +97,23 @@ def add_bot_log(
     if lvl not in BOT_LOG_LEVELS:
         raise ValueError(f"Geçersiz log seviyesi: {level!r}. Geçerli değerler: {BOT_LOG_LEVELS}")
 
-    # details’i JSONB’e hazırla
+    # details’i JSONB’e hazırla (güvenli temizleme ile)
     json_details: Optional[Json] = None
     if details is not None:
         if isinstance(details, str):
-            # string ise geçerli JSON mu kontrol et; değilse raw string'i yine JSONB'e string olarak koy
+            # string geldiyse JSON parse etmeyi dener; olmazsa 'text' alanına koyar
             try:
                 parsed = json.loads(details)
             except Exception:
                 parsed = {"text": details}
-            json_details = Json(parsed)
+            parsed = sanitize_json_payload(parsed)
+            json_details = Json(parsed, dumps=json.dumps)
         else:
-            json_details = Json(details)
+            parsed = sanitize_json_payload(details)
+            json_details = Json(parsed, dumps=json.dumps)
 
     sql = """
-        INSERT INTO bot_logs (user_id, bot_id, symbol, period, level, message, details)
+        INSERT INTO public.bot_logs (user_id, bot_id, symbol, period, level, message, details)
         VALUES (%s, %s, %s, %s, %s::bot_log_level, %s, %s)
         RETURNING id;
     """
@@ -81,10 +130,10 @@ def add_bot_log(
     own_conn = None
     try:
         if conn is None:
-            own_conn = _connect()
+            own_conn = get_db_connection()  # config'ten: sslmode/parametreler merkezi
             conn = own_conn
 
-        with conn.cursor() as cur:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(sql, params)
             new_id = cur.fetchone()["id"]
 
@@ -94,8 +143,8 @@ def add_bot_log(
 
         return int(new_id)
 
-    except (OperationalError, InterfaceError, DatabaseError) as e:
-        # Dış bağlantı ise rollback etmemek daha doğru; sadece kendi açtığımız bağlantıda rollback+close
+    except (OperationalError, InterfaceError, DatabaseError):
+        # Sadece kendi açtığımız bağlantıda rollback edelim
         if own_conn is not None:
             try:
                 conn.rollback()
@@ -105,12 +154,12 @@ def add_bot_log(
     finally:
         if own_conn is not None:
             try:
-                own_conn.close()
+                conn.close()
             except Exception:
                 pass
 
 
-# Basit yardımcılar (isteğe bağlı)
+# Basit yardımcılar (kısayol)
 
 def log_info(**kwargs) -> int:
     """add_bot_log için level='info' kısayolu."""

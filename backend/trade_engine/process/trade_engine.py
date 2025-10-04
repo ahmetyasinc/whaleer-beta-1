@@ -5,7 +5,6 @@ from backend.trade_engine.data.data_load import fetch_all_candles
 
 async def run_trade_engine(interval):
     bots = load_active_bots(interval)
-    print("load_active_bots returned:", bots)
     if not bots:
         #print("Aktif bot bulunamadı.")
         return [], {}, []

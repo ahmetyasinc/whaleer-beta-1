@@ -1,12 +1,13 @@
+# balance_writer_db.py
+# DEĞİŞİKLİK: Fonksiyonlar artık 'pool' parametresi almıyor ve
+# config.asyncpg_connection kullanarak kendi bağlantılarını yönetiyor.
+
 import logging
 import datetime
+from decimal import Decimal
+from backend.trade_engine.config import asyncpg_connection
 
-# Not: Bu fonksiyonlar artık kendi dosyalarında.
-# Spot ve Futures için veri yazma mantığını burada merkezileştireceğiz.
-
-# Lütfen batch_upsert_balances fonksiyonunu bu blokla tamamen değiştirin
-
-async def batch_upsert_balances(pool, balance_data: list):
+async def batch_upsert_balances(balance_data: list):
     """
     Gelen SPOT bakiye listesini (Decimal objeleri içerebilir) 
     user_api_balances tablosuna toplu olarak ekler/günceller (UPSERT).
@@ -16,27 +17,25 @@ async def batch_upsert_balances(pool, balance_data: list):
 
     records_to_upsert = []
     for data in balance_data:
-        # Gelen verinin Decimal olduğunu ve 'free'/'locked' anahtarlarını içerdiğini varsayıyoruz.
         free_val = data.get('free')
         locked_val = data.get('locked')
         
-        # Eğer veri eksikse bu kaydı atla
         if free_val is None or locked_val is None:
             logging.warning(f"Eksik bakiye verisi atlandı: {data}")
             continue
 
-        total_val = free_val + locked_val # Decimal objeleriyle hassas toplama
+        total_val = free_val + locked_val
         
         records_to_upsert.append(
             (
                 data['user_id'],
                 data['api_id'],
                 data['asset'],
-                total_val,      # amount sütunu
-                free_val,       # free_amount sütunu
-                locked_val,     # locked_amount sütunu
+                total_val,
+                free_val,
+                locked_val,
                 'spot',
-                datetime.datetime.now(datetime.timezone.utc) # Zaman dilimi bilgisi eklemek en iyisidir
+                datetime.datetime.now(datetime.timezone.utc)
             )
         )
 
@@ -44,9 +43,8 @@ async def batch_upsert_balances(pool, balance_data: list):
         return
 
     try:
-        async with pool.acquire() as conn:
+        async with asyncpg_connection() as conn:
             async with conn.transaction():
-                # "Varsa güncelle, yoksa ekle" mantığını bu SQL komutu sağlar.
                 await conn.executemany("""
                     INSERT INTO public.user_api_balances 
                     (user_id, api_id, coin_symbol, amount, free_amount, locked_amount, account_type, updated_at)
@@ -63,48 +61,50 @@ async def batch_upsert_balances(pool, balance_data: list):
     except Exception as e:
         logging.error(f"❌ [DB] Spot bakiye yazma hatası: {e}", exc_info=True)
 
-async def batch_insert_orders(pool, order_data: list):
+async def batch_insert_orders(order_data: list):
     """
-    Gelen SPOT emir listesini bot_trades tablosuna toplu olarak ekler.
+    Gelen SPOT emir listesini bot_trades tablosunda GÜNCeller.
+    Eğer emir sistemde mevcut değilse, hiçbir işlem yapmaz (atlar).
     """
     if not order_data:
         return
 
-    records_to_insert = [
-        (
-            data['user_id'],
-            None, # bot_id bilgisi genel kullanıcı veri akışından gelmez.
-            datetime.datetime.fromtimestamp(data['event_time'] / 1000),
-            data['symbol'],
-            data['side'].lower(),
-            data['executed_quantity'], # Gerçekleşen miktar
-            None, # fee bilgisi için ek mantık gerekebilir
-            str(data['order_id']),
-            data['status'],
-            'spot', # Bu fonksiyon spot verisi için
-            None, # position_side spot emirlerinde olmaz
-            data['price'],
-            data['client_order_id'] # Yeni eklediğimiz client_order_id sütunu için
-        ) for data in order_data
-    ]
-
+    updated_count = 0
+    skipped_count = 0
     try:
-        async with pool.acquire() as conn:
+        async with asyncpg_connection() as conn:
             async with conn.transaction():
-                # Lütfen bot_trades tablonuzda client_order_id sütunu olduğundan emin olun.
-                # Önceki adımlarda eklenmesini önermiştim.
-                await conn.executemany("""
-                    INSERT INTO public.bot_trades 
-                    (user_id, bot_id, created_at, symbol, side, amount, fee, order_id, status, trade_type, position_side, price, client_order_id)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-                """, records_to_insert)
-        logging.info(f"✅ [DB] {len(records_to_insert)} adet SPOT EMİR başarıyla yazıldı.")
+                for data in order_data:
+                    exists = await conn.fetchval(
+                        "SELECT 1 FROM public.bot_trades WHERE user_id=$1 AND order_id=$2",
+                        data['user_id'], str(data['order_id'])
+                    )
+
+                    if exists:
+                        await conn.execute("""
+                            UPDATE public.bot_trades
+                            SET 
+                                status = $1,
+                                fee = bot_trades.fee + $2,
+                                price = $3,
+                                amount_state = $4
+                            WHERE user_id = $5 AND order_id = $6
+                        """,
+                        data['status'],
+                        data.get('commission', Decimal('0')),
+                        data['price'],
+                        data['executed_quantity'],
+                        data['user_id'],
+                        str(data['order_id'])
+                        )
+                        updated_count += 1
+                    else:
+                        skipped_count += 1
+
+        if updated_count > 0:
+            logging.info(f"✅ [DB] {updated_count} adet mevcut SPOT EMRİ başarıyla güncellendi.")
+        if skipped_count > 0:
+            logging.info(f"ℹ️ [DB] {skipped_count} adet sistem dışı spot emri atlandı.")
+
     except Exception as e:
-        logging.error(f"❌ [DB] Spot emir yazma hatası: {e}", exc_info=True)
-
-# TODO: Gelecekte futures_ws_service için benzer fonksiyonlar buraya eklenebilir.
-# async def batch_upsert_futures_balances(pool, balance_data: list):
-#     pass
-
-# async def batch_insert_futures_orders(pool, order_data: list):
-#     pass
+        logging.error(f"❌ [DB] Spot emir güncelleme hatası: {e}", exc_info=True)

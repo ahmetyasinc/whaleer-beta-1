@@ -1,6 +1,60 @@
+# backend/trade_engine/control/control_the_results.py
+from __future__ import annotations
+
+import asyncio
+import math
 from collections import defaultdict
+from decimal import Decimal
+
 from backend.trade_engine.data.bot_features import load_bot_context
 from backend.trade_engine.log.log import log_info, log_warning, log_error
+from backend.trade_engine.log.telegram.telegram_service import notify_user_by_telegram
+
+
+# ------------- Sayısal güvenlik yardımcıları -------------
+
+def _to_float_or_none(x):
+    if x is None:
+        return None
+    if isinstance(x, Decimal):
+        try:
+            if x.is_nan() or (not x.is_finite()):
+                return None
+        except Exception:
+            return None
+        return float(x)
+    if isinstance(x, (int,)):
+        return float(x)
+    if isinstance(x, float):
+        if math.isnan(x) or math.isinf(x):
+            return None
+        return x
+    # diğer türler parse edilmeye çalışılmaz
+    return None
+
+
+def _finite_or_none(x):
+    """float/Decimal NaN/Inf → None; int → float; diğer → None."""
+    return _to_float_or_none(x)
+
+
+def _fmt_usd(x):
+    """Telegram metninde güvenli göstermek için: None → '-', sayı → 2 ondalık."""
+    if x is None:
+        return "-"
+    try:
+        return f"{float(x):.2f} USD"
+    except Exception:
+        return "-"
+
+
+def _validate_action_dict(act: dict) -> tuple[bool, str]:
+    required = ("coin_id", "trade_type")
+    missing = [k for k in required if not act.get(k)]
+    if missing:
+        return False, f"eksik alan(lar): {', '.join(missing)}"
+    return True, ""
+
 
 def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
     """
@@ -18,6 +72,14 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
       - mevcut yüzde/levrage DEĞİŞMEZ
       - açma fazı mevcut duruma göre karar verir.
     """
+
+    def _fire_and_forget(coro):
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(coro)
+        except RuntimeError:
+            # Çalışan loop yoksa ayrı bir task olarak başlat
+            asyncio.run(coro)
 
     # ---------- context ----------
     ctx = ctx or load_bot_context(bot_id)
@@ -55,8 +117,16 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
         return {k: v for k, v in res.items()
                 if k not in ("last_positions", "last_percentage")}
 
-    # USD eşiğini fraction
-    min_frac = (min_usd / current_value) if current_value > 0 else float("inf")
+    # USD eşiğini fraction (global). Dict gelirse global değer yok; coin-bazlı hesaplanacak.
+    if isinstance(min_usd, dict):
+        base_min_usd = None
+        base_min_frac = None
+    else:
+        try:
+            base_min_usd = float(min_usd)
+        except Exception:
+            base_min_usd = 10.0
+        base_min_frac = (base_min_usd / current_value) if current_value > 0 else None  # None = hesaplanamaz
 
     # ---------- mevcutı haritalama ----------
     holding_map = {
@@ -68,6 +138,7 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
     }
 
     pos_map = {}  # {sym: {...}}
+    print("positions:", positions)
     for p in positions:
         sym = p["symbol"]
         side = (p.get("position_side") or "").lower()
@@ -90,10 +161,12 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
 
     # ---------- hedef kurulumu ----------
     targets = {}
+    print("results:", results)
 
     for res in (results or []):
         lp = res.get("last_positions")
         lper = res.get("last_percentage")
+        print("last_positions:", lp, "last_percentage:", lper)
         if not (isinstance(lp, (list, tuple)) and isinstance(lper, (list, tuple)) and len(lp) == 2 and len(lper) == 2):
             continue
 
@@ -124,34 +197,127 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
                 t["short"]["lev"] = curr_pos
 
     actions = []
-    #print("bot_type:", bot_type)
-    #print("targets:", targets)
+    print("pos_map:", pos_map)
+    print("targets:", targets)
+
     # Leverage değişimi kapatması min_usd’a takılırsa ilgili bacağı açmayı engellemek için:
     blocked_open = defaultdict(lambda: {"long": False, "short": False})
 
-    def maybe_append(act, frac):
-        """Emri uygunsa ekle; değilse logla."""
-        if frac <= 0:
-            return False
-        if frac < min_frac:
-            log_warning(
-                bot_id=bot_id,
-                message="Minimum USD altı işlem engellendi",
-                symbol=act.get("coin_id"),
-                details={"frac": frac, "min_frac": min_frac, "action": act}
+    def _get_min_frac_for_action(act):
+        # 1) min_usd (dict ise coin/tip'e özgü, değilse sabit)
+        local_min_usd = None
+        if isinstance(min_usd, dict):
+            sym = act.get("coin_id")
+            tt  = act.get("trade_type")  # 'spot' | 'futures'
+            local_min_usd = (
+                min_usd.get((tt, sym)) if (tt, sym) in min_usd else
+                min_usd.get(sym)
             )
+        if local_min_usd is None:
+            try:
+                local_min_usd = float(min_usd)
+            except Exception:
+                local_min_usd = 10.0  # güvenli varsayılan
+
+        # 2) FUTURES için leverage etkisi: notional = margin × leverage → margin eşiği = min_usd / lev
+        if (act.get("trade_type") == "futures"):
+            lev = act.get("leverage")  # open fazında set ediliyor, bkz. aşağıda
+            try:
+                lev = float(lev) if lev is not None else 1.0
+            except Exception:
+                lev = 1.0
+            if lev > 0:
+                local_min_usd = local_min_usd / lev
+
+        # 3) fraction'a çevir (current_value > 0 ise)
+        if current_value > 0:
+            return local_min_usd / current_value
+        return None  # hesaplanamaz → eşiği uygulamayacağız
+
+    def maybe_append(act, frac):
+        # temel kontroller
+        if not isinstance(frac, (int, float)):
+            print("Here 1")
             return False
-        usd = current_value * frac
+        if frac <= 0:
+            print("Here 2")
+            return False
+
+        # required alanlar
+        ok_req, err_req = _validate_action_dict(act)
+        if not ok_req:
+            log_error(
+                bot_id=bot_id,
+                message="Aksiyon sözlüğü hatası",
+                symbol=act.get("coin_id"),
+                details={"reason": err_req, "action": act}
+            )
+            print("Here 4")
+            return False
+
+        # NOTIONAL karşılaştırması için:
+        # effective_frac = frac * leverage
+        effective_frac = frac * abs(act.get("leverage"))
+        # local_min_frac = min_usd / current_value  (her zaman NOTIONAL eşiği)
+        if isinstance(min_usd, dict):
+            local_min_frac = _get_min_frac_for_action(act)
+        else:
+            # min_usd sabitse base_min_usd önceden hesaplanmıştı; lev ile bölme YOK
+            if current_value > 0:
+                local_min_frac = (base_min_usd / current_value)
+            else:
+                local_min_frac = None  # hesaplanamaz
+
+        # USD karşılıkları (gösterim/log için)
+        usd = (current_value * frac) if current_value > 0 else None
+        required_usd = (local_min_frac * current_value) if (local_min_frac is not None and current_value > 0) else None
+
+        # eşik kontrolü
+        if (local_min_frac is None) or (effective_frac < local_min_frac):
+            print(local_min_frac, effective_frac, "Here 5")
+            # Telegram bildirimi (usd > 10 ve eşik altı) → sadece sayısal ve hesaplanabilirse
+            if (usd is not None) and (required_usd is not None) and (usd > 10) and (usd < required_usd):
+                log_warning(
+                    bot_id=bot_id,
+                    message="Minimum USD altı işlem engellendi",
+                    symbol=act.get("coin_id"),
+                    details={
+                        "frac": _finite_or_none(frac),
+                        "min_frac": _finite_or_none(local_min_frac),
+                        "usd": _finite_or_none(usd),
+                        "required_usd": _finite_or_none(required_usd),
+                        "action": act
+                    }
+                )
+                _msg = (
+                    f"⚠️ <b>Emir Eşik Altında Kaldı</b>\n\n"
+                    f"🤖 Bot: <b>#{bot_id}</b>\n"
+                    f"📈 Sembol: <b>{act.get('coin_id','N/A')}</b>\n"
+                    f"🧾 Tür: <b>{(act.get('trade_type') or 'N/A').upper()}</b>\n"
+                    f"↔️ Yön: <b>{(act.get('side') or act.get('positionside') or 'N/A').upper()}</b>\n"
+                    f"📉 Kaldıraç: <b>{act.get('leverage','1')}</b>\n"
+                    f"💵 Hesaplanan Margin: <b>{_fmt_usd(usd)}</b>\n"
+                    f"🔺 Gerekli Minimum Margin: <b>{_fmt_usd(required_usd)}</b>\n\n"
+                    f"ℹ️ Bu emir, aracı kurumun minimum eşik değerinin altında kalması nedeniyle gönderilemedi."
+                )
+                _fire_and_forget(notify_user_by_telegram(text=_msg, bot_id=int(bot_id)))
+            print("Here 6")
+            return False
+
+        # ✅ eşik geçildi → normal akış
         a = act.copy()
-        a["value"] = usd
+        a["value"] = _finite_or_none(usd)  # log/pipe güvenliği
         a["status"] = "success"
         actions.append(a)
-        # 🔹 Başarılı eklenen işlemleri de logla
         log_info(
             bot_id=bot_id,
             message="İşlem eklendi",
             symbol=act.get("coin_id"),
-            details={"frac": frac, "usd_value": usd, "action": act}
+            details={
+                "frac": _finite_or_none(frac),
+                "usd_value": _finite_or_none(usd),
+                "action": act
+            }
         )
         return True
 
@@ -165,8 +331,6 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
             if delta_spot < 0:
                 reduce_frac = -delta_spot
                 act = {"coin_id": sym, "trade_type": "spot", "side": "sell", **meta}
-                #if cur["spot_amount"] > 0:
-                #    act["amount"] = (cur["spot_amount"] * reduce_frac / (cur["spot_pct"] / 100.0)) if cur["spot_pct"] else cur["spot_amount"]
                 ok = maybe_append(act, reduce_frac)
                 if ok:
                     fulness = max(0.0, fulness - reduce_frac)
@@ -189,8 +353,6 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
             if cur_pct > 0 and target_pct > 0 and (cur_lev is not None and target_lev is not None) and (cur_lev != target_lev):
                 reduce_frac = cur_pct / 100.0
                 act = {"coin_id": sym, "trade_type": "futures", "positionside": "long", "side": "sell", "reduceOnly": True, **meta}
-                #if cur["long_amount"] > 0:
-                #    act["amount"] = cur["long_amount"]
                 ok = maybe_append(act, reduce_frac)
                 if ok:
                     fulness = max(0.0, fulness - reduce_frac)
@@ -203,8 +365,6 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
             if delta_long < 0:
                 reduce_frac = -delta_long
                 act = {"coin_id": sym, "trade_type": "futures", "positionside": "long", "side": "sell", "reduceOnly": True, **meta}
-                #if cur["long_amount"] > 0:
-                #    act["amount"] = (cur["long_amount"] * reduce_frac / (cur_pct / 100.0)) if cur_pct else cur["long_amount"]
                 ok = maybe_append(act, reduce_frac)
                 if ok:
                     fulness = max(0.0, fulness - reduce_frac)
@@ -219,8 +379,6 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
             if cur_pct > 0 and target_pct > 0 and (cur_lev is not None and target_lev is not None) and (cur_lev != target_lev):
                 reduce_frac = cur_pct / 100.0
                 act = {"coin_id": sym, "trade_type": "futures", "positionside": "short", "side": "buy", "reduceOnly": True, **meta}
-                #if cur["short_amount"] > 0:
-                #    act["amount"] = cur["short_amount"]
                 ok = maybe_append(act, reduce_frac)
                 if ok:
                     fulness = max(0.0, fulness - reduce_frac)
@@ -233,8 +391,6 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
             if delta_short < 0:
                 reduce_frac = -delta_short
                 act = {"coin_id": sym, "trade_type": "futures", "positionside": "short", "side": "buy", "reduceOnly": True, **meta}
-                #if cur["short_amount"] > 0:
-                #    act["amount"] = (cur["short_amount"] * reduce_frac / (cur_pct / 100.0)) if cur_pct else cur["short_amount"]
                 ok = maybe_append(act, reduce_frac)
                 if ok:
                     fulness = max(0.0, fulness - reduce_frac)
@@ -291,10 +447,13 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
                     act = {"coin_id": sym, "trade_type": "futures", "positionside": "short", "side": "sell", **meta}
                     if target_lev is not None:
                         act["leverage"] = target_lev
+                    print("action for short open:", act, "add_frac:", add_frac)
                     ok = maybe_append(act, add_frac)
                     if ok:
                         fulness = min(1.0, fulness + add_frac)
                         cur["short_pct"] = min(100.0, cur["short_pct"] + add_frac * 100.0)
                         cur["short_lev"] = target_lev if target_lev is not None else cur["short_lev"]
-
+                        print("after appending, fulness:", fulness, "cur:", cur)
+                
+    print("final actions:", actions)
     return actions

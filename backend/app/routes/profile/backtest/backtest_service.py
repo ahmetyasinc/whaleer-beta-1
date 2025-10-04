@@ -105,13 +105,14 @@ async def run_backtest_logic(
     if "position" not in df.columns or "percentage" not in df.columns:
         raise HTTPException(status_code=400, detail="Strategy must output 'position' and 'percentage'.")
 
+    print(df["percentage"])
     # Calculate performance (returns already include position & percentage and zero-out after closes)
     result = calculate_performance(
         df,
         commission=allowed_globals.get("commission", 0.0),
         initial_balance=initial_balance_used,
     )
-
+    print(df["percentage"])
     return {
         "chartData": result["chartData"],
         "performance": result["performance"],

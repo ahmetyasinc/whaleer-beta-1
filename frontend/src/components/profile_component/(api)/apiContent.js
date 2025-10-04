@@ -12,6 +12,7 @@ import ConfirmDeleteModal from '@/components/profile_component/(api)/confirmDele
 import { toast } from 'react-toastify';
 import { MdOutlineVpnKeyOff } from "react-icons/md";
 import { useTranslation } from 'react-i18next';
+import { TbNetwork } from "react-icons/tb";
 
 const fmtUSD = (n, locale = "en") =>
   Number(n ?? 0).toLocaleString(locale, { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
@@ -96,20 +97,42 @@ export default function ApiConnectionClient() {
   return (
     <>
         <div className="bg-[rgba(0,0,5)] rounded-xl mx-16 pt-4 shadow p-4 min-h-[calc(100vh-1rem)] flex flex-col">
-          <div className="flex items-center justify-between mt-12 mb-4 pb-4 border-b border-gray-500">
-            <h2 className="text-3xl text-gray-200 font-semibold">{t("title")}</h2>
-            <button
-              onClick={handleAddNewApi}
-              className="group/button relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-lg bg-gradient-to-t from-blue-900/50 to-gray-950 backdrop-blur-lg px-8 py-3 text-base font-semibold text-white transition-all duration-100 ease-in-out hover:scale-[1.01] hover:shadow-lg hover:shadow-gray-600/50 active:scale-[0.98] border border-gray-700/50"
-            >
-              <span className="relative z-10 text-sm font-medium tracking-wide">{t("buttons.addNew")}</span>
-              <HiPlusSmall className="relative z-10 text-2xl font-bold transition-transform duration-300 group-hover/button:rotate-90" />
-              <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-13deg)_translateX(-100%)] group-hover/button:duration-1000 group-hover/button:[transform:skew(-13deg)_translateX(100%)]">
-                <div className="relative h-full w-10 bg-white/20"></div>
+            <div className="flex items-center justify-between mt-12 mb-4 pb-4 border-b border-gray-500">
+              <h2 className="flex items-center gap-2 text-3xl text-gray-200 font-semibold">
+                <TbNetwork className="text-gray-200 mx-3" />
+                {t("title")}
+              </h2>
+
+              <div className="flex items-center gap-4">
+                {/* 📘 Yardım Linki */}
+                <a
+                  href=""
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] text-blue-400/90 hover:text-blue-300/90 underline underline-offset-2 transition-colors duration-100 pt-6"
+                >
+                  {t("links.howToConnect")}
+                </a>
+
+                {/* ➕ Yeni API Ekle Butonu */}
+                <button
+                  onClick={handleAddNewApi}
+                  className="group/button relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-lg bg-gradient-to-t from-blue-900/50 to-gray-950 backdrop-blur-lg px-8 py-3 text-base font-semibold text-white transition-all duration-100 ease-in-out hover:scale-[1.01] hover:shadow-lg hover:shadow-gray-600/50 active:scale-[0.98] border border-gray-700/50"
+                >
+                  <span className="relative z-10 text-sm font-medium tracking-wide">{t("buttons.addNew")}</span>
+                  <HiPlusSmall className="relative z-10 text-2xl font-bold transition-transform duration-300 group-hover/button:rotate-90" />
+
+                  {/* Shine effect */}
+                  <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-13deg)_translateX(-100%)] group-hover/button:duration-1000 group-hover/button:[transform:skew(-13deg)_translateX(100%)]">
+                    <div className="relative h-full w-10 bg-white/20"></div>
+                  </div>
+
+                  {/* Hover gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600/0 via-blue-600/10 to-blue-600/0 opacity-0 transition-opacity duration-300 group-hover/button:opacity-100"></div>
+                </button>
               </div>
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/0 via-blue-600/10 to-blue-600/0 opacity-0 transition-opacity duration-300 group-hover/button:opacity-100"></div>
-            </button>
-          </div>
+            </div>
+
 
           <p className="text-gray-500 text-sm font-medium mb-6 pb-4 border-b border-gray-500">
             • {t("info.line1")}<br />

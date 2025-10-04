@@ -35,5 +35,8 @@
   "settings": "Ayarlar" , 
   "footer": {
     "rights": "Tüm hakları saklıdır."
+  },
+    "links": {
+    "howToConnect": "Hesabımı nasıl bağlarım?"
   }
 }

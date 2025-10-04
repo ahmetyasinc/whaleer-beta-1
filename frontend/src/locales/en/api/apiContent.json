@@ -35,5 +35,8 @@
   "settings": "Settings",
   "footer": {
     "rights": "All rights reserved."
+  },
+  "links": {
+    "howToConnect": "How do I connect my account?"
   }
 }

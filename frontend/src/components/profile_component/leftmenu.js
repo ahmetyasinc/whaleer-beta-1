@@ -36,6 +36,33 @@ const LeftMenu = ({ locale }) => {
     }
   }, [locale]);
 
+      const Clock = () => {
+        const [time, setTime] = useState({ h: "", m: "", s: "", ms: "" });
+      
+        useEffect(() => {
+          const update = () => {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, "0");
+            const m = String(now.getMinutes()).padStart(2, "0");
+            const s = String(now.getSeconds()).padStart(2, "0");
+            const ms = String(now.getMilliseconds()).padStart(3, "0");
+            setTime({ h, m, s, ms });
+          };
+          update();
+          const interval = setInterval(update, 50);
+          return () => clearInterval(interval);
+        }, []);
+      
+        return (
+          <span className="text-orange-400 font-mono text-sm tracking-widest">
+            {time.h}:{time.m}:{time.s}
+            <span className="text-[10px] opacity-80 relative top-[1px]">
+              .{String(Math.floor(time.ms / 10)).padStart(2, "0")}
+            </span>
+          </span>
+        );
+      };
+
   const menuItems = [
     { href: "/profile", icon: <BiUser />, label: t("profile") },
     { href: "/profile/strategies", icon: <BiCandles />, label: t("strategies") },
@@ -143,6 +170,14 @@ const LeftMenu = ({ locale }) => {
             </button>
           </li>
         </ul>
+        {/* Saat kutusu */}
+        {isOpen && (
+          <div className="absolute bottom-3 left-0 w-full flex justify-center">
+            <div className="px-3 py-1.5 bg-black/40 rounded-md border border-orange-500 shadow-[0_0_8px_rgba(255,165,0,0.4)]">
+              <Clock />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* BACKDROP → menü açıkken dışarıya tıklayınca kapanır -----> bunu silince özellik kalkıyor */}

@@ -13,6 +13,12 @@
     "planInsufficient": "Your plan allows up to {{limit}} bots in My Bots."
   },
   "empty": {
+    "originalTitle": "You don't have any bots yet!",
+    "originalDesc": "You can create a new strategy and start building your own bots right away.",
+    "purchasedTitle": "You haven't purchased any bots yet!",
+    "purchasedDesc": "You can buy bots with strong strategies from the Marketplace.",
+    "rentedTitle": "You haven't rented any bots yet!",
+    "rentedDesc": "You can rent bots to test different strategies before buying.",
     "original": "You don't have any original bots yet.",
     "purchased": "You haven't purchased any bots yet.",
     "rented": "You haven't rented any bots yet."

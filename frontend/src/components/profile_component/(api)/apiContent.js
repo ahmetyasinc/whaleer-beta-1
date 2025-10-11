@@ -96,7 +96,7 @@ export default function ApiConnectionClient() {
 
   return (
     <>
-        <div className="bg-[rgba(0,0,5)] rounded-xl mx-16 pt-4 shadow p-4 min-h-[calc(100vh-1rem)] flex flex-col">
+         <div className="bg-[rgba(0,0,20,0.65)] backdrop-blur-md border border-gray-700/30 rounded-2xl mx-16 pt-4 shadow-xl shadow-black/50 p-4 min-h-[calc(100vh-1rem)] flex flex-col">
             <div className="flex items-center justify-between mt-12 mb-4 pb-4 border-b border-gray-500">
               <h2 className="flex items-center gap-2 text-3xl text-gray-200 font-semibold">
                 <TbNetwork className="text-gray-200 mx-3" />
@@ -165,7 +165,7 @@ export default function ApiConnectionClient() {
                     const total = spot + futures;
                   
                     return (
-                      <tr key={api.id ?? idx} className="border-b border-gray-700 hover:bg-[rgb(6,6,12)]">
+                      <tr key={api.id ?? idx} className="border-b border-gray-700 hover:bg-[rgb(6,6,12,0.35)]">
                         <td className="py-2 px-4">
                           <div className="flex items-center gap-2">
                           <span>

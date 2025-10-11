@@ -132,7 +132,7 @@ const FullScreenStrategyCodeModal = ({
                 ? "bg-gray-700 cursor-not-allowed opacity-60"
                 : "bg-[rgb(16,45,100)] hover:bg-[rgb(27,114,121)]"
             }`}
-            title={locked ? "Locked versions cannot be modified" : "Save"}
+            title={locked ? "Locked versions cannot be modified" : "Save (Ctrl+S)"}
             onClick={handleSave}
             disabled={locked || isSaving}
             aria-disabled={locked || isSaving}

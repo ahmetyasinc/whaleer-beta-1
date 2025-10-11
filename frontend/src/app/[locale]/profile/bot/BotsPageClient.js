@@ -11,6 +11,7 @@ import { ToastContainer } from 'react-toastify';
 import SwitchConfirmModal from "@/components/profile_component/(bot)/switchConfirmModal";
 import 'react-toastify/dist/ReactToastify.css';
 import { useTranslation } from 'react-i18next';
+import { RiRobot2Line } from "react-icons/ri";
 
 const TABS = [
   { key: 'ORIGINAL' },
@@ -245,23 +246,72 @@ export default function BotsPageClient() {
         {modalOpen && <BotModal onClose={() => setModalOpen(false)} />}
 
         {/* Liste alanı */}
-        {sortedBots.length === 0 ? (
-          <div className="px-6 text-white/70">
-            {activeTab === 'ORIGINAL'  && t("empty.original")}
-            {activeTab === 'PURCHASED' && t("empty.purchased")}
-            {activeTab === 'RENTED'    && t("empty.rented")}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 px-4">
-            {sortedBots.map((bot, index) => (
-              <BotCard
-                key={bot.id}
-                bot={bot}
-                column={index % 2 === 0 ? "left" : "right"}
-              />
-            ))}
-          </div>
-        )}
+          {sortedBots.length === 0 ? (
+            <div className="flex flex-col items-center justify-center text-center text-white/70 py-24">
+              {/* Büyük ikon */}
+              <RiRobot2Line className="text-8xl text-gray-400 mb-4 animate-pulse" />
+          
+              {/* Başlık */}
+              <h2 className="text-2xl font-semibold text-gray-200 mb-2">
+                {activeTab === 'ORIGINAL'  && t("empty.originalTitle")}
+                {activeTab === 'PURCHASED' && t("empty.purchasedTitle")}
+                {activeTab === 'RENTED'    && t("empty.rentedTitle")}
+              </h2>
+          
+              {/* Açıklama */}
+              <p className="max-w-md text-sm text-gray-400 mb-6 leading-relaxed">
+                {activeTab === 'ORIGINAL'  && t("empty.originalDesc")}
+                {activeTab === 'PURCHASED' && t("empty.purchasedDesc")}
+                {activeTab === 'RENTED'    && t("empty.rentedDesc")}
+              </p>
+          
+              {/* Eylem butonu */}
+              {activeTab === 'ORIGINAL' && canCreateBot && (
+                <button
+                  onClick={() => setModalOpen(true)}
+                  className="
+                    relative inline-flex items-center gap-2 
+                    px-6 py-2 rounded-lg font-semibold text-white
+                    bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
+                    shadow-[0_0_10px_rgba(99,102,241,0.4)] 
+                    hover:shadow-[0_0_20px_rgba(139,92,246,0.6)]
+                    hover:scale-[1.01] active:scale-[0.97]
+                    transition-all duration-200 ease-out
+                    overflow-hidden
+                  "
+                >
+                  {/* Parlayan efekt */}
+                  <span
+                    className="
+                      absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent 
+                      translate-x-[-100%] group-hover:translate-x-[100%] 
+                      transition-transform duration-1000 ease-in-out
+                    "
+                  />
+                  <HiPlusSmall className="text-xl relative z-10" />
+                  <span className="relative z-10">{t("actions.createNewBot")}</span>
+                </button>
+
+              )}
+
+              {!canCreateBot && activeTab === 'ORIGINAL' && (
+                <span className="text-sm text-gray-500 italic">
+                  {t("actions.createLocked")}
+                </span>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 px-4">
+              {sortedBots.map((bot, index) => (
+                <BotCard
+                  key={bot.id}
+                  bot={bot}
+                  column={index % 2 === 0 ? "left" : "right"}
+                />
+              ))}
+            </div>
+          )}
+
       </main>
     </div>
   );

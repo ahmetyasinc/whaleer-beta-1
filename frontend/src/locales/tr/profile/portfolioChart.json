@@ -1,3 +1,5 @@
 {
-  "title": "Portföy Dağılımı"
+  "title": "Portföy Dağılımı",
+  "noData": "Portföy verisi bulunamadı",
+  "connectExchange": "Veri görmek için API anahtarı bağlayın ve hesabınızda işlem yapın."
 }

@@ -116,7 +116,7 @@ const CodeModal = ({ isOpen, onClose, indicator, onSave, runIndicatorId }) => {
           {/* Save */}
           <button
             className="gap-1 px-[9px] py-[5px] bg-[rgb(16,45,100)] hover:bg-[rgb(27,114,121)] rounded text-xs font-medium flex items-center"
-            title="Save"
+            title="Save (Ctrl+S)"
             onClick={handleSave}
             disabled={isSaving}
           >

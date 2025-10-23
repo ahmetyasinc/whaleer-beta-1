@@ -7,6 +7,8 @@ import time
 import asyncio
 import ta
 from backend.trade_engine.process.library.get_percentage import get_percentage
+from backend.trade_engine.process.library.get_initial_usd import get_initial_usdt
+from backend.trade_engine.process.library.get_current_usd import get_current_usdt
 
 def empty(*args, **kwargs):
     pass
@@ -109,6 +111,8 @@ def allowed_globals_(df, bot_id):
 
                 # ✅ Grafik oluşturma fonksiyonu (plot)
                 "get_percentage": (lambda: get_percentage(bot_id)),
+                "get_initial_usd": (lambda: get_initial_usdt(bot_id)),
+                "get_current_usd": (lambda: get_current_usdt(bot_id)),
                 "plot": lambda *args, **kwargs: empty(*args, **kwargs),
                 "mark": lambda *args, **kwargs: empty(*args, **kwargs),
                 "input": EmptyClass(),

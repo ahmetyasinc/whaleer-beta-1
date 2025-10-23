@@ -18,9 +18,18 @@
     "priceClose": "Price (Close)"
   },
   "types": {
-    "longOpen": "OPEN LONG",
-    "longClose": "CLOSE LONG",
-    "shortOpen": "OPEN SHORT",
-    "shortClose": "CLOSE SHORT"
+    "longOpen": "Open Long",
+    "longClose": "Close Long",
+    "shortOpen": "Open Short",
+    "shortClose": "Close Short",
+    "longTakeProfitClose": "Close Long (TP)",
+    "longStopLossClose": "Close Long (SL)",
+    "shortTakeProfitClose": "Close Short (TP)",
+    "shortStopLossClose": "Close Short (SL)",
+    "longScaleIn": "Long Scale In",
+    "shortScaleIn": "Short Scale In",
+    "longScaleOut": "Long Scale Out",
+    "shortScaleOut": "Short Scale Out",
+    "forceClose": "Force Close"
   }
 }

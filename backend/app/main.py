@@ -20,6 +20,7 @@ from app.routes.profile.strategy.strategy_adjustment import protected_router as 
 from app.routes.profile.strategy.strategy_run import protected_router as strategy_run_router
 from app.routes.profile.strategy.strategy_imports import protected_router as strategy_imports_router
 from app.routes.profile.backtest.backtest import protected_router as backtest_router
+from app.routes.profile.backtest.backtest_service import router as backtest_run_router
 from app.routes.profile.api_keys.api_keys import protected_router as api_keys_router
 from app.routes.profile.api_keys.binance import router as api_keys_binance_router
 from app.routes.profile.bots.bots import protected_router as bots_router
@@ -71,6 +72,7 @@ api_router.include_router(api_keys_router)
 api_router.include_router(api_keys_binance_router)
 # BACKTEST ROUTES
 api_router.include_router(backtest_router)
+api_router.include_router(backtest_run_router)
 # BOT ROUTES
 api_router.include_router(bots_router)
 api_router.include_router(bot_router_mobile)

@@ -35,6 +35,24 @@ export default function TradesList({ trades }) {
         return t('types.shortOpen');
       case 'SHORT_CLOSE':
         return t('types.shortClose');
+      case 'LONG_TAKE_PROFIT_CLOSE':
+        return t('types.longTakeProfitClose');
+      case 'LONG_STOP_LOSS_CLOSE':
+        return t('types.longStopLossClose');
+      case 'SHORT_TAKE_PROFIT_CLOSE':
+        return t('types.shortTakeProfitClose');
+      case 'SHORT_STOP_LOSS_CLOSE':
+        return t('types.shortStopLossClose');
+      case 'LONG_SCALE_IN':
+        return t('types.longScaleIn');
+      case 'SHORT_SCALE_IN':
+        return t('types.shortScaleIn');
+      case 'LONG_SCALE_OUT':
+        return t('types.longScaleOut');
+      case 'SHORT_SCALE_OUT':
+        return t('types.shortScaleOut');
+      case 'FORCE_CLOSE':
+        return t('types.forceClose');
       default:
         return type;
     }
@@ -86,7 +104,7 @@ export default function TradesList({ trades }) {
                   <td className="py-3">
                     <span
                       className={`px-2 py-1 rounded-xl text-xs font-medium ${
-                        trade.type.includes('OPEN')
+                        trade.type.includes('OPEN') || trade.type.includes('SCALE_IN')
                           ? 'bg-green-900 text-green-300'
                           : 'bg-red-900 text-red-300'
                       }`}

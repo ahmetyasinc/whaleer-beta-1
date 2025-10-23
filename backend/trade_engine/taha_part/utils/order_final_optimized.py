@@ -1331,19 +1331,16 @@ async def last_trial():
         
     }
     test_one ={"169": [
-            
-              {
-                 "coin_id": "SOLUSDT",
-            "trade_type": "futures",
-            "side": "buy",
-            "status": "success",
-            "order_type": "market",
-            "take_profit": 235,
-            "value": 14,
-            "leverage": 4,
-            "positionside": "long",
-
-                
+            {
+                "coin_id": "SOLUSDT",
+                "trade_type": "futures",
+                "side": "sell",
+                "status": "success",
+                "order_type": "market",
+                #"price": 190.32,
+                "value": 10,
+                "leverage": 3,
+                "positionside": "short",    
             }
         ]
     }

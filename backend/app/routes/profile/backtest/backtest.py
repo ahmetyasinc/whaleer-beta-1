@@ -6,9 +6,7 @@ from typing import Any, List
 from app.core.auth import verify_token
 from app.database import get_db
 from pydantic import BaseModel
-from app.routes.profile.backtest.backtest_service import run_backtest_logic
 from app.models.profile.backtest.backtest import BacktestArchive  # modeli import et
-
 
 protected_router = APIRouter()
 
@@ -22,21 +20,6 @@ class BacktestRequest(BaseModel):
 class SaveBacktestRequest(BaseModel):
     commission: float
     data: dict
-
-@protected_router.post("/api/run-backtest/")
-async def run_backtest(
-    payload: BacktestRequest,
-    db: AsyncSession = Depends(get_db),
-    user_id: dict = Depends(verify_token)
-):
-    return await run_backtest_logic(
-        strategy_id=payload.strategy,
-        period=payload.period,
-        crypto=payload.crypto,
-        user_id=int(user_id),
-        db=db,
-        initial_balance=payload.initial_balance  # Pass the optional initial balance
-    )
 
 @protected_router.post("/api/archive-backtest/")
 async def save_backtest(

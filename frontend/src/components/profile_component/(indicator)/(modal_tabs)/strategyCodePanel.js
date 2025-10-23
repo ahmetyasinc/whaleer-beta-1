@@ -6,12 +6,12 @@ import { FaRegSave } from "react-icons/fa";
 import { MdOpenInFull } from "react-icons/md";
 import CodeEditor from "../../CodeEditor";
 import usePanelStore from "@/store/indicator/panelStore";
-import useCodePanelStore from "@/store/indicator/strategyCodePanelStore"; // versiyonlu store
+import useCodePanelStore from "@/store/indicator/strategyCodePanelStore"; 
 import useStrategyStore from "@/store/indicator/strategyStore";
 import RunButton from "./run_button_str";
 import TerminalStrategy from "./terminalStrategy";
 import VersionSelect from "./versionSelect";
-import CodeModal from "./fullScreenStrategyCodeModal"; // 👈 YENİ modal
+import CodeModal from "./fullScreenStrategyCodeModal"; 
 import axios from "axios";
 import { useTranslation } from "react-i18next";
 
@@ -36,8 +36,7 @@ const CodePanel = () => {
     setStrategyEditing,
   } = useCodePanelStore();
 
-  const { addStrategy, deleteStrategy } = useStrategyStore();
-  // store API'larını getState üzerinden alacağız (updateStrategy vs.)
+  const { addStrategy } = useStrategyStore();
   const strategyStore = useStrategyStore;
 
   const [localName, setLocalName] = useState("");
@@ -45,10 +44,10 @@ const CodePanel = () => {
   const [isSaving, setIsSaving] = useState(false);
   const terminalRef = useRef(null);
 
-  // Tam ekran modal state
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [codeModalStrategy, setCodeModalStrategy] = useState(null);
 
+  const runButtonRef = useRef(null); // 🔑 RunButtonStr için ref
   const { t } = useTranslation("strategyCodePanel");
 
   useEffect(() => {
@@ -56,31 +55,21 @@ const CodePanel = () => {
     setLocalCode(strategyCode);
   }, [strategyName, strategyCode]);
 
-  // seçili versiyon kilitli mi? (yeni versiyon modunda kilit devre dışı)
   const isLockedActive = !!(selected && !isNewVersion && selected.locked);
 
-  /**
-   * handleSaveStrategy(incomingCode?)
-   * - incomingCode: modalden gelen kod (string) — varsa onu doğrudan kullan
-   * - state set'lerine güvenmek yerine kodu bir değişkende tutup onu kullan
-   */
   const handleSaveStrategy = async (incomingCode) => {
-    // kilitliyken kaydetme yok
     if (isLockedActive) return;
 
-    // Eğer modalden kod geldiyse onu öncelikle kullan; aksi halde localCode kullan
     const codeToSave = typeof incomingCode === "string" ? incomingCode : localCode;
     const nameToSave = localName?.trim();
 
-    // Eşitle UI side (isteğe bağlı, kullanıcı modalde düzenleme görsün)
     if (typeof incomingCode === "string") {
       setLocalCode(incomingCode);
-      setStrategyCode(incomingCode); // panel store binding
+      setStrategyCode(incomingCode);
     }
 
     setIsSaving(true);
 
-    // validation (kod ve isim kesin olmalı)
     if (!nameToSave || !codeToSave || !codeToSave.trim()) {
       setIsSaving(false);
       return;
@@ -90,15 +79,6 @@ const CodePanel = () => {
 
     try {
       if (selected && !isNewVersion) {
-        // ---- GÜNCELLEME (mevcut versiyon) ----
-        const isNameUnchanged = nameToSave === strategyName;
-        const isCodeUnchanged = codeToSave === strategyCode;
-        if (isNameUnchanged && isCodeUnchanged) {
-          setIsSaving(false);
-          return;
-        }
-
-        // update panel binding
         setStrategyName(nameToSave);
         setStrategyCode(codeToSave);
 
@@ -110,29 +90,19 @@ const CodePanel = () => {
 
         await Promise.all([updateRequest, delay]);
 
-        // store'da atomik güncelleme: updateStrategy kullan
         const updateFn = strategyStore.getState().updateStrategy;
         if (typeof updateFn === "function") {
           updateFn(selected.id, { name: nameToSave, code: codeToSave });
-        } else {
-          // fallback: setPersonalStrategies ile manuel map (eski davranış)
-          const { strategies = [], setPersonalStrategies } = strategyStore.getState();
-          const updated = (strategies || []).map((s) =>
-            String(s.id) === String(selected.id) ? { ...s, name: nameToSave, code: codeToSave } : s
-          );
-          if (typeof setPersonalStrategies === "function") setPersonalStrategies(updated);
         }
 
-        // Paneldeki versiyon listesini güncellemek için setStrategyEditing çağır
         setStrategyEditing({ ...selected, name: nameToSave, code: codeToSave });
       } else {
-        // ---- YENİ / YENİ VERSİYON ----
         const postRequest = axios.post(
           `${process.env.NEXT_PUBLIC_API_URL}/api/add-strategy/`,
           {
             name: nameToSave,
             code: codeToSave,
-            parent_strategy_id: parent_strategy_id,
+            parent_strategy_id,
           },
           { withCredentials: true, headers: { "Content-Type": "application/json" } }
         );
@@ -140,10 +110,7 @@ const CodePanel = () => {
         const [response] = await Promise.all([postRequest, delay]);
         const newStrategy = response.data;
 
-        // addStrategy tüm backend objesini eklesin (version/parent/locked... korunur)
         addStrategy(newStrategy);
-
-        // paneli edit moda geçir
         setStrategyEditing(newStrategy);
         setStrategyName(newStrategy.name || "");
         setStrategyCode(newStrategy.code || "");
@@ -160,7 +127,6 @@ const CodePanel = () => {
     removeCustomPanel("panel-strategy-editor");
   };
 
-  // Tam ekran modal aç (Run'ın solundaki ikon)
   const openFullscreenModal = () => {
     setCodeModalStrategy({
       id: selected?.id ?? null,
@@ -170,6 +136,20 @@ const CodePanel = () => {
     });
     setIsCodeModalOpen(true);
   };
+
+  // 🔑 F5 → RunButtonStr çalıştır
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "F5") {
+        e.preventDefault();
+        if (runButtonRef.current) {
+          runButtonRef.current.click();
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   if (!isOpen) return null;
 
@@ -185,10 +165,8 @@ const CodePanel = () => {
         </h2>
       </div>
 
-      {/* Sağ üst aksiyon çubuğu: [Tam ekran] [Run] [Save] [Close] */}
       {selected && !isNewVersion && (
         <div className="absolute top-10 right-[10px] flex items-center gap-2">
-          {/* Tam ekran ikonu — Run'ın SOLUNDA */}
           <button
             onClick={openFullscreenModal}
             className={`p-[1px] ${isLockedActive ? "opacity-60 cursor-not-allowed" : ""}`}
@@ -201,10 +179,13 @@ const CodePanel = () => {
       )}
 
       {!isLockedActive && (
-        <RunButton strategyId={selected?.id} onBeforeRun={handleSaveStrategy} />
+        <RunButton
+          ref={runButtonRef} // 🔑 ref eklendi
+          strategyId={selected?.id}
+          onBeforeRun={handleSaveStrategy}
+        />
       )}
 
-      {/* Save */}
       <button
         className={`absolute top-2 right-10 gap-1 px-[9px] py-[5px] mr-[6px] rounded text-xs font-medium flex items-center ${
           isLockedActive
@@ -223,7 +204,6 @@ const CodePanel = () => {
         )}
       </button>
 
-      {/* Close */}
       <button
         className="absolute top-2 right-1 gap-1 px-[9px] py-[5px] mr-1 bg-[rgb(100,16,16)] hover:bg-[rgb(189,49,49)] rounded text-sm font-medium"
         onClick={handleClose}
@@ -232,7 +212,6 @@ const CodePanel = () => {
         <IoMdClose />
       </button>
 
-      {/* Input + Version select */}
       <div className="flex items-center gap-2 mb-3">
         <input
           type="text"
@@ -258,10 +237,8 @@ const CodePanel = () => {
         )}
       </div>
 
-      {/* Locked uyarısı */}
       {isLockedActive && (
         <div className="mb-2 px-2 py-1 bg-amber-900/30 border border-amber-700/40 rounded flex items-center gap-2 text-[12px]">
-          <svg width="16" height="16" viewBox="0 0 24 24" className="text-amber-400"><path fill="currentColor" d="M12 17q.425 0 .713-.288T13 16q0-.425-.288-.713T12 15q-.425 0-.713.288T11 16q0 .425.288.713T12 17Zm-1-4h2V7h-2v6Zm1 9q-2.075 0-3.9-.788t-3.2-2.137t-2.137-3.2T2 12t.788-3.9t2.137-3.2t3.2-2.137T12 2t3.9.788t3.2 2.137t2.137 3.2T22 12t-.788 3.9t-2.137 3.2t-3.2 2.137T12 22Z"/></svg>
           <span>{t("banners.locked")}</span>
           <button
             className="ml-auto px-2 py-1 text-[12px] rounded bg-amber-700 hover:bg-amber-600"
@@ -272,7 +249,6 @@ const CodePanel = () => {
         </div>
       )}
 
-      {/* Editor */}
       <div className="flex-1 overflow-hidden rounded-t-[4px] relative">
         <CodeEditor
           code={localCode}
@@ -281,33 +257,29 @@ const CodePanel = () => {
           }}
           language="python"
           readOnly={isLockedActive}
+          onSave={handleSaveStrategy}
         />
         {isLockedActive && (
           <div className="pointer-events-none absolute inset-0 border-2 border-amber-600/50 rounded-sm"></div>
         )}
       </div>
 
-      {/* Terminal */}
       <TerminalStrategy
         {...(selected ? { id: selected.id } : {})}
         ref={terminalRef}
         initialOutput={t("terminalReady")}
       />
 
-      {/* Tam ekran modal */}
       <CodeModal
         isOpen={isCodeModalOpen}
         onClose={() => setIsCodeModalOpen(false)}
         strategy={codeModalStrategy}
         onSave={async (codeFromModal) => {
-          // modal onSave(code) çağırdığında parent burada kodu alır,
-          // handleSaveStrategy içine direk geçiriyoruz ve modal kendi içinde onClose eder.
           await handleSaveStrategy(codeFromModal);
         }}
         runStrategyId={selected?.id || null}
         locked={isLockedActive}
       />
-
     </div>
   );
 };

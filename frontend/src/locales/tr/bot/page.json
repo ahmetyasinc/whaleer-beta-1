@@ -13,6 +13,12 @@
     "planInsufficient": "Planınız Botlarım bölümünde en fazla {{limit}} bot’a izin veriyor."
   },
   "empty": {
+    "originalTitle": "Henüz botun yok!",
+    "originalDesc": "Yeni bir strateji oluşturabilir ve kendi botlarını tasarlamaya hemen başlayabilirsin.",
+    "purchasedTitle": "Henüz satın aldığın bir bot yok!",
+    "purchasedDesc": "Marketplace üzerinden güçlü stratejilere sahip botları satın alabilirsin.",
+    "rentedTitle": "Henüz kiraladığın bir bot yok!",
+    "rentedDesc": "Bot kiralama sisteminden stratejini test etmek için bir bot kiralayabilirsin.",
     "original": "Henüz orijinal botunuz yok.",
     "purchased": "Henüz satın aldığınız bir bot yok.",
     "rented": "Henüz kiraladığınız bir bot yok."

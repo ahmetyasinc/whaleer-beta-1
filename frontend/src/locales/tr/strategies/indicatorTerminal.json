@@ -11,5 +11,5 @@
   "uptimeFormat": "⏱️ Sayfa açık kalma süresi: {{seconds}} saniye",
   "warningSample": "Bu bir uyarı mesajıdır!",
   "successSample": "Bu bir başarı mesajıdır!",
-  "unknown": "Tanımsız komut: {{cmd}}"
+  "unknown": "Bilinmeyen Komut: {{cmd}}"
 }

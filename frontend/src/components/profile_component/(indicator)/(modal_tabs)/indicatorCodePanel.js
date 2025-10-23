@@ -43,6 +43,7 @@ const CodePanel = () => {
   const [codeModalIndicator, setCodeModalIndicator] = useState(null);
   const terminalRef = useRef(null);
 
+  const runButtonRef = useRef(null); // 🔑 RunButton için ref
   const { t } = useTranslation("indicatorEditor");
 
   useEffect(() => {
@@ -63,7 +64,7 @@ const CodePanel = () => {
     try {
       if (selected && !isNewVersion) {
         setIndicatorName(localName);
-        setIndicatorCode(codeToSave); // panel state güncellendi
+        setIndicatorCode(codeToSave);
 
         const updateRequest = axios.put(
           `${process.env.NEXT_PUBLIC_API_URL}/api/edit-indicator/`,
@@ -73,7 +74,6 @@ const CodePanel = () => {
 
         await Promise.all([updateRequest, delay]);
 
-        // store güncelle
         const updateFn = indicatorStore.getState().updateIndicator;
         if (typeof updateFn === "function") {
           updateFn(selected.id, { name: localName, code: codeToSave });
@@ -116,6 +116,20 @@ const CodePanel = () => {
     setIsCodeModalOpen(true);
   };
 
+  // 🔑 F5 tuşuna basıldığında RunButton çalıştır
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "F5") {
+        e.preventDefault(); // tarayıcı yenilemeyi engelle
+        if (runButtonRef.current) {
+          runButtonRef.current.click();
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
   if (!isOpen) return null;
 
   return (
@@ -142,12 +156,16 @@ const CodePanel = () => {
         </div>
       )}
 
-      <RunButton indicatorId={selected?.id} onBeforeRun={handleSaveIndicator} />
+      <RunButton
+        ref={runButtonRef} // 🔑 ref eklendi
+        indicatorId={selected?.id}
+        onBeforeRun={handleSaveIndicator}
+      />
 
       <button
         className="absolute top-2 right-10 gap-1 px-[9px] py-[5px] mr-[6px] bg-[rgb(16,45,100)] hover:bg-[rgb(27,114,121)] rounded text-xs font-medium flex items-center"
         title={t("buttons.save")}
-        onClick={handleSaveIndicator}
+        onClick={() => handleSaveIndicator()}
       >
         {isSaving ? (
           <div className="w-[16px] h-[16px] border-2 border-t-white border-gray-400 rounded-full animate-spin"></div>
@@ -185,7 +203,12 @@ const CodePanel = () => {
       </div>
 
       <div className="flex-1 overflow-hidden rounded-t-[4px]">
-        <CodeEditor code={localCode} setCode={setLocalCode} language="python" />
+        <CodeEditor
+          code={localCode}
+          setCode={setLocalCode}
+          language="python"
+          onSave={handleSaveIndicator} // 🔑 Ctrl+S ile kaydet
+        />
       </div>
 
       <TerminalIndicator
@@ -198,7 +221,7 @@ const CodePanel = () => {
         isOpen={isCodeModalOpen}
         onClose={() => setIsCodeModalOpen(false)}
         indicator={{ ...codeModalIndicator, code: localCode }}
-        onSave={handleSaveIndicator}  // artık kod parametresi alıyor
+        onSave={handleSaveIndicator}
         runIndicatorId={selected?.id || null}
       />
     </div>

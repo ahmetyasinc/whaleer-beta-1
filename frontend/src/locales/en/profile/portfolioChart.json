@@ -1,3 +1,5 @@
 {
-  "title": "Portfolio Distribution"
+  "title": "Portfolio Distribution",
+  "noData": "No portfolio data available",
+  "connectExchange": "Connect your API key to see data and perform actions in your account."
 }

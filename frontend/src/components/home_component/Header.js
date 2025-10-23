@@ -209,13 +209,11 @@ export default function Header({ pageClass }) {
             {/* Mobile Toggle */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="relative md:hidden inline-flex items-center justify-center rounded-2xl p-2.5 text-slate-200 transition-all duration-300 hover:bg-slate-800/70 hover:text-white hover:scale-110 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
+              className="relative md:hidden inline-flex items-center justify-center rounded-2xl p-2.5 text-slate-200 transition-all duration-300 hover:text-white hover:scale-110 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
               aria-label="Toggle navigation menu"
               aria-expanded={mobileOpen}
             >
-              <div className="relative h-6 w-6">
                 <MenuIcon isOpen={mobileOpen} />
-              </div>
             </button>
           </div>
         </div>
@@ -225,7 +223,7 @@ export default function Header({ pageClass }) {
           ref={mobileRef}
           className={[
             "md:hidden fixed left-4 right-4 top-24 sm:top-28",
-            "bg-slate-950/95 backdrop-blur-xl rounded-3xl",
+            "bg-[rgb(0,0,5)] backdrop-blur-xl rounded-3xl",
             "shadow-[0_20px_60px_rgba(0,0,0,0.5)]",
             "transition-all duration-500 ease-out",
             mobileOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 -translate-y-4 pointer-events-none",
@@ -248,7 +246,7 @@ export default function Header({ pageClass }) {
                   <Link
                     href={withLocale("/profile")}
                     onClick={() => setMobileOpen(false)}
-                    className="group relative overflow-hidden rounded-2xl bg-slate-800/80 px-6 py-3 font-semibold text-slate-100 transition-all duration-300 hover:bg-slate-700/90 hover:text-white active:scale-95 ring-1 ring-slate-700/60 hover:ring-slate-600/80"
+                      className="group relative overflow-hidden w-full rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-3 text-center font-semibold text-white shadow-lg transition-all duration-300 hover:from-blue-500 hover:to-cyan-500 hover:shadow-[0_8px_30px_rgba(59,130,246,0.4)] active:scale-95"
                   >
                     <span className="relative z-10">My Profile</span>
                     <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -258,7 +256,7 @@ export default function Header({ pageClass }) {
                       setMobileOpen(false);
                       handleLogout();
                     }}
-                    className="group relative w-full rounded-2xl bg-slate-800/80 px-6 py-3 font-semibold text-slate-100 transition-all duration-300 hover:bg-slate-700/90 hover:text-white active:scale-95 ring-1 ring-slate-700/60 hover:ring-slate-600/80"
+                      className="group relative overflow-hidden w-full rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-3 text-center font-semibold text-white shadow-lg transition-all duration-300 hover:from-blue-500 hover:to-cyan-500 hover:shadow-[0_8px_30px_rgba(59,130,246,0.4)] active:scale-95"
                   >
                     <span className="relative z-10">Log Out</span>
                     <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-red-500/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -280,11 +278,12 @@ export default function Header({ pageClass }) {
                     <Link
                       href={withLocale("/register")}
                       onClick={() => setMobileOpen(false)}
-                      className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:shadow-md hover:shadow-cyan-300/30 transition-all duration-300 hover:from-cyan-600 hover:to-blue-600 trainsition active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/70"
+                      className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:shadow-md hover:shadow-cyan-300/30 transition-all duration-300 hover:from-cyan-600 hover:to-blue-600 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/70 flex items-center justify-center"
                     >
                       <span className="relative z-10">{t("register")}</span>
                       <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                     </Link>
+
                   )}
                 </>
               )}
@@ -300,9 +299,9 @@ export default function Header({ pageClass }) {
 function MenuIcon({ isOpen }) {
   return (
     <div className="flex flex-col justify-center items-center w-6 h-6">
-      <span className={`bg-current block transition-all duration-300 ease-out h-0.5 w-6 rounded-sm ${isOpen ? "rotate-45 translate-y-1" : "-translate-y-0.5"}`} />
-      <span className={`bg-current block transition-all duration-300 ease-out h-0.5 w-6 rounded-sm my-0.5 ${isOpen ? "opacity-0" : "opacity-100"}`} />
-      <span className={`bg-current block transition-all duration-300 ease-out h-0.5 w-6 rounded-sm ${isOpen ? "-rotate-45 -translate-y-1" : "translate-y-0.5"}`} />
+      <span className={`bg-current block transition-all duration-300 ease-out h-0.5 w-6 rounded-sm -translate-y-0.5`} />
+      <span className={`bg-current block transition-all duration-300 ease-out h-0.5 w-6 rounded-sm my-0.5 opacity-100`} />
+      <span className={`bg-current block transition-all duration-300 ease-out h-0.5 w-6 rounded-sm translate-y-0.5`} />
     </div>
   );
 }

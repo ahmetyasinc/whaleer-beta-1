@@ -221,21 +221,14 @@ async def send_order(prepared_orders: dict) -> dict:
                                 # === 2) TP zinciri (isteğe bağlı) ===
                                 if original_order.get("take_profit") is not None:
                                     try:
-                                        executed_qty = float(trade_result.get("executedQty") or 0)
+                                        executed_qty = float(trade_result.get("executedQty") or trade_result.get("origQty") or 0)
                                         if executed_qty <= 0:
-                                            executed_qty = float(
-                                                trade_result.get("origQty")
-                                                or original_order.get("amount")
-                                                or 0
-                                            )
+                                            executed_qty = float(original_order.get("amount") or 0)
                                         if executed_qty <= 0:
                                             raise ValueError("TP için geçerli quantity bulunamadı")
 
-                                        if "spot" in order_trade_type:
-                                            await asyncio.sleep(1)
-
                                         tp_price = float(original_order["take_profit"])
-
+                                        symbol = trade_result.get("symbol")
                                         symbol_filters = (await get_symbols_filters_dict({symbol: [order_trade_type]})).get(symbol, [])
                                         normalized_type = "futures" if "futures" in order_trade_type else "spot"
                                         selected_filter = next((f for f in symbol_filters if f["trade_type"] == normalized_type), None)
@@ -244,71 +237,94 @@ async def send_order(prepared_orders: dict) -> dict:
 
                                         step_size = float(selected_filter["step_size"])
                                         tick_size = float(selected_filter["tick_size"])
-
-                                        qty = float(round_step_size(executed_qty, step_size))
-                                        if qty <= 0:
-                                            raise ValueError(f"{symbol} için TP qty geçersiz: {executed_qty} -> {qty}")
-                                        qty_str = str(qty)
+                                        qty = str(round_step_size(executed_qty, step_size))
                                         price_str = str(round_step_size(tp_price, tick_size))
 
-                                        # YENİ MANTIK: Varsayılan TP yönü SELL'dir.
+                                        # TP yönü (futures SELL ise BUY yap)
                                         tp_side = "SELL"
-                                        # Sadece futures ve SELL ise TP yönünü BUY yap (short pozisyonu kapatmak için).
                                         if "futures" in order_trade_type and side.upper() == "SELL":
                                             tp_side = "BUY"
 
-                                        # TP parametreleri
-                                        if "spot" in order_trade_type:
-                                            tp_params = {
-                                                "symbol": symbol,
-                                                "side": tp_side, # DEĞİŞİKLİK
-                                                "type": "LIMIT",
-                                                "price": price_str,
-                                                "quantity": qty_str,
-                                                "timeInForce": "GTC",
-                                                "timestamp": int(time.time() * 1000),
-                                            }
-                                        else: # futures
-                                            tp_params = {
-                                                "symbol": symbol,
-                                                "side": tp_side, # DEĞİŞİKLİK
-                                                "type": "TAKE_PROFIT_MARKET",
-                                                "stopPrice": price_str,
-                                                "quantity": qty_str,
-                                                "timestamp": int(time.time() * 1000),
-                                            }
+                                        # 1️⃣ Önce LIMIT dene
+                                        tp_params_limit = {
+                                            "symbol": symbol,
+                                            "side": tp_side,
+                                            "type": "LIMIT",
+                                            "price": price_str,
+                                            "quantity": qty,
+                                            "timeInForce": "GTC",
+                                            "timestamp": int(time.time() * 1000),
+                                        }
 
-                                        # TP imza ve gönderim
-                                        tp_payload = "&".join(f"{k}={v}" for k, v in tp_params.items())
+                                        tp_payload = "&".join(f"{k}={v}" for k, v in tp_params_limit.items())
                                         tp_signature = await _create_signature(private_key, tp_payload, order_trade_type)
-                                        tp_params["signature"] = tp_signature
+                                        tp_params_limit["signature"] = tp_signature
 
                                         async with aiohttp.ClientSession() as tp_session:
-                                            async with tp_session.post(api_url, headers=headers, data=tp_params) as tp_resp:
+                                            async with tp_session.post(api_url, headers=headers, data=tp_params_limit) as tp_resp:
                                                 if tp_resp.status == 200:
                                                     tp_result = await tp_resp.json()
+                                                    print(f"🎯 TP LIMIT order gönderildi: {symbol} {tp_side} @ {price_str}")
                                                     responses[ttype].append(tp_result)
-                                                    print(f"📤 TP order gönderildi: {symbol} {tp_side} {qty_str} @ {price_str}")
-
-                                                    # DB kaydı (TP)
                                                     if bot_id:
-                                                        tp_db_params = original_order.copy()
-                                                        tp_db_params.update({
+                                                        await save_successful_trade(int(bot_id), tp_result, {
+                                                            **original_order,
                                                             "symbol": symbol,
-                                                            "side": tp_side, # DEĞİŞİKLİK
-                                                            "quantity": qty_str,
+                                                            "side": tp_side,
                                                             "price": price_str,
                                                             "trade_type": order_trade_type,
                                                             "api_id": order.get("api_id"),
                                                         })
-                                                        await save_successful_trade(int(bot_id), tp_result, tp_db_params)
                                                 else:
+                                                    # 2️⃣ LIMIT başarısız → TP tipine göre fallback
                                                     error_text = await tp_resp.text()
-                                                    logger.error(f"❌ TP order hatası: {tp_resp.status} - {error_text}")
-                                                    responses[ttype].append({"error": f"TP order failed: {error_text}"})
-                                    except Exception as tp_err:
-                                        logger.error(f"❌ TP order oluşturma hatası: {str(tp_err)}")
+                                                    logger.warning(f"⚠️ TP LIMIT başarısız ({tp_resp.status}) → fallback denenecek: {error_text}")
 
+                                                    if "futures" in order_trade_type:
+                                                        tp_params_fallback = {
+                                                            "symbol": symbol,
+                                                            "side": tp_side,
+                                                            "type": "TAKE_PROFIT_MARKET",
+                                                            "stopPrice": price_str,
+                                                            "quantity": qty,
+                                                            "timestamp": int(time.time() * 1000),
+                                                        }
+                                                    else:
+                                                        tp_params_fallback = {
+                                                            "symbol": symbol,
+                                                            "side": tp_side,
+                                                            "type": "LIMIT",
+                                                            "price": price_str,
+                                                            "quantity": qty,
+                                                            "timeInForce": "GTC",
+                                                            "timestamp": int(time.time() * 1000),
+                                                        }
+
+                                                    tp_payload2 = "&".join(f"{k}={v}" for k, v in tp_params_fallback.items())
+                                                    tp_signature2 = await _create_signature(private_key, tp_payload2, order_trade_type)
+                                                    tp_params_fallback["signature"] = tp_signature2
+
+                                                    async with tp_session.post(api_url, headers=headers, data=tp_params_fallback) as tp_resp2:
+                                                        if tp_resp2.status == 200:
+                                                            tp_result2 = await tp_resp2.json()
+                                                            print(f"✅ TP fallback başarılı: {symbol} {tp_side} @ {price_str}")
+                                                            responses[ttype].append(tp_result2)
+                                                            if bot_id:
+                                                                await save_successful_trade(int(bot_id), tp_result2, {
+                                                                    **original_order,
+                                                                    "symbol": symbol,
+                                                                    "side": tp_side,
+                                                                    "price": price_str,
+                                                                    "trade_type": order_trade_type,
+                                                                    "api_id": order.get("api_id"),
+                                                                })
+                                                        else:
+                                                            err_text2 = await tp_resp2.text()
+                                                            logger.error(f"❌ TP fallback da başarısız: {tp_resp2.status} - {err_text2}")
+                                                            responses[ttype].append({"error": f"TP fallback failed: {err_text2}"})
+
+                                    except Exception as tp_err:
+                                        logger.error(f"❌ TP zinciri hatası: {str(tp_err)}")
                             else:
                                 error_text = await response.text()
                                 logger.error(f"❌ {order_trade_type} API hatası: {response.status} - {error_text}")
@@ -1330,17 +1346,20 @@ async def last_trial():
            
         
     }
-    test_one ={"169": [
-            {
-                "coin_id": "SOLUSDT",
-                "trade_type": "futures",
-                "side": "sell",
-                "status": "success",
-                "order_type": "market",
-                #"price": 190.32,
-                "value": 10,
-                "leverage": 3,
-                "positionside": "short",    
+    test_one ={"120": [
+            
+              {
+                 "coin_id": "SOLUSDT",
+            "trade_type": "futures",
+            "side": "buy",
+            "status": "success",
+            "order_type": "market",
+            "take_profit": 190,
+            "value": 10,
+            "leverage": 5,
+            "positionside": "long",
+
+                
             }
         ]
     }

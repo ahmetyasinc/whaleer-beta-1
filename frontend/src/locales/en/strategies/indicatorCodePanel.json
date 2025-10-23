@@ -5,7 +5,8 @@
     "addNewIndicator": "Add New Indicator"
   },
   "buttons": {
-    "save": "Save",
+    "save": "Save (Ctrl + S)",
+    "run": "Save & Run",
     "close": "Close"
   },
   "tooltips": {

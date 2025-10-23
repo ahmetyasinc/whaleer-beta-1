@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { createChart } from "lightweight-charts";
 import useIndicatorDataStore from "@/store/indicator/indicatorDataStore";
 import IndicatorSettingsModal from "./(modal_tabs)/indicatorSettingsModal";
+import { RiSettingsLine } from "react-icons/ri";
+import { AiOutlineClose } from "react-icons/ai";
 import PropTypes from "prop-types";
 import useCryptoStore from "@/store/indicator/cryptoPinStore";
 import { installCursorWheelZoom } from "@/utils/cursorCoom";
@@ -371,10 +373,10 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
 
   return (
     <div className="relative w-full h-full">
-      <div className="absolute top-2 left-2 z-10 flex items-center gap-2 bg-gray-800/50 text-white text-xs px-2 py-1 rounded shadow-md">
+      <div className="absolute top-2 left-2 z-10 flex items-center gap-2 bg-transparent border border-gray-400/10 text-white text-xs px-2 py-1 rounded shadow-md">
         <span>{indicatorName}</span>
-        <button className="hover:text-yellow-400" onClick={() => setSettingsOpen(true)}>⚙️</button>
-        <button className="hover:text-red-400" onClick={() => removeSubIndicator(indicatorId, subId)}>❌</button>
+        <button className="hover:text-gray-400" onClick={() => setSettingsOpen(true)}><RiSettingsLine /></button>
+        <button className="hover:text-gray-400" onClick={() => removeSubIndicator(indicatorId, subId)}><AiOutlineClose /></button>
       </div>
       <div ref={chartContainerRef} className="absolute top-0 left-0 w-full h-full"></div>
       <IndicatorSettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} indicatorId={indicatorId} subId={subId} />

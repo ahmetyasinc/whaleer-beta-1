@@ -10,15 +10,6 @@ import dynamic from "next/dynamic";
 // Monaco Editor SSR uyumlu şekilde dinamik import edilir
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
-/**
- * Props:
- * - isOpen: boolean
- * - onClose: () => void
- * - strategy: { id?: number, name: string, code: string, locked?: boolean }
- * - onSave?: (code?: string) => Promise<void> | void   <-- artık kodu argüman olarak alabilir
- * - runStrategyId?: number | null
- * - locked?: boolean
- */
 const FullScreenStrategyCodeModal = ({
   isOpen,
   onClose,
@@ -31,6 +22,7 @@ const FullScreenStrategyCodeModal = ({
   const [mounted, setMounted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const monacoRef = useRef(null);
+  const runButtonRef = useRef(null); // 🔑 RunButtonStr için ref
 
   useEffect(() => setMounted(true), []);
 
@@ -54,9 +46,7 @@ const FullScreenStrategyCodeModal = ({
     if (monacoRef.current) return;
     monacoRef.current = monaco;
 
-    // basit custom python tokenizer (mevcut haliyle bırakıyorum)
     monaco.languages.register({ id: "python-custom" });
-
     monaco.languages.setMonarchTokensProvider("python-custom", {
       tokenizer: {
         root: [
@@ -71,8 +61,6 @@ const FullScreenStrategyCodeModal = ({
           [/'''/, "string", "@triple_single_quote"],
           [/".*?"/, "string"],
           [/'.*?'/, "string"],
-          [/\b(len|type|range|open|abs|round|sorted|map|filter|zip|sum|min|max|pow|chr|ord|bin|hex|oct|id|repr|hash|dir|vars|locals|globals|help|isinstance|issubclass|callable|eval|exec|compile|input|super|memoryview|staticmethod|classmethod|property|delattr|getattr|setattr|hasattr|all|any|enumerate|format|iter|next|reversed|slice)\b/, "function"],
-          [/\b(os|sys|math|random|time|datetime|re|json|csv|argparse|collections|functools|itertools|threading|multiprocessing|socket|subprocess|asyncio|base64|pickle|gzip|shutil|tempfile|xml|http|urllib|sqlite3)\b/, "module"],
         ],
         triple_double_quote: [[/"""/, "string", "@popall"], [/./, "string"]],
         triple_single_quote: [[/'''/, "string", "@popall"], [/./, "string"]],
@@ -80,27 +68,45 @@ const FullScreenStrategyCodeModal = ({
     });
   }
 
-  // Kaydet → Kapat
-  const handleSaveThenClose = async () => {
-    // locked ise sadece kapat (ve onSave çağrılmaz)
-    if (locked) return onClose?.();
-
+  const handleSave = async () => {
+    if (locked || !onSave) return;
     try {
       setIsSaving(true);
-      // onSave fonksiyonu kodu argüman olarak alıyorsa onu gönderiyoruz
-      const maybePromise = onSave ? onSave(code) : null;
-      if (maybePromise && typeof maybePromise.then === "function") await maybePromise;
-      onClose?.();
+      const maybePromise = onSave(code);
+      if (maybePromise && typeof maybePromise.then === "function") {
+        await maybePromise;
+      }
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Run öncesi: kaydet & kapat (aynı zamanda parent'e kodu iletir)
   const handleBeforeRun = async () => {
-    if (locked) return; // kilitliyse çalıştırma yok
-    await handleSaveThenClose();
+    if (locked) return;
+    await handleSave();
   };
+
+  // 🔑 Ctrl+S ve F5 kısayolu
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e) => {
+      // Ctrl+S → Kaydet
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        handleSave();
+      }
+
+      // F5 → RunButtonStr tetikle
+      if (e.key === "F5") {
+        e.preventDefault();
+        if (runButtonRef.current) {
+          runButtonRef.current.click();
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [isOpen, code]);
 
   if (!mounted || !isOpen || !strategy) return null;
 
@@ -109,20 +115,25 @@ const FullScreenStrategyCodeModal = ({
       <div className="bg-gray-900 text-white rounded-md w-[900px] h-[600px] p-6 shadow-2xl relative">
         {/* Sağ üst aksiyonlar: [Run] [Save] [Close] */}
         {runStrategyId && !locked ? (
-          <div className="absolute top-5 right-4 ">
-            <RunButton strategyId={runStrategyId} onBeforeRun={handleBeforeRun} />
+          <div className="absolute top-5 right-4">
+            <RunButton
+              ref={runButtonRef}   // 🔑 Ref eklendi
+              strategyId={runStrategyId}
+              onBeforeRun={handleBeforeRun}
+            />
           </div>
         ) : null}
 
         <div className="absolute top-7 right-6 flex items-center gap-2">
+          {/* Save */}
           <button
             className={`gap-1 px-[9px] py-[5px] rounded text-xs font-medium flex items-center ${
               locked
                 ? "bg-gray-700 cursor-not-allowed opacity-60"
                 : "bg-[rgb(16,45,100)] hover:bg-[rgb(27,114,121)]"
             }`}
-            title={locked ? "Locked versions cannot be modified" : "Save"}
-            onClick={handleSaveThenClose}
+            title={locked ? "Locked versions cannot be modified" : "Save (Ctrl+S)"}
+            onClick={handleSave}
             disabled={locked || isSaving}
             aria-disabled={locked || isSaving}
           >
@@ -133,6 +144,7 @@ const FullScreenStrategyCodeModal = ({
             )}
           </button>
 
+          {/* Close */}
           <button
             className="gap-1 px-[9px] py-[5px] bg-[rgb(100,16,16)] hover:bg-[rgb(189,49,49)] rounded text-sm font-medium"
             onClick={onClose}
@@ -156,7 +168,7 @@ const FullScreenStrategyCodeModal = ({
               if (!locked) setCode(val ?? "");
             }}
             options={{
-              readOnly: locked, // artık locked kontrolü ile düzenlenebilirlik
+              readOnly: locked,
               fontSize: 13,
               minimap: { enabled: false },
               scrollBeyondLastLine: false,

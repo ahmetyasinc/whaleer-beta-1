@@ -27,5 +27,5 @@ class PNLEngine:
 
     @staticmethod
     def compute_qty(balance: float, used_pct: float, leverage: float, price: float) -> float:
-        notional = balance * used_pct * max(1.0, leverage)  # futures: kaldıraç dahil
+        notional = balance * used_pct * leverage  # futures: kaldıraç dahil
         return notional / price

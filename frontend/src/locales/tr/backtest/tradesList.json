@@ -18,7 +18,7 @@
     "priceClose": "Fiyat (Kapanış)"
   },
   "types": {
-    "longOpen": "Long Ac",
+    "longOpen": "Long Aç",
     "longClose": "Long Kapat",
     "shortOpen": "Short Aç",
     "shortClose": "Short Kapat",
@@ -30,6 +30,10 @@
     "shortScaleIn": "Short Artır",
     "longScaleOut": "Long Azalt",
     "shortScaleOut": "Short Azalt",
-    "forceClose": "Zorla Kapat"
+    "flipLongOpen": "Yön Değişimi Long Aç",
+    "flipShortOpen": "Yön Değişimi Short Aç",
+    "flipLongClose": "Yön Değişimi Long Kapat",
+    "flipShortClose": "Yön Değişimi Short Kapat",
+    "forceClose": "Zorla Kapama"
   }
 }

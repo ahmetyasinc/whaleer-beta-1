@@ -30,7 +30,6 @@ router = APIRouter(prefix="/payments", tags=["payments"])
 
 PLATFORM_FEE_BPS = 1000
 
-
 # ---------- Schemas ----------
 class CreateListingIntentReq(BaseModel):
     bot_id: int

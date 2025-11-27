@@ -49,6 +49,19 @@ class PositionManager:
         self.tranches = (new_list if self.scaleout_policy=="FIFO" else list(reversed(new_list)))
         if self.total_qty() <= 0:
             self.side = None
+    
+    # Mevcut scale_out metodunun altına ekleyebilirsin
+    def close_specific_tranche(self, tranche_obj: Tranche):
+        """
+        TP/SL durumunda FIFO/LIFO sırasına bakmaksızın
+        spesifik olarak o tranche'ı listeden siler.
+        """
+        if tranche_obj in self.tranches:
+            self.tranches.remove(tranche_obj)
+            
+            # Eğer hiç tranche kalmadıysa yönü (side) sıfırla
+            if self.total_qty() <= 0:
+                self.side = None
 
     def close_all(self):
         self.tranches.clear()

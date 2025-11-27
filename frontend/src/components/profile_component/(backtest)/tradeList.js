@@ -14,6 +14,13 @@ export default function TradesList({ trades }) {
       minimumFractionDigits: 1,
     }).format(value);
 
+  const formatCurrencyAbs = (value) =>
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 1,
+    }).format(Math.abs(value));
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleString('en-GB');
@@ -51,6 +58,14 @@ export default function TradesList({ trades }) {
         return t('types.longScaleOut');
       case 'SHORT_SCALE_OUT':
         return t('types.shortScaleOut');
+      case 'FLIP_LONG_OPEN':
+        return t('types.flipLongOpen');
+      case 'FLIP_SHORT_OPEN':
+        return t('types.flipShortOpen');
+      case 'FLIP_LONG_CLOSE':
+        return t('types.flipLongClose');
+      case 'FLIP_SHORT_CLOSE':
+        return t('types.flipShortClose');
       case 'FORCE_CLOSE':
         return t('types.forceClose');
       default:
@@ -138,8 +153,8 @@ export default function TradesList({ trades }) {
                       <span
                         className={pnlPercentage >= 0 ? 'text-green-400' : 'text-red-400'}
                       >
-                        {pnlPercentage >= 0 ? '+' : ''}
-                        {formatCurrency(pnlAmount)}
+                        {pnlPercentage >= 0 ? '+' : '-'}
+                        {formatCurrencyAbs(pnlAmount)}
                       </span>
                     ) : (
                       <span className="text-gray-500">–</span>

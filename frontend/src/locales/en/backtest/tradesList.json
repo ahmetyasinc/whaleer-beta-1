@@ -30,6 +30,10 @@
     "shortScaleIn": "Short Scale In",
     "longScaleOut": "Long Scale Out",
     "shortScaleOut": "Short Scale Out",
+    "flipLongOpen": "Flip Open Long",
+    "flipShortOpen": "Flip Open Short",
+    "flipLongClose": "Flip Close Long",
+    "flipShortClose": "Flip Close Short",
     "forceClose": "Force Close"
   }
 }

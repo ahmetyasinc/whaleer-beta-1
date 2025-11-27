@@ -19,64 +19,70 @@ def _to_epoch_seconds(ts) -> int:
 
 def _trade_type_from_event(ev) -> str:
     """
-    TradeEvent alanlarını motorunuza göre eşle.
+    TradeEvent olaylarını frontend'in anlayacağı string kodlara çevirir.
+    Mantik:
+      - BUY  + OPEN      -> LONG_OPEN
+      - SELL + OPEN      -> SHORT_OPEN
+      - BUY  + CLOSE     -> SHORT_CLOSE (Short kapatılıyor)
+      - SELL + CLOSE     -> LONG_CLOSE  (Long kapatılıyor)
+      - BUY  + SCALE_IN  -> LONG_SCALE_IN
+      - SELL + SCALE_IN  -> SHORT_SCALE_IN
+      - BUY  + SCALE_OUT -> SHORT_SCALE_OUT (Short pozisyon azaltılıyor)
+      - SELL + SCALE_OUT -> LONG_SCALE_OUT  (Long pozisyon azaltılıyor)
     """
     t = getattr(ev, "type", None)
-    if t in ("LONG_OPEN", "LONG_CLOSE", "SHORT_OPEN", "SHORT_CLOSE"):
+    side = getattr(ev, "side", "buy")
+
+    # Zaten formatlı gelmişse direkt döndür
+    if t in ("LONG_OPEN", "LONG_CLOSE", "SHORT_OPEN", "SHORT_CLOSE", 
+             "LONG_SCALE_IN", "SHORT_SCALE_IN", "LONG_SCALE_OUT", "SHORT_SCALE_OUT"):
         return t
 
-    side = getattr(ev, "side", "buy")
-    if t == "OPEN":
-        if side=="buy":
-            return "LONG_OPEN"
-        if side=="sell":
-            return "SHORT_OPEN"
-    if t == "CLOSE":
-        if side=="buy":
-            return "SHORT_CLOSE"
-        if side=="sell":
-            return "LONG_CLOSE"
+    # 1. AÇILIŞ İŞLEMLERİ (OPEN / FLIP_OPEN)
+    if t in ("OPEN", "FLIP_OPEN"):
+        if side == "buy":  return "LONG_OPEN"
+        if side == "sell": return "SHORT_OPEN"
+
+    # 2. KAPANIŞ İŞLEMLERİ (CLOSE / FLIP_CLOSE)
+    if t in ("CLOSE", "FLIP_CLOSE"):
+        if side == "buy":  return "SHORT_CLOSE" # Alış yapıyorsak Short kapatıyoruzdur
+        if side == "sell": return "LONG_CLOSE"  # Satış yapıyorsak Long kapatıyoruzdur
+
+    # 3. POZİSYON ARTIRMA (SCALE_IN)
     if t == "SCALE_IN":
-        if side == "buy":
-            return "LONG_SCALE_IN"
-        if side == "sell":
-            return "SHORT_SCALE_IN"
+        if side == "buy":  return "LONG_SCALE_IN"
+        if side == "sell": return "SHORT_SCALE_IN"
+
+    # 4. POZİSYON AZALTMA (SCALE_OUT) - HATALI OLABİLİR
     if t == "SCALE_OUT":
-        if side == "buy":
-            return "SHORT_SCALE_OUT"
-        if side == "sell":
-            return "LONG_SCALE_OUT"
-    if t == "FLIP_OPEN":
-        if side == "buy":
-            return "LONG_OPEN"
-        if side == "sell":
-            return "SHORT_OPEN"
-    if t == "FLIP_CLOSE":
-        if side == "buy":
-            return "SHORT_CLOSE"
-        if side == "sell":
-            return "LONG_CLOSE"
-    if t == "TP_CLOSE":
-        if side == "sell":
-            return "LONG_TAKE_PROFIT_CLOSE"
-        if side == "buy":
-            return "SHORT_TAKE_PROFIT_CLOSE"
-    if t == "SL_CLOSE":
-        if side == "sell":
-            return "LONG_STOP_LOSS_CLOSE"
-        if side == "buy":
-            return "SHORT_STOP_LOSS_CLOSE"
+        if side == "buy":  return "LONG_SCALE_OUT" # Alış ile azaltıyorsak Short'tayızdır
+        if side == "sell": return "SHORT_SCALE_OUT"  # Satış ile azaltıyorsak Long'dayızdır
 
-    if t == "FORCED_CLOSE":
-        return "FORCED_CLOSE"
+    # 5. TP / SL KAPANIŞLARI
+    if "TP_CLOSE" in t or "TAKE_PROFIT" in t:
+        if side == "buy":  return "SHORT_TAKE_PROFIT_CLOSE"
+        if side == "sell": return "LONG_TAKE_PROFIT_CLOSE"
     
-    
+    if "SL_CLOSE" in t or "STOP_LOSS" in t:
+        if side == "buy":  return "SHORT_STOP_LOSS_CLOSE"
+        if side == "sell": return "LONG_STOP_LOSS_CLOSE"
+
+    # 6. FORCE CLOSE (Zorunlu Kapanış)
+    if t == "FORCE_CLOSE" or t == "FORCED_CLOSE":
+        # Force close işleminde side, kapanış emrinin yönüdür.
+        if side == "buy": return "SHORT_CLOSE"
+        if side == "sell": return "LONG_CLOSE"
+
+    # Varsayılan Fallback (Eğer yukarıdakilere uymazsa)
+    # Delta qty veya position direction üzerinden tahmin (Eski yöntem)
     dq   = float(getattr(ev, "delta_qty", 0.0))
-    dirn = int(getattr(ev, "position_direction", 1))
+    # Yön bulamazsa varsayılan Long varsayımı
+    if dq > 0: return "LONG_OPEN"
+    if dq < 0: return "SHORT_OPEN"
+    
+    # En kötü ihtimalle basit dönüş
+    return f"{side.upper()}_{t}"
 
-    if dirn >= 0:
-        return "LONG_OPEN" if dq > 0 else "LONG_CLOSE"
-    return "SHORT_OPEN" if dq < 0 else "SHORT_CLOSE"
 
 def _fmt_used_pct(p_from: float, p_to: float) -> str:
     def pct(x):
@@ -124,6 +130,25 @@ def build_frontend_response(
         for i in range(len(equity_series))
     ]
 
+    # Grafik için "Başlangıç Bakiyesi"ni temsil eden 0. noktayı ekle
+    if len(chart_data) > 0 and initial_balance_used is not None:
+        first_point_time = chart_data[0]["time"]
+        
+        # Zaman aralığını (interval) tahmin et
+        # Eğer en az 2 veri varsa aradaki farkı al, yoksa varsayılan 60sn (1dk) düş
+        if len(chart_data) > 1:
+            interval = chart_data[1]["time"] - first_point_time
+        else:
+            interval = 60  # Varsayılan
+            
+        # İlk mumdan bir periyot geriye "Başlangıç" noktası koyuyoruz
+        start_time = first_point_time - interval
+        
+        chart_data.insert(0, {
+            "time": start_time,
+            "value": float(initial_balance_used)
+        })
+
     # ---- returns: [time, retPct, leverage, usedPct]
     returns = []
     for i in range(len(equity_series)):
@@ -161,17 +186,25 @@ def build_frontend_response(
             "pnlPercentage": float(getattr(ev, "pnl_pct", getattr(ev, "pnlPercentage", 0.0))),
             "pnlAmount": float(getattr(ev, "pnl_amount", getattr(ev, "pnlAmount", 0.0))),
         })
+    
+    trades_view.reverse()
 
     # ---- performance
-    initial_balance = float(equity_series.iloc[0]) if len(equity_series) else 0.0
-    final_balance   = float(equity_series.iloc[-1]) if len(equity_series) else 0.0
-    total_pnl       = final_balance - initial_balance
+    if initial_balance_used is not None:
+        true_initial_balance = float(initial_balance_used)
+    else:
+        true_initial_balance = float(equity_series.iloc[0]) if len(equity_series) else 0.0
+    final_balance = float(equity_series.iloc[-1]) if len(equity_series) else 0.0
+    total_pnl = final_balance - true_initial_balance
     total_trades    = int(metrics_dict.get("num_trades", len(trades_list)))
     winning         = sum(1 for t in trades_list if float(getattr(t, "pnl_amount", 0.0)) > 0)
     losing          = sum(1 for t in trades_list if float(getattr(t, "pnl_amount", 0.0)) < 0)
     win_rate        = 0.0 if total_trades == 0 else round(winning / total_trades * 100.0, 2)
 
-    return_pct      = float(metrics_dict.get("return_pct", (total_pnl/initial_balance*100.0 if initial_balance else 0.0)))
+    if true_initial_balance > 0:
+        return_pct = (total_pnl / true_initial_balance) * 100.0
+    else:
+        return_pct = 0.0
     max_dd          = float(metrics_dict.get("max_drawdown_pct", 0.0))
     sharpe          = float(metrics_dict.get("sharpe", 0.0))
     commission_cost = float(metrics_dict.get("commission_paid", 0.0))
@@ -208,11 +241,11 @@ def build_frontend_response(
         "winningTrades": winning,
         "losingTrades": losing,
         "winRate": win_rate,
-        "initialBalance": round(initial_balance, 2),
+        "initialBalance": round(true_initial_balance, 2),
         "finalBalance": round(final_balance, 2),
         "maxDrawdown": round(max_dd, 2),
         "sharpeRatio": round(sharpe, 3),
-        "profitFactor": (float("inf") if profit_factor == math.inf else round(profit_factor, 2)),
+        "profitFactor": (0.0 if profit_factor == math.inf else round(profit_factor, 2)),
         "buyHoldReturn": round(bh, 2),
         "sortinoRatio": round(sortino, 3),
         "mostProfitableTrade": round(float(most_profitable), 2),
@@ -234,5 +267,5 @@ def build_frontend_response(
         "strategy_id": strategy_id,
         "code": strategy_code,
         "crypto": crypto,
-        "initial_balance_used": float(initial_balance_used if initial_balance_used is not None else initial_balance),
+        "initial_balance_used": float(initial_balance_used if initial_balance_used is not None else true_initial_balance),
     }

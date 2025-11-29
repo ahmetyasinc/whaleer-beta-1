@@ -105,7 +105,7 @@ const Footer = () => {
           </div>
 
           {/* Divider & bottom mini bar */}
-          <div className="mt-10 border-t border-neutral-800 pt-6 text-sm text-neutral-400">
+          <div className="mt-10 border-t border-neutral-800 pt-6 text-sm text-neutral-400 text-center">
             <p>© {new Date().getFullYear()} {t("rights")}</p>
           </div>
         </div>

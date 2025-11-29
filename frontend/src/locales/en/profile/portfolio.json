@@ -9,6 +9,7 @@
   },
   "portfolio": {
     "empty": "You don't have any cryptocurrencies in your portfolio yet.",
+    "addApi": "Connect an API Key Now",
     "columns": {
       "crypto": "Cryptocurrency",
       "leverage": "Leverage",

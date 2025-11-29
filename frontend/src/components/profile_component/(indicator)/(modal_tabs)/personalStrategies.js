@@ -14,7 +14,8 @@ import { useTranslation } from "react-i18next";
 
 axios.defaults.withCredentials = true;
 
-const PersonalStrategies = () => {
+// GÜNCELLEME: closeModal prop'u eklendi
+const PersonalStrategies = ({ closeModal }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [toDelete, setToDelete] = useState(null); // seçili versiyon objesi
 
@@ -94,6 +95,14 @@ const PersonalStrategies = () => {
       setShowDeleteModal(false);
       setToDelete(null);
     }
+  };
+
+  const getStrategyStatus = (strategy) => {
+    const data = strategyData[strategy.id];
+    if (!data) return "none";
+    if (data.status === "error") return "error";
+    if (data.status === "success" && data.strategy_graph?.length > 0) return "active";
+    return "loaded";
   };
 
   return (
@@ -180,18 +189,21 @@ const PersonalStrategies = () => {
                   )}
 
                   {/* AddStrategyButton sadece SEÇİLİ versiyon için */}
-                  <AddStrategyButton strategyId={selected.id} />
+                  {/* GÜNCELLEME: closeModal prop'u AddStrategyButton'a aktarılıyor */}
+                  <AddStrategyButton strategyId={selected.id} closeModal={closeModal} />
 
-                  {/* Paneli AÇ — TÜM versiyonları ve groupId’yi gönder */}
+                  {/* Paneli AÇ (SiRobinhood) — TÜM versiyonları ve groupId’yi gönder */}
                   <button
                     className="bg-transparent p-2 rounded-md hover:bg-gray-800"
-                    onClick={() =>
-                      openPanel({
-                        groupId,
-                        versions,                 // tüm versiyon objeleri
-                        initialSelectedId: selected.id,
-                      })
-                    }
+                    onClick={() => {
+                        openPanel({
+                            groupId,
+                            versions,                 // tüm versiyon objeleri
+                            initialSelectedId: selected.id,
+                        });
+                        // GÜNCELLEME: Düzenleme butonuna tıklandığında modalı kapat
+                        if (closeModal) closeModal();
+                    }}
                     title={t("buttons.openEdit")}
                   >
                     <SiRobinhood className="text-blue-400 hover:text-blue-700 text-lg cursor-pointer" />
@@ -212,10 +224,14 @@ const PersonalStrategies = () => {
         )}
       </div>
 
-      {/* + yeni strateji (yeni GRUP: parent null) */}
+      {/* + yeni strateji (IoMdAdd) (yeni GRUP: parent null) */}
       <button
         className="mt-1 p-3 bg-green-500 hover:bg-green-600 text-white rounded-sm flex items-center justify-center h-3 w-16"
-        onClick={() => openPanel({ groupId: null, versions: [], initialSelectedId: null })}
+        onClick={() => {
+            openPanel({ groupId: null, versions: [], initialSelectedId: null });
+            // GÜNCELLEME: Yeni strateji oluştur butonuna tıklandığında modalı kapat
+            if (closeModal) closeModal();
+        }}
         title={t("buttons.newStrategy")}
       >
         <IoMdAdd className="text-lg" />

@@ -73,6 +73,15 @@
       "unlink": "Telegram bağlantısı kesilemedi."
     }
   },
+    "leftmenu": {
+    "profile_basics": "Profil Ayarları",
+    "security": "Hesap Güvenliği",
+    "language": "Dil Tercihleri",
+    "telegram": "Telegram Bildirimleri",
+    "theme": "Tema Ayarları",
+    "timezone": "Zaman Dilimi",
+    "social_links": "Sosyal Bağlantılar"
+  },
 
   "errors": {
     "load": "Ayarlar yüklenirken bir sorun oluştu.",

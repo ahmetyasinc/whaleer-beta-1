@@ -14,7 +14,8 @@ import { useTranslation } from "react-i18next";
 
 axios.defaults.withCredentials = true;
 
-export default function PersonalIndicators() {
+// YENİ: closeModal prop'u eklendi
+export default function PersonalIndicators({ closeModal }) {
   const { t } = useTranslation("personalIndicators");
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -146,17 +147,19 @@ export default function PersonalIndicators() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <AddIndicatorButton indicatorId={selected.id} />
+                  <AddIndicatorButton indicatorId={selected.id} closeModal={closeModal} />
 
                   <button
                     className="bg-transparent p-2 rounded-md hover:bg-gray-800"
-                    onClick={() =>
+                    onClick={() => {
                       openPanel({
                         groupId,
                         versions,
                         initialSelectedId: selected.id,
-                      })
-                    }
+                      });
+                      // YENİ: Modalı kapat
+                      if(closeModal) closeModal(); 
+                    }}
                     title={t("actions.edit")}
                   >
                     <SiRobinhood className="text-blue-400 hover:text-blue-700 text-lg cursor-pointer" />
@@ -178,7 +181,11 @@ export default function PersonalIndicators() {
 
       <button
         className="mt-1 p-3 bg-green-500 hover:bg-green-600 text-white rounded-sm flex items-center justify-center h-3 w-16"
-        onClick={() => openPanel({ groupId: null, versions: [], initialSelectedId: null })}
+        onClick={() => {
+          openPanel({ groupId: null, versions: [], initialSelectedId: null });
+          // YENİ: Modalı kapat
+          if(closeModal) closeModal(); 
+        }}
         title={t("actions.new")}
       >
         <IoMdAdd className="text-lg" />

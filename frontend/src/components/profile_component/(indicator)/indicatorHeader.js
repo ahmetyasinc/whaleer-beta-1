@@ -50,7 +50,7 @@ const IndicatorHeader = ({ locale }) => {
 
   return (
     <>
-      <div className="w-full bg-black shadow-md flex justify-between items-center py-3 fixed top-0 left-0 right-0 z-50 h-[61px] pl-16">
+      <div className="w-full bg-black border-b border-zinc-900 shadow-md flex justify-between items-center py-3 fixed top-0 left-0 right-0 z-50 h-[61px] pl-16">
         <div className="flex gap-2 items-center w-full">
           <CryptoSelectButton
             locale={locale}

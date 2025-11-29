@@ -11,7 +11,8 @@ import { useTranslation } from "react-i18next";
 
 axios.defaults.withCredentials = true;
 
-const TechnicalStrategies = ({locale}) => {
+// GÜNCELLEME: closeModal prop'u eklendi
+const TechnicalStrategies = ({locale, closeModal}) => {
   const { t } = useTranslation("indicator");
   const {
     favorites,
@@ -114,7 +115,8 @@ const TechnicalStrategies = ({locale}) => {
               </div>
 
               <div className="flex gap-2">
-                <AddStrategyButton strategyId={strategy.id} />
+                {/* GÜNCELLEME: closeModal prop'u AddStrategyButton'a aktarılıyor */}
+                <AddStrategyButton strategyId={strategy.id} closeModal={closeModal} /> 
                 <button
                   className="bg-transparent p-2 rounded-md hover:bg-gray-800"
                   onClick={() => openCodeModal(strategy)}

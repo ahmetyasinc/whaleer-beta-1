@@ -4,6 +4,11 @@ import { useMemo, useState, useCallback, useEffect } from "react";
 import { useProfileStore } from "@/store/profile/profileStore";
 import { useAccountDataStore } from "@/store/profile/accountDataStore";
 import { useTranslation } from "react-i18next";
+import { GiTwoCoins } from "react-icons/gi";
+import { TbAlignBoxLeftStretch } from "react-icons/tb";
+import { FaLongArrowAltRight } from "react-icons/fa";
+import { useRouter } from "next/navigation";
+
 
 // ---- Timezone helpers (cookie: wh_settings.timezone = "GMT+3" vb.) ----
 const pad = (n) => String(n).padStart(2, '0');
@@ -72,6 +77,12 @@ export default function Portfolio() {
   const activeApiId = useProfileStore((s) => s.activeApiId);
   const portfolioMap = useAccountDataStore((s) => s.portfolioByApiId);
   const tradesMap = useAccountDataStore((s) => s.tradesByApiId);
+
+  const router = useRouter();
+
+  const handleNavigate = () => {
+    router.push("/profile/apiconnect");
+  };
 
   const portfolio = useMemo(
     () => portfolioMap?.[activeApiId] || [],
@@ -167,8 +178,15 @@ export default function Portfolio() {
     }
   };
 
-  return (
-    <div className="bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl shadow-lg border border-zinc-700 overflow-hidden text-white flex flex-col h-full">
+//bg-gradient-to-br from-gray-950 to-zinc-900
+  
+return (
+    // DEĞİŞİKLİK BURADA:
+    // min-h-[400px]: İçerik az olsa bile kart en az 400px boyunda olur.
+    // max-h-[600px]: İçerik çok olsa bile kart 600px'i geçmez.
+    // Bu sınıra ulaşıldığında içerideki overflow-y-auto devreye girer ve scroll oluşur.
+    <div className="bg-gradient-to-br from-zinc-950/90 via-stone-800/40 to-zinc-950/90 rounded-xl shadow-lg border border-zinc-700 overflow-hidden text-white w-full flex flex-col h-[calc(100vh-108px)]">
+      
       {/* Header */}
       <div className="bg-gradient-to-r from-cyan-800 to-purple-800 px-4 py-3 flex-shrink-0">
         <div className="flex justify-between items-center">
@@ -202,14 +220,19 @@ export default function Portfolio() {
         </div>
       </div>
 
-      {/* Content */}
+      {/* Content - Scroll Alanı */}
+      {/* flex-1: Header'dan kalan tüm alanı kaplar. */}
+      {/* overflow-hidden: Dışa taşmayı engeller. */}
       <div className="flex-1 overflow-hidden">
-        <div className="h-full overflow-y-auto px-3 py-4">
+        {/* h-full: Ebeveyninin boyunu alır. */}
+        {/* overflow-y-auto: İçerik sığmazsa scroll bar çıkarır. */}
+        <div className="h-full overflow-y-auto px-3 py-4 scrollbar-thin scrollbar-thumb-zinc-600 scrollbar-track-transparent">
           {activeTab === "portfolio" ? (
             <div className="space-y-4">
               {portfolio.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-7 gap-2 text-xs sm:text-sm font-semibold text-gray-400 py-2 sticky top-0 bg-[rgb(0,0,0,0)] z-10 px-2">
+                  {/* Sticky Header (Tablo Başlıkları) */}
+                  <div className="grid grid-cols-7 gap-2 text-xs sm:text-sm font-semibold text-gray-400 py-2 sticky top-0 bg-gray-900/95 backdrop-blur z-10 px-2 rounded">
                     <div className="text-left">
                       {t("portfolio.columns.crypto")}
                     </div>
@@ -311,8 +334,16 @@ export default function Portfolio() {
                   })}
                 </>
               ) : (
-                <div className="text-center py-12 text-gray-400">
+                <div className="text-center py-12 text-gray-500 flex flex-col items-center gap-2">
+                  <GiTwoCoins className="text-[70px] text-gray-500 my-2" />
                   <p>{t("portfolio.empty")}</p>
+                  <button
+                    onClick={handleNavigate}
+                    className="py-2 mt-10 px-3 bg-gradient-to-r from-violet-600 to-cyan-600 text-zinc-300 rounded-xl shadow-lg shadow-blue-600/30 hover:from-blue-500/70 hover:to-purple-500/70 hover:shadow-blue-500/30 transition-all hover:scale-[1.005] duration-100 flex items-center gap-2"
+                  >
+                    <FaLongArrowAltRight className="text-lg" />
+                    {t('portfolio.addApi')}
+                  </button>
                 </div>
               )}
             </div>
@@ -320,7 +351,7 @@ export default function Portfolio() {
             <div className="space-y-4">
               {transactions.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-6 gap-3 text-xs sm:text-sm font-semibold text-gray-400 py-2 sticky top-0 bg-[rgb(0,0,0,0)] z-10 px-2">
+                  <div className="grid grid-cols-6 gap-3 text-xs sm:text-sm font-semibold text-gray-300 py-2 sticky top-0 bg-slate-900/95 backdrop-blur z-10 px-2 rounded">
                     <div>{t("transactions.columns.crypto")}</div>
                     <div className="text-center">
                       {t("transactions.columns.type")}
@@ -404,7 +435,8 @@ export default function Portfolio() {
                   ))}
                 </>
               ) : (
-                <div className="text-center py-12 text-gray-400">
+                <div className="text-center py-12 text-gray-500 flex flex-col items-center gap-2">
+                  <TbAlignBoxLeftStretch className="text-[70px] text-gray-500 my-2" />
                   <p>{t("transactions.empty")}</p>
                 </div>
               )}

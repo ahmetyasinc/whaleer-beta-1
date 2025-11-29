@@ -96,7 +96,7 @@ export default function ApiConnectionClient() {
 
   return (
     <>
-         <div className="bg-[rgba(0,0,20,0.65)] backdrop-blur-md border border-gray-700/30 rounded-2xl mx-16 pt-4 shadow-xl shadow-black/50 p-4 min-h-[calc(100vh-1rem)] flex flex-col">
+         <div className="bg-gradient-to-br from-zinc-950/90 via-stone-900/70 to-zinc-950/90 backdrop-blur-md border border-gray-700/30 rounded-2xl mx-16 pt-4 shadow-xl shadow-black/50 p-4 min-h-[calc(100vh-1rem)] flex flex-col">
             <div className="flex items-center justify-between mt-12 mb-4 pb-4 border-b border-gray-500">
               <h2 className="flex items-center gap-2 text-3xl text-gray-200 font-semibold">
                 <TbNetwork className="text-gray-200 mx-3" />
@@ -117,7 +117,7 @@ export default function ApiConnectionClient() {
                 {/* ➕ Yeni API Ekle Butonu */}
                 <button
                   onClick={handleAddNewApi}
-                  className="group/button relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-lg bg-gradient-to-t from-blue-900/50 to-gray-950 backdrop-blur-lg px-8 py-3 text-base font-semibold text-white transition-all duration-100 ease-in-out hover:scale-[1.01] hover:shadow-lg hover:shadow-gray-600/50 active:scale-[0.98] border border-gray-700/50"
+                  className="group/button relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-lg bg-gradient-to-t from-blue-950/50 to-zinc-950/70 backdrop-blur-lg px-8 py-3 text-base font-semibold text-white transition-all duration-100 ease-in-out hover:scale-[1.005] hover:shadow-lg hover:shadow-gray-600/40 active:scale-[0.98] border border-gray-700/50"
                 >
                   <span className="relative z-10 text-sm font-medium tracking-wide">{t("buttons.addNew")}</span>
                   <HiPlusSmall className="relative z-10 text-2xl font-bold transition-transform duration-300 group-hover/button:rotate-90" />

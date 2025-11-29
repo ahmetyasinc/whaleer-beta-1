@@ -94,14 +94,15 @@ const LeftMenu = ({ locale }) => {
       toggleBtn.classList.toggle("move-left", isOpen);
     }
   }, [isOpen]);
-
+  
+/*
   if (!user) {
     return (
       <div className="sidebar-left bg-black text-white px-6 pt-4">
         <p className="text-sm animate-pulse">{t("loading")}</p>
       </div>
     );
-  }
+  }*/
 
   return (
     <>

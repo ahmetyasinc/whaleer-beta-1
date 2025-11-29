@@ -31,7 +31,8 @@ const Pill = ({ children, tone = "neutral" }) => {
   );
 };
 
-const CommunityStrategies = () => {
+// GÜNCELLEME: closeModal prop'u eklendi
+const CommunityStrategies = ({ closeModal }) => {
   const { favorites, toggleFavorite, community } = useStrategyStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStrategy, setSelectedStrategy] = useState(null);
@@ -179,7 +180,12 @@ const CommunityStrategies = () => {
                     if (allowChartView) await notifyStrategyView(releaseId);
                   }}
                 >
-                  <AddStrategyButton strategyId={strategy.id} disabled={!allowChartView} />
+                  {/* GÜNCELLEME: closeModal prop'u AddStrategyButton'a aktarılıyor */}
+                  <AddStrategyButton
+                    strategyId={strategy.id}
+                    disabled={!allowChartView}
+                    closeModal={closeModal} 
+                  />
                   {!allowChartView && (
                     <div className="absolute inset-0" onClick={(e) => e.stopPropagation()} />
                   )}

@@ -10,7 +10,8 @@ import { useTranslation } from "react-i18next";
 
 axios.defaults.withCredentials = true;
 
-const AddIndicatorButton = ({ indicatorId }) => {
+// GÜNCELLEME: closeModal prop'u eklendi
+const AddIndicatorButton = ({ indicatorId, closeModal }) => {
   const { t } = useTranslation("indicator");
 
   const { addSyncedPanel, end } = usePanelStore();
@@ -58,7 +59,13 @@ const AddIndicatorButton = ({ indicatorId }) => {
   const handleClick = async () => {
     setIsLoading(true);
     await fetchIndicatorData();
-    setTimeout(() => setIsLoading(false), 200);
+    setTimeout(() => {
+      setIsLoading(false);
+      // YENİ: Başarılı yüklemeden sonra modalı kapat
+      if (closeModal) {
+        closeModal(); 
+      }
+    }, 200);
   };
 
   return (

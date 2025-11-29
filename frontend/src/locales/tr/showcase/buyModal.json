@@ -6,6 +6,7 @@
     "sellerName": "Satıcı Adı",
     "priceUsd": "Fiyat (USD)",
     "approxSol": "Tahmini Fiyat (SOL)",
+    "approxXlm": "Tahmini Fiyat (XLM)",
     "revenueWallet": "Gelir Cüzdanı"
   },
   "actionNames": {

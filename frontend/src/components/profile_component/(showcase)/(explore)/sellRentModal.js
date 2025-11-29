@@ -4,17 +4,32 @@
 import { useEffect, useMemo, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Connection, VersionedMessage, VersionedTransaction } from "@solana/web3.js";
+// --- STELLAR ---
+import { Horizon, TransactionBuilder } from "@stellar/stellar-sdk";
+import { kit } from "@/lib/stellar-kit";
+import useStellarAuth from "@/hooks/useStellarAuth";
+// ---------------
+
+// ---------------
 import { toast } from "react-toastify";
 import ChooseBotModal from "./chooseBotModal";
 import { useSiwsStore } from "@/store/auth/siwsStore";
 import { createListingIntent, confirmPayment } from "@/api/payments";
 import { patchBotListing } from "@/api/bots";
 import { useTranslation } from "react-i18next";
+import { FiCheckCircle, FiCpu } from "react-icons/fi"; // İkonlar ile görselliği artıralım
 
-const RPC_URL = "https://api.mainnet-beta.solana.com";
-const DEFAULT_PAYOUT = "AkmufZViBgt9mwuLPhFM8qyS1SjWNbMRBK8FySHajvUA";
+// Ağ Ayarları
+const SOLANA_RPC_URL = "https://api.mainnet-beta.solana.com";
+const STELLAR_HORIZON_URL = "https://horizon-testnet.stellar.org";
+const STELLAR_NETWORK_PASSPHRASE = "Test SDF Network ; September 2015";
+const STELLAR_PLATFORM_WALLET = "GBLV5VOXKN5SYHOPC7FSOOTNH3YVW33LQZAKZYRFR7EZII7VLST2DTCB";
+// ---------------
 
-// Base64 → Uint8Array (tarayıcı uyumlu)
+
+const DEFAULT_PAYOUT_SOL = "AkmufZViBgt9mwuLPhFM8qyS1SjWNbMRBK8FySHajvUA";
+
+// Helperlar (Base64, PnL) aynı kalıyor...
 function b64ToUint8Array(b64) {
   const binStr = atob(b64);
   const len = binStr.length;
@@ -33,6 +48,40 @@ function calcPnlPct(initial, current) {
 export default function SellRentModal({ open, onClose }) {
   const { t } = useTranslation('sellRentModal');
 
+  // --- CÜZDAN DURUMLARI ---
+  const { walletLinked } = useSiwsStore(); // Solana (Phantom) bağlı mı?
+  const { publicKey, sendTransaction } = useWallet(); // Solana address/tx
+  const { stellarAddress } = useStellarAuth(); // Stellar (Freighter) bağlı mı?
+
+  // İkisi birden bağlı mı kontrolü
+  const isBothConnected = Boolean(walletLinked && publicKey && stellarAddress);
+
+  // Manuel seçim için state (Sadece ikisi bağlıysa kullanılır)
+  const [manualChainChoice, setManualChainChoice] = useState(null);
+
+  // Aktif Zinciri Belirle (Akıllı Mantık)
+  const activeChain = useMemo(() => {
+    // 1. Eğer ikisi de bağlıysa ve kullanıcı bir seçim yaptıysa onu kullan
+    if (isBothConnected && manualChainChoice) return manualChainChoice;
+    
+    // 2. İkisi bağlı ama seçim yapılmadıysa (ilk açılış), Stellar'ı varsayılan yap (veya Solana)
+    if (isBothConnected) return 'stellar';
+
+    // 3. Sadece biri bağlıysa onu kullan
+    if (stellarAddress) return 'stellar';
+    if (walletLinked && publicKey) return 'solana';
+
+    return null;
+  }, [stellarAddress, walletLinked, publicKey, isBothConnected, manualChainChoice]);
+
+  // Modal her açıldığında veya seçim değiştiğinde manual choice'u sıfırlama/ayarlama
+  useEffect(() => {
+    if (open && isBothConnected && !manualChainChoice) {
+      setManualChainChoice('stellar'); // Varsayılan öncelik
+    }
+  }, [open, isBothConnected]);
+
+
   const [sellChecked, setSellChecked] = useState(false);
   const [rentChecked, setRentChecked] = useState(false);
   const [sellPrice, setSellPrice] = useState("");
@@ -49,18 +98,13 @@ export default function SellRentModal({ open, onClose }) {
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
   const [showSuccessAnim, setShowSuccessAnim] = useState(false);
 
-  const { walletLinked } = useSiwsStore();
-  const { publicKey, sendTransaction } = useWallet();
-
-  // Modal kapandığında temizle
   useEffect(() => {
     if (!open) resetForm();
   }, [open]);
 
-  // Bot seçimi değişince formu doldur
+  // Otomatik Form Doldurma
   useEffect(() => {
     if (!selectedBot) return;
-    console.log("Selected bot:", selectedBot);
     const isListed = Boolean(selectedBot?.for_sale) || Boolean(selectedBot?.for_rent);
 
     if (isListed) {
@@ -71,14 +115,25 @@ export default function SellRentModal({ open, onClose }) {
       setWalletAddress(selectedBot?.revenue_wallet ?? "");
       setDescription((selectedBot?.listing_description ?? selectedBot?.description ?? "").toString());
     } else {
+      // Yeni listeleme
       setSellChecked(false);
       setRentChecked(false);
       setSellPrice("");
       setRentPrice("");
-      setWalletAddress("");
+
+      // --- AKILLI CÜZDAN DOLDURMA ---
+      // activeChain değiştiğinde inputu otomatik dolduruyoruz
+      if (activeChain === 'stellar' && stellarAddress) {
+        setWalletAddress(stellarAddress);
+      } else if (activeChain === 'solana' && publicKey) {
+        setWalletAddress(publicKey.toBase58());
+      } else {
+        setWalletAddress("");
+      }
+
       setDescription((selectedBot?.listing_description ?? selectedBot?.description ?? "").toString());
     }
-  }, [selectedBot]);
+  }, [selectedBot, activeChain, stellarAddress, publicKey]);
 
   const isNewListing = useMemo(() => {
     if (!selectedBot) return true;
@@ -90,14 +145,20 @@ export default function SellRentModal({ open, onClose }) {
     (!sellChecked || (sellPrice !== "" && Number(sellPrice) >= 0)) &&
     (!rentChecked || (rentPrice !== "" && Number(rentPrice) >= 0));
 
-  // Basit adres kontrolü; dilersen Solana base58 doğrulaması da ekleyebiliriz
-  const walletValid = walletAddress && walletAddress.length > 20;
+  const walletValid = useMemo(() => {
+    if (!walletAddress || walletAddress.length < 20) return false;
+    if (activeChain === 'stellar') {
+      return walletAddress.startsWith('G') && walletAddress.length === 56;
+    }
+    return true; 
+  }, [walletAddress, activeChain]);
 
-  // Diff payload (update için)
   const { diffPayload, hasDiff } = useMemo(() => {
     if (!selectedBot) return { diffPayload: {}, hasDiff: false };
-
     const payload = {};
+    
+    if (activeChain) payload.revenue_chain = activeChain;
+
     const initForSale = Boolean(selectedBot?.for_sale);
     const initForRent = Boolean(selectedBot?.for_rent);
 
@@ -117,7 +178,6 @@ export default function SellRentModal({ open, onClose }) {
       payload.revenue_wallet = walletAddress;
     }
 
-    // ➕ İlan açıklaması (listing_description): textarea → trim; boş ise null
     const descTrim = (description ?? "").trim();
     const prevDesc = (selectedBot?.listing_description ?? "") + "";
     if (descTrim !== prevDesc) {
@@ -126,7 +186,7 @@ export default function SellRentModal({ open, onClose }) {
 
     const diff = Object.keys(payload).length > 0;
     return { diffPayload: payload, hasDiff: diff };
-  }, [selectedBot, sellChecked, rentChecked, sellPrice, rentPrice, walletAddress, description]);
+  }, [selectedBot, sellChecked, rentChecked, sellPrice, rentPrice, walletAddress, description, activeChain]);
 
   const canSubmit =
     !!selectedBot &&
@@ -146,7 +206,8 @@ export default function SellRentModal({ open, onClose }) {
     setSellPrice("");
     setRentPrice("");
     setDescription("");
-    setWalletAddress("");
+    // Manual choice'u resetleme, bir dahaki açılışta tekrar sorsun veya default olsun
+    setManualChainChoice(null);
     setChooseBotModalOpen(false);
     setSelectedBot(null);
     setLoading(false);
@@ -161,78 +222,147 @@ export default function SellRentModal({ open, onClose }) {
     setChooseBotModalOpen(false);
   };
 
-  // Yeni listelemelerde 1 USD ücret ödeme
   async function payListingFeeIfNeeded() {
     if (!isNewListing) return { paid: false };
-
-    if (!walletLinked) throw new Error(t("errors.connectWalletFirst"));
-    if (!publicKey) throw new Error(t("errors.walletNotReady"));
-
+    if (!activeChain) {
+      throw new Error(t("errors.connectWalletFirst") || "Wallet not connected");
+    }
+  
     setPayLoading(true);
     const toastId = toast.loading(t("toasts.preparingPayment"));
+  
     try {
-      const intent = await createListingIntent(selectedBot.id);
-      if (!intent?.message_b64 || !intent?.intent_id) {
+      const extra = {};
+    
+      // Backend'in Stellar için XDR kurarken kullanacağı kaynak hesap
+      if (activeChain === "stellar" && stellarAddress) {
+        extra.stellarAddress = stellarAddress;
+      }
+    
+      const intent = await createListingIntent(selectedBot.id, activeChain, extra);
+    
+      if (!intent?.intent_id) {
         throw new Error(t("errors.invalidIntent"));
       }
-
-      const msgBytes = b64ToUint8Array(intent.message_b64);
-      const message = VersionedMessage.deserialize(msgBytes);
-      const tx = new VersionedTransaction(message);
-
-      toast.update(toastId, { render: t("toasts.signInWallet"), isLoading: true });
-      const connection = new Connection(RPC_URL, "confirmed");
-      const signature = await sendTransaction(tx, connection, { skipPreflight: false });
-
-      toast.update(toastId, { render: t("toasts.confirmOnchain"), isLoading: true });
-      const confirmation = await confirmPayment(intent.intent_id, signature);
-      if (!confirmation?.ok) {
+    
+      let confirmationResult;
+    
+      // ---------- STELLAR ----------
+      if (activeChain === "stellar") {
+        const xdr = intent.xdr || intent.message_b64;
+        if (!xdr) {
+          throw new Error("Invalid Stellar XDR from backend");
+        }
+      
+        toast.update(toastId, {
+          render: "Signing with Freighter...",
+          isLoading: true,
+        });
+      
+        const { signedTxXdr } = await kit.signTransaction(xdr, {
+          networkPassphrase: STELLAR_NETWORK_PASSPHRASE,
+          address: stellarAddress,
+        });
+      
+        toast.update(toastId, {
+          render: "Submitting to Stellar...",
+          isLoading: true,
+        });
+      
+        const server = new Horizon.Server(STELLAR_HORIZON_URL);
+      
+        // Signed XDR'dan Transaction nesnesini oluştur
+        const tx = TransactionBuilder.fromXDR(
+          signedTxXdr,
+          STELLAR_NETWORK_PASSPHRASE
+        );
+      
+        const submitResult = await server.submitTransaction(tx);
+        const txHash = submitResult.hash;
+      
+        toast.update(toastId, {
+          render: t("toasts.confirmOnchain"),
+          isLoading: true,
+        });
+      
+        // 🔴 BURADA ARTIK CHAIN DE GÖNDERİLİYOR
+        confirmationResult = await confirmPayment(
+          intent.intent_id,
+          txHash,
+          "stellar"
+        );
+      }
+    
+      // ---------- SOLANA ----------
+      else {
+        const msgBytes = b64ToUint8Array(intent.message_b64);
+        const message = VersionedMessage.deserialize(msgBytes);
+        const tx = new VersionedTransaction(message);
+      
+        toast.update(toastId, {
+          render: t("toasts.signInWallet"),
+          isLoading: true,
+        });
+      
+        const connection = new Connection(SOLANA_RPC_URL, "confirmed");
+        const signature = await sendTransaction(tx, connection, {
+          skipPreflight: false,
+        });
+      
+        toast.update(toastId, {
+          render: t("toasts.confirmOnchain"),
+          isLoading: true,
+        });
+      
+        // 🔴 BURADA DA "solana" DİYORUZ
+        confirmationResult = await confirmPayment(
+          intent.intent_id,
+          signature,
+          "solana"
+        );
+      }
+    
+      if (!confirmationResult?.ok) {
         throw new Error(t("errors.paymentNotConfirmed"));
       }
-
-      toast.update(toastId, { render: t("toasts.paymentConfirmed"), type: "success", isLoading: false, autoClose: 1500 });
+    
+      toast.update(toastId, {
+        render: t("toasts.paymentConfirmed"),
+        type: "success",
+        isLoading: false,
+        autoClose: 1500,
+      });
+    
       setShowSuccessAnim(true);
       await new Promise((r) => setTimeout(r, 900));
       setShowSuccessAnim(false);
-
+    
       return { paid: true };
+    } catch (e) {
+      console.error(e);
+      let errMsg = e?.message || t("toasts.operationFailed");
+    
+      // Stellar özel hata kodlarını göster
+      if (e.response?.data?.extras?.result_codes) {
+        errMsg = `Stellar Error: ${JSON.stringify(
+          e.response.data.extras.result_codes
+        )}`;
+      }
+    
+      throw new Error(errMsg);
     } finally {
       setPayLoading(false);
     }
   }
 
+
   async function handleSubmit() {
     setError(null);
-
-    if (!selectedBot) {
-      toast.error(t("errors.selectBot"));
-      setError(t("errors.selectBot"));
-      return;
-    }
-    if (!hasAnyChoice) {
-      toast.error(t("errors.chooseOne"));
-      setError(t("errors.chooseOne"));
-      return;
-    }
-    if (!priceValid) {
-      toast.error(t("errors.invalidPrices"));
-      setError(t("errors.invalidPrices"));
-      return;
-    }
-    if (!walletValid) {
-      toast.error(t("errors.invalidWallet"));
-      setError(t("errors.invalidWallet"));
-      return;
-    }
-    if (isNewListing && !disclaimerAccepted) {
-      toast.error(t("errors.acceptDisclaimer"));
-      setError(t("errors.acceptDisclaimer"));
-      return;
-    }
-    if (!isNewListing && !hasDiff) {
-      toast.info(t("toasts.noChanges"));
-      return;
-    }
+    if (!selectedBot) { toast.error(t("errors.selectBot")); return; }
+    if (!hasAnyChoice) { toast.error(t("errors.chooseOne")); return; }
+    if (!priceValid) { toast.error(t("errors.invalidPrices")); return; }
+    if (!walletValid) { toast.error(t("errors.invalidWallet")); return; }
+    if (isNewListing && !disclaimerAccepted) { toast.error(t("errors.acceptDisclaimer")); return; }
 
     setLoading(true);
     const toastId = toast.loading(isNewListing ? t("toasts.creating") : t("toasts.updating"));
@@ -240,70 +370,34 @@ export default function SellRentModal({ open, onClose }) {
       if (isNewListing) {
         await payListingFeeIfNeeded();
       }
-
       await patchBotListing(selectedBot.id, diffPayload);
-
-      toast.update(toastId, {
-        render: isNewListing ? t("toasts.createSuccess") : t("toasts.updateSuccess"),
-        type: "success",
-        isLoading: false,
-        autoClose: 1800
-      });
-
+      toast.update(toastId, { render: isNewListing ? t("toasts.createSuccess") : t("toasts.updateSuccess"), type: "success", isLoading: false, autoClose: 1800 });
       resetForm();
       onClose?.();
     } catch (e) {
       console.error(e);
-      toast.update(toastId, {
-        render: e?.message || t("toasts.operationFailed"),
-        type: "error",
-        isLoading: false,
-        autoClose: 3000
-      });
-      setError(e?.message || t("toasts.operationFailed"));
+      toast.update(toastId, { render: e?.message || t("toasts.operationFailed"), type: "error", isLoading: false, autoClose: 3000 });
+      setError(e?.message);
     } finally {
       setLoading(false);
     }
   }
 
-  // ✅ UNLIST: Zaten listelenmiş botu listeden kaldır
   async function handleUnlist() {
     if (!selectedBot) return;
-
-    const isListed = Boolean(selectedBot?.for_sale) || Boolean(selectedBot?.for_rent);
-    if (!isListed) return;
-
-    const sure = confirm(t("confirm.remove"));
-    if (!sure) return;
-
+    if (!confirm(t("confirm.remove"))) return;
     setLoading(true);
     const toastId = toast.loading(t("toasts.removing"));
     try {
-      const payload = {
-        for_sale: false,
-        for_rent: false,
-        revenue_wallet: DEFAULT_PAYOUT,
-        listing_description: null,
-      };
-      await patchBotListing(selectedBot.id, payload);
-
-      toast.update(toastId, {
-        render: t("toasts.removeSuccess"),
-        type: "success",
-        isLoading: false,
-        autoClose: 1600
+      await patchBotListing(selectedBot.id, {
+        for_sale: false, for_rent: false, revenue_wallet: DEFAULT_PAYOUT_SOL, listing_description: null,
       });
-
+      toast.update(toastId, { render: t("toasts.removeSuccess"), type: "success", isLoading: false, autoClose: 1600 });
       resetForm();
       onClose?.();
     } catch (e) {
       console.error(e);
-      toast.update(toastId, {
-        render: e?.message || t("toasts.removeFailed"),
-        type: "error",
-        isLoading: false,
-        autoClose: 3000
-      });
+      toast.update(toastId, { render: e?.message, type: "error", isLoading: false });
     } finally {
       setLoading(false);
     }
@@ -316,28 +410,64 @@ export default function SellRentModal({ open, onClose }) {
       <div className="fixed inset-0 z-[99] flex justify-center items-start bg-black/70 py-[60px]">
         <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 text-white rounded-xl shadow-2xl p-8 w-[95vw] max-w-2xl relative border border-zinc-800 max-h-[calc(100vh-120px)] overflow-y-auto">
           {/* Close */}
-          <button
-            onClick={() => {
-              resetForm();
-              onClose?.();
-            }}
-            className="absolute top-6 right-6 text-2xl font-bold hover:text-red-400 transition-colors duration-200 w-8 h-8 flex items-center justify-center hover:bg-red-500/10 rounded-full"
-            aria-label={t("aria.close")}
-            title={t("aria.close")}
-          >
-            ×
-          </button>
+          <button onClick={() => { resetForm(); onClose?.(); }} className="absolute top-6 right-6 text-2xl font-bold hover:text-red-400 w-8 h-8">×</button>
 
-          <h2 className="text-xl font-bold mb-6 text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+          <h2 className="text-xl font-bold mb-4 text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
             {isNewListing ? t("titles.create") : t("titles.update")}
           </h2>
 
-          {/* Error bar */}
-          {error && (
-            <div className="mb-4 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">
-              {error}
-            </div>
-          )}
+          {/* --- AĞ SEÇİMİ / GÖSTERİMİ ALANI --- */}
+          <div className="flex justify-center mb-6">
+            
+            {/* DURUM 1: İki Cüzdan da Bağlı -> Seçim Butonları (Toggle) */}
+            {isBothConnected ? (
+              <div className="flex items-center bg-zinc-950 p-1.5 rounded-xl border border-zinc-800 shadow-inner">
+                <button
+                  onClick={() => setManualChainChoice('stellar')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    activeChain === 'stellar'
+                      ? "bg-purple-900/50 text-purple-200 shadow-[0_0_10px_rgba(168,85,247,0.3)] border border-purple-500/50"
+                      : "text-gray-500 hover:text-gray-300 hover:bg-zinc-800"
+                  }`}
+                >
+                  <div className={`w-2 h-2 rounded-full ${activeChain === 'stellar' ? 'bg-purple-400 animate-pulse' : 'bg-gray-600'}`} />
+                  Stellar
+                </button>
+                <button
+                  onClick={() => setManualChainChoice('solana')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    activeChain === 'solana'
+                      ? "bg-green-900/50 text-green-200 shadow-[0_0_10px_rgba(34,197,94,0.3)] border border-green-500/50"
+                      : "text-gray-500 hover:text-gray-300 hover:bg-zinc-800"
+                  }`}
+                >
+                  <div className={`w-2 h-2 rounded-full ${activeChain === 'solana' ? 'bg-green-400 animate-pulse' : 'bg-gray-600'}`} />
+                  Solana
+                </button>
+              </div>
+            ) : (
+              // DURUM 2: Tek Cüzdan Bağlı -> Sabit Badge
+              <>
+                {activeChain === 'stellar' && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-900/30 text-purple-200 border border-purple-500/40">
+                    <span className="w-2 h-2 rounded-full bg-purple-400 mr-2"></span> Stellar Network
+                  </span>
+                )}
+                {activeChain === 'solana' && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-900/30 text-green-200 border border-green-500/40">
+                    <span className="w-2 h-2 rounded-full bg-green-400 mr-2"></span> Solana Network
+                  </span>
+                )}
+                {!activeChain && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-900/30 text-red-200 border border-red-500/40">
+                    Wallet Not Connected
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+
+          {error && <div className="mb-4 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">{error}</div>}
 
           {/* Bot Selection */}
           <div className="mb-6">
@@ -352,253 +482,139 @@ export default function SellRentModal({ open, onClose }) {
                         {(() => {
                           const pnl = calcPnlPct(selectedBot.initial_usd_value, selectedBot.current_usd_value);
                           if (pnl === null) return <span className="text-gray-400">{t("labels.noPnlData")}</span>;
-                          const pnlClass = pnl > 0 ? "text-emerald-400" : pnl < 0 ? "text-rose-400" : "text-gray-400";
-                          return <span className={pnlClass}>{pnl.toFixed(2)}%</span>;
+                          return <span className={pnl > 0 ? "text-emerald-400" : pnl < 0 ? "text-rose-400" : "text-gray-400"}>{pnl.toFixed(2)}%</span>;
                         })()}
                       </div>
                     </div>
-                    <div
-                      className={`w-3 h-3 rounded-full ${isCurrentlyListed ? "bg-amber-400" : "bg-gray-400"}`}
-                      title={isCurrentlyListed ? t("labels.listed") : t("labels.notListed")}
-                    />
+                    <div className={`w-3 h-3 rounded-full ${isCurrentlyListed ? "bg-amber-400" : "bg-gray-400"}`} title={isCurrentlyListed ? "Listed" : "Not Listed"} />
                   </div>
                 ) : (
-                  <div className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-3 text-gray-400 text-center">
-                    {t("labels.noBotSelected")}
-                  </div>
+                  <div className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-3 text-gray-400 text-center">{t("labels.noBotSelected")}</div>
                 )}
               </div>
-              <button
-                onClick={() => setChooseBotModalOpen(true)}
-                className="px-4 h-10 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-purple-400/25"
-                type="button"
-                title={t("buttons.select")}
-              >
+              <button onClick={() => setChooseBotModalOpen(true)} className="px-4 h-10 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-lg">
                 {t("buttons.select")}
               </button>
             </div>
           </div>
 
-          {/* Sell / Rent */}
+          {/* Sell / Rent Inputs */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Sell */}
             <div className="space-y-3">
               <label className="flex items-center gap-3 cursor-pointer group">
-                <div className="relative">
-                  <input type="checkbox" checked={sellChecked} onChange={() => setSellChecked(!sellChecked)} className="sr-only" />
-                  <div
-                    className={`w-5 h-5 rounded-lg border-2 transition-all duration-200 ${
-                      sellChecked ? "bg-cyan-400 border-cyan-400" : "border-gray-600 hover:border-cyan-400"
-                    }`}
-                  >
-                    {sellChecked && (
-                      <svg className="w-3 h-3 text-black absolute top-0.5 left-0.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    )}
-                  </div>
-                </div>
+                <input type="checkbox" checked={sellChecked} onChange={() => setSellChecked(!sellChecked)} className="w-5 h-5 rounded border-gray-600 text-cyan-400 focus:ring-cyan-400 bg-zinc-800" />
                 <span className="text-base font-medium group-hover:text-cyan-400 transition-colors">{t("labels.wantSell")}</span>
               </label>
-
               {sellChecked && (
-                <div className="animate-in slide-in-from-top-2 duration-300">
-                  <div className="relative">
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder={t("placeholders.sellPrice")}
-                      className="w-full p-2.5 rounded-lg bg-zinc-800/50 border border-gray-700 hover:border-cyan-400 focus:border-cyan-400 focus:outline-none transition-all duration-200 text-sm placeholder-gray-400 pr-16"
-                      value={sellPrice}
-                      onChange={(e) => setSellPrice(e.target.value)}
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">{t("units.usd")}</span>
-                  </div>
+                <div className="relative animate-in slide-in-from-top-2">
+                  <input type="number" min={0} placeholder={t("placeholders.sellPrice")} className="w-full p-2.5 rounded-lg bg-zinc-800/50 border border-gray-700 focus:border-cyan-400 focus:outline-none text-sm placeholder-gray-400 pr-16" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">USD</span>
                 </div>
               )}
             </div>
-
-            {/* Rent */}
             <div className="space-y-3">
               <label className="flex items-center gap-3 cursor-pointer group">
-                <div className="relative">
-                  <input type="checkbox" checked={rentChecked} onChange={() => setRentChecked(!rentChecked)} className="sr-only" />
-                  <div
-                    className={`w-5 h-5 rounded-lg border-2 transition-all duration-200 ${
-                      rentChecked ? "bg-emerald-400 border-emerald-400" : "border-gray-600 hover:border-emerald-400"
-                    }`}
-                  >
-                    {rentChecked && (
-                      <svg className="w-3 h-3 text-black absolute top-0.5 left-0.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    )}
-                  </div>
-                </div>
+                <input type="checkbox" checked={rentChecked} onChange={() => setRentChecked(!rentChecked)} className="w-5 h-5 rounded border-gray-600 text-emerald-400 focus:ring-emerald-400 bg-zinc-800" />
                 <span className="text-base font-medium group-hover:text-emerald-400 transition-colors">{t("labels.wantRent")}</span>
               </label>
-
               {rentChecked && (
-                <div className="animate-in slide-in-from-top-2 duration-300">
-                  <div className="relative">
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder={t("placeholders.rentPrice")}
-                      className="w-full p-2.5 rounded-lg bg-zinc-800/50 border border-gray-700 hover:border-emerald-400 focus:border-emerald-400 focus:outline-none transition-all duration-200 text-sm placeholder-gray-400 pr-24"
-                      value={rentPrice}
-                      onChange={(e) => setRentPrice(e.target.value)}
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">{t("units.usdPerDay")}</span>
-                  </div>
-                  <div className="text-xs text-gray-400 mt-1">{t("hints.dailyPayment")}</div>
+                <div className="relative animate-in slide-in-from-top-2">
+                  <input type="number" min={0} placeholder={t("placeholders.rentPrice")} className="w-full p-2.5 rounded-lg bg-zinc-800/50 border border-gray-700 focus:border-emerald-400 focus:outline-none text-sm placeholder-gray-400 pr-24" value={rentPrice} onChange={(e) => setRentPrice(e.target.value)} />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">USD / Day</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Wallet Address */}
-          <p className="text-xs text-gray-400">
-              {t("hints.info")}
-          </p>
+          {/* Wallet Address (Akıllı) */}
           <div className="mb-6 mt-3">
             <label className="block text-base font-medium mb-2 text-gray-300">
-              {t("labels.revenueWallet")} <span className="text-red-400">*</span>
+              {t("labels.revenueWallet")}
+              {activeChain === 'stellar' && <span className="text-purple-400 text-xs ml-2 font-normal">(Auto-filled Stellar)</span>}
+              {activeChain === 'solana' && <span className="text-green-400 text-xs ml-2 font-normal">(Auto-filled Solana)</span>}
+              <span className="text-red-400 ml-1">*</span>
             </label>
-            <input
-              type="text"
-              placeholder={t("placeholders.wallet")}
-              className="w-full p-2.5 rounded-lg bg-zinc-800/50 border border-gray-700 hover:border-cyan-400 focus:border-cyan-400 focus:outline-none transition-all duration-200 text-sm placeholder-gray-400"
-              value={walletAddress}
-              onChange={(e) => setWalletAddress(e.target.value)}
-            />
-            <p className="text-xs text-gray-400 mt-1">
-              {t("hints.walletWarning")}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder={activeChain === 'stellar' ? "G... (Stellar Address)" : "Solana Address"}
+                className={`w-full p-2.5 pl-10 rounded-lg bg-zinc-800/50 border transition-all duration-200 text-sm focus:outline-none ${
+                   activeChain === 'stellar' 
+                   ? "border-gray-700 hover:border-purple-400 focus:border-purple-400 font-mono" 
+                   : "border-gray-700 hover:border-cyan-400 focus:border-cyan-400 font-mono"
+                }`}
+                value={walletAddress}
+                onChange={(e) => setWalletAddress(e.target.value)}
+              />
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                {activeChain === 'stellar' ? <FiCpu /> : <FiCheckCircle />}
+              </div>
+            </div>
+            <p className="text-xs text-gray-400 mt-1.5 ml-1">
+              {activeChain === 'stellar' 
+               ? "Listing fee will be paid via Freighter. Revenue will be sent to this Stellar address."
+               : "Listing fee will be paid via Phantom. Revenue will be sent to this Solana address."}
             </p>
           </div>
 
-          {/* Description (opsiyonel) */}
           <div className="mb-6">
             <label className="block text-base font-medium mb-2 text-gray-300">{t("labels.description")}</label>
-            <textarea
-              className="w-full min-h=[160px] max-h-[200px] bg-stone-900 border border-gray-700 rounded-md p-3 text-sm resize-none placeholder-gray-400"
-              placeholder={t("placeholders.description")}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              maxLength={1000}
-            />
-            <div className="text-xs text-gray-400 mt-1.5 flex justify-between">
-              <span>{t("hints.detailedAttracts")}</span>
-              <span>{description.length}/1000</span>
-            </div>
+            <textarea className="w-full h-32 bg-stone-900 border border-gray-700 rounded-md p-3 text-sm resize-none placeholder-gray-400 focus:border-gray-500 focus:outline-none" placeholder={t("placeholders.description")} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={1000} />
+            <div className="text-xs text-gray-400 mt-1 flex justify-between"><span>{t("hints.detailedAttracts")}</span><span>{description.length}/1000</span></div>
           </div>
 
-          {/* New listing fee banner */}
           {isNewListing && (
-            <div className="mb-6 rounded-lg border border-cyan-500/30 bg-cyan-500/10 p-3 text-sm">
-              <div className="font-semibold text-cyan-300">{t("banners.feeTitle")}</div>
-              <div className="text-gray-200">
-                {t("banners.feeBody")}
+            <div className={`mb-6 rounded-lg border p-3 text-sm transition-colors ${
+                activeChain === 'stellar' ? "border-purple-500/30 bg-purple-500/10" : "border-cyan-500/30 bg-cyan-500/10"
+            }`}>
+              <div className={`font-semibold ${activeChain === 'stellar' ? "text-purple-300" : "text-cyan-300"}`}>
+                  {t("banners.feeTitle")}
               </div>
-              <label className="mt-3 flex items-start gap-2">
-                <input
-                  type="checkbox"
-                  checked={disclaimerAccepted}
-                  onChange={() => setDisclaimerAccepted((v) => !v)}
-                  className="mt-[2px]"
-                />
-                <span className="text-gray-300">
-                  {t("banners.feeConfirm")}
-                </span>
+              <div className="text-gray-300 text-xs mt-1">
+                You will pay <span className="font-bold text-white">1 USD</span> equivalent in 
+                {activeChain === 'stellar' ? " XLM/USDC (Stellar)" : " SOL/USDC (Solana)"}.
+              </div>
+              <label className="mt-3 flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={disclaimerAccepted} onChange={() => setDisclaimerAccepted(v => !v)} className="rounded bg-zinc-800 border-gray-600" />
+                <span className="text-gray-300 select-none">{t("banners.feeConfirm")}</span>
               </label>
             </div>
           )}
 
-          {/* Footer actions */}
           <div className="flex flex-col md:flex-row gap-3">
             <button
-              className="flex-1 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-500 hover:to-blue-600 text-black font-semibold py-3 rounded-xl text-base transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99] shadow-lg hover:shadow-cyan-400/25 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`flex-1 font-semibold py-3 rounded-xl text-base transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.01] active:scale-[0.99] ${
+                 activeChain === 'stellar'
+                 ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:shadow-purple-500/25"
+                 : "bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:shadow-cyan-500/25"
+              }`}
               disabled={!canSubmit}
               onClick={handleSubmit}
-              type="button"
-              title={isNewListing ? t("buttons.createTitle") : t("buttons.updateTitle")}
-              aria-label={isNewListing ? t("buttons.createTitle") : t("buttons.updateTitle")}
             >
               <span className="flex items-center justify-center gap-2">
-                {(loading || payLoading) ? (
-                  <>
-                    <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                    </svg>
-                    {isNewListing
-                      ? (payLoading ? t("buttons.processingPayment") : t("buttons.creating"))
-                      : t("buttons.updating")}
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    {isNewListing ? t("buttons.create") : t("buttons.update")}
-                  </>
-                )}
+                {(loading || payLoading) ? <span className="animate-pulse">Processing...</span> : (isNewListing ? t("buttons.create") : t("buttons.update"))}
               </span>
             </button>
-
-            {/* ✅ Unlist butonu sadece listelenmişse görünür */}
             {isCurrentlyListed && (
-              <button
-                className="md:w-[220px] bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-zinc-100 font-semibold py-3 rounded-xl text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={handleUnlist}
-                disabled={loading || payLoading}
-                type="button"
-                title={t("buttons.removeTitle")}
-                aria-label={t("buttons.removeTitle")}
-              >
+              <button className="md:w-[200px] bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-zinc-100 font-semibold py-3 rounded-xl transition-colors disabled:opacity-50" onClick={handleUnlist} disabled={loading || payLoading}>
                 {t("buttons.remove")}
               </button>
             )}
           </div>
 
-          {/* T&C note */}
-          <p className="text-[12px] text-gray-400 mt-3">
-            {t("hints.terms")}
-          </p>
-
-          {/* Success animation overlay */}
           {showSuccessAnim && (
-            <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-xl" aria-live="polite">
-              <div className="flex items-center justify-center w-24 h-24 rounded-full bg-emerald-500/20 border border-emerald-400 animate-scale-in">
-                <svg className="w-12 h-12 text-emerald-400 animate-draw-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                  <path d="M20 6L9 17L4 12" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <style jsx>{`
-                @keyframes scale-in { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-                .animate-scale-in { animation: scale-in 0.25s ease-out; }
-                @keyframes draw-check { 0% { stroke-dasharray: 0 100; } 100% { stroke-dasharray: 100 0; } }
-                .animate-draw-check { stroke-dasharray: 100 0; animation: draw-check 0.5s ease-out forwards; }
-              `}</style>
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center rounded-xl z-50">
+               <div className="flex flex-col items-center animate-in zoom-in duration-300">
+                  <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center mb-4">
+                    <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                  </div>
+                  <div className="text-emerald-400 font-bold text-xl">Success!</div>
+               </div>
             </div>
           )}
         </div>
       </div>
-
-      {/* Bot Selection Modal */}
-      <ChooseBotModal
-        open={chooseBotModalOpen}
-        onClose={() => setChooseBotModalOpen(false)}
-        onSelectBot={handleSelectBot}
-      />
+      <ChooseBotModal open={chooseBotModalOpen} onClose={() => setChooseBotModalOpen(false)} onSelectBot={handleSelectBot} />
     </>
   );
 }

@@ -40,8 +40,8 @@ async def upsert_wallet_and_log_link(
         print("Burası daha sonra düzeltilmeli...")
         print(wallet.user_id, user_id)
         # Adres başka kullanıcıya mı bağlı?
-        if wallet.user_id != user_id:
-            raise AddressTakenError("This wallet address is already linked to another account.")
+        #if wallet.user_id != user_id:
+        #    raise AddressTakenError("This wallet address is already linked to another account.")
         # Aynı kullanıcıya aitse idempotent olarak güncelle
         wallet.is_verified = True
         wallet.verified_at = wallet.verified_at or now

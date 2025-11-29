@@ -7,6 +7,10 @@ from datetime import datetime, timezone, timedelta
 import json
 import secrets
 
+from app.core.stellar import wait_for_tx_success  # 👈 biraz önce yazdığımız helper
+
+from stellar_sdk import SorobanServer, soroban_rpc
+
 from app.database import get_db
 from app.core.auth import verify_token
 from app.models.payments import PaymentIntent 
@@ -21,6 +25,8 @@ router = APIRouter(prefix="/stellar/market", tags=["stellar-market"])
 HORIZON_URL = "https://horizon-testnet.stellar.org"
 PAYMENT_CONTRACT_ID = os.getenv("WHALEER_PAYMENT_CONTRACT_ID")
 NATIVE_TOKEN_ID = os.getenv("NATIVE_TOKEN_CONTRACT_ID")
+
+soroban = SorobanServer("https://soroban-testnet.stellar.org")
 
 server = Server(HORIZON_URL)
 
@@ -95,8 +101,8 @@ async def confirm_order(
     user_id: str = Depends(verify_token),
 ):
     """
-    1. Transaction Hash'i on-chain doğrular.
-    2. İşlem başarılıysa Botu kopyalar ve kullanıcıya atar.
+    1. Transaction Hash'i Soroban RPC üzerinden doğrular.
+    2. İşlem SUCCESS ise Botu kopyalar ve kullanıcıya atar.
     """
     print(f"Confirming order {body.order_id} for user {user_id} with tx {body.tx_hash}")
 
@@ -105,24 +111,32 @@ async def confirm_order(
     res = await db.execute(q)
     intent = res.scalar_one_or_none()
     print(f"Found intent: {intent}")
+
     if not intent:
         raise HTTPException(404, "Order not found")
+
     if intent.status == 1:
-        return {"status": "already_confirmed", "bot_id": intent.bot_id} # Zaten onaylıysa tekrar işlem yapma
+        # Zaten onaylıysa tekrar işlem yapma
+        return {"status": "already_confirmed", "bot_id": intent.bot_id}
+
     print(f"Intent status: {intent.status}")
-    # 2. Stellar Ağından Sorgula
+
+    # 2. Soroban RPC'den transaction durumunu doğrula
     try:
-        tx_data = server.transactions().transaction(body.tx_hash).call()
-    except Exception as e:
-        raise HTTPException(400, f"Transaction not found on chain: {str(e)}")
-    print(f"Transaction data: {tx_data}")
-    if not tx_data["successful"]:
-        raise HTTPException(400, "Transaction failed on-chain")
-    
-    # 3. İleri Seviye Doğrulama (Opsiyonel ama önerilir)
-    # Transaction'ın memo'sunda order_id var mı? Veya eventlerde var mı?
-    # Şimdilik TX başarılıysa ve bizim kontrata gittiyse kabul ediyoruz.
-    
+        tx_resp = await wait_for_tx_success(body.tx_hash)
+    except RuntimeError as e:
+        # Burada FAILED veya NOT_FOUND (poll sonrası) gibi durumlar gelir
+        raise HTTPException(status_code=400, detail=str(e))
+
+    # Buraya gelmişsek status == SUCCESS
+    # İstersen tx_resp'i loglayabilirsin:
+    print(f"Soroban tx success: ledger={tx_resp.ledger}, created_at={tx_resp.create_at}")
+
+    # 3. İleri Seviye Doğrulama (opsiyonel)
+    # - tx_resp.result_meta_xdr'dan kontrat eventlerini parse edip
+    #   gerçekten pay_split çağrısı mı yapılmış, contract_id seninki mi vs. bakabilirsin.
+    # Şimdilik SUCCESS olması yeterli kabul ediyoruz.
+
     # 4. BOT KOPYALAMA İŞLEMİ
     meta_data = json.loads(intent.recipient_json)
     purchase_type = meta_data.get("purchase_type", "BUY")
@@ -133,25 +147,27 @@ async def confirm_order(
             db=db,
             original_bot_id=intent.bot_id,
             new_owner_id=int(user_id),
-            purchase_type=purchase_type,
-            rent_days=rent_days
+            purchase_type=purchase_type,   # "BUY" | "RENT" gibi
+            rent_days=rent_days,
+            price_paid=float(intent.price_amount) if getattr(intent, "price_amount", None) else None,
+            tx_hash=body.tx_hash,
         )
     except Exception as e:
         print(f"Bot replication failed: {e}")
-        raise HTTPException(500, "Payment successful but bot delivery failed. Contact support.")
+        raise HTTPException(
+            500,
+            "Payment successful but bot delivery failed. Contact support.",
+        )
 
     # 5. Veritabanını Güncelle (Siparişi Tamamla)
-    intent.status = 1 # Confirmed
+    intent.status = 1  # Confirmed
     intent.tx_sig = body.tx_hash
     intent.updated_at = datetime.now(timezone.utc)
-    
-    # Oluşturulan yeni botun ID'sini intent'e not düşebilirsin (opsiyonel)
-    # intent.delivered_bot_id = new_bot_id 
 
     await db.commit()
 
     return {
-        "status": "confirmed", 
+        "status": "confirmed",
         "new_bot_id": new_bot_id,
-        "message": "Bot successfully added to your inventory."
+        "message": "Bot successfully added to your inventory.",
     }

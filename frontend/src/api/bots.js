@@ -105,8 +105,23 @@ export const createBot = async (botData) => {
 
 export const updateBot = async (id, botData) => {
   try {
+    // 🔹 SADECE deposit_balance güncellenecekse:
+    // backende gitme, direkt return et (store local state'i zaten merge ediyor).
+    console.log("updateBot called with:", id); // DEBUG
+    console.log("updateBot botData:", botData); // DEBUG
+    if (
+      botData &&
+      Object.keys(botData).length === 1 &&
+      Object.prototype.hasOwnProperty.call(botData, "deposit_balance")
+    ) {
+      // Burada axios çağrısı yok; sadece "başarılı" gibi davranıyoruz.
+      return { id, ...botData };
+    }
+
+    // 🔹 Normal (tam) update flow:
     const apiList = useApiStore.getState().apiList;
     const strategies = useStrategyStore.getState().all_strategies;
+
     const selectedApi = apiList.find((item) => item.name === botData.api);
     let selectedStrategy;
     if (botData.strategy && typeof botData.strategy === 'string') {
@@ -114,14 +129,16 @@ export const updateBot = async (id, botData) => {
     } else {
       selectedStrategy = strategies.find((item) => String(item.id) === String(botData.strategy));
     }
+
     if (!selectedApi) {
       throw new Error('Unvalid API.');
     }
-    let selected_strategy_id = null
-    if(selectedStrategy) {
-      selected_strategy_id = selectedStrategy.id
+
+    let selected_strategy_id = null;
+    if (selectedStrategy) {
+      selected_strategy_id = selectedStrategy.id;
     }
-    //console.log("botData:", botData);
+
     const payload = {
       name: botData.name,
       strategy_id: selected_strategy_id,
@@ -135,7 +152,7 @@ export const updateBot = async (id, botData) => {
       initial_usd_value: Number(botData.initial_usd_value),
       current_usd_value: Number(botData.initial_usd_value),
       maximum_usd_value: Number(botData.initial_usd_value),
-      bot_type: botData.bot_type || {}, 
+      bot_type: botData.bot_type || {},
     };
 
     const response = await axios.put(
@@ -149,6 +166,7 @@ export const updateBot = async (id, botData) => {
     throw error;
   }
 };
+
 
 export const deleteBot = async (id) => {// GELİŞTİRİCİ MODU
   try {

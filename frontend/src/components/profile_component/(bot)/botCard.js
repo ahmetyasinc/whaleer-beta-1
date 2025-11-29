@@ -83,69 +83,124 @@ function RentedCountdown({ rent_expires_at }) {
 export const BotCard = ({ bot, column }) => {
   const { t } = useTranslation("botCard");
 
+  // === STORE & ACTIONLAR ===
   const removeBot = useBotStore((state) => state.removeBot);
   const shutDownBot = useBotStore((state) => state.shutDownBot);
   const updateBot = useBotStore((state) => state.updateBot);
   const toggleBotActive = useBotStore((state) => state.toggleBotActive);
   const { fetchAndStoreBotAnalysis } = useBotExamineStore.getState();
-
+  
+  // === UI STATE ===
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedBotId, setSelectedBotId] = useState(null);
   const [isShotDownModalOpen, setShotDownModalOpen] = useState(false);
-
+  
   const [editing, setEditing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isExamineOpen, setIsExamineOpen] = useState(false);
   const menuRef = useRef(null);
-
-  // RENTED kontrol + expiry
-  const isRented = bot?.acquisition_type === 'RENTED';
-  const expiryMs = isRented && bot?.rent_expires_at ? new Date(bot.rent_expires_at).getTime() : null;
+  
+  // === RENTED KONTROL & SAYAÇ ===
+  const isRented = bot?.acquisition_type === "RENTED";
+  
+  // Kira bitişi (ms cinsinden)
+  const expiryMs =
+    isRented && bot?.rent_expires_at
+      ? new Date(bot.rent_expires_at).getTime()
+      : null;
+  
+  // Süresi dolmuş mu?
   const isExpired = isRented && (expiryMs ? Date.now() >= expiryMs : true);
+  
+  // Saniyelik tick (countdown için)
   const [nowTick, setNowTick] = useState(() => Date.now());
+  
   useEffect(() => {
     if (!expiryMs) return;
     const id = setInterval(() => setNowTick(Date.now()), 1000);
     return () => clearInterval(id);
   }, [expiryMs]);
-
+  
+  // === MENÜ DIŞINA TIKLAMA ===
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  // --- Yeni blokaj kontrolü (aktif etme ve examine için) ---
+  
+  // === BLOKAJ (API / VALUE EKSİKSE) ===
   const isBlocked =
     bot?.initial_usd_value == null ||
     bot?.current_usd_value == null ||
-    (typeof bot?.api === 'undefined');
-
-  // Toggle’ın gerçek kullanılabilirliği
-  const canToggle = !(isRented && isExpired) && !isBlocked;
-
-  // Ortak kırmızı uyarı stili (toggle alanı için)
-  const redDisableWrap = !canToggle
-    ? "ring-1 ring-red-700 rounded-md p-1 bg-red-500/10"
-    : "";
-
+    typeof bot?.api === "undefined";
+  
+  // Toggle için temel disable title (bakiyeye bakmadan önce)
   const disableTitle = isBlocked
     ? t("toggle.blocked")
-    : (isRented && isExpired)
-      ? t("toggle.expired")
-      : undefined;
+    : isRented && isExpired
+    ? t("toggle.expired")
+    : undefined;
+  
+  // === DEPOZİTO & TOGGLE LOGIC ===
+  
+  // TODO: bunu gerçek "sadece kardan komisyon almak istiyorum" field'ına bağlayacaksın
+  const isProfitShareMode = !!bot?.profit_share_only;
+  
+  // Depozito kartını aç/kapa kontrolü
+  const [showDeposit, setShowDeposit] = useState(false);
+  
+  // API'den gelen bakiye (yoksa 0)
+  const balance = bot?.deposit_balance ?? 0;
+  
+  // Normal şartlarda toggle atılabilir mi? (API var mı, blokeli mi vs.)
+  const canToggle = !isBlocked && !!bot.api;
+  
+  // Depozito yetersiz mi? (ör: 10$ altı)
+  const isDepositTooLow = isProfitShareMode && balance < 10;
+  
+  // Final disable durumu: ya sistemsel blokaj, ya da depozito yetersizliği
+  const finalToggleDisabled = !canToggle || isDepositTooLow;
+  
+  // Tooltip metni: önce bakiye kontrolü, sonra genel sebep
+  const finalDisableTitle = isDepositTooLow
+    ? "Depozito bakiyesi 10$ altında olduğu için bot çalıştırılamaz."
+    : disableTitle;
+  
+  // Toggle çevresine kırmızı highlight (sadece gerçekten disable ise)
+  const redDisableWrap = finalToggleDisabled
+    ? "ring-1 ring-red-700 rounded-md p-1 bg-red-500/10"
+    : "";
+  
+
+  // === Depozito işlemleri ===
+  const handleDepositLoad = () => {
+    console.log("Yükle butonuna basıldı. Bot ID:", bot.id);
+    // TODO: burada yükleme modalı veya işlem açılacak
+  };
+  
+  const handleDepositWithdraw = () => {
+    console.log("Çek butonuna basıldı. Bot ID:", bot.id);
+    // TODO: burada çekme modalı veya işlem açılacak
+  };
+
+
 
   /* ==== SOL KART ==== */
   if (column === "left") {
     return (
       <>
         <div className="rounded-r-full px-4 py-4 relative border-2 border-cyan-900 bg-[hsl(227,82%,2%)] text-gray-200">
-          <div className="grid grid-cols-3 gap-4">
-
+          
+          {/* DEĞİŞİKLİK 1: gap-4 kaldırıldı, yerine divide-x divide-gray-700 eklendi. 
+              Bu işlem sütunlar arasına tek ve düzgün bir çizgi çeker. */}
+          <div className="grid grid-cols-3 divide-x divide-gray-700">
+    
             {/* SOL: Bot Bilgi Alanı */}
-            <div className="border-r border-gray-700 pr-4">
+            <div className="pr-4"> 
               {/* Başlık satırı: İsim + Type + Menü */}
               <div className="flex items-center gap-2 border-b border-gray-600 pb-[10px] mb-2">
                 <h3 className="text-[18px] font-semibold text-white truncate flex-1">{bot.name}</h3>
@@ -166,13 +221,13 @@ export const BotCard = ({ bot, column }) => {
                         className="flex items-center gap-2 w-full px-4 py-2 text-sm text-blue-400 hover:bg-gray-800">
                         <FiEdit3 size={16} /> {t("menu.edit")}
                       </button>
-
+    
                       <button
                         onClick={() => { setSelectedBotId(bot.id); setDeleteModalOpen(true); setMenuOpen(false); }}
                         className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-800">
                         <FaRegTrashAlt size={16} /> {t("menu.deleteDev")}
                       </button>
-
+    
                       <button
                         onClick={() => {
                           if (isBlocked) return;
@@ -190,7 +245,7 @@ export const BotCard = ({ bot, column }) => {
                       >
                         <IoSearch size={16} /> {t("menu.examine")}
                       </button>
-
+    
                       <button
                         onClick={() => { setSelectedBotId(bot.id); setShotDownModalOpen(true); setMenuOpen(false); }}
                         className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-gray-700"
@@ -201,7 +256,7 @@ export const BotCard = ({ bot, column }) => {
                   )}
                 </div>
               </div>
-
+    
               <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.api")}</span> {bot.api}</p>
               <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.strategy")}</span> {bot.strategy}</p>
               <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.period")}</span> {bot.period}</p>
@@ -216,21 +271,79 @@ export const BotCard = ({ bot, column }) => {
                 </span>
               </p>
             </div>
-
-            {/* ORTA: Countdown + Coinler */}
-            <div className="flex flex-col pr-1 border-r border-gray-700 relative">
+    
+             {/* ORTA: Kripto Paralar ve Depozito */}
+            <div className="flex flex-col px-6">
               {isRented && (
                 <RentedCountdown rent_expires_at={bot?.rent_expires_at} />
               )}
-              <h4 className="text-sm font-semibold mb-2 bg-gradient-to-r from-violet-900 via-sky-600 to-purple-500 text-transparent bg-clip-text">
-                {t("fields.cryptocurrencies")}
-              </h4>
-              <div className="h-44 overflow-y-auto mr-4 scrollbar-hide">
+    
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-semibold bg-gradient-to-r from-violet-900 via-sky-600 to-purple-500 text-transparent bg-clip-text">
+                  {t("fields.cryptocurrencies")}
+                </h4>
+            
+                {isProfitShareMode && (
+                  <button
+                    type="button"
+                    onClick={() => setShowDeposit((v) => !v)}
+                    className="text-[11px] px-3 py-1 rounded-full border border-cyan-700 bg-[rgb(5,20,35)] hover:bg-[rgb(10,32,52)] text-cyan-200 font-medium transition"
+                  >
+                    Depozito
+                  </button>
+                )}
+              </div>
+              
+              {/* BURASI ORTAK SCROLL ALANI */}
+              <div className="h-44 overflow-y-auto scrollbar-hide space-y-2">
+                {showDeposit && (
+                  <div className="rounded-xl border border-cyan-900 bg-gradient-to-r from-[rgb(10,18,35)] via-[rgb(8,29,54)] to-[rgb(18,24,48)] px-3 py-3 shadow-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[11px] uppercase tracking-wide text-cyan-300">
+                        Depozito
+                      </span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-900/60 text-cyan-200 border border-cyan-700/60">
+                        Komisyon
+                      </span>
+                    </div>
+                
+                    {/* Bakiye kutusu */}
+                    <div className="mb-3 rounded-lg border border-slate-700 bg-black/40 px-3 py-2 flex items-baseline justify-between">
+                      <span className="text-[11px] text-slate-400">Bakiye</span>
+                      <span className="text-[18px] font-semibold text-white">
+                        ${balance.toFixed(2)}
+                      </span>
+
+                    </div>
+                
+                    {/* Yükle / Çek butonları */}
+                    <div className="flex gap-2">
+                    <button
+                        type="button"
+                        onClick={handleDepositLoad}
+                        className="flex-1 text-[13px] font-medium px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 hover:from-violet-600 hover:to-sky-500 border border-cyan-400/40 shadow-md shadow-cyan-900/40 transition"
+                      >
+                        Yükle
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleDepositWithdraw}
+                        className="flex-1 text-[13px] font-medium px-3 py-1.5 rounded-lg bg-transparent border border-slate-600 hover:border-sky-500 text-slate-200 hover:text-white transition"
+                      >
+                        Çek
+                      </button>
+
+                    </div>
+                  </div>
+                )}
+    
+                {/* Coin listesi – aynı scroll alanında */}
                 {bot.cryptos?.length > 0 ? (
                   bot.cryptos.map((coin) => (
                     <div
                       key={coin}
-                      className="w-full text-center text-[14px] bg-gradient-to-r from-[rgb(14,20,35)] to-neutral-800 border border-slate-700 px-2 py-1 rounded text-white mb-1"
+                      className="w-full text-center text-[14px] bg-gradient-to-r from-[rgb(14,20,35)] to-neutral-800 border border-slate-700 px-2 py-1 rounded text-white"
                     >
                       {coin}
                     </div>
@@ -240,34 +353,35 @@ export const BotCard = ({ bot, column }) => {
                 )}
               </div>
             </div>
-
+    
             {/* SAĞ: Toggle + Spinner */}
-            <div className="flex flex-col justify-center items-center relative">
+            <div className="flex flex-col justify-center items-center relative pl-4">
               <div className="absolute flex items-center gap-3 mb-[148px] mr-[7px] z-10 pointer-events-none">
                 <SpinningWheel isActive={bot.isActive} />
               </div>
               <div
                 className={[
                   "flex items-center gap-3 z-20 relative",
-                  (!canToggle) ? "opacity-90" : "",
+                  finalToggleDisabled ? "opacity-50 cursor-not-allowed" : "",
                   redDisableWrap
                 ].join(' ')}
-                title={disableTitle}
-                aria-disabled={!canToggle}
+                title={finalDisableTitle}
+                aria-disabled={finalToggleDisabled}
               >
                 <RunBotToggle
                   checked={bot.isActive}
-                  onChange={canToggle ? () => toggleBotActive(bot.id) : undefined}
-                  disabled={!canToggle}
+                  onChange={!finalToggleDisabled ? () => toggleBotActive(bot.id) : undefined}
+                  disabled={finalToggleDisabled}
                 />
               </div>
+
             </div>
           </div>
-
+    
           {editing && <BotModal mode="edit" bot={bot} onClose={() => setEditing(false)} />}
           {isExamineOpen && <ExamineBot isOpen={isExamineOpen} onClose={() => setIsExamineOpen(false)} botId={bot.id} />}
         </div>
-
+    
         <DeleteBotConfirmModal
           isOpen={isDeleteModalOpen}
           onClose={() => setDeleteModalOpen(false)}

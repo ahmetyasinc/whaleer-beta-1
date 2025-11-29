@@ -1,4 +1,3 @@
-// components/BotCard.js
 "use client";
 
 import React, { useEffect, useMemo, useState } from 'react';
@@ -19,9 +18,6 @@ import { useTranslation } from "react-i18next";
 import BuyModal from "@/components/profile_component/(showcase)/(checkout)/BuyModal";
 import RentModal from "@/components/profile_component/(showcase)/(checkout)/RentModal";
 
-/* =========================
-   Timezone helpers
-   ========================= */
 const pad = (n) => String(n).padStart(2, '0');
 
 function getCookie(name) {
@@ -30,7 +26,6 @@ function getCookie(name) {
   return m ? decodeURIComponent(m.split('=')[1]) : null;
 }
 
-// "GMT+3", "GMT-5:30" → dakika cinsinden offset
 function parseGmtToMinutes(tzStr) {
   const m = /^GMT\s*([+-])\s*(\d{1,2})(?::?(\d{2}))?$/i.exec((tzStr || '').trim());
   if (!m) return 0;
@@ -236,7 +231,7 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
           </div>
 
           {/* Buy / Rent */}
-          <div className="flex w-full gap-2 mb-4">
+          <div className="flex w-full gap-2 mb-2">
             <PurchaseButton
               enabledFlag={Boolean(botData.for_sale)}
               // --- GÜNCELLEME: combined değişkeni gönderiyoruz ---
@@ -260,6 +255,34 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
               onClick={() => setRentOpen(true)}
             />
           </div>
+
+          {/* Kardan Komisyon Uyarıları */}
+          <div className="w-full py-4 space-y-3">
+
+            {/* Satın Alma İçin Kardan Komisyon*/}
+            {botData.has_profit_commission_buy  && (
+              <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-900/50 border border-amber-500/70 text-amber-200 text-xs sm:text-sm">
+                <span className="font-extralight">
+                  ⚠ Bu botta SATIN alımlarda günlük 
+                  <span className="font-bold text-lg text-orange-600"> %{botData.profit_commission_rate_buy} </span> 
+                  oranında kârdan komisyon alınmaktadır.
+                </span>
+              </div>
+            )}
+            
+            {/* Kiralama İçin Kardan Komisyon*/}
+            { botData.has_profit_commission_rent && (
+              <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-900/50 border border-amber-500/70 text-amber-200 text-xs sm:text-sm">
+                <span className="font-extralight">
+                  ⚠ Bu botta KİRALAMA işlemlerinde günlük 
+                  <span className="font-bold text-lg text-orange-600"> %{botData.profit_commission_rate_rent} </span> 
+                  oranında kârdan komisyon alınmaktadır.
+                </span>
+              </div>
+            )}
+          </div>
+
+
 
           {/* Stats */}
           <div className="flex flex-col space-y-2 mb-6">

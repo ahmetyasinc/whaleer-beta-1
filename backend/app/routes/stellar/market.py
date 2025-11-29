@@ -162,23 +162,17 @@ async def confirm_order(
         raise HTTPException(400, "User stellar wallet not found in Platform")
     
     user_address = user_wallet.address
-    #print(f"User address: {user_address}")
     q_bot = select(Bots).where(Bots.id == intent.bot_id)
     res_bot = await db.execute(q_bot)
     original_bot = res_bot.scalar_one_or_none()
-    #print(f"Original bot: {original_bot}")
     meta_data = json.loads(intent.recipient_json)
     purchase_type = meta_data.get("purchase_type", "BUY")
     rent_days = meta_data.get("rent_days", 0)
-    print(f"Purchase type: {purchase_type}, rent days: {rent_days}")
-    # Oranları belirle (Veritabanında bu alanların olduğunu varsayıyorum)
-    # Eğer botta 'profit_sharing' kapalıysa 0 göndeririz.
     profit_share_rate = 0
     if purchase_type == "BUY" and getattr(original_bot, "sold_profit_share_rate", False):
         profit_share_rate = getattr(original_bot, "sold_profit_share_rate", 0)
     elif purchase_type == "RENT" and getattr(original_bot, "rent_profit_share_rate", False):
         profit_share_rate = getattr(original_bot, "rent_profit_share_rate", 0)
-    print(f"Profit share rate: {profit_share_rate}")
     platform_cut_rate = 10
 
     try:
@@ -191,9 +185,7 @@ async def confirm_order(
             price_paid=float(intent.price_amount) if getattr(intent, "price_amount", None) else None,
             tx_hash=body.tx_hash,
         )
-        print(f"Replicated bot with new ID: {new_bot_id}")
         if profit_share_rate > 0:
-            print(f"Initializing vault on-chain for bot {new_bot_id} and user {user_id}")
             vault_tx_hash = init_vault_on_chain(
                 bot_id=new_bot_id,
                 user_id=int(user_id),
@@ -202,9 +194,7 @@ async def confirm_order(
                 profit_share_rate=profit_share_rate,
                 platform_cut_rate=platform_cut_rate
             )
-            print(f"Vault init tx hash: {vault_tx_hash}")
     except Exception as e:
-        print(f"Bot replication failed: {e}")
         raise HTTPException(
             500,
             "Payment successful but bot delivery failed. Contact support.",

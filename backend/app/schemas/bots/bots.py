@@ -14,6 +14,7 @@ class BotsBase(BaseModel):
     name: Optional[str] = None
     initial_usd_value: Optional[float] = None
     current_usd_value: Optional[float] = None
+    maximum_usd_value: Optional[float] = None
     bot_type: Optional[str] = None
     enter_on_start: Optional[bool] = Field(False, description="Bot starts trading immediately on current signal if True")
 
@@ -47,6 +48,7 @@ class BotsOut(BotsBase):
     rent_expires_at: Optional[datetime] = None
     enter_on_start: Optional[bool] = None
     description: Optional[str] = None
+    
     
     class Config:
         orm_mode = True

@@ -41,7 +41,7 @@ export const getBots = async () => {
         rent_expires_at: item.rent_expires_at,
         enterOnCurrentSignal: item.enter_on_start,
         description: item.description,
-        profit_share_only: item.is_profit_share ?? true,   // kardan komisyon modu
+        profit_share_only: item.is_profit_share ?? false,   // kardan komisyon modu
         deposit_balance: item.deposit_balance ?? 0,           // depozito bakiyesi
       };
     });

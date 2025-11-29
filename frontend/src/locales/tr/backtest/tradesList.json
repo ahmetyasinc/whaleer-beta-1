@@ -18,9 +18,22 @@
     "priceClose": "Fiyat (Kapanış)"
   },
   "types": {
-    "longOpen": "LONG AÇ",
-    "longClose": "LONG KAPAT",
-    "shortOpen": "SHORT AÇ",
-    "shortClose": "SHORT KAPAT"
+    "longOpen": "Long Aç",
+    "longClose": "Long Kapat",
+    "shortOpen": "Short Aç",
+    "shortClose": "Short Kapat",
+    "longTakeProfitClose": "Long Kapat (TP)",
+    "longStopLossClose": "Long Kapat (SL)",
+    "shortTakeProfitClose": "Short Kapat (TP)",
+    "shortStopLossClose": "Short Kapat (SL)",
+    "longScaleIn": "Long Artır",
+    "shortScaleIn": "Short Artır",
+    "longScaleOut": "Long Azalt",
+    "shortScaleOut": "Short Azalt",
+    "flipLongOpen": "Yön Değişimi Long Aç",
+    "flipShortOpen": "Yön Değişimi Short Aç",
+    "flipLongClose": "Yön Değişimi Long Kapat",
+    "flipShortClose": "Yön Değişimi Short Kapat",
+    "forceClose": "Zorla Kapama"
   }
 }

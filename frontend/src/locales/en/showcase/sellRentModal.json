@@ -34,7 +34,7 @@
   "banners": {
     "feeTitle": "One-time Listing Fee",
     "feeBody": "A one-time fee of 1 USD will be charged via Solana when creating a new listing. Your wallet will display the exact SOL amount.",
-    "feeConfirm": "I confirm that I’m paying a 1 USD listing fee via Solana and agree that this fee is non-refundable."
+    "feeConfirm": "I confirm that I’m paying a 1 USD listing fee via blockchain network and agree that this fee is non-refundable."
   },
   "buttons": {
     "select": "Select",

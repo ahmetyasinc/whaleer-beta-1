@@ -1,49 +1,60 @@
-  // src/store/auth/siwsStore.js
-  "use client";
-  import { create } from "zustand";
-  import { persist } from "zustand/middleware";
-  import { fetchWalletSession, logoutWallet } from "@/api/auth";
+// src/store/auth/siwsStore.js
+"use client";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { fetchWalletSession, logoutWallet } from "@/api/auth";
 
-  export const useSiwsStore = create(
-    persist(
-      (set, get) => ({
-        // Sadece cüzdan oturumu
-        wallet: null,               // { id, address, chain, ... }
-        walletLinked: false,        // UI için kısa bayrak
-        authLoading: false,         // Connect/verify akışı boyunca loading kontrolü
+export const useSiwsStore = create(
+  persist(
+    (set, get) => ({
+      // --- SOLANA (Mevcut) ---
+      wallet: null,               
+      walletLinked: false,        
+      authLoading: false,         
 
-        setAuthLoading: (v) => set({ authLoading: v }),
-        setWallet: (w) => set({ wallet: w, walletLinked: !!w }),
+      // --- STELLAR (YENİ EKLENEN KISIM) ---
+      stellarAddress: null,       // Stellar Cüzdan Adresi (G... ile başlar)
+      
+      setAuthLoading: (v) => set({ authLoading: v }),
+      setWallet: (w) => set({ wallet: w, walletLinked: !!w }),
+      
+      // Stellar State Güncelleyici
+      setStellarAddress: (addr) => set({ stellarAddress: addr }),
 
-        clearAll: () => set({ wallet: null, walletLinked: false }),
+      clearAll: () => set({ 
+        wallet: null, 
+        walletLinked: false,
+        stellarAddress: null // Temizlerken bunu da sıfırla
+      }),
 
-        // Vitrine (Showcase) her girişte çağır: Cookie varsa wallet hydrate edilir.
-        hydrateSession: async () => {
-          try {
-            const sess = await fetchWalletSession(); // GET /auth/siws/session (withCredentials)
-            if (sess?.wallet) {
-              set({ wallet: sess.wallet, walletLinked: true });
-            } else {
-              set({ wallet: null, walletLinked: false });
-            }
-          } catch {
+      hydrateSession: async () => {
+        try {
+          const sess = await fetchWalletSession(); 
+          if (sess?.wallet) {
+            set({ wallet: sess.wallet, walletLinked: true });
+          } else {
             set({ wallet: null, walletLinked: false });
           }
-        },
-
-        // Sadece SIWS cookie’yi temizler (kullanıcı app login’i ile ilgili değildir)
-        signOutWallet: async () => {
-          try { await logoutWallet(); } catch {}
+        } catch {
           set({ wallet: null, walletLinked: false });
-        },
+        }
+      },
+
+      signOutWallet: async () => {
+        try { await logoutWallet(); } catch {}
+        set({ wallet: null, walletLinked: false });
+      },
+      
+      // Sadece Stellar çıkışı yapmak istersen
+      disconnectStellar: () => set({ stellarAddress: null })
+    }),
+    {
+      name: "siws-local",
+      partialize: (state) => ({
+        wallet: state.wallet,
+        walletLinked: state.walletLinked,
+        stellarAddress: state.stellarAddress, // Stellar adresini de tarayıcıda hatırla
       }),
-      {
-        name: "siws-local",
-        // Persist’e gereksiz şeyleri yazma; tüm state yazılabilir ama istersen daraltabilirsin.
-        partialize: (state) => ({
-          wallet: state.wallet,
-          walletLinked: state.walletLinked,
-        }),
-      }
-    )
-  );
+    }
+  )
+);

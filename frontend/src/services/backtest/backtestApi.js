@@ -5,8 +5,9 @@ axios.defaults.withCredentials = true;
 export const runBacktestApi = async ({ strategy, period, crypto, initial_balance }) => {
   try {
     strategy = strategy.id;
-
-    const payload = { strategy, period, crypto };
+    console.log("Running backtest with:", { strategy, period, crypto, initial_balance });
+    crypto = crypto?.binance_symbol;
+    const payload = { strategy, period, crypto};
     if (typeof initial_balance === 'number' && Number.isFinite(initial_balance)) {
       payload.initial_balance = initial_balance; // only send if provided/valid
     }

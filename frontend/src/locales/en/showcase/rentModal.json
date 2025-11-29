@@ -9,6 +9,7 @@
     "dailyUsd": "Daily Price (USD)",
     "totalUsd": "Total Price (USD)",
     "totalSol": "Approx. Total (SOL)",
+    "totalXlm": "Approx. Total (XLM)",
     "revenueWallet": "Revenue Wallet"
   },
   "actionNames": {

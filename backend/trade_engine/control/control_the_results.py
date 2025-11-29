@@ -1,5 +1,6 @@
 # backend/trade_engine/control/control_the_results.py
 from __future__ import annotations
+import numpy as np
 
 import asyncio
 import math
@@ -257,7 +258,12 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
 
         # NOTIONAL karşılaştırması için:
         # effective_frac = frac * leverage
-        effective_frac = frac * abs(act.get("leverage"))
+        lev = act.get("leverage")
+        try:
+            lev = float(lev) if lev is not None else 1.0
+        except Exception:
+            lev = 1.0
+        effective_frac = frac * abs(lev)
         # local_min_frac = min_usd / current_value  (her zaman NOTIONAL eşiği)
         if isinstance(min_usd, dict):
             local_min_frac = _get_min_frac_for_action(act)
@@ -321,6 +327,8 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
         )
         return True
 
+    print("bot_type:", bot_type)
+    #print("blocked_open:", blocked_open)
     # ---------- 1) REDUCE/CLOSE ----------
     if bot_type == "spot":
         for sym, tgt in targets.items():
@@ -350,9 +358,10 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
             cur_pct = cur["long_pct"]
             cur_lev = cur["long_lev"]
 
-            if cur_pct > 0 and target_pct > 0 and (cur_lev is not None and target_lev is not None) and (cur_lev != target_lev):
+            if cur_pct > 0 and target_pct > 0 and (cur_lev is not None and target_lev is not None) and (abs(cur_lev) != abs(target_lev)):
                 reduce_frac = cur_pct / 100.0
                 act = {"coin_id": sym, "trade_type": "futures", "positionside": "long", "side": "sell", "reduceOnly": True, **meta}
+                print("action for long close due to lev change:", act, "reduce_frac:", reduce_frac)
                 ok = maybe_append(act, reduce_frac)
                 if ok:
                     fulness = max(0.0, fulness - reduce_frac)
@@ -365,6 +374,7 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
             if delta_long < 0:
                 reduce_frac = -delta_long
                 act = {"coin_id": sym, "trade_type": "futures", "positionside": "long", "side": "sell", "reduceOnly": True, **meta}
+                print("action for long reduce:", act, "reduce_frac:", reduce_frac)
                 ok = maybe_append(act, reduce_frac)
                 if ok:
                     fulness = max(0.0, fulness - reduce_frac)
@@ -376,9 +386,10 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
             cur_pct = cur["short_pct"]
             cur_lev = cur["short_lev"]
 
-            if cur_pct > 0 and target_pct > 0 and (cur_lev is not None and target_lev is not None) and (cur_lev != target_lev):
+            if cur_pct > 0 and target_pct > 0 and (cur_lev is not None and target_lev is not None) and (abs(cur_lev) != abs(target_lev)):
                 reduce_frac = cur_pct / 100.0
                 act = {"coin_id": sym, "trade_type": "futures", "positionside": "short", "side": "buy", "reduceOnly": True, **meta}
+                print("action for short close due to lev change:", act, "reduce_frac:", reduce_frac)
                 ok = maybe_append(act, reduce_frac)
                 if ok:
                     fulness = max(0.0, fulness - reduce_frac)
@@ -391,6 +402,7 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
             if delta_short < 0:
                 reduce_frac = -delta_short
                 act = {"coin_id": sym, "trade_type": "futures", "positionside": "short", "side": "buy", "reduceOnly": True, **meta}
+                print("action for short reduce:", act, "reduce_frac:", reduce_frac)
                 ok = maybe_append(act, reduce_frac)
                 if ok:
                     fulness = max(0.0, fulness - reduce_frac)
@@ -421,15 +433,18 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
 
             # LONG open
             if not blocked_open[sym]["long"]:
+                print("trying long open for", sym)
                 target_pct = tgt["long"]["pct"]
                 target_lev = tgt["long"]["lev"]
                 cur_pct = cur["long_pct"]
                 delta_long = (target_pct - cur_pct) / 100.0
+                print("delta_long:", delta_long, "fulness:", fulness, "cur:", cur, "tgt:", tgt)
                 if delta_long > 0:
                     add_frac = min(delta_long, max(0.0, 1.0 - fulness))
                     act = {"coin_id": sym, "trade_type": "futures", "positionside": "long", "side": "buy", **meta}
                     if target_lev is not None:
                         act["leverage"] = target_lev
+                    print("action for long open:", act, "add_frac:", add_frac)
                     ok = maybe_append(act, add_frac)
                     if ok:
                         fulness = min(1.0, fulness + add_frac)
@@ -438,10 +453,12 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
 
             # SHORT open
             if not blocked_open[sym]["short"]:
+                print("trying short open for", sym)
                 target_pct = tgt["short"]["pct"]
                 target_lev = tgt["short"]["lev"]
                 cur_pct = cur["short_pct"]
                 delta_short = (target_pct - cur_pct) / 100.0
+                print("delta_short:", delta_short, "fulness:", fulness, "cur:", cur, "tgt:", tgt)
                 if delta_short > 0:
                     add_frac = min(delta_short, max(0.0, 1.0 - fulness))
                     act = {"coin_id": sym, "trade_type": "futures", "positionside": "short", "side": "sell", **meta}
@@ -457,3 +474,29 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
                 
     print("final actions:", actions)
     return actions
+
+
+# Dosyanın en altına ekle
+
+def main():
+    # >>> Burayı kendine göre doldur <<<
+    user_id = 5
+    bot_id = 168
+    results = [{'bot_id': 168, 'coin_id': 'SOLUSDT', 'status': 'success', 'last_positions': [20, 20], 'last_percentage': [5.155863110216407, 25.555863110216407], 'order_type': 'market', 'stop_loss': None, 'take_profit': None}]          # örn: [{"coin_id":"BTCUSDT","last_positions":[0,5],"last_percentage":[0,50]}]
+    min_usd = 10.0        # sayı ya da dict verebilirsin
+    ctx = None            # kendi context'ini vermek istersen dict koy; yoksa None bırak (load_bot_context çalışır)
+
+    actions = control_the_results(
+        user_id=user_id,
+        bot_id=bot_id,
+        results=results,
+        min_usd=min_usd,
+        ctx=ctx
+    )
+
+    # çıktıyı gör
+    import json
+    print(json.dumps(actions, ensure_ascii=False, indent=2))
+
+if __name__ == "__main__":
+    main()

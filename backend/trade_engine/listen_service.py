@@ -106,7 +106,7 @@ async def execute_bot_logic(interval):
 
             # TAHANIN PARTI
             print("result_dict:", result_dict)
-            result = await send_order(await prepare_order_data(result_dict))
+            #result = await send_order(await prepare_order_data(result_dict))
             
             elapsed = time.time() - start_time
             print(f"✅ {last_time}, {interval} tamamlandı. Süre: {elapsed:.2f} sn. (toplam sonuç: {len(results)})")

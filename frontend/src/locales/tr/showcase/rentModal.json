@@ -9,6 +9,7 @@
     "dailyUsd": "Günlük Fiyat (USD)",
     "totalUsd": "Toplam Fiyat (USD)",
     "totalSol": "Tahmini Toplam (SOL)",
+    "totalXlm": "Tahmini Toplam (XLM)",
     "revenueWallet": "Gelir Cüzdanı"
   },
   "actionNames": {

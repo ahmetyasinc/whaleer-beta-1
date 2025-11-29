@@ -143,8 +143,8 @@ const TerminalIndicator = ({ id }) => {
         setShowHeart(true);
         setTimeout(() => setShowHeart(false), 10000);
         playAudio("/sounds/jeveux.m4a");
-        break;
 
+        break;
       case 'çok ciddiyim':
         playAudio("/sounds/shaco.mpeg");
         break;

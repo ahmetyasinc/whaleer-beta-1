@@ -34,7 +34,7 @@
   "banners": {
     "feeTitle": "Tek Seferlik İlan Ücreti",
     "feeBody": "Yeni ilan oluştururken Solana üzerinden tek seferlik 1 USD ücret alınacaktır. Cüzdanınızda tam SOL miktarı görünecektir.",
-    "feeConfirm": "Solana ile 1 USD ilan ücreti ödeyeceğimi ve bu ücretin iade edilemeyeceğini kabul ediyorum."
+    "feeConfirm": "Ağ üzerinden 1 USD ilan ücreti ödeyeceğimi ve bu ücretin iade edilemeyeceğini kabul ediyorum."
   },
   "buttons": {
     "select": "Seç",

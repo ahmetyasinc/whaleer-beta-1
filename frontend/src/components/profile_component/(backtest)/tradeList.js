@@ -14,6 +14,13 @@ export default function TradesList({ trades }) {
       minimumFractionDigits: 1,
     }).format(value);
 
+  const formatCurrencyAbs = (value) =>
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 1,
+    }).format(Math.abs(value));
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleString('en-GB');
@@ -35,6 +42,32 @@ export default function TradesList({ trades }) {
         return t('types.shortOpen');
       case 'SHORT_CLOSE':
         return t('types.shortClose');
+      case 'LONG_TAKE_PROFIT_CLOSE':
+        return t('types.longTakeProfitClose');
+      case 'LONG_STOP_LOSS_CLOSE':
+        return t('types.longStopLossClose');
+      case 'SHORT_TAKE_PROFIT_CLOSE':
+        return t('types.shortTakeProfitClose');
+      case 'SHORT_STOP_LOSS_CLOSE':
+        return t('types.shortStopLossClose');
+      case 'LONG_SCALE_IN':
+        return t('types.longScaleIn');
+      case 'SHORT_SCALE_IN':
+        return t('types.shortScaleIn');
+      case 'LONG_SCALE_OUT':
+        return t('types.longScaleOut');
+      case 'SHORT_SCALE_OUT':
+        return t('types.shortScaleOut');
+      case 'FLIP_LONG_OPEN':
+        return t('types.flipLongOpen');
+      case 'FLIP_SHORT_OPEN':
+        return t('types.flipShortOpen');
+      case 'FLIP_LONG_CLOSE':
+        return t('types.flipLongClose');
+      case 'FLIP_SHORT_CLOSE':
+        return t('types.flipShortClose');
+      case 'FORCE_CLOSE':
+        return t('types.forceClose');
       default:
         return type;
     }
@@ -86,7 +119,7 @@ export default function TradesList({ trades }) {
                   <td className="py-3">
                     <span
                       className={`px-2 py-1 rounded-xl text-xs font-medium ${
-                        trade.type.includes('OPEN')
+                        trade.type.includes('OPEN') || trade.type.includes('SCALE_IN')
                           ? 'bg-green-900 text-green-300'
                           : 'bg-red-900 text-red-300'
                       }`}
@@ -120,8 +153,8 @@ export default function TradesList({ trades }) {
                       <span
                         className={pnlPercentage >= 0 ? 'text-green-400' : 'text-red-400'}
                       >
-                        {pnlPercentage >= 0 ? '+' : ''}
-                        {formatCurrency(pnlAmount)}
+                        {pnlPercentage >= 0 ? '+' : '-'}
+                        {formatCurrencyAbs(pnlAmount)}
                       </span>
                     ) : (
                       <span className="text-gray-500">–</span>

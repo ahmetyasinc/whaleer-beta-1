@@ -6,16 +6,12 @@ import { motion } from 'framer-motion';
 import {
   FiCalendar,
   FiClock,
-  FiTrendingUp,
   FiUserPlus,
   FiCheck,
   FiBarChart
 } from 'react-icons/fi';
 import { FaRobot, FaUser } from 'react-icons/fa';
 import { LuChartNoAxesCombined } from "react-icons/lu";
-import { GiCharging } from "react-icons/gi";
-import { IoMdWarning } from "react-icons/io";
-import { MdOutlineNumbers } from "react-icons/md";
 import { LiaChargingStationSolid } from "react-icons/lia";
 import { useSiwsStore } from "@/store/auth/siwsStore";
 import { useTranslation } from "react-i18next";
@@ -100,7 +96,6 @@ function formatDateOnly(value, offsetMinutes) {
 // ---- helpers for TypeBadge ----
 const getTypeBadgeClasses = (type) => {
   const t = String(type || '').toLowerCase();
-  // renkleri sade ve okunur tut
   switch (t) {
     case 'futures':
     case 'future':
@@ -114,7 +109,7 @@ const getTypeBadgeClasses = (type) => {
 };
 
 function TypeBadge({ type }) {
-  const { t: tr } = useTranslation('showcaseBotCard'); // aynı namespace'i kullanalım
+  const { t: tr } = useTranslation('showcaseBotCard');
   const label = (type || 'spot').toString().toUpperCase();
   return (
     <span
@@ -130,7 +125,13 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
   if (!botData) return null;
 
   const { t } = useTranslation('showcaseBotCard');
-  const { walletLinked } = useSiwsStore();
+  
+  // --- GÜNCELLEME: Hem Solana (walletLinked) hem Stellar (stellarAddress) durumunu çekiyoruz ---
+  const { walletLinked, stellarAddress } = useSiwsStore();
+
+  // Herhangi biri bağlıysa true döner
+  const isAnyWalletConnected = walletLinked || !!stellarAddress;
+
   const [buyOpen, setBuyOpen] = useState(false);
   const [rentOpen, setRentOpen] = useState(false);
 
@@ -139,56 +140,25 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
     setTzOffsetMin(readTimezoneOffsetMinutesFromCookie());
   }, []);
 
-  // minutesInput: dakika cinsinden toplam süre
   const formatRunningTime = (minutesInput) => {
-    const m = Math.max(0, Math.floor(Number(minutesInput) || 0)); // negatif/NaN koruması
-    if (m < 1) return t("runtime.justNow"); // 1 dakikadan az
+    const m = Math.max(0, Math.floor(Number(minutesInput) || 0));
+    if (m < 1) return t("runtime.justNow");
 
     const minutes = m % 60;
     const totalHours = Math.floor(m / 60);
-
     const hours = totalHours % 24;
     const totalDays = Math.floor(totalHours / 24);
-
     const days = totalDays % 7;
     const totalWeeks = Math.floor(totalDays / 7);
-
     const weeks = totalWeeks % 52;
     const years = Math.floor(totalWeeks / 52);
 
-    // --- Mantıklı formatlar ---
-    if (years > 0) {
-      if (weeks === 0 && days === 0 && hours === 0) {
-        return t("runtime.yearsOnly", { years });
-      }
-      return t("runtime.yearsWeeks", { years, weeks });
-    }
-
-    if (weeks > 0) {
-      if (days === 0 && hours === 0) {
-        return t("runtime.weeksOnly", { weeks });
-      }
-      return t("runtime.weeksDays", { weeks, days });
-    }
-
-    if (days > 0) {
-      if (hours === 0) {
-        return t("runtime.daysOnly", { days });
-      }
-      return t("runtime.daysHours", { days, hours });
-    }
-
-    if (totalHours > 0) {
-      if (minutes === 0) {
-        return t("runtime.hoursOnly", { hours: totalHours });
-      }
-      return t("runtime.hoursMinutes", { hours: totalHours, minutes });
-    }
-
-    // sadece dakika
+    if (years > 0) return weeks === 0 && days === 0 && hours === 0 ? t("runtime.yearsOnly", { years }) : t("runtime.yearsWeeks", { years, weeks });
+    if (weeks > 0) return days === 0 && hours === 0 ? t("runtime.weeksOnly", { weeks }) : t("runtime.weeksDays", { weeks, days });
+    if (days > 0) return hours === 0 ? t("runtime.daysOnly", { days }) : t("runtime.daysHours", { days, hours });
+    if (totalHours > 0) return minutes === 0 ? t("runtime.hoursOnly", { hours: totalHours }) : t("runtime.hoursMinutes", { hours: totalHours, minutes });
     return t("runtime.minutesOnly", { minutes });
   };
-
 
   const coins = useMemo(() => {
     if (typeof botData.coins === 'string') {
@@ -208,7 +178,6 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
         animate={{ y: isAnimating ? -20 : 0, opacity: isAnimating ? 0.8 : 1 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
-        {/* Type Badge (spot/futures) */}
         <div className="absolute top-3 right-3 z-10">
           <TypeBadge type={botData.bot_type || botData.type || 'spot'} />
         </div>
@@ -270,7 +239,8 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
           <div className="flex w-full gap-2 mb-4">
             <PurchaseButton
               enabledFlag={Boolean(botData.for_sale)}
-              walletLinked={walletLinked}
+              // --- GÜNCELLEME: combined değişkeni gönderiyoruz ---
+              walletLinked={isAnyWalletConnected}
               price={botData.sell_price}
               label={t('purchase.buy')}
               bg="bg-green-600"
@@ -280,7 +250,8 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
             />
             <PurchaseButton
               enabledFlag={Boolean(botData.for_rent)}
-              walletLinked={walletLinked}
+              // --- GÜNCELLEME: combined değişkeni gönderiyoruz ---
+              walletLinked={isAnyWalletConnected}
               price={botData.rent_price}
               label={t('purchase.rentDaily')}
               bg="bg-orange-600"
@@ -292,7 +263,6 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
 
           {/* Stats */}
           <div className="flex flex-col space-y-2 mb-6">
-            {/* createdOn: sadece tarih, cookie timezone'a göre */}
             <StatBox
               icon={<FiCalendar />}
               title={t('stats.createdOn')}
@@ -304,9 +274,6 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
               value={formatRunningTime(botData.runningTime)}
             />
             <StatBox icon={<LuChartNoAxesCombined />} title={t('stats.totalMargin')} value={`${botData.totalMargin}%`} />
-            {/*<StatBox icon={<FiTrendingUp />} title={t('stats.winRate')} value={`${botData.winRate}%`} />
-            <StatBox icon={<GiCharging />} title={t('stats.profitFactor')} value={botData.profitFactor} />
-            <StatBox icon={<IoMdWarning />} title={t('stats.riskFactor')} value={botData.riskFactor} />*/}
             <StatBox icon={<LiaChargingStationSolid />} title={t('stats.avgFullness')} value={`${botData.avg_fullness}%`} />
             <StatBoxTrades icon={<FiBarChart />} title={t('stats.plDWM')} value={`${botData.dayMargin}% / ${botData.weekMargin}% / ${botData.monthMargin}%`} />
           </div>

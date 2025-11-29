@@ -6,6 +6,7 @@
     "sellerName": "Seller Name",
     "priceUsd": "Price (USD)",
     "approxSol": "Approx. Price (SOL)",
+    "approxXlm": "Approx. Price (XLM)",
     "revenueWallet": "Revenue Wallet"
   },
   "actionNames": {

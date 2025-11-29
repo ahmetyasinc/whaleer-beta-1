@@ -3,6 +3,7 @@ from app.routes.user import router as user_router
 from app.routes.auth import router as auth_router
 from app.routes.phantom.auth import router as phantom_auth_router
 from app.routes.phantom.payments import router as phantom_purchase_router
+from app.routes.stellar.market import router as stellar_market_router
 from app.routes.mobile.auth.auth import router as auth_router_mobile
 from app.routes.mobile.bots.bots import protected_router as bot_router_mobile
 from app.routes.mobile.showcase.showcase import protected_router as showcase_router_mobile
@@ -20,6 +21,7 @@ from app.routes.profile.strategy.strategy_adjustment import protected_router as 
 from app.routes.profile.strategy.strategy_run import protected_router as strategy_run_router
 from app.routes.profile.strategy.strategy_imports import protected_router as strategy_imports_router
 from app.routes.profile.backtest.backtest import protected_router as backtest_router
+from app.routes.profile.backtest.backtest_service import router as backtest_run_router
 from app.routes.profile.api_keys.api_keys import protected_router as api_keys_router
 from app.routes.profile.api_keys.binance import router as api_keys_binance_router
 from app.routes.profile.bots.bots import protected_router as bots_router
@@ -51,6 +53,7 @@ api_router.include_router(auth_router)
 api_router.include_router(auth_router_mobile)
 api_router.include_router(phantom_auth_router)
 api_router.include_router(phantom_purchase_router)
+api_router.include_router(stellar_market_router)
 # COINS ROUTES
 api_router.include_router(binance_coins_router)
 # INDICATOR ROUTES
@@ -71,6 +74,7 @@ api_router.include_router(api_keys_router)
 api_router.include_router(api_keys_binance_router)
 # BACKTEST ROUTES
 api_router.include_router(backtest_router)
+api_router.include_router(backtest_run_router)
 # BOT ROUTES
 api_router.include_router(bots_router)
 api_router.include_router(bot_router_mobile)

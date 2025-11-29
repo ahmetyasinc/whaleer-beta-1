@@ -58,6 +58,9 @@ class BotListingUpdate(BaseModel):
     sell_price: Optional[float] = None
     rent_price: Optional[float] = None
     revenue_wallet: Optional[str] = None
+    is_profit_share: Optional[bool] = None
+    sold_profit_share_rate: Optional[float] = None
+    rent_profit_share_rate: Optional[float] = None
     listing_description: Optional[str] = Field(None, max_length=1000)
 
 

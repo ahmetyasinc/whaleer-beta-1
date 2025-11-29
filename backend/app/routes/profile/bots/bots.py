@@ -436,6 +436,12 @@ async def list_followed_bots(
 
     return response
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
+
 @protected_router.patch("/api/bots/{bot_id}/listing", response_model=BotsOut)
 async def update_bot_listing(
     bot_id: int,
@@ -443,31 +449,152 @@ async def update_bot_listing(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token),
 ):
-    result = await db.execute(
-        select(Bots).where(Bots.id == bot_id, Bots.user_id == int(user_id), Bots.deleted.is_(False))
-    )
-    bot = result.scalar_one_or_none()
+    logger.info("=== [update_bot_listing] START ===")
+    logger.info("User %s is updating listing for bot_id=%s", user_id, bot_id)
+    logger.info("Raw payload: %s", payload.dict())
+
+    # 1) Botu sahibine göre çek
+    try:
+        result = await db.execute(
+            select(Bots).where(
+                Bots.id == bot_id,
+                Bots.user_id == int(user_id),
+                Bots.deleted.is_(False),
+            )
+        )
+        bot: Bots | None = result.scalar_one_or_none()
+    except Exception as e:
+        logger.exception("[update_bot_listing] DB select error: %s", e)
+        raise
+
     if not bot:
+        logger.warning(
+            "[update_bot_listing] Bot not found or unauthorized. bot_id=%s, user_id=%s",
+            bot_id, user_id
+        )
         raise HTTPException(status_code=404, detail="Bot not found or unauthorized")
 
-    data = payload.dict(exclude_unset=True)
+    logger.info("[update_bot_listing] Found bot id=%s name=%s", bot.id, bot.name)
 
-    # İş kuralları
-    if data.get("for_sale") is False:
-        data["sell_price"] = None
-    if data.get("for_rent") is False:
-        data["rent_price"] = None
+    # 2) Sadece listing ile ilgili alanları güncellenebilir yap
+    allowed_fields = {
+        "for_sale",
+        "sell_price",
+        "for_rent",
+        "rent_price",
+        "listing_description",
+        "is_profit_share",
+        "rent_profit_share_rate",
+        "sold_profit_share_rate",
+    }
 
-    # Açıklamayı normalize et (trim + boşsa None)
+    raw_data = payload.dict(exclude_unset=True)
+    logger.info("[update_bot_listing] raw_data (exclude_unset): %s", raw_data)
+
+    data = {k: v for k, v in raw_data.items() if k in allowed_fields}
+    logger.info("[update_bot_listing] filtered data (allowed_fields): %s", data)
+
+    # 3) İş kuralları
+
+    # 3.a) Satış durumu
+    if "for_sale" in data:
+        logger.info("[update_bot_listing] Incoming for_sale=%s", data["for_sale"])
+        if data["for_sale"] is False:
+            logger.info("[update_bot_listing] for_sale=False, resetting sell_price & sold_profit_share_rate")
+            data["sell_price"] = None
+            data["sold_profit_share_rate"] = 0
+        else:
+            # for_sale True ise fiyat var mı?
+            sell_price = data.get("sell_price", bot.sell_price)
+            logger.info("[update_bot_listing] Effective sell_price=%s (payload or existing)", sell_price)
+            if sell_price is None:
+                logger.warning("[update_bot_listing] for_sale=True but sell_price is None")
+                raise HTTPException(
+                    status_code=400,
+                    detail="sell_price is required when for_sale is true.",
+                )
+
+    # 3.b) Kiralama durumu
+    if "for_rent" in data:
+        logger.info("[update_bot_listing] Incoming for_rent=%s", data["for_rent"])
+        if data["for_rent"] is False:
+            logger.info("[update_bot_listing] for_rent=False, resetting rent_price & rent_profit_share_rate")
+            data["rent_price"] = None
+            data["rent_profit_share_rate"] = 0
+        else:
+            rent_price = data.get("rent_price", bot.rent_price)
+            logger.info("[update_bot_listing] Effective rent_price=%s (payload or existing)", rent_price)
+            if rent_price is None:
+                logger.warning("[update_bot_listing] for_rent=True but rent_price is None")
+                raise HTTPException(
+                    status_code=400,
+                    detail="rent_price is required when for_rent is true.",
+                )
+
+    # 3.c) Açıklamayı normalize et
     if "listing_description" in data:
+        logger.info("[update_bot_listing] Raw listing_description=%r", data["listing_description"])
         desc = (data["listing_description"] or "").strip()
         data["listing_description"] = desc if desc else None
+        logger.info("[update_bot_listing] Normalized listing_description=%r", data["listing_description"])
 
+    # 3.d) Profit share kuralları
+    if "is_profit_share" in data:
+        logger.info("[update_bot_listing] Incoming is_profit_share=%s", data["is_profit_share"])
+
+        if data["is_profit_share"] is False:
+            logger.info("[update_bot_listing] is_profit_share=False, zeroing profit share rates")
+            data["rent_profit_share_rate"] = 0
+            data["sold_profit_share_rate"] = 0
+        else:
+            # is_profit_share True ise oranların 0–100 aralığında olduğundan emin ol
+            rent_rate = data.get("rent_profit_share_rate", bot.rent_profit_share_rate or 0)
+            sold_rate = data.get("sold_profit_share_rate", bot.sold_profit_share_rate or 0)
+
+            logger.info(
+                "[update_bot_listing] Effective profit share rates (rent=%s, sold=%s)",
+                rent_rate, sold_rate
+            )
+
+            for field_name, val in [
+                ("rent_profit_share_rate", rent_rate),
+                ("sold_profit_share_rate", sold_rate),
+            ]:
+                if val is not None:
+                    fval = float(val)
+                    logger.info(
+                        "[update_bot_listing] Checking %s=%s (float=%s)",
+                        field_name, val, fval
+                    )
+                    if fval < 0 or fval > 100:
+                        logger.warning(
+                            "[update_bot_listing] %s out of range: %s",
+                            field_name, fval
+                        )
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"{field_name} must be between 0 and 100.",
+                        )
+                    # data içinde yoksa (sadece validasyon yaptık) set edelim
+                    if field_name not in data:
+                        data[field_name] = fval
+
+    logger.info("[update_bot_listing] Final data to set on bot: %s", data)
+
+    # 4) Alanları modele uygula
     for field, value in data.items():
+        logger.info("[update_bot_listing] Setting bot.%s = %r", field, value)
         setattr(bot, field, value)
 
-    await db.commit()
-    await db.refresh(bot)
+    try:
+        await db.commit()
+        await db.refresh(bot)
+    except Exception as e:
+        logger.exception("[update_bot_listing] DB commit/refresh error: %s", e)
+        raise
+
+    logger.info("[update_bot_listing] SUCCESS for bot_id=%s", bot.id)
+    logger.info("=== [update_bot_listing] END ===")
     return bot
 
 
@@ -569,7 +696,6 @@ async def acquire_bot(
     - Alıcı için yeni bir bot satırı oluşturur (kopya).
     - Orijinal bottaki sayaçları artırır.
     """
-
     requester_id = int(user_data)
 
     # 1) Orijinal botu kilitle (yarış koşullarına karşı)

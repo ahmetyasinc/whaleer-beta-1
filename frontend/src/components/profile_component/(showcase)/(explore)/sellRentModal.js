@@ -1,4 +1,3 @@
-// src/components/profile_component/(showcase)/(explore)/sellRentModal.js
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -10,26 +9,22 @@ import { kit } from "@/lib/stellar-kit";
 import useStellarAuth from "@/hooks/useStellarAuth";
 // ---------------
 
-// ---------------
 import { toast } from "react-toastify";
 import ChooseBotModal from "./chooseBotModal";
 import { useSiwsStore } from "@/store/auth/siwsStore";
 import { createListingIntent, confirmPayment } from "@/api/payments";
 import { patchBotListing } from "@/api/bots";
 import { useTranslation } from "react-i18next";
-import { FiCheckCircle, FiCpu } from "react-icons/fi"; // İkonlar ile görselliği artıralım
+import { FiCheckCircle, FiCpu, FiPercent } from "react-icons/fi"; 
 
 // Ağ Ayarları
 const SOLANA_RPC_URL = "https://api.mainnet-beta.solana.com";
 const STELLAR_HORIZON_URL = "https://horizon-testnet.stellar.org";
 const STELLAR_NETWORK_PASSPHRASE = "Test SDF Network ; September 2015";
-const STELLAR_PLATFORM_WALLET = "GBLV5VOXKN5SYHOPC7FSOOTNH3YVW33LQZAKZYRFR7EZII7VLST2DTCB";
-// ---------------
-
 
 const DEFAULT_PAYOUT_SOL = "AkmufZViBgt9mwuLPhFM8qyS1SjWNbMRBK8FySHajvUA";
 
-// Helperlar (Base64, PnL) aynı kalıyor...
+// Helperlar
 function b64ToUint8Array(b64) {
   const binStr = atob(b64);
   const len = binStr.length;
@@ -49,43 +44,45 @@ export default function SellRentModal({ open, onClose }) {
   const { t } = useTranslation('sellRentModal');
 
   // --- CÜZDAN DURUMLARI ---
-  const { walletLinked } = useSiwsStore(); // Solana (Phantom) bağlı mı?
-  const { publicKey, sendTransaction } = useWallet(); // Solana address/tx
-  const { stellarAddress } = useStellarAuth(); // Stellar (Freighter) bağlı mı?
+  const { walletLinked } = useSiwsStore(); 
+  const { publicKey, sendTransaction } = useWallet(); 
+  const { stellarAddress } = useStellarAuth(); 
 
   // İkisi birden bağlı mı kontrolü
   const isBothConnected = Boolean(walletLinked && publicKey && stellarAddress);
 
-  // Manuel seçim için state (Sadece ikisi bağlıysa kullanılır)
+  // Manuel seçim için state
   const [manualChainChoice, setManualChainChoice] = useState(null);
 
-  // Aktif Zinciri Belirle (Akıllı Mantık)
+  // Aktif Zinciri Belirle
   const activeChain = useMemo(() => {
-    // 1. Eğer ikisi de bağlıysa ve kullanıcı bir seçim yaptıysa onu kullan
     if (isBothConnected && manualChainChoice) return manualChainChoice;
-    
-    // 2. İkisi bağlı ama seçim yapılmadıysa (ilk açılış), Stellar'ı varsayılan yap (veya Solana)
     if (isBothConnected) return 'stellar';
-
-    // 3. Sadece biri bağlıysa onu kullan
     if (stellarAddress) return 'stellar';
     if (walletLinked && publicKey) return 'solana';
-
     return null;
   }, [stellarAddress, walletLinked, publicKey, isBothConnected, manualChainChoice]);
 
-  // Modal her açıldığında veya seçim değiştiğinde manual choice'u sıfırlama/ayarlama
+  // Modal her açıldığında seçim resetleme
   useEffect(() => {
     if (open && isBothConnected && !manualChainChoice) {
-      setManualChainChoice('stellar'); // Varsayılan öncelik
+      setManualChainChoice('stellar');
     }
   }, [open, isBothConnected]);
 
-
+  // --- FORM STATE'LERİ ---
   const [sellChecked, setSellChecked] = useState(false);
   const [rentChecked, setRentChecked] = useState(false);
   const [sellPrice, setSellPrice] = useState("");
   const [rentPrice, setRentPrice] = useState("");
+  
+  // YENİ: Profit Sharing State'leri
+  const [sellProfitShareEnabled, setSellProfitShareEnabled] = useState(false);
+  const [sellProfitShareRate, setSellProfitShareRate] = useState("");
+
+  const [rentProfitShareEnabled, setRentProfitShareEnabled] = useState(false);
+  const [rentProfitShareRate, setRentProfitShareRate] = useState("");
+
   const [description, setDescription] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
 
@@ -105,24 +102,43 @@ export default function SellRentModal({ open, onClose }) {
   // Otomatik Form Doldurma
   useEffect(() => {
     if (!selectedBot) return;
+
     const isListed = Boolean(selectedBot?.for_sale) || Boolean(selectedBot?.for_rent);
 
     if (isListed) {
       setSellChecked(Boolean(selectedBot?.for_sale));
       setRentChecked(Boolean(selectedBot?.for_rent));
+
       setSellPrice(selectedBot?.sell_price ?? "");
       setRentPrice(selectedBot?.rent_price ?? "");
+
+      // ⭐ Sadece ilk load'da doldurulmalı ⭐
+      if (!sellProfitShareRate && !rentProfitShareRate) {
+        const soldRate = selectedBot?.sold_profit_share_rate ?? 0;
+        const rentRate = selectedBot?.rent_profit_share_rate ?? 0;
+
+        setSellProfitShareEnabled(soldRate > 0);
+        setSellProfitShareRate(soldRate ? String(soldRate) : "");
+
+        setRentProfitShareEnabled(rentRate > 0);
+        setRentProfitShareRate(rentRate ? String(rentRate) : "");
+      }
+
       setWalletAddress(selectedBot?.revenue_wallet ?? "");
       setDescription((selectedBot?.listing_description ?? selectedBot?.description ?? "").toString());
-    } else {
-      // Yeni listeleme
+    }
+    else {
+      // Yeni listeleme - Varsayılanları sıfırla
       setSellChecked(false);
       setRentChecked(false);
       setSellPrice("");
       setRentPrice("");
+      setSellProfitShareEnabled(false);
+      setSellProfitShareRate("");
+      setRentProfitShareEnabled(false);
+      setRentProfitShareRate("");
 
-      // --- AKILLI CÜZDAN DOLDURMA ---
-      // activeChain değiştiğinde inputu otomatik dolduruyoruz
+      // Akıllı Cüzdan Doldurma
       if (activeChain === 'stellar' && stellarAddress) {
         setWalletAddress(stellarAddress);
       } else if (activeChain === 'solana' && publicKey) {
@@ -141,9 +157,15 @@ export default function SellRentModal({ open, onClose }) {
   }, [selectedBot]);
 
   const hasAnyChoice = sellChecked || rentChecked;
+  
   const priceValid =
     (!sellChecked || (sellPrice !== "" && Number(sellPrice) >= 0)) &&
     (!rentChecked || (rentPrice !== "" && Number(rentPrice) >= 0));
+
+  // YENİ: Profit Share Validasyonu (0-100 arası)
+  const profitShareValid = 
+    (!sellChecked || !sellProfitShareEnabled || (Number(sellProfitShareRate) > 0 && Number(sellProfitShareRate) <= 100)) &&
+    (!rentChecked || !rentProfitShareEnabled || (Number(rentProfitShareRate) > 0 && Number(rentProfitShareRate) <= 100));
 
   const walletValid = useMemo(() => {
     if (!walletAddress || walletAddress.length < 20) return false;
@@ -153,18 +175,20 @@ export default function SellRentModal({ open, onClose }) {
     return true; 
   }, [walletAddress, activeChain]);
 
+  // Payload Hazırlama
   const { diffPayload, hasDiff } = useMemo(() => {
     if (!selectedBot) return { diffPayload: {}, hasDiff: false };
-    const payload = {};
-    
+    const payload={};
+  
     if (activeChain) payload.revenue_chain = activeChain;
-
+  
     const initForSale = Boolean(selectedBot?.for_sale);
     const initForRent = Boolean(selectedBot?.for_rent);
-
+  
     if (initForSale !== sellChecked) payload.for_sale = sellChecked;
     if (initForRent !== rentChecked) payload.for_rent = rentChecked;
-
+  
+    // --- Fiyatlar ---
     if (sellChecked) {
       const val = sellPrice === "" ? null : Number(sellPrice);
       if (val !== selectedBot?.sell_price) payload.sell_price = val;
@@ -173,25 +197,65 @@ export default function SellRentModal({ open, onClose }) {
       const val = rentPrice === "" ? null : Number(rentPrice);
       if (val !== selectedBot?.rent_price) payload.rent_price = val;
     }
+  
+    // --- PROFIT SHARE ---
+    // Global flag: herhangi birinde profit share açıksa true
+    const nextIsProfitShare = (sellChecked && sellProfitShareEnabled) || (rentChecked && rentProfitShareEnabled);
+    const initIsProfitShare = Boolean(selectedBot?.is_profit_share);
 
+    if (nextIsProfitShare !== initIsProfitShare) {
+        payload.is_profit_share = nextIsProfitShare;
+    }
+
+    // Satış oranı
+    if (sellChecked) {
+      payload.sold_profit_share_rate = sellProfitShareEnabled
+        ? Number(sellProfitShareRate || 0)
+        : 0;
+    }
+  
+    // Kiralama oranı
+    if (rentChecked) {
+      payload.rent_profit_share_rate = rentProfitShareEnabled
+        ? Number(rentProfitShareRate || 0)
+        : 0;
+    }
+  
+    // Cüzdan
     if (walletAddress && walletAddress !== selectedBot?.revenue_wallet) {
       payload.revenue_wallet = walletAddress;
     }
-
+  
+    // Açıklama
     const descTrim = (description ?? "").trim();
     const prevDesc = (selectedBot?.listing_description ?? "") + "";
     if (descTrim !== prevDesc) {
       payload.listing_description = descTrim.length ? descTrim : null;
     }
-
+  
     const diff = Object.keys(payload).length > 0;
     return { diffPayload: payload, hasDiff: diff };
-  }, [selectedBot, sellChecked, rentChecked, sellPrice, rentPrice, walletAddress, description, activeChain]);
+  }, [
+    selectedBot,
+    sellChecked,
+    rentChecked,
+    sellPrice,
+    rentPrice,
+    sellProfitShareEnabled,
+    sellProfitShareRate,
+    rentProfitShareEnabled,
+    rentProfitShareRate,
+    walletAddress,
+    description,
+    activeChain,
+  ]);
+
 
   const canSubmit =
     !!selectedBot &&
     hasAnyChoice &&
     priceValid &&
+    profitShareValid &&
     walletValid &&
     !loading &&
     !payLoading &&
@@ -205,8 +269,13 @@ export default function SellRentModal({ open, onClose }) {
     setRentChecked(false);
     setSellPrice("");
     setRentPrice("");
+    
+    setSellProfitShareEnabled(false);
+    setSellProfitShareRate("");
+    setRentProfitShareEnabled(false);
+    setRentProfitShareRate("");
+
     setDescription("");
-    // Manual choice'u resetleme, bir dahaki açılışta tekrar sorsun veya default olsun
     setManualChainChoice(null);
     setChooseBotModalOpen(false);
     setSelectedBot(null);
@@ -224,115 +293,63 @@ export default function SellRentModal({ open, onClose }) {
 
   async function payListingFeeIfNeeded() {
     if (!isNewListing) return { paid: false };
-    if (!activeChain) {
-      throw new Error(t("errors.connectWalletFirst") || "Wallet not connected");
-    }
+    if (!activeChain) throw new Error(t("errors.connectWalletFirst") || "Wallet not connected");
   
     setPayLoading(true);
     const toastId = toast.loading(t("toasts.preparingPayment"));
   
     try {
       const extra = {};
-    
-      // Backend'in Stellar için XDR kurarken kullanacağı kaynak hesap
       if (activeChain === "stellar" && stellarAddress) {
         extra.stellarAddress = stellarAddress;
       }
     
       const intent = await createListingIntent(selectedBot.id, activeChain, extra);
     
-      if (!intent?.intent_id) {
-        throw new Error(t("errors.invalidIntent"));
-      }
+      if (!intent?.intent_id) throw new Error(t("errors.invalidIntent"));
     
       let confirmationResult;
     
-      // ---------- STELLAR ----------
+      // STELLAR
       if (activeChain === "stellar") {
         const xdr = intent.xdr || intent.message_b64;
-        if (!xdr) {
-          throw new Error("Invalid Stellar XDR from backend");
-        }
+        if (!xdr) throw new Error("Invalid Stellar XDR from backend");
       
-        toast.update(toastId, {
-          render: "Signing with Freighter...",
-          isLoading: true,
-        });
+        toast.update(toastId, { render: "Signing with Freighter...", isLoading: true });
       
         const { signedTxXdr } = await kit.signTransaction(xdr, {
           networkPassphrase: STELLAR_NETWORK_PASSPHRASE,
           address: stellarAddress,
         });
       
-        toast.update(toastId, {
-          render: "Submitting to Stellar...",
-          isLoading: true,
-        });
+        toast.update(toastId, { render: "Submitting to Stellar...", isLoading: true });
       
         const server = new Horizon.Server(STELLAR_HORIZON_URL);
-      
-        // Signed XDR'dan Transaction nesnesini oluştur
-        const tx = TransactionBuilder.fromXDR(
-          signedTxXdr,
-          STELLAR_NETWORK_PASSPHRASE
-        );
+        const tx = TransactionBuilder.fromXDR(signedTxXdr, STELLAR_NETWORK_PASSPHRASE);
       
         const submitResult = await server.submitTransaction(tx);
         const txHash = submitResult.hash;
       
-        toast.update(toastId, {
-          render: t("toasts.confirmOnchain"),
-          isLoading: true,
-        });
-      
-        // 🔴 BURADA ARTIK CHAIN DE GÖNDERİLİYOR
-        confirmationResult = await confirmPayment(
-          intent.intent_id,
-          txHash,
-          "stellar"
-        );
+        toast.update(toastId, { render: t("toasts.confirmOnchain"), isLoading: true });
+        confirmationResult = await confirmPayment(intent.intent_id, txHash, "stellar");
       }
-    
-      // ---------- SOLANA ----------
+      // SOLANA
       else {
         const msgBytes = b64ToUint8Array(intent.message_b64);
         const message = VersionedMessage.deserialize(msgBytes);
         const tx = new VersionedTransaction(message);
       
-        toast.update(toastId, {
-          render: t("toasts.signInWallet"),
-          isLoading: true,
-        });
-      
+        toast.update(toastId, { render: t("toasts.signInWallet"), isLoading: true });
         const connection = new Connection(SOLANA_RPC_URL, "confirmed");
-        const signature = await sendTransaction(tx, connection, {
-          skipPreflight: false,
-        });
+        const signature = await sendTransaction(tx, connection, { skipPreflight: false });
       
-        toast.update(toastId, {
-          render: t("toasts.confirmOnchain"),
-          isLoading: true,
-        });
-      
-        // 🔴 BURADA DA "solana" DİYORUZ
-        confirmationResult = await confirmPayment(
-          intent.intent_id,
-          signature,
-          "solana"
-        );
+        toast.update(toastId, { render: t("toasts.confirmOnchain"), isLoading: true });
+        confirmationResult = await confirmPayment(intent.intent_id, signature, "solana");
       }
     
-      if (!confirmationResult?.ok) {
-        throw new Error(t("errors.paymentNotConfirmed"));
-      }
+      if (!confirmationResult?.ok) throw new Error(t("errors.paymentNotConfirmed"));
     
-      toast.update(toastId, {
-        render: t("toasts.paymentConfirmed"),
-        type: "success",
-        isLoading: false,
-        autoClose: 1500,
-      });
-    
+      toast.update(toastId, { render: t("toasts.paymentConfirmed"), type: "success", isLoading: false, autoClose: 1500 });
       setShowSuccessAnim(true);
       await new Promise((r) => setTimeout(r, 900));
       setShowSuccessAnim(false);
@@ -341,26 +358,21 @@ export default function SellRentModal({ open, onClose }) {
     } catch (e) {
       console.error(e);
       let errMsg = e?.message || t("toasts.operationFailed");
-    
-      // Stellar özel hata kodlarını göster
       if (e.response?.data?.extras?.result_codes) {
-        errMsg = `Stellar Error: ${JSON.stringify(
-          e.response.data.extras.result_codes
-        )}`;
+        errMsg = `Stellar Error: ${JSON.stringify(e.response.data.extras.result_codes)}`;
       }
-    
       throw new Error(errMsg);
     } finally {
       setPayLoading(false);
     }
   }
 
-
   async function handleSubmit() {
     setError(null);
     if (!selectedBot) { toast.error(t("errors.selectBot")); return; }
     if (!hasAnyChoice) { toast.error(t("errors.chooseOne")); return; }
     if (!priceValid) { toast.error(t("errors.invalidPrices")); return; }
+    if (!profitShareValid) { toast.error("Invalid profit share rates (0-100%)"); return; }
     if (!walletValid) { toast.error(t("errors.invalidWallet")); return; }
     if (isNewListing && !disclaimerAccepted) { toast.error(t("errors.acceptDisclaimer")); return; }
 
@@ -409,17 +421,15 @@ export default function SellRentModal({ open, onClose }) {
     <>
       <div className="fixed inset-0 z-[99] flex justify-center items-start bg-black/70 py-[60px]">
         <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 text-white rounded-xl shadow-2xl p-8 w-[95vw] max-w-2xl relative border border-zinc-800 max-h-[calc(100vh-120px)] overflow-y-auto">
-          {/* Close */}
+          
           <button onClick={() => { resetForm(); onClose?.(); }} className="absolute top-6 right-6 text-2xl font-bold hover:text-red-400 w-8 h-8">×</button>
 
           <h2 className="text-xl font-bold mb-4 text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
             {isNewListing ? t("titles.create") : t("titles.update")}
           </h2>
 
-          {/* --- AĞ SEÇİMİ / GÖSTERİMİ ALANI --- */}
+          {/* Ağ Seçimi */}
           <div className="flex justify-center mb-6">
-            
-            {/* DURUM 1: İki Cüzdan da Bağlı -> Seçim Butonları (Toggle) */}
             {isBothConnected ? (
               <div className="flex items-center bg-zinc-950 p-1.5 rounded-xl border border-zinc-800 shadow-inner">
                 <button
@@ -446,7 +456,6 @@ export default function SellRentModal({ open, onClose }) {
                 </button>
               </div>
             ) : (
-              // DURUM 2: Tek Cüzdan Bağlı -> Sabit Badge
               <>
                 {activeChain === 'stellar' && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-900/30 text-purple-200 border border-purple-500/40">
@@ -500,33 +509,74 @@ export default function SellRentModal({ open, onClose }) {
 
           {/* Sell / Rent Inputs */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* SELL SECTION */}
             <div className="space-y-3">
               <label className="flex items-center gap-3 cursor-pointer group">
                 <input type="checkbox" checked={sellChecked} onChange={() => setSellChecked(!sellChecked)} className="w-5 h-5 rounded border-gray-600 text-cyan-400 focus:ring-cyan-400 bg-zinc-800" />
                 <span className="text-base font-medium group-hover:text-cyan-400 transition-colors">{t("labels.wantSell")}</span>
               </label>
+              
               {sellChecked && (
-                <div className="relative animate-in slide-in-from-top-2">
-                  <input type="number" min={0} placeholder={t("placeholders.sellPrice")} className="w-full p-2.5 rounded-lg bg-zinc-800/50 border border-gray-700 focus:border-cyan-400 focus:outline-none text-sm placeholder-gray-400 pr-16" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">USD</span>
+                <div className="flex flex-col gap-3 animate-in slide-in-from-top-2">
+                  {/* Fiyat */}
+                  <div className="relative">
+                    <input type="number" min={0} placeholder={t("placeholders.sellPrice")} className="w-full p-2.5 rounded-lg bg-zinc-800/50 border border-gray-700 focus:border-cyan-400 focus:outline-none text-sm placeholder-gray-400 pr-16" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">USD</span>
+                  </div>
+
+                  {/* Sell Profit Share */}
+                  <div className="pl-1">
+                    <label className="flex items-center gap-2 cursor-pointer text-xs text-gray-400 hover:text-cyan-300 transition-colors mb-2">
+                      <input type="checkbox" checked={sellProfitShareEnabled} onChange={() => setSellProfitShareEnabled(!sellProfitShareEnabled)} className="rounded bg-zinc-800 border-gray-600 text-cyan-500 focus:ring-cyan-500" />
+                      <span>Enable Profit Sharing?</span>
+                    </label>
+                    
+                    {sellProfitShareEnabled && (
+                      <div className="relative animate-in slide-in-from-top-1">
+                        <input type="number" min={0} max={100} placeholder="Commission %" className="w-full p-2 rounded-lg bg-zinc-900 border border-cyan-900/50 focus:border-cyan-500 focus:outline-none text-sm pr-8 text-cyan-100 placeholder-cyan-900" value={sellProfitShareRate} onChange={(e) => setSellProfitShareRate(e.target.value)} />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-cyan-600"><FiPercent /></span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
+
+            {/* RENT SECTION */}
             <div className="space-y-3">
               <label className="flex items-center gap-3 cursor-pointer group">
                 <input type="checkbox" checked={rentChecked} onChange={() => setRentChecked(!rentChecked)} className="w-5 h-5 rounded border-gray-600 text-emerald-400 focus:ring-emerald-400 bg-zinc-800" />
                 <span className="text-base font-medium group-hover:text-emerald-400 transition-colors">{t("labels.wantRent")}</span>
               </label>
+              
               {rentChecked && (
-                <div className="relative animate-in slide-in-from-top-2">
-                  <input type="number" min={0} placeholder={t("placeholders.rentPrice")} className="w-full p-2.5 rounded-lg bg-zinc-800/50 border border-gray-700 focus:border-emerald-400 focus:outline-none text-sm placeholder-gray-400 pr-24" value={rentPrice} onChange={(e) => setRentPrice(e.target.value)} />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">USD / Day</span>
+                <div className="flex flex-col gap-3 animate-in slide-in-from-top-2">
+                  {/* Fiyat */}
+                  <div className="relative">
+                    <input type="number" min={0} placeholder={t("placeholders.rentPrice")} className="w-full p-2.5 rounded-lg bg-zinc-800/50 border border-gray-700 focus:border-emerald-400 focus:outline-none text-sm placeholder-gray-400 pr-24" value={rentPrice} onChange={(e) => setRentPrice(e.target.value)} />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">USD / Day</span>
+                  </div>
+
+                  {/* Rent Profit Share */}
+                  <div className="pl-1">
+                    <label className="flex items-center gap-2 cursor-pointer text-xs text-gray-400 hover:text-emerald-300 transition-colors mb-2">
+                      <input type="checkbox" checked={rentProfitShareEnabled} onChange={() => setRentProfitShareEnabled(!rentProfitShareEnabled)} className="rounded bg-zinc-800 border-gray-600 text-emerald-500 focus:ring-emerald-500" />
+                      <span>Enable Profit Sharing?</span>
+                    </label>
+                    
+                    {rentProfitShareEnabled && (
+                      <div className="relative animate-in slide-in-from-top-1">
+                        <input type="number" min={0} max={100} placeholder="Commission %" className="w-full p-2 rounded-lg bg-zinc-900 border border-emerald-900/50 focus:border-emerald-500 focus:outline-none text-sm pr-8 text-emerald-100 placeholder-emerald-900" value={rentProfitShareRate} onChange={(e) => setRentProfitShareRate(e.target.value)} />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600"><FiPercent /></span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Wallet Address (Akıllı) */}
+          {/* Wallet Address */}
           <div className="mb-6 mt-3">
             <label className="block text-base font-medium mb-2 text-gray-300">
               {t("labels.revenueWallet")}

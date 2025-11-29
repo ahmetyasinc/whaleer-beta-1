@@ -3,6 +3,7 @@ from sqlalchemy import (
 )
 from app.database import Base
 from sqlalchemy.sql import func
+from sqlalchemy.sql import expression
 
 class Bots(Base):
     __tablename__ = "bots"
@@ -62,3 +63,32 @@ class Bots(Base):
     deleted = Column(Boolean, nullable=False, server_default=text("false"))
 
     description = Column(Text, nullable=True)
+
+    is_profit_share = Column(
+        Boolean,
+        nullable=False,
+        server_default=expression.false()
+    )
+
+    deposit = Column(
+        Numeric(12, 2),
+        nullable=False,
+        server_default="0"
+    )
+
+    maximum_usd_value = Column(
+        Numeric(12, 2),
+        nullable=True
+    )
+
+    rent_profit_share_rate = Column(
+        Numeric(5, 2),
+        nullable=False,
+        server_default="0"
+    )
+
+    sold_profit_share_rate = Column(
+        Numeric(5, 2),
+        nullable=False,
+        server_default="0"
+    )

@@ -177,6 +177,7 @@ export const toggleBotActiveApi = async (id, isActive) => {
 };
 
 export async function patchBotListing(botId, payload) {
+  console.log("patchBotListing called:", botId, payload); // DEBUG
   const { data } = await axios.patch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/bots/${botId}/listing`,
     payload,

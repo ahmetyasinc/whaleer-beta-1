@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from datetime import datetime, timezone, timedelta
 import json
+import secrets
 
 from app.database import get_db
 from app.core.auth import verify_token
@@ -17,7 +18,7 @@ import os
 
 router = APIRouter(prefix="/stellar/market", tags=["stellar-market"])
 
-HORIZON_URL = os.getenv("STELLAR_RPC_URL", "https://horizon-testnet.stellar.org")
+HORIZON_URL = "https://horizon-testnet.stellar.org"
 PAYMENT_CONTRACT_ID = os.getenv("WHALEER_PAYMENT_CONTRACT_ID")
 NATIVE_TOKEN_ID = os.getenv("NATIVE_TOKEN_CONTRACT_ID")
 
@@ -49,25 +50,29 @@ async def create_order(
     # XLM Miktarını 'stroop' (10^7) cinsine çevir (Kontrat i128 bekler)
     # Örn: 1 XLM = 10,000,000 stroop
     amount_stroop = int(body.price_amount * 10_000_000)
-
+    
     pi = PaymentIntent(
         user_id=int(user_id),
         bot_id=body.bot_id,
-        purpose=f"{body.purchase_type}_stellar", # PURCHASE_stellar veya RENT_stellar
+        purpose=f"{body.purchase_type}_stellar",
         seller_wallet=body.seller_address,
-        buyer_pays_usd=0, # Kurla hesaplayabilirsin
+        buyer_pays_usd=0, 
         
-        # 'quote_lamports' alanını 'stroop' miktarı için kullanalım (veya yeni kolon aç)
         quote_lamports=amount_stroop, 
         
-        # Ek verileri JSON'da saklayalım
+        # --- EKSİK ALANLAR DOLDURULDU ---
+        quote_sol=0, # Stellar için anlamsız, 0 veriyoruz
+        quote_rate_usd_per_sol=0, # Stellar için anlamsız
+        reference=secrets.token_hex(16), # Rastgele benzersiz referans
+        chain="stellar", # Modelde artık bu alan var!
+        # -------------------------------
+
         recipient_json=json.dumps({
             "rent_days": body.rent_days,
             "purchase_type": body.purchase_type
         }),
         
-        status=0, # Pending
-        chain="stellar",
+        status=0,
         created_at=datetime.now(timezone.utc),
         expires_at=datetime.now(timezone.utc) + timedelta(minutes=15)
     )
@@ -93,26 +98,27 @@ async def confirm_order(
     1. Transaction Hash'i on-chain doğrular.
     2. İşlem başarılıysa Botu kopyalar ve kullanıcıya atar.
     """
-    
+    print(f"Confirming order {body.order_id} for user {user_id} with tx {body.tx_hash}")
+
     # 1. Siparişi Bul
     q = select(PaymentIntent).where(PaymentIntent.id == body.order_id)
     res = await db.execute(q)
     intent = res.scalar_one_or_none()
-
+    print(f"Found intent: {intent}")
     if not intent:
         raise HTTPException(404, "Order not found")
     if intent.status == 1:
         return {"status": "already_confirmed", "bot_id": intent.bot_id} # Zaten onaylıysa tekrar işlem yapma
-
+    print(f"Intent status: {intent.status}")
     # 2. Stellar Ağından Sorgula
     try:
         tx_data = server.transactions().transaction(body.tx_hash).call()
     except Exception as e:
         raise HTTPException(400, f"Transaction not found on chain: {str(e)}")
-
+    print(f"Transaction data: {tx_data}")
     if not tx_data["successful"]:
         raise HTTPException(400, "Transaction failed on-chain")
-
+    
     # 3. İleri Seviye Doğrulama (Opsiyonel ama önerilir)
     # Transaction'ın memo'sunda order_id var mı? Veya eventlerde var mı?
     # Şimdilik TX başarılıysa ve bizim kontrata gittiyse kabul ediyoruz.

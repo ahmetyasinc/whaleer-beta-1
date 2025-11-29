@@ -4,10 +4,12 @@ import {
   xdr, 
   Address, 
   nativeToScVal,
-  ScInt
+  ScInt,
+  Operation
 } from "@stellar/stellar-sdk";
 import { kit } from "@/lib/stellar-kit"; 
 import { createStellarOrder, confirmStellarOrder } from "@/api/stellar/stellarMarket";
+
 
 // Env değişkenleri veya varsayılanlar
 const RPC_URL = process.env.NEXT_PUBLIC_STELLAR_RPC_URL || "https://soroban-testnet.stellar.org";
@@ -53,21 +55,18 @@ export async function processStellarPurchase({
     // 3. SOROBAN: Parametreleri Hazırla
     // fn pay_split(buyer, seller, token, amount, order_id)
     const args = [
-      new Address(userAddress).toScVal(),           // buyer
-      new Address(sellerAddress).toScVal(),         // seller
-      new Address(nativeTokenId).toScVal(),         // token (Native XLM Contract)
-      nativeToScVal(amountStroop, { type: "i128" }), // amount
-      nativeToScVal(orderId, { type: "u64" })       // order_id
+      new Address(userAddress).toScVal(),             // buyer
+      new Address(sellerAddress).toScVal(),           // seller
+      new Address(nativeTokenId).toScVal(),           // token (native XLM contract)
+      nativeToScVal(amountStroop, { type: "i128" }),  // amount (stroop BigInt)
+      nativeToScVal(orderId, { type: "u64" }),        // order_id (BigInt)
     ];
 
-    // 4. TRANSACTION: İşlemi İnşa Et
-    const invokeOp = xdr.Operation.invokeHostFunction({
-      hostFunction: xdr.HostFunction.hostFunctionTypeInvokeContract([
-        new Address(contractId).toScAddress(),
-        xdr.ScSymbol.from("pay_split"),
-        xdr.ScVec.from(args)
-      ]),
-      auth: [] // Simülasyon sonrası dolacak
+    const invokeOp = Operation.invokeContractFunction({
+      contract: contractId,   // "C..." ile başlayan contract ID *string* olarak
+      function: "pay_split",  // kontrattaki fonksiyon ismi
+      args,                   // yukarıdaki ScVal dizisi
+      // auth: []             // şimdilik boş bırakabilirsin, optional
     });
 
     let tx = new TransactionBuilder(account, {
@@ -75,16 +74,16 @@ export async function processStellarPurchase({
       networkPassphrase: NETWORK_PASSPHRASE,
     })
       .addOperation(invokeOp)
-      .setTimeout(30)
+      .setTimeout(300)
       .build();
 
     // 5. SIMULATION: Maliyet Hesabı
     console.log("⏳ İşlem Simüle Ediliyor...");
     const simResponse = await server.simulateTransaction(tx);
 
-    if (rpc.isSimulationError(simResponse)) {
+    if (rpc.Api.isSimulationError(simResponse)) {
       console.error("Simülasyon Hatası Detayı:", simResponse);
-      throw new Error(`Simülasyon Hatası: Kontrat işlemi reddetti.`);
+      throw new Error(`Simülasyon Hatası: ${simResponse.error}`);
     }
 
     console.log("✅ Simülasyon Başarılı! Kaynaklar hesaplandı.");

@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { IoMdSettings } from "react-icons/io";
 import { useSessionStore } from "@/store/profile/sessionStore";
 import { useProfileStore } from "@/store/profile/profileStore";
 import { useTranslation } from "react-i18next";
+import { FaChevronDown } from "react-icons/fa";
 
 function useCurrentLocale(pathname) {
   // /en/profile/... -> "en"
@@ -31,7 +31,7 @@ export default function ProfileHeader() {
 
   return (
     <div className="relative w-full flex flex-col">
-      <div className="w-full h-[60px] bg-black flex items-center justify-between px-6 shadow-lg">
+      <div className="w-full h-[60px] bg-black border-b border-zinc-900 flex items-center justify-between px-6 shadow-lg">
         {/* Left Profile */}
         <div className="flex items-center gap-3 border-l border-gray-700 pl-4 ml-10">
           {!user ? (
@@ -56,12 +56,24 @@ export default function ProfileHeader() {
         {/* Right Menu + API Dropdown */}
         <div className="flex items-center gap-4">
           <div className="relative">
+          <div className="relative w-fit">
             <select
               value={activeApiId || ""}
               onChange={(e) => setActiveApiById(Number(e.target.value))}
-              className="px-4 py-[8px] rounded-xl transition font-medium border border-gray-800 hover:border-gray-600 text-white
-                         bg-black focus:outline-none focus:ring-cyan-500"
-              title={t("api.select")}
+              className="
+                px-4 py-[8px] 
+                rounded-xl 
+                transition 
+                font-medium 
+                border border-gray-800 
+                hover:border-gray-600 
+                text-white
+                bg-black
+                focus:outline-none 
+                focus:ring-cyan-500
+                appearance-none     /* default oku kaldır */
+                pr-10               /* sağ boşluk ver */
+              "
             >
               {!apis?.length && <option value="">{t("api.noApi")}</option>}
               {apis?.map((api) => (
@@ -70,11 +82,21 @@ export default function ProfileHeader() {
                 </option>
               ))}
             </select>
+            
+            {/* Kendi dropdown oku */}
+            <span className="pointer-events-none absolute right-3 text-sm top-1/2 -translate-y-1/2 text-white">
+              <FaChevronDown />          
+            </span>
+          </div>
           </div>
 
           <nav className="flex gap-4">
             {navItems.map((item) => {
-              const active = pathname.startsWith(item.href);
+              const active =
+                item.href === `/${locale}/profile`
+                  ? pathname === item.href
+                  : pathname.startsWith(item.href);
+            
               return (
                 <Link
                   key={item.href}
@@ -90,7 +112,6 @@ export default function ProfileHeader() {
               );
             })}
           </nav>
-
         </div>
       </div>
     </div>

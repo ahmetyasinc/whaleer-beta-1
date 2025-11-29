@@ -28,7 +28,8 @@ const Pill = ({ children, tone = "neutral" }) => {
   );
 };
 
-const CommunityIndicators = ({ locale }) => {
+// GÜNCELLEME: closeModal prop'u eklendi
+const CommunityIndicators = ({ locale, closeModal }) => {
   const { t } = useTranslation("indicator");
   const { favorites, toggleFavorite, community } = useIndicatorStore();
 
@@ -172,7 +173,12 @@ const CommunityIndicators = ({ locale }) => {
                     if (allowChartView) await notifyIndicatorView(releaseId);
                   }}
                 >
-                  <AddIndicatorButton indicatorId={indicator.id} disabled={!allowChartView} />
+                  {/* GÜNCELLEME: closeModal prop'u AddIndicatorButton'a aktarılıyor */}
+                  <AddIndicatorButton
+                    indicatorId={indicator.id}
+                    disabled={!allowChartView}
+                    closeModal={closeModal} 
+                  />
                   {!allowChartView && (
                     <div className="absolute inset-0" onClick={(e) => e.stopPropagation()} />
                   )}

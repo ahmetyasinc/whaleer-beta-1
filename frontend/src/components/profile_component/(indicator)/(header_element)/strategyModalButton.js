@@ -49,13 +49,17 @@ const StrategyButton = ({locale}) => {
   const renderContent = () => {
     switch (activeTab) {
       case 1:
-        return <TechnicalStrategies locale={locale} />;
+        // GÜNCELLEME: closeModal eklendi
+        return <TechnicalStrategies locale={locale} closeModal={() => setIsModalOpen(false)} />;
       case 2:
-        return <MyStrategies />;
+        // GÜNCELLEME: closeModal eklendi
+        return <MyStrategies closeModal={() => setIsModalOpen(false)} />;
       case 3:
-        return <CommunityStrategy locale={locale}/>;
+        // GÜNCELLEME: closeModal eklendi
+        return <CommunityStrategy locale={locale} closeModal={() => setIsModalOpen(false)} />;
       case 4:
-        return <FavStrategies  favorites={favorites} addFavorite={addFavorite} />;
+        // GÜNCELLEME: closeModal eklendi
+        return <FavStrategies favorites={favorites} addFavorite={addFavorite} closeModal={() => setIsModalOpen(false)} />;
       default:
         return <p className="text-white">Not Found.</p>;
     }

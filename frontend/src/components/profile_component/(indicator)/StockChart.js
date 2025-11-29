@@ -18,6 +18,7 @@ import StrategySettingsModal from './(modal_tabs)/strategySettingsModal';
 import { installCursorWheelZoom } from "@/utils/cursorCoom";
 import usePanelStore from "@/store/indicator/panelStore";
 import { useChartSettingsStore } from "@/store/indicator/chartSettingsStore";
+import useWatchListStore from "@/store/indicator/watchListStore";
 
 import { RANGE_EVENT, RANGE_REQUEST_EVENT, nextSeq, markLeader, unmarkLeader, isLeader, minBarsFor, FUTURE_PADDING_BARS, setLastRangeCache, getLastRangeCache } from "@/utils/chartSync";
 
@@ -155,7 +156,8 @@ export default function ChartComponent() {
 
   const { indicatorData, removeSubIndicator } = useIndicatorDataStore();
   const { strategyData, removeSubStrategy } = useStrategyDataStore();
-  const { selectedCrypto, selectedPeriod } = useCryptoStore();
+  const { selectedCrypto, setSelectedCrypto, coins, selectedPeriod } = useCryptoStore();
+  const { watchlist } = useWatchListStore();
 
   const [settingsIndicatorModalOpen, setSettingsIndicatorModalOpen] = useState(false);
   const [settingsStrategyModalOpen, setSettingsStrategyModalOpen] = useState(false);
@@ -203,6 +205,50 @@ export default function ChartComponent() {
     };
     recalc();
   }, [selectedCrypto, selectedPeriod, end]);
+
+  // ===== Watchlist ile klavye ok tuşlarıyla geçiş =====
+
+  useEffect(() => {
+  const handleKeyDown = (e) => {
+    // Input/text alanındayken çalışmasın
+    const target = e.target;
+    if (
+      target &&
+      (target.tagName === "INPUT" || target.tagName === "TEXTAREA") &&
+      !target.classList.contains("whaleer-hotkey-enabled")
+    ) {
+      return;
+    }
+
+    if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+    if (!selectedCrypto || !watchlist.length) return;
+
+    // Sayfa scroll’unu engelle
+    e.preventDefault();
+
+    const ids = watchlist; 
+    const currentIndex = ids.indexOf(selectedCrypto.id);
+
+    if (currentIndex === -1) return;
+
+    let nextIndex = currentIndex;
+
+    if (e.key === "ArrowUp") {
+      nextIndex = (currentIndex - 1 + ids.length) % ids.length;
+    } else if (e.key === "ArrowDown") {
+      nextIndex = (currentIndex + 1) % ids.length;
+    }
+
+    const nextId = ids[nextIndex];
+    const nextCoin = coins.find((c) => c.id === nextId);
+    if (!nextCoin) return;
+
+    setSelectedCrypto(nextCoin);
+  };
+
+  window.addEventListener("keydown", handleKeyDown);
+  return () => window.removeEventListener("keydown", handleKeyDown);
+}, [selectedCrypto, watchlist, coins, setSelectedCrypto]);
 
   // ===== Fetch data =====
   useEffect(() => {
@@ -325,7 +371,16 @@ export default function ChartComponent() {
 
     const fmt = makeZonedFormatter(selectedPeriod, tzOffsetMin);
 
-    const textColor = settings.textColor === "black" ? "#111111" : "#ffffff";
+    const COLOR_MAP = {
+      white: "#FFFFFF",
+      black: "#111111",
+      gray: "#8C8C8C",
+      yellow: "#F2D024",
+      red: "#F23645",
+      green: "#0ECB81"
+    };
+
+    const textColor = COLOR_MAP[settings.textColor] ?? "#8C8C8C";
     const gridColor = settings?.grid?.color || "#111111";
 
     const chartOptions = {
@@ -339,10 +394,27 @@ export default function ChartComponent() {
     const chart = createChart(chartContainerRef.current, chartOptions);
     chartRef.current = chart;
 
-    // watermark
+// YENİ WATERMARK KODU
+    const wmVisible = settings?.watermark?.visible ?? true;
+    const wmColorKey = settings?.watermark?.color ?? settings.textColor; // Metin rengini yedek olarak kullan
+    const wmColorBase = COLOR_MAP[wmColorKey.toLowerCase()] ?? "#8C8C8C"; // Seçilen renge çevir
+    const wmFontSize = settings?.watermark?.fontSize ?? 20;
+
+    // Metin renginin %5 opacity'sini al, bu sayede arka plandan bağımsız olur
+    const wmColor = hexToRgba(wmColorBase, 0.05);
+    
+    // Watermark ayarlarını uygula
     const symbolText = selectedCrypto?.binance_symbol || selectedCrypto?.symbol || '—';
-    const wmColor = settings.textColor === "black" ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)";
-    chart.applyOptions({ watermark: { color: wmColor, visible: true, text: symbolText, fontSize: 40, horzAlign: 'center', vertAlign: 'center' } });
+    chart.applyOptions({ 
+        watermark: { 
+            color: wmColor, 
+            visible: wmVisible, 
+            text: symbolText, 
+            fontSize: wmFontSize, 
+            horzAlign: 'center', 
+            vertAlign: 'center' 
+        } 
+    });
 
     const el = chartContainerRef.current; const cleanupFns = [];
     if (el) {

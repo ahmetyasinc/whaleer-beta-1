@@ -9,6 +9,7 @@
   },
   "portfolio": {
     "empty": "Portföyünüzde henüz kripto para yok.",
+    "addApi": "Hemen Api Anahtarı Bağlayın",
     "columns": {
       "crypto": "Kripto Para",
       "leverage": "Kaldıraç",

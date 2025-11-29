@@ -45,14 +45,15 @@ const IndicatorsButton = ({locale}) => {
   const renderContent = () => {
     switch (activeTab) {
       case 1:
-            return <TechnicalIndicators locale={locale} addFavorite={addFavorite} favorites={favorites} />;
+            // TechnicalIndicators için closeModal prop'u (önceki istekten korunmuştur)
+            return <TechnicalIndicators locale={locale} addFavorite={addFavorite} favorites={favorites} closeModal={() => setIsModalOpen(false)} />;
       case 2:
-        return <PersonalIndicators/>;
+            // YENİ: PersonalIndicators için closeModal prop'u eklendi
+            return <PersonalIndicators closeModal={() => setIsModalOpen(false)} />; 
       case 3:
-        return <CommunityIndicators locale={locale}/>;
+        return <CommunityIndicators locale={locale} closeModal={() => setIsModalOpen(false)}/>;
       case 4:
-        return <FavoriteIndicators favorites={favorites} addFavorite={addFavorite} />;
-      default:
+        return <FavoriteIndicators favorites={favorites} addFavorite={addFavorite} closeModal={() => setIsModalOpen(false)} />;      default:
         return <p className="text-white">t("NotFound")</p>;
     }
   };

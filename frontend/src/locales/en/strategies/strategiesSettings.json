@@ -18,7 +18,8 @@
     "barOptions": "Bar Options",
     "histogramOptions": "Histogram Options",
     "seriesOptions": "{{type}} Options",
-    "priceSettings": "Price Settings"
+    "priceSettings": "Price Settings",
+    "watermark": "Watermark Settings"
   },
   "fields": {
     "background": "Background",
@@ -50,7 +51,10 @@
     "baseValue": "Base Value",
     "opacity": "Opacity",
     "pricePrecision": "Precision (decimals)",
-    "opacityFor": "Opacity for {{target}}"
+    "opacityFor": "Opacity for {{target}}",
+    "visible": "Visible",
+    "wmColor": "Watermark Color",
+    "wmSize": "Watermark Size"
   },
   "series": {
     "candlestick": "Candlestick",
@@ -73,7 +77,11 @@
   },
   "options": {
     "white": "White",
-    "black": "Black"
+    "black": "Black",
+    "gray": "Gray",
+    "yellow": "Yellow",
+    "red": "Red",
+    "green": "Green"
   },
   "a11y": {
     "backdrop": "Close modal by clicking on backdrop"

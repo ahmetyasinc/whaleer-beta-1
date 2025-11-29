@@ -74,6 +74,17 @@
     }
   },
 
+  "leftmenu": {
+  "profile_basics": "Profile Settings",
+  "security": "Account Security",
+  "language": "Language Preferences",
+  "telegram": "Telegram Notifications",
+  "theme": "Theme Settings",
+  "timezone": "Time Zone",
+  "social_links": "Social Links"
+},
+
+
   "errors": {
     "load": "There was a problem while loading settings.",
     "loadProfile": "Unable to load profile information.",

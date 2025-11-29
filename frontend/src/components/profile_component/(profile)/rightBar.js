@@ -258,9 +258,12 @@ export default function RightBar() {
     { title: t("stats.totalActiveBots"), value: activeBotCount },
   ];
 
-  return (
-    <div className="w-[260px] h-[calc(100vh-60px)] bg-black text-white shrink-0 flex flex-col">
-      {/* Üst Aksiyon Butonları */}
+return (
+    // 1. Dış Kapsayıcı: h-full ile ebeveyninin boyunu alır, overflow-hidden ile taşmayı engeller.
+    <div className="w-[260px] h-full bg-black text-white shrink-0 flex flex-col overflow-hidden border-l border-zinc-800/50">
+    
+            {/* Üst Aksiyon Butonları */}
+      
       {/*<div className="p-3 border-b border-neutral-800">
         <div className="grid grid-cols-1 gap-[10px]">
           <button className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-pink-700 hover:from-pink-700 hover:to-orange-500 duration-200 text-white px-3 py-2 rounded-lg text-xs font-medium hover:shadow-lg transition">
@@ -277,47 +280,71 @@ export default function RightBar() {
           </button>
         </div>
       </div>*/}
-
-      {/* İçerik */}
-      <div className="flex-1 overflow-y-auto p-3">
-        {/* Genel İstatistikler (Tüm API'ler) */}
-        <div className="space-y-3 mb-5">
+      
+      <div className="flex flex-col h-full p-3 gap-4">
+        
+        {/* --- BÖLÜM 1: Genel İstatistikler --- */}
+        {/* flex-1: Bu grup mevcut alanın yarısını (veya orantılısını) kaplar. 
+            min-h-0: Küçülmesi gerekirse küçülür. */}
+        <div className="flex-1 flex flex-col gap-3 min-h-0">
           {stats.map((stat, index) => (
             <div
               key={stat.title}
-              className="bg-gradient-to-r pt-4 from-gray-950 to-zinc-900 rounded-lg h-16 shadow-md hover:shadow-lg border border-neutral-700 transition-all duration-300 flex flex-col justify-center px-4"
-              style={{ animationDelay: `${index * 200}ms`, animation: "fadeInUpRightBar 1s ease-out forwards" }}
+              // 3. Kart Ayarları:
+              // flex-1: Her kart eşit yükseklikte yer kaplar.
+              // h-auto: Sabit h-16 kaldırıldı.
+              // min-h-0: İçerik sığmasa bile kutu küçülebilir.
+              className="flex-1 min-h-0 bg-gradient-to-r from-gray-950 to-zinc-900 rounded-lg shadow-md hover:shadow-lg border border-neutral-700 transition-all duration-300 flex flex-col justify-center px-4"
+              style={{
+                animationDelay: `${index * 200}ms`,
+                animation: "fadeInUpRightBar 1s ease-out forwards",
+              }}
             >
-              <h4 className="text-xs font-medium text-zinc-400 mb-1">{stat.title}</h4>
-              <p className="text-lg font-semibold text-white">{stat.value}</p>
+              <h4 className="text-xs font-medium text-zinc-400 mb-1 truncate">
+                {stat.title}
+              </h4>
+              <p className="text-lg font-semibold text-white truncate">
+                {stat.value}
+              </p>
             </div>
           ))}
         </div>
 
-        {/* Performans (Aktif API) */}
-        <div className="space-y-3">
+        {/* --- BÖLÜM 2: Performans --- */}
+        {/* flex-1: Alt kısım da kalan alanı doldurur. */}
+        <div className="flex-1 flex flex-col gap-3 min-h-0">
           {["daily", "weekly", "monthly"].map((period, index) => {
             const perf = performance[period] || { value: null, trades: 0 };
             const val = perf.value;
             const trades = perf.trades || 0;
 
             const colorClass =
-              val === null ? "text-zinc-300" : val >= 0 ? "text-emerald-400" : "text-red-400";
+              val === null
+                ? "text-zinc-300"
+                : val >= 0
+                ? "text-emerald-400"
+                : "text-red-400";
 
             return (
               <div
                 key={period}
-                className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-lg h-20 shadow-md hover:shadow-lg border border-neutral-700 transition-all duration-300 flex flex-col justify-center px-4"
-                style={{ animationDelay: `${index * 200}ms`, animation: "fadeInUpRightBar 1s ease-out forwards" }}
+                // Kart Ayarları: Sabit h-20 kaldırıldı, yerine flex-1 geldi.
+                className="flex-1 min-h-0 bg-gradient-to-r from-gray-950 to-zinc-900 rounded-lg shadow-md hover:shadow-lg border border-neutral-700 transition-all duration-300 flex flex-col justify-center px-4"
+                style={{
+                  animationDelay: `${index * 200}ms`,
+                  animation: "fadeInUpRightBar 1s ease-out forwards",
+                }}
               >
-                <h4 className="text-xs font-medium text-zinc-400 capitalize mb-1">
+                <h4 className="text-xs font-medium text-zinc-400 capitalize mb-1 truncate">
                   {t(`performance.labels.${period}`)}
                 </h4>
                 <div className="flex justify-between items-center">
-                  <p className={`text-lg font-bold ${colorClass}`}>
-                    {val === null ? "–" : `${val >= 0 ? "+" : "-"}${Math.abs(val).toFixed(2)}%`}
+                  <p className={`text-lg font-bold ${colorClass} truncate`}>
+                    {val === null
+                      ? "–"
+                      : `${val >= 0 ? "+" : "-"}${Math.abs(val).toFixed(2)}%`}
                   </p>
-                  <span className="text-xs mb-3 text-zinc-400">
+                  <span className="text-xs text-zinc-400 whitespace-nowrap ml-2">
                     {t("performance.trades", { count: trades })}
                   </span>
                 </div>
@@ -329,8 +356,14 @@ export default function RightBar() {
 
       <style jsx>{`
         @keyframes fadeInUpRightBar {
-          from { opacity: 0; transform: translateX(40px); }
-          to   { opacity: 1; transform: translateX(0); }
+          from {
+            opacity: 0;
+            transform: translateX(40px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
         }
       `}</style>
     </div>

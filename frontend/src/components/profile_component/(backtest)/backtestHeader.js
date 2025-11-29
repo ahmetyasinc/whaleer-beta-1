@@ -43,7 +43,7 @@ export default function BacktestHeader() {
 
   return (
     <>
-      <header className="w-full bg-black text-white px-6 py-3 h-[60px] flex justify-between items-center">
+      <header className="w-full bg-black border-b border-zinc-900 text-white px-6 py-3 h-[60px] flex justify-between items-center">
         <h1></h1>
         <div className="flex gap-4">
           <button

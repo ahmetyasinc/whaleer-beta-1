@@ -4,7 +4,8 @@ import { IoMdStar } from "react-icons/io";
 import AddStrategyButton from "./add_strategy_button";
 import useStrategyStore from "@/store/indicator/strategyStore"; // Zustand Store'u import et
 
-const FavoriteStrategies = () => {
+// GÜNCELLEME: closeModal prop'u eklendi
+const FavoriteStrategies = ({ closeModal }) => {
     const { favorites, toggleFavorite } = useStrategyStore(); // Zustand'dan state çek
     
     return (
@@ -32,7 +33,8 @@ const FavoriteStrategies = () => {
                             {/* Kartın sağ kısmı */}
                             <div className="flex gap-2">
                                 {/* Göster/Gizle Butonu */}
-                                <AddStrategyButton strategyId={strategy.id} />
+                                {/* GÜNCELLEME: closeModal prop'u AddStrategyButton'a aktarılıyor */}
+                                <AddStrategyButton strategyId={strategy.id} closeModal={closeModal} />
                             </div>
                         </div>
                     ))}

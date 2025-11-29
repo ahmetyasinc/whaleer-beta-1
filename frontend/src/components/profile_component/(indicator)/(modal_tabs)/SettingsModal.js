@@ -24,8 +24,12 @@ export default function SettingsModal({ open, onClose, locale }) {
 
   // --- defaults guard ---
   const defaultState = {
-    bgColor: settings?.bgColor || "rgba(1, 1, 27, 1)",
-    textColor: ONE_OF(settings?.textColor, ["white", "black"], "white"),
+    bgColor: settings?.bgColor || "rgba(0, 0, 25)",
+    textColor: ONE_OF(
+      settings?.textColor,
+      ["white", "black", "gray", "yellow", "red", "green"],
+      "white"
+    ),
     grid: { color: settings?.grid?.color || "#111111" },
     series: {
       type: ONE_OF(
@@ -81,9 +85,16 @@ export default function SettingsModal({ open, onClose, locale }) {
     timezoneMode: ONE_OF(settings?.timezoneMode, ["local", "utc", "fixed"], "local"),
     timezoneFixed: settings?.timezoneFixed || "GMT+03:00",
     pricePrecision: clamp(+settings?.pricePrecision || 2, 0, 8),
+    watermark: {
+      visible: settings?.watermark?.visible ?? true,
+      fontSize: clamp(+settings?.watermark?.fontSize || 20, 10, 40),
+    },
   };
 
   const [localState, setLocalState] = useState(defaultState);
+
+  const scrollRef = useRef(null);
+  const scrollPosRef = useRef(0);
 
   // --- Bas Değer alanı için KONTROLSÜZ input (odak kaybını önler)
   const bvRef = useRef(null);
@@ -109,7 +120,7 @@ export default function SettingsModal({ open, onClose, locale }) {
       if (bvRef.current) bvRef.current.value = shown;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, settings]);
+  }, [open]);
 
   // ---- Helpers (sadece input deneyimi için) ----
   function sanitizeDecimalInput6(s) {
@@ -127,6 +138,11 @@ export default function SettingsModal({ open, onClose, locale }) {
   }
 
   const handleChange = (path, value) => {
+    // Scroll pozisyonunu state değişmeden önce kaydet
+    if (scrollRef.current) {
+      scrollPosRef.current = scrollRef.current.scrollTop;
+    }
+
     setLocalState((prev) => {
       const clone = structuredClone(prev);
       const segs = path.split(".");
@@ -136,6 +152,14 @@ export default function SettingsModal({ open, onClose, locale }) {
       return clone;
     });
   };
+
+  useEffect(() => {
+  if (scrollRef.current) {
+    scrollRef.current.scrollTop = scrollPosRef.current;
+  }
+}, [localState]);
+
+
 
   const handleSave = () => {
     // 1) Baz Değer'i ref'ten oku ve sayıya çevir
@@ -221,7 +245,10 @@ export default function SettingsModal({ open, onClose, locale }) {
           </div>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
+            <div
+              ref={scrollRef}
+              className="flex-1 overflow-y-auto p-5 custom-scrollbar"
+            >
             {/* Appearance */}
             <Section title={t("labels.appearance")}>
               {/* Background */}
@@ -235,19 +262,25 @@ export default function SettingsModal({ open, onClose, locale }) {
                 />
               </div>
 
-              {/* Text/Price Color */}
-              <div className="flex items-center justify-between">
-                <label className="text-gray-300 text-sm">{t("fields.textPriceColor")}</label>
-                <select
-                  className="bg-black border border-gray-700 rounded-md px-2 py-1 text-gray-200"
-                  value={localState.textColor}
-                  onChange={(e) => handleChange("textColor", e.target.value)}
-                  aria-label={t("fields.textPriceColor")}
-                >
-                  <option value="white">{t("options.white")}</option>
-                  <option value="black">{t("options.black")}</option>
-                </select>
-              </div>
+            {/* Text/Price Color */}
+            <div className="flex items-center justify-between">
+              <label className="text-gray-300 text-sm">{t("fields.textPriceColor")}</label>
+
+              <select
+                className="bg-black border border-gray-700 rounded-md px-2 py-1 text-gray-200"
+                value={localState.textColor}
+                onChange={(e) => handleChange("textColor", e.target.value)}
+                aria-label={t("fields.textPriceColor")}
+              >
+                <option value="white">{t("options.white")}</option>
+                <option value="black">{t("options.black")}</option>
+                <option value="gray">{t("options.gray")}</option>
+                <option value="yellow">{t("options.yellow")}</option>
+                <option value="red">{t("options.red")}</option>
+                <option value="green">{t("options.green")}</option>
+              </select>
+            </div>
+
 
               {/* Series type */}
               <div className="flex items-center justify-between">
@@ -311,6 +344,31 @@ export default function SettingsModal({ open, onClose, locale }) {
                   </select>
                 </div>
               )}
+            </Section>
+
+            {/* WaterMark */}
+            <Section title={t("labels.watermark")}>
+              <div className="flex items-center justify-between">
+                <label className="text-gray-300 text-sm">{t("fields.visible")}</label>
+                <input
+                  type="checkbox"
+                  checked={!!localState.watermark.visible}
+                  onChange={(e) => handleChange("watermark.visible", e.target.checked)}
+                  aria-label={t("fields.visible")}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <label className="text-gray-300 text-sm">{t("fields.wmSize")}</label>
+                <input
+                  aria-label={t("fields.wmSize")}
+                  type="number"
+                  min={10}
+                  max={40}
+                  className="w-20 bg-black border border-gray-700 rounded px-2 py-1 text-gray-200"
+                  value={localState.watermark.fontSize}
+                  onChange={(e) => handleChange("watermark.fontSize", clamp(+e.target.value || 20, 10, 40))}
+                />
+              </div>
             </Section>
 
             {/* Value source for single-value series */}

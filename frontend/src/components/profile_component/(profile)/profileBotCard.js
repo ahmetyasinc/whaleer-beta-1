@@ -161,10 +161,10 @@ export default function ModernBotList({ bots = [] }) {
                           </button>
 
                           {menuOpen === bot.id && (
-                            <div className="absolute top-0 right-10 w-36 bg-stone-900 rounded-lg shadow-lg z-50 border border-stone-700">
+                            <div className="absolute top-0 right-10 w-36 bg-gray-900 rounded-lg shadow-lg z-50 border border-gray-700">
                               <button
                                 onClick={() => handleExamineBot(bot.id)}
-                                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-amber-400 hover:bg-stone-800 rounded-t-lg transition-colors duration-200 disabled:opacity-60"
+                                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-amber-400 hover:bg-gray-800 rounded-t-lg transition-colors duration-200 disabled:opacity-60"
                                 disabled={examineLoadingId === bot.id}
                               >
                                 <IoSearch size={16} />

@@ -97,80 +97,121 @@ export default function TelegramConnect({ className = '', onChange }) {
     }
   }
 
-  return (
-    <section className={`rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 ${className}`}>
-      <h2 className="text-lg font-medium mb-4">
-        {t('notifications')}
-      </h2>
+return (
+  <section
+    className={`relative overflow-hidden rounded-2xl border border-zinc-800/80 
+    bg-gradient-to-br from-zinc-950/90 via-zinc-900/80 to-zinc-950/90 
+    p-5 sm:p-6 shadow-xl shadow-black/40 ${className}`}
+  >
 
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <p className="font-medium flex items-center gap-2">
-            {t('telegram.title')}
-            {state.connected && (
-              <FiCheckCircle className="text-emerald-400" title={t('telegram.connected')} />
-            )}
-          </p>
+    {/* Üst mavi glow çizgisi */}
+    <div className="pointer-events-none absolute inset-x-0 top-0 h-px 
+      bg-gradient-to-r from-blue-500/0 via-blue-500/60 to-blue-500/0" />
 
-          <p className="text-sm text-zinc-400">
-            {state.connected ? t('telegram.connected_hint') : t('telegram.connect_hint')}
-          </p>
+    {/* Arka plan blur efekt */}
+    <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 
+      rounded-full bg-blue-500/10 blur-3xl" />
 
+    <h2 className="text-lg font-semibold text-zinc-100 mb-4 flex items-center gap-2">
+      {t("notifications")}
+    </h2>
+
+    <div className="flex items-start justify-between gap-4">
+
+      {/* Sol taraf açıklama */}
+      <div className="space-y-1">
+        <p className="font-medium flex items-center gap-2 text-zinc-200">
+          {t("telegram.title")}
           {state.connected && (
-            <p className="text-xs text-zinc-500">
-              {t('telegram.account')}: {state.username ? `@${state.username}` : state.chatId}
-            </p>
+            <FiCheckCircle className="text-blue-400" title={t("telegram.connected")} />
           )}
+        </p>
 
-          {state.error && (
-            <div className="text-sm text-rose-300 mt-1">{state.error}</div>
-          )}
-        </div>
+        <p className="text-sm text-zinc-400">
+          {state.connected ? t("telegram.connected_hint") : t("telegram.connect_hint")}
+        </p>
 
-        <div className="flex items-center gap-2">
-          {!state.connected ? (
-            <>
-              <button
-                onClick={handleConnect}
-                disabled={state.working || state.loading}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-colors duration-200 disabled:opacity-60"
-              >
-                <FiLink />
-                {state.working ? t('telegram.connecting') : t('telegram.connect')}
-              </button>
-              <button
-                onClick={refreshStatus}
-                disabled={state.working}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-white border border-zinc-600 transition-colors"
-                title={t('telegram.refresh_status')}
-              >
-                <FiRefreshCw />
-                {t('telegram.refresh')}
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={handleDisconnect}
-                disabled={state.working}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition-colors duration-200 disabled:opacity-60"
-              >
-                <FiXCircle />
-                {state.working ? t('telegram.disconnecting') : t('telegram.disconnect')}
-              </button>
-              <button
-                onClick={refreshStatus}
-                disabled={state.working}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-white border border-zinc-600 transition-colors"
-                title={t('telegram.refresh_status')}
-              >
-                <FiRefreshCw />
-                {t('telegram.refresh')}
-              </button>
-            </>
-          )}
-        </div>
+        {state.connected && (
+          <p className="text-xs text-zinc-500">
+            {t("telegram.account")}:{" "}
+            {state.username ? `@${state.username}` : state.chatId}
+          </p>
+        )}
+
+        {state.error && (
+          <div className="text-sm text-rose-400 mt-1">{state.error}</div>
+        )}
       </div>
-    </section>
-  );
+
+      {/* Sağ taraf butonlar */}
+      <div className="flex items-center gap-2">
+
+        {!state.connected ? (
+          <>
+            {/* Connect */}
+            <button
+              onClick={handleConnect}
+              disabled={state.working || state.loading}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+              transition-all duration-200
+              ${
+                state.working || state.loading
+                  ? "bg-zinc-900/80 text-zinc-500 ring-1 ring-zinc-800/80 cursor-not-allowed opacity-60"
+                  : "bg-blue-600/90 text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500 hover:shadow-blue-500/40 hover:-translate-y-0.5 active:translate-y-0"
+              }`}
+            >
+              <FiLink />
+              {state.working ? t("telegram.connecting") : t("telegram.connect")}
+            </button>
+
+            {/* Refresh */}
+            <button
+              onClick={refreshStatus}
+              disabled={state.working}
+              className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
+              bg-zinc-900/60 text-zinc-300 border border-zinc-800 transition-all
+              hover:bg-zinc-800 hover:text-white
+              disabled:opacity-50`}
+            >
+              <FiRefreshCw />
+              {t("telegram.refresh")}
+            </button>
+          </>
+        ) : (
+          <>
+            {/* Disconnect */}
+            <button
+              onClick={handleDisconnect}
+              disabled={state.working}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+              transition-all duration-200
+              ${
+                state.working
+                  ? "bg-zinc-900/80 text-zinc-500 ring-1 ring-zinc-800/80 cursor-not-allowed opacity-60"
+                  : "bg-rose-600/90 text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 hover:shadow-rose-500/40 hover:-translate-y-0.5 active:translate-y-0"
+              }`}
+            >
+              <FiXCircle />
+              {state.working ? t("telegram.disconnecting") : t("telegram.disconnect")}
+            </button>
+
+            {/* Refresh */}
+            <button
+              onClick={refreshStatus}
+              disabled={state.working}
+              className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
+              bg-zinc-900/60 text-zinc-300 border border-zinc-800 transition-all
+              hover:bg-zinc-800 hover:text-white
+              disabled:opacity-50`}
+            >
+              <FiRefreshCw />
+              {t("telegram.refresh")}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  </section>
+);
+
 }

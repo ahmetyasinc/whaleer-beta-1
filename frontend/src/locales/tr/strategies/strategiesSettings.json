@@ -18,6 +18,7 @@
     "barOptions": "Bar Seçenekleri",
     "histogramOptions": "Histogram Seçenekleri",
     "seriesOptions": "{{type}} Seçenekleri",
+    "watermark": "Su İzi Ayarları",
     "priceSettings": "Fiyat Ayarları"
   },
   "fields": {
@@ -50,7 +51,10 @@
     "baseValue": "Baz Değer",
     "opacity": "Opaklık",
     "pricePrecision": "Hassasiyet (ondalık)",
-    "opacityFor": "{{target}} için opaklık"
+    "opacityFor": "{{target}} için opaklık",
+    "visible": "Görünür",
+    "wmColor": "Su İzi Rengi",
+    "wmSize": "Su İzi Boyutu"
   },
   "series": {
     "candlestick": "Mum",
@@ -73,7 +77,11 @@
   },
   "options": {
     "white": "Beyaz",
-    "black": "Siyah"
+    "black": "Siyah",
+    "gray": "Gri",
+    "yellow": "Sarı",
+    "red": "Kırmızı",
+    "green": "Yeşil"
   },
   "a11y": {
     "backdrop": "Arka plana tıklayarak kapat"

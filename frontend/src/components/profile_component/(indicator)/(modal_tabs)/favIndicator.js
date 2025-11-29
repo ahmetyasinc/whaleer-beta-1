@@ -4,7 +4,8 @@ import { IoMdStar } from "react-icons/io";
 import AddIndicatorButton from "./add_indicator_button";
 import useIndicatorStore from "@/store/indicator/indicatorStore"; // Zustand Store'u import et
 
-const FavoriteIndicators = () => {
+// GÜNCELLEME: closeModal prop'u eklendi
+const FavoriteIndicators = ({ closeModal }) => {
     const { favorites, toggleFavorite } = useIndicatorStore(); // Zustand'dan state çek
     
     return (
@@ -32,7 +33,8 @@ const FavoriteIndicators = () => {
                             {/* Kartın sağ kısmı */}
                             <div className="flex gap-2">
                                 {/* Göster/Gizle Butonu */}
-                                <AddIndicatorButton indicatorId={indicator.id} />
+                                {/* GÜNCELLEME: closeModal prop'u AddIndicatorButton'a aktarılıyor */}
+                                <AddIndicatorButton indicatorId={indicator.id} closeModal={closeModal} />
                             </div>
                         </div>
                     ))}

@@ -55,7 +55,7 @@ const StrategyButton = () => {
   return (
     <>
       <button
-        className="bg-gray-800 w-[120px] px-4 py-[10px] rounded text-sm text-white truncate"
+        className="bg-zinc-950 w-[240px] px-4 py-[9px] border border-zinc-800 rounded-md text-sm text-white truncate"
         onClick={() => setIsModalOpen(true)}
       >
         {selectedStrategy ? selectedStrategy.name : t("button.select")}

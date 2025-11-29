@@ -11,7 +11,8 @@ import { useTranslation } from "react-i18next";
 
 axios.defaults.withCredentials = true; // Tüm axios isteklerinde cookie'yi göndermeyi etkinleştir
 
-const TechnicalIndicators = ({locale}) => {
+// GÜNCELLEME: closeModal prop'u eklendi
+const TechnicalIndicators = ({locale, closeModal}) => {
     const { t } = useTranslation("indicator");
 
     const { favorites, toggleFavorite, setTecnicIndicators, setPersonalIndicators, setCommunityIndicators, tecnic } = useIndicatorStore();
@@ -121,7 +122,8 @@ const TechnicalIndicators = ({locale}) => {
                             {/* Kartın sağ kısmı */}
                             <div className="flex gap-2">
                                 {/* Göster/Gizle Butonu */}
-                                <AddIndicatorButton indicatorId={indicator.id} />
+                                {/* GÜNCELLEME: closeModal prop'u AddIndicatorButton'a aktarılıyor */}
+                                <AddIndicatorButton indicatorId={indicator.id} closeModal={closeModal} /> 
 
                                 {/* Kod Butonu */}
                                 <button

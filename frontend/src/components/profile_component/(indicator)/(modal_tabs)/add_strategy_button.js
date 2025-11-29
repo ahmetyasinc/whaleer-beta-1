@@ -11,7 +11,8 @@ import { useTranslation } from "react-i18next";
 
 axios.defaults.withCredentials = true;
 
-const AddStrategyButton = ({ strategyId }) => {
+// GÜNCELLEME: closeModal prop'u eklendi
+const AddStrategyButton = ({ strategyId, closeModal }) => {
   const { end } = usePanelStore();
   const { selectedCrypto, selectedPeriod } = useCryptoStore();
   const { insertStrategyData } = useStrategyDataStore();
@@ -76,6 +77,10 @@ const AddStrategyButton = ({ strategyId }) => {
     await fetchStrategyData();
     setTimeout(() => {
       setIsLoading(false);
+      // YENİ: Başarıyla yüklendikten sonra modalı kapat
+      if (closeModal) {
+        closeModal(); 
+      }
     }, 200);
   };
 

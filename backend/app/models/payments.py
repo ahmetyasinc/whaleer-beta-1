@@ -21,6 +21,8 @@ class PaymentIntent(Base):
     purpose: Mapped[str] = mapped_column(String(32), nullable=False)            # "listing_fee" | "purchase"
     bot_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
 
+    chain: Mapped[str] = mapped_column(String(32), nullable=False, default="solana")
+    
     seller_wallet: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     platform_fee_usd: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False, default=0)

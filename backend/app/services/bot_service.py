@@ -17,6 +17,7 @@ async def replicate_bot_for_user(
     rent_days: int = 0,
     price_paid: Optional[float] = None,
     tx_hash: Optional[str] = None,
+    profit_share_rate: Optional[float] = None,
 ):
     """
     Orijinal botun bir kopyasını oluşturur ve yeni kullanıcıya atar.
@@ -53,57 +54,111 @@ async def replicate_bot_for_user(
         days = rent_days or 30
         rent_expires_at = now + timedelta(days=days)
 
-    # 3) Yeni bot kaydı (alıcı için kopya)
-    new_bot = Bots(
-        # sahiplik
-        user_id=new_owner_id,
+    if purchase_type == "BUY":
+        # 3) Yeni bot kaydı (alıcı için kopya)
+        new_bot = Bots(
+            # sahiplik
+            user_id=new_owner_id,
 
-        # "kopya" referansları ve lisans/edinim bilgisi
-        parent_bot_id=src.id,
-        acquisition_type="PURCHASED" if is_buy else "RENTED",
-        acquired_from_user_id=src.user_id,
-        acquired_at=now,
-        rent_expires_at=rent_expires_at,
-        acquisition_price=price_paid,
-        acquisition_tx=tx_hash,
+            # "kopya" referansları ve lisans/edinim bilgisi
+            parent_bot_id=src.id,
+            acquisition_type="PURCHASED" if is_buy else "RENTED",
+            acquired_from_user_id=src.user_id,
+            acquired_at=now,
+            rent_expires_at=rent_expires_at,
+            acquisition_price=price_paid,
+            acquisition_tx=tx_hash,
 
-        # davranış/konfigürasyon (orijinal bottan kopya)
-        strategy_id=src.strategy_id,
-        api_id=None,                     # alıcı kendi API'sini tanımlar
-        period=src.period,
-        stocks=list(src.stocks or []),
-        active=False,                    # yeni kopya default pasif gelsin
-        candle_count=src.candle_count,
-        active_days=list(src.active_days or []),
-        active_hours=src.active_hours,
-        bot_type=src.bot_type,
+            # davranış/konfigürasyon (orijinal bottan kopya)
+            strategy_id=src.strategy_id,
+            api_id=None,                     # alıcı kendi API'sini tanımlar
+            period=src.period,
+            stocks=list(src.stocks or []),
+            active=False,                    # yeni kopya default pasif gelsin
+            candle_count=src.candle_count,
+            active_days=list(src.active_days or []),
+            active_hours=src.active_hours,
+            bot_type=src.bot_type,
 
-        # görünen isim
-        name=("[P] " if is_buy else "[R] ") + src.name,
+            # görünen isim
+            name=("[P] " if is_buy else "[R] ") + src.name,
 
-        # finansal metrikler: yeni bot sıfırdan başladığı için reset
-        initial_usd_value=None,
-        current_usd_value=None,
-        fullness=None,
+            # finansal metrikler: yeni bot sıfırdan başladığı için reset
+            initial_usd_value=None,
+            current_usd_value=None,
+            fullness=None,
 
-        # listing durumu: yeni kopya listelenmiş gelmesin
-        for_sale=False,
-        for_rent=False,
-        sell_price=None,
-        rent_price=None,
+            # listing durumu: yeni kopya listelenmiş gelmesin
+            for_sale=False,
+            for_rent=False,
+            sell_price=None,
+            rent_price=None,
 
-        # sayaç/metrikler
-        sold_count=0,
-        rented_count=0,
-        running_time=0,
-        profit_factor=0,
-        risk_factor=0,
+            # sayaç/metrikler
+            sold_count=0,
+            rented_count=0,
+            running_time=0,
+            profit_factor=0,
+            risk_factor=0,
 
-        # gelir cüzdanı: üreticinin cüzdanı değil, alıcının kazancı için.
-        # Eski acquire_bot'taki placeholder'ı korudum; sende farklı bir field varsa bunu güncelle.
-        revenue_wallet="AkmufZViBgt9mwuLPhFM8qyS1SjWNbMRBK8FySHajvUA",
-    )
+            # gelir cüzdanı: üreticinin cüzdanı değil, alıcının kazancı için.
+            # Eski acquire_bot'taki placeholder'ı korudum; sende farklı bir field varsa bunu güncelle.
+            revenue_wallet="AkmufZViBgt9mwuLPhFM8qyS1SjWNbMRBK8FySHajvUA",
+            sold_profit_share_rate=profit_share_rate,
+            is_profit_share= True,
+        )
+    else:
+        new_bot = Bots(
+            # sahiplik
+            user_id=new_owner_id,
 
+            # "kopya" referansları ve lisans/edinim bilgisi
+            parent_bot_id=src.id,
+            acquisition_type="PURCHASED" if is_buy else "RENTED",
+            acquired_from_user_id=src.user_id,
+            acquired_at=now,
+            rent_expires_at=rent_expires_at,
+            acquisition_price=price_paid,
+            acquisition_tx=tx_hash,
+
+            # davranış/konfigürasyon (orijinal bottan kopya)
+            strategy_id=src.strategy_id,
+            api_id=None,                     # alıcı kendi API'sini tanımlar
+            period=src.period,
+            stocks=list(src.stocks or []),
+            active=False,                    # yeni kopya default pasif gelsin
+            candle_count=src.candle_count,
+            active_days=list(src.active_days or []),
+            active_hours=src.active_hours,
+            bot_type=src.bot_type,
+
+            # görünen isim
+            name=("[P] " if is_buy else "[R] ") + src.name,
+
+            # finansal metrikler: yeni bot sıfırdan başladığı için reset
+            initial_usd_value=None,
+            current_usd_value=None,
+            fullness=None,
+
+            # listing durumu: yeni kopya listelenmiş gelmesin
+            for_sale=False,
+            for_rent=False,
+            sell_price=None,
+            rent_price=None,
+
+            # sayaç/metrikler
+            sold_count=0,
+            rented_count=0,
+            running_time=0,
+            profit_factor=0,
+            risk_factor=0,
+
+            # gelir cüzdanı: üreticinin cüzdanı değil, alıcının kazancı için.
+            # Eski acquire_bot'taki placeholder'ı korudum; sende farklı bir field varsa bunu güncelle.
+            revenue_wallet="AkmufZViBgt9mwuLPhFM8qyS1SjWNbMRBK8FySHajvUA",
+            rent_profit_share_rate=profit_share_rate,
+            is_profit_share= True,
+        )
     db.add(new_bot)
 
     # 4) Orijinal bot sayaçlarını artır

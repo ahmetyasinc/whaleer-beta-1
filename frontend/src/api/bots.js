@@ -7,7 +7,7 @@ axios.defaults.withCredentials = true;
 export const getBots = async () => {
   try {
     const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/get-bots`);
-    
+    console.log("getBots response:", response.data);
     const { apiList } = useApiStore.getState();
     const { all_strategies } = useStrategyStore.getState();
 
@@ -18,6 +18,7 @@ export const getBots = async () => {
       const strategyName = all_strategies.find(strategy => strategy.id === item.strategy_id)?.name || 'Not Found';
       return {
         id: item.id,
+        user_id: item.user_id,
         name: item.name,
         isActive: item.active,
         days: item.active_days,
@@ -41,8 +42,8 @@ export const getBots = async () => {
         rent_expires_at: item.rent_expires_at,
         enterOnCurrentSignal: item.enter_on_start,
         description: item.description,
-        profit_share_only: item.is_profit_share ?? false,   // kardan komisyon modu
-        deposit_balance: item.deposit_balance ?? 0,           // depozito bakiyesi
+        profit_share_only: item.is_profit_share,   // kardan komisyon modu
+        deposit_balance: item.deposit_balance,           // depozito bakiyesi
       };
     });
 

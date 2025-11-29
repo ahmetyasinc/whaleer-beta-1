@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 class BotsBase(BaseModel):
     strategy_id: Optional[int] = None
+    user_id: Optional[int] = None
     api_id: Optional[int] = None
     period: Optional[str] = None
     stocks: Optional[List[str]] = None
@@ -48,6 +49,8 @@ class BotsOut(BotsBase):
     rent_expires_at: Optional[datetime] = None
     enter_on_start: Optional[bool] = None
     description: Optional[str] = None
+    is_profit_share: Optional[bool] = None
+    deposit: Optional[float] = None
     
     
     class Config:

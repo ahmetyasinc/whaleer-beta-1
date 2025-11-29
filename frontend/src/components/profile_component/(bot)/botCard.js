@@ -1,4 +1,7 @@
 'use client';
+import { depositToVault } from "@/services/contract/deposit";
+import { toast } from "react-toastify";
+
 import { useState, useRef, useEffect, useMemo } from 'react';
 import useBotExamineStore from "@/store/bot/botExamineStore";
 import { useBotStore } from "@/store/bot/botStore";
@@ -14,6 +17,7 @@ import { FaBan } from "react-icons/fa6";
 import DeleteBotConfirmModal from "./deleteBotConfirmModal";
 import ShutDownBotModal from "./shutDownBotModal";
 import { useTranslation } from "react-i18next";
+import useStellarAuth from "@/hooks/useStellarAuth";
 
 /* ---- Type rozet stili ---- */
 function getTypeBadgeClasses(type) {
@@ -82,7 +86,7 @@ function RentedCountdown({ rent_expires_at }) {
 
 export const BotCard = ({ bot, column }) => {
   const { t } = useTranslation("botCard");
-
+  const { stellarAddress } = useStellarAuth();
   // === STORE & ACTIONLAR ===
   const removeBot = useBotStore((state) => state.removeBot);
   const shutDownBot = useBotStore((state) => state.shutDownBot);
@@ -108,7 +112,9 @@ export const BotCard = ({ bot, column }) => {
   const [depositAmount, setDepositAmount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
 
-
+  // Depozito işlemi loading
+  const [depositLoading, setDepositLoading] = useState(false);
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
   
   
   // === RENTED KONTROL & SAYAÇ ===
@@ -195,6 +201,46 @@ export const BotCard = ({ bot, column }) => {
   const handleDepositWithdraw = () => {
     setWithdrawModalOpen(true);
   };
+
+  const handleConfirmDeposit = async () => {
+    const amount = Number(depositAmount);
+
+    if (!amount || isNaN(amount) || amount <= 0) {
+      toast.error("Lütfen geçerli bir miktar girin.");
+      return;
+    }
+
+    if (!bot?.id || !bot?.user_id) {
+      toast.error("Bot bilgileri eksik (id / user_id).");
+      return;
+    }
+
+    if (!stellarAddress) {
+      toast.error("Lütfen önce Stellar cüzdanınızı bağlayın.");
+      return;
+    }
+
+    try {
+      setDepositLoading(true);
+
+      await depositToVault({
+        botId: bot.id,
+        userId: bot.user_id,
+        amountUsdc: amount,
+        publicKey: stellarAddress, // 🔴 artık buradan geliyor
+      });
+
+      toast.success("Depozito yatırma işlemi gönderildi.");
+      setDepositModalOpen(false);
+      setDepositAmount("");
+    } catch (err) {
+      console.error("depositToVault error:", err);
+      toast.error(err?.message || "Depozito yatırılırken hata oluştu.");
+    } finally {
+      setDepositLoading(false);
+    }
+  };
+
 
 
 
@@ -433,12 +479,13 @@ export const BotCard = ({ bot, column }) => {
                 </button>
         
                 <button
-                  onClick={() => {
-                    // Şimdilik boş bırak dedin
-                  }}
-                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 border border-cyan-400/40 text-white shadow-md hover:from-violet-600 hover:to-sky-500 transition"
+                  onClick={handleConfirmDeposit}
+                  disabled={depositLoading}
+                  className={`px-4 py-2 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 border border-cyan-400/40 text-white shadow-md hover:from-violet-600 hover:to-sky-500 transition ${
+                    depositLoading ? "opacity-60 cursor-not-allowed" : ""
+                  }`}
                 >
-                  Yükle
+                  {depositLoading ? "Gönderiliyor..." : "Yükle"}
                 </button>
               </div>
             </div>
@@ -801,9 +848,7 @@ export const BotCard = ({ bot, column }) => {
             </button>
 
             <button
-              onClick={() => {
-                // Şimdilik boş
-              }}
+              onClick={() => {}}
               className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 border border-cyan-400/40 text-white shadow-md hover:from-violet-600 hover:to-sky-500 transition"
             >
               Yükle

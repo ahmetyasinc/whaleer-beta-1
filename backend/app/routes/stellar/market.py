@@ -184,6 +184,7 @@ async def confirm_order(
             rent_days=rent_days,
             price_paid=float(intent.price_amount) if getattr(intent, "price_amount", None) else None,
             tx_hash=body.tx_hash,
+            profit_share_rate=profit_share_rate
         )
         if profit_share_rate > 0:
             vault_tx_hash = init_vault_on_chain(

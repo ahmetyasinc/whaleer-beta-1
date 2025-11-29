@@ -164,6 +164,8 @@ async def update_bot(
         if val < 0:
             raise HTTPException(status_code=422, detail="initial_usd_value must be ≥ 0.")
         bot.initial_usd_value = val
+        bot.current_usd_value = val
+        bot.maximum_usd_value = val
         # current_usd_value da ilk değerle başlasın (boşsa veya zorunlu olarak eşitlemek isterseniz)
         if bot.current_usd_value is None:
             bot.current_usd_value = val

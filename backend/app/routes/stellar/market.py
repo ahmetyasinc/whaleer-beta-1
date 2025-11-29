@@ -6,6 +6,7 @@ from sqlalchemy import select, update
 from datetime import datetime, timezone, timedelta
 import json
 import secrets
+from app.services.contract.init_vault import init_vault_on_chain
 
 from app.core.stellar import wait_for_tx_success  # 👈 biraz önce yazdığımız helper
 
@@ -16,6 +17,9 @@ from app.core.auth import verify_token
 from app.models.payments import PaymentIntent 
 from app.services.bot_service import replicate_bot_for_user
 from stellar_sdk import Server
+
+from app.models.wallets import Wallet # Cüzdan modeli
+from app.models.profile.bots.bots import Bots      # Bot modeli
 
 # .env'den ID'leri çekmek için
 import os
@@ -110,7 +114,7 @@ async def confirm_order(
     q = select(PaymentIntent).where(PaymentIntent.id == body.order_id)
     res = await db.execute(q)
     intent = res.scalar_one_or_none()
-    print(f"Found intent: {intent}")
+    #print(f"Found intent: {intent}")
 
     if not intent:
         raise HTTPException(404, "Order not found")
@@ -119,7 +123,7 @@ async def confirm_order(
         # Zaten onaylıysa tekrar işlem yapma
         return {"status": "already_confirmed", "bot_id": intent.bot_id}
 
-    print(f"Intent status: {intent.status}")
+    #print(f"Intent status: {intent.status}")
 
     # 2. Soroban RPC'den transaction durumunu doğrula
     try:
@@ -130,7 +134,7 @@ async def confirm_order(
 
     # Buraya gelmişsek status == SUCCESS
     # İstersen tx_resp'i loglayabilirsin:
-    print(f"Soroban tx success: ledger={tx_resp.ledger}, created_at={tx_resp.create_at}")
+    #print(f"Soroban tx success: ledger={tx_resp.ledger}, created_at={tx_resp.create_at}")
 
     # 3. İleri Seviye Doğrulama (opsiyonel)
     # - tx_resp.result_meta_xdr'dan kontrat eventlerini parse edip
@@ -142,6 +146,35 @@ async def confirm_order(
     purchase_type = meta_data.get("purchase_type", "BUY")
     rent_days = meta_data.get("rent_days", 0)
 
+    q_wallet = select(Wallet).where(
+        Wallet.user_id == int(user_id),
+        Wallet.chain == "stellar"
+    )
+    res_wallet = await db.execute(q_wallet)
+    user_wallet = res_wallet.scalar_one_or_none()
+    #print(f"User wallet: {user_wallet}")
+    #print(f"User ID: {user_id}")
+    #print(f"Intent seller wallet: {intent.seller_wallet}")
+    if not user_wallet:
+        # Eğer cüzdan bulunamazsa (çok düşük ihtimal ama mümkün)
+        # Frontend'den adres gelmediyse hata fırlatabiliriz veya
+        # İşlemi yapan TX'in 'sourceAccount'una bakabiliriz (ileri seviye)
+        raise HTTPException(400, "User stellar wallet not found in Platform")
+    
+    user_address = user_wallet.address
+    q_bot = select(Bots).where(Bots.id == intent.bot_id)
+    res_bot = await db.execute(q_bot)
+    original_bot = res_bot.scalar_one_or_none()
+    meta_data = json.loads(intent.recipient_json)
+    purchase_type = meta_data.get("purchase_type", "BUY")
+    rent_days = meta_data.get("rent_days", 0)
+    profit_share_rate = 0
+    if purchase_type == "BUY" and getattr(original_bot, "sold_profit_share_rate", False):
+        profit_share_rate = getattr(original_bot, "sold_profit_share_rate", 0)
+    elif purchase_type == "RENT" and getattr(original_bot, "rent_profit_share_rate", False):
+        profit_share_rate = getattr(original_bot, "rent_profit_share_rate", 0)
+    platform_cut_rate = 10
+
     try:
         new_bot_id = await replicate_bot_for_user(
             db=db,
@@ -152,8 +185,16 @@ async def confirm_order(
             price_paid=float(intent.price_amount) if getattr(intent, "price_amount", None) else None,
             tx_hash=body.tx_hash,
         )
+        if profit_share_rate > 0:
+            vault_tx_hash = init_vault_on_chain(
+                bot_id=new_bot_id,
+                user_id=int(user_id),
+                user_address=user_address,
+                developer_address=intent.seller_wallet,
+                profit_share_rate=profit_share_rate,
+                platform_cut_rate=platform_cut_rate
+            )
     except Exception as e:
-        print(f"Bot replication failed: {e}")
         raise HTTPException(
             500,
             "Payment successful but bot delivery failed. Contact support.",

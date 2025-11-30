@@ -212,6 +212,7 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
         ? Number(allocatedAmount)
         : (bot.initial_usd_value ?? bot.balance ?? 0);
       const effectiveBalance = useStateApiBlock ? Number(balance) : bot.balance;
+      console.log("Bot:", bot);
       //console.log("bot:", bot);
       const botData = {
         id: bot?.id,
@@ -231,13 +232,14 @@ export const BotModal = ({ onClose, mode = 'create', bot = null }) => {
         cryptos: bot.cryptos,
         candleCount: bot.candleCount,
         bot_type: bot.type,
+        deposit: bot.deposit_balance,
         enterOnCurrentSignal: bot.enterOnCurrentSignal ?? bot.enter_on_current_signal ?? false,
         ...(isAcquiredLocked ? {} : { strategy: bot.strategy }),
       };
       console.log("Updating bot with data (before API):", botData);
       updateBot(botData);
       setDeferLockApiAndBalance(false);
-      toast.success(t('toast.updated'), { autoClose: 2000 });
+      //toast.success(t('toast.updated'), { autoClose: 2000 });
       onClose();
       return;
     }

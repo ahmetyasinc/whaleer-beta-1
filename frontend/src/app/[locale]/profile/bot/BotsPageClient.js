@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { RiRobot2Line } from "react-icons/ri";
 import { toast } from "react-toastify";
 import { settleAllProfits } from "@/api/stellar/settle_api";
+import { simulateDailyBotResults } from "@/api/stellar/simulate";
 
 const TABS = [
   { key: 'ORIGINAL' },
@@ -56,7 +57,10 @@ export default function BotsPageClient() {
   const loadApiKeys = useApiStore((state) => state.loadApiKeys);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const { deactivateAllBots } = useBotStore();
+
   const [settleLoading, setSettleLoading] = useState(false);
+  const [simulateLoading, setSimulateLoading] = useState(false);
+
 
   // --- Gruplar
   const originals  = useMemo(() => (bots || []).filter(b => b?.acquisition_type === 'ORIGINAL'),  [bots]);
@@ -180,6 +184,29 @@ export default function BotsPageClient() {
     }
   };
 
+  const handleSimulateClick = async () => {
+    try {
+      setSimulateLoading(true);
+
+      const res = await simulateDailyBotResults();
+      console.log("Simulate daily bot results response:", res);
+
+      //toast.success("Simulate daily bot results response:", res);
+
+      // Yeni verileri görmek için botları yeniden yükle
+      await loadBots();
+    } catch (err) {
+      console.error("Simulate daily bot results error:", err);
+      const msg =
+        err?.response?.data?.detail ||
+        err?.message ||
+        "Simülasyon sırasında bir hata oluştu.";
+      toast.error(msg);
+    } finally {
+      setSimulateLoading(false);
+    }
+  };
+
   // --- Sekme etiketleri (i18n)
   const tabLabels = {
     ORIGINAL: t('tabs.myBots'),
@@ -212,6 +239,25 @@ export default function BotsPageClient() {
 
         {/* Right actions */}
         <div className="ml-auto flex items-center gap-4">
+          <button
+            onClick={handleSimulateClick}
+            disabled={simulateLoading || settleLoading}
+            title="Simulate daily profit/loss data for all bots (for testing)"
+            className={[
+              "relative inline-flex items-center justify-center px-6 py-1 text-sm font-semibold rounded-md overflow-hidden",
+              "bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-500",
+              "text-white shadow-md shadow-indigo-800/40",
+              "transition-all duration-200",
+              simulateLoading || settleLoading
+                ? "opacity-60 cursor-wait"
+                : "hover:shadow-lg hover:scale-[1.01] cursor-pointer",
+            ].join(" ")}
+          >
+            <span className="relative z-10">
+              {simulateLoading ? "Simulating..." : "Simulate Daily PnL"}
+            </span>
+          </button>
+
           {/* Tüm komisyonları şimdi tahsil et */}
           <button
             onClick={handleSettleAllClick}
@@ -226,7 +272,7 @@ export default function BotsPageClient() {
             ].join(" ")}
           >
             <span className="relative z-10">
-              {settleLoading ? "İşlem yapılıyor..." : "Kâr Komisyonlarını Öde"}
+              {settleLoading ? "Processing..." : "Pay All Commissions Now"}
             </span>
           </button>
           {/* Panic Button */}

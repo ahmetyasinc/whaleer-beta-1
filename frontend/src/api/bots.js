@@ -43,7 +43,7 @@ export const getBots = async () => {
         enterOnCurrentSignal: item.enter_on_start,
         description: item.description,
         profit_share_only: item.is_profit_share,   // kardan komisyon modu
-        deposit_balance: item.deposit_balance,           // depozito bakiyesi
+        deposit_balance: item.deposit,           // depozito bakiyesi
       };
     });
 
@@ -165,6 +165,7 @@ export const updateBot = async (id, botData) => {
       initial_usd_value: Number(botData.initial_usd_value),
       current_usd_value: Number(botData.initial_usd_value),
       maximum_usd_value: Number(botData.initial_usd_value),
+
       bot_type: botData.bot_type || {},
     };
 
@@ -172,6 +173,7 @@ export const updateBot = async (id, botData) => {
       `${process.env.NEXT_PUBLIC_API_URL}/api/update-bot/${id}`,
       payload
     );
+    console.log("updateBot response:", response.data); // DEBUG
     return response.data;
 
   } catch (error) {

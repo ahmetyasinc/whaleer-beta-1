@@ -217,7 +217,7 @@ export const BotCard = ({ bot, column }) => {
     if (!stellarAddress) return;
 
     refreshVaultBalance();
-  }, [showDeposit, isProfitShareMode, stellarAddress, bot.id, bot.user_id]);
+  }, [isProfitShareMode, stellarAddress, bot.id, bot.user_id]); //showDeposit
 
   // === Depozito işlemleri ===
   const handleDepositLoad = () => {
@@ -296,9 +296,11 @@ export const BotCard = ({ bot, column }) => {
         publicKey: stellarAddress,
       });
 
-      await refreshVaultBalance();
+      setTimeout(() => {
+        refreshVaultBalance();
+      }, 2000);
 
-      toast.success("Depozito yatırma işlemi gönderildi.");
+      //toast.success("Process initiated: Deposit to vault.");
       setDepositModalOpen(false);
       setDepositAmount("");
     } catch (err) {
@@ -416,20 +418,20 @@ export const BotCard = ({ bot, column }) => {
                   <div className="rounded-xl border border-cyan-900 bg-gradient-to-r from-[rgb(10,18,35)] via-[rgb(8,29,54)] to-[rgb(18,24,48)] px-3 py-3 shadow-lg">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-[11px] uppercase tracking-wide text-cyan-300">
-                        Depozito
+                        Deposit
                       </span>
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-900/60 text-cyan-200 border border-cyan-700/60">
-                        Komisyon
+                        Commission
                       </span>
                     </div>
                 
                     {/* Bakiye kutusu */}
                     <div className="mb-3 rounded-lg border border-slate-700 bg-black/40 px-3 py-2 flex items-baseline justify-between">
                       <span className="text-[11px] text-slate-400">
-                        Bakiye
+                        Balanace
                         {vaultLoading && (
                           <span className="ml-2 text-[10px] text-cyan-400">
-                            (güncelleniyor…)
+                            (updating…)
                           </span>
                         )}
                       </span>
@@ -445,7 +447,7 @@ export const BotCard = ({ bot, column }) => {
                         onClick={handleDepositLoad}
                         className="flex-1 text-[13px] font-medium px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 hover:from-violet-600 hover:to-sky-500 border border-cyan-400/40 shadow-md shadow-cyan-900/40 transition"
                       >
-                        Yükle
+                        Load
                       </button>
 
                       <button
@@ -517,11 +519,11 @@ export const BotCard = ({ bot, column }) => {
         {isDepositModalOpen && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
             <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-full max-w-md shadow-xl animate-fadeIn">
-              <h2 className="text-xl font-semibold text-white mb-4">Depozito Yükleme</h2>
+              <h2 className="text-xl font-semibold text-white mb-4">Deposit Load</h2>
         
               <div className="mb-4">
                 <label className="text-sm text-zinc-400 block mb-1">
-                  Yüklenecek Miktar
+                  Load Amount (USDC)
                 </label>
         
                 <input
@@ -538,7 +540,7 @@ export const BotCard = ({ bot, column }) => {
                   onClick={() => setDepositModalOpen(false)}
                   className="px-4 py-2 rounded-lg bg-zinc-700 text-white hover:bg-zinc-600 transition"
                 >
-                  İptal
+                  Cancel
                 </button>
         
                 <button
@@ -560,12 +562,12 @@ export const BotCard = ({ bot, column }) => {
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
             <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-full max-w-md shadow-xl animate-fadeIn">
               <h2 className="text-xl font-semibold text-white mb-4">
-                Depozito Çekme
+                Withdraw Deposit
               </h2>
         
               <div className="mb-4">
                 <label className="text-sm text-zinc-400 block mb-1">
-                  Çekilecek Miktar (Max: {balance})
+                  Withdraw Amount (Max: {balance})
                 </label>
         
                 <input
@@ -586,7 +588,7 @@ export const BotCard = ({ bot, column }) => {
 
                 {Number(withdrawAmount) > balance && (
                   <p className="text-sm text-red-400 mt-1">
-                    Girilen miktar bakiye limitini aşıyor.
+                    Withdraw amount cannot exceed available balance.
                   </p>
                 )}
               </div>
@@ -662,7 +664,7 @@ export const BotCard = ({ bot, column }) => {
                   onClick={() => setShowDeposit((v) => !v)}
                   className="text-[11px] px-3 py-1 rounded-full border border-cyan-700 bg-[rgb(5,20,35)] hover:bg-[rgb(10,32,52)] text-cyan-200 font-medium transition"
                 >
-                  Depozito
+                  Deposit
                 </button>
               )}
             </div>
@@ -672,20 +674,20 @@ export const BotCard = ({ bot, column }) => {
                 <div className="rounded-xl border border-cyan-900 bg-gradient-to-r from-[rgb(10,18,35)] via-[rgb(8,29,54)] to-[rgb(18,24,48)] px-3 py-3 shadow-lg">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[11px] uppercase tracking-wide text-cyan-300">
-                      Depozito
+                      Deposit
                     </span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-900/60 text-cyan-200 border border-cyan-700/60">
-                      Komisyon
+                      Commission
                     </span>
                   </div>
 
                   {/* Bakiye kutusu */}
                   <div className="mb-3 rounded-lg border border-slate-700 bg-black/40 px-3 py-2 flex items-baseline justify-between">
                     <span className="text-[11px] text-slate-400">
-                      Bakiye
+                      Balance
                       {vaultLoading && (
                         <span className="ml-2 text-[10px] text-cyan-400">
-                          (güncelleniyor…)
+                          (updating…)
                         </span>
                       )}
                     </span>
@@ -701,7 +703,7 @@ export const BotCard = ({ bot, column }) => {
                       onClick={handleDepositLoad}
                       className="flex-1 text-[13px] font-medium px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 hover:from-violet-600 hover:to-sky-500 border border-cyan-400/40 shadow-md shadow-cyan-900/40 transition"
                     >
-                      Yükle
+                      Load
                     </button>
 
                     <button
@@ -709,7 +711,7 @@ export const BotCard = ({ bot, column }) => {
                       onClick={handleDepositWithdraw}
                       className="flex-1 text-[13px] font-medium px-3 py-1.5 rounded-lg bg-transparent border border-slate-600 hover:border-sky-500 text-slate-200 hover:text-white transition"
                     >
-                      Çek
+                      Withdraw
                     </button>
                   </div>
                 </div>
@@ -880,12 +882,12 @@ export const BotCard = ({ bot, column }) => {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-full max-w-md shadow-xl animate-fadeIn">
             <h2 className="text-xl font-semibold text-white mb-4">
-              Depozito Yükleme
+              Load Deposit
             </h2>
 
             <div className="mb-4">
               <label className="text-sm text-zinc-400 block mb-1">
-                Yüklenecek Miktar
+                The Load Amount (USDC)
               </label>
 
               <input
@@ -902,7 +904,7 @@ export const BotCard = ({ bot, column }) => {
                 onClick={() => setDepositModalOpen(false)}
                 className="px-4 py-2 rounded-lg bg-zinc-700 text-white hover:bg-zinc-600 transition"
               >
-                İptal
+                Cancel
               </button>
 
               <button
@@ -923,12 +925,12 @@ export const BotCard = ({ bot, column }) => {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-full max-w-md shadow-xl animate-fadeIn">
             <h2 className="text-xl font-semibold text-white mb-4">
-              Depozito Çekme
+              Withdraw Deposit
             </h2>
 
             <div className="mb-4">
               <label className="text-sm text-zinc-400 block mb-1">
-                Çekilecek Miktar (Max: {balance})
+                Withdraw Amount (Max: {balance})
               </label>
 
               <input
@@ -951,7 +953,7 @@ export const BotCard = ({ bot, column }) => {
 
               {Number(withdrawAmount) > balance && (
                 <p className="text-sm text-red-400 mt-1">
-                  Girilen miktar bakiye limitini aşıyor.
+                  Withdraw amount cannot exceed available balance.
                 </p>
               )}
             </div>
@@ -961,7 +963,7 @@ export const BotCard = ({ bot, column }) => {
                 onClick={() => setWithdrawModalOpen(false)}
                 className="px-4 py-2 rounded-lg bg-zinc-700 text-white hover:bg-zinc-600 transition"
               >
-                İptal
+                Cancel
               </button>
 
               <button
@@ -971,7 +973,7 @@ export const BotCard = ({ bot, column }) => {
                 disabled={!withdrawAmount || Number(withdrawAmount) <= 0}
                 className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 border border-cyan-400/40 text-white shadow-md hover:from-violet-600 hover:to-sky-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Çek
+                Withdraw
               </button>
             </div>
           </div>

@@ -175,7 +175,7 @@ export const useBotStore = create((set) => ({
         rent_expires_at: result.rent_expires_at,
         current_usd_value: result.current_usd_value,
         profit_share_only: result.is_profit_share,
-        deposit_balance: result.deposit_balance != null ? Number(result.deposit_balance) : 0,
+        deposit_balance: result.deposit,
       };
 
       set((state) => ({

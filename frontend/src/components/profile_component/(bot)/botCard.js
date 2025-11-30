@@ -3,6 +3,7 @@ import { depositToVault } from "@/services/contract/deposit";
 import { toast } from "react-toastify";
 
 import { getVault } from "@/services/contract/get_vault";
+import { withdrawFromVault } from "@/services/contract/withdraw";
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import useBotExamineStore from "@/store/bot/botExamineStore";
@@ -135,7 +136,7 @@ export const BotCard = ({ bot, column }) => {
       });
 
       // i128 -> number (7 decimal varsayıyoruz)
-      const rawBalance = Number(vault.balance_usdc) / 1e7;
+      const rawBalance = Number(vault.balance_usdc);
       console.log("getVault fetched balance:", rawBalance);
       await useBotStore.getState().setBotDepositBalance(bot.id, rawBalance);
     } catch (err) {
@@ -225,6 +226,46 @@ export const BotCard = ({ bot, column }) => {
   
   const handleDepositWithdraw = () => {
     setWithdrawModalOpen(true);
+  };
+
+  const handleConfirmWithdraw = async () => {
+    const amount = Number(withdrawAmount);
+    if (!amount || isNaN(amount) || amount <= 0) {
+      toast.error("Lütfen geçerli bir miktar girin.");
+      return;
+    }
+  
+    if (!bot?.id || !bot?.user_id) {
+      toast.error("Bot bilgileri eksik (id / user_id).");
+      return;
+    }
+  
+    if (!stellarAddress) {
+      toast.error("Lütfen önce Stellar cüzdanınızı bağlayın.");
+      return;
+    }
+  
+    try {
+      setWithdrawLoading(true);
+    
+      await withdrawFromVault({
+        botId: bot.id,
+        userId: bot.user_id,
+        amountUsdc: amount,
+        publicKey: stellarAddress,
+      });
+    
+      await refreshVaultBalance();   // DB + store güncellemesi
+      toast.success("Depozito çekme işlemi gönderildi.");
+    
+      setWithdrawModalOpen(false);
+      setWithdrawAmount("");
+    } catch (err) {
+      console.error("withdrawFromVault error:", err);
+      toast.error(err?.message || "Depozito çekilirken hata oluştu.");
+    } finally {
+      setWithdrawLoading(false);
+    }
   };
 
   const handleConfirmDeposit = async () => {
@@ -559,13 +600,12 @@ export const BotCard = ({ bot, column }) => {
                 </button>
               
                 <button
-                  onClick={() => {
-                    // Şimdilik boş kalacak
-                  }}
-                  disabled={!withdrawAmount || Number(withdrawAmount) <= 0}
+                  type="button"
+                  onClick={handleConfirmWithdraw}
+                  disabled={!withdrawAmount || Number(withdrawAmount) <= 0 || withdrawLoading}
                   className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 border border-cyan-400/40 text-white shadow-md hover:from-violet-600 hover:to-sky-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Çek
+                  {withdrawLoading ? "Gönderiliyor..." : "Çek"}
                 </button>
               </div>
             </div>

@@ -125,17 +125,19 @@ export const useBotStore = create((set) => ({
   setBotDepositBalance: async (botId, newBalance) => {
     try {
       // 1) Veritabanında güncelle
+      console.log("🔄 updateBotDepositBalance çağrılıyor:", botId, newBalance);
       const result = await updateBotDepositBalance(botId, newBalance);
       // result: { id, deposit_balance }
-
+      console.log("✅ updateBotDepositBalance sonucu:", result);
       // 2) Store'da güncelle
       set((state) => ({
         bots: state.bots.map((bot) =>
           bot.id === botId
-            ? { ...bot, deposit_balance: result.deposit_balance }
+            ? { ...bot, deposit_balance: result.deposit }
             : bot
         ),
       }));
+      console.log("✅ Bot store'da güncellendi:", botId, newBalance);
     } catch (err) {
       console.error("setBotDepositBalance hata:", err);
       // istersen burada toast da atabilirsin
@@ -172,6 +174,8 @@ export const useBotStore = create((set) => ({
         type: result.bot_type,
         rent_expires_at: result.rent_expires_at,
         current_usd_value: result.current_usd_value,
+        profit_share_only: result.is_profit_share,
+        deposit_balance: result.deposit_balance != null ? Number(result.deposit_balance) : 0,
       };
 
       set((state) => ({

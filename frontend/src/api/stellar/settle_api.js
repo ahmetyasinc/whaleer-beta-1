@@ -10,7 +10,7 @@ axios.defaults.withCredentials = true;
 export const settleAllProfits = async () => {
   try {
     const res = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/stellar/settle-all-profits`
+      `${process.env.NEXT_PUBLIC_API_URL}/stellar/settle-all-profits`
     );
     return res.data;
   } catch (error) {

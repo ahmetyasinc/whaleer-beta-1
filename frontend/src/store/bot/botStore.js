@@ -5,7 +5,7 @@ import useStrategyStore from '@/store/indicator/strategyStore';
 import { useAccountDataStore } from "@/store/profile/accountDataStore";
 import { useProfileStore } from "@/store/profile/profileStore";
 import { toast } from "react-toastify";
-
+import { updateBotDepositBalance } from "@/api/bots";
 export const useBotStore = create((set) => ({
   bots: [],
 
@@ -122,8 +122,29 @@ export const useBotStore = create((set) => ({
     }
   },
 
+  setBotDepositBalance: async (botId, newBalance) => {
+    try {
+      // 1) Veritabanında güncelle
+      const result = await updateBotDepositBalance(botId, newBalance);
+      // result: { id, deposit_balance }
+
+      // 2) Store'da güncelle
+      set((state) => ({
+        bots: state.bots.map((bot) =>
+          bot.id === botId
+            ? { ...bot, deposit_balance: result.deposit_balance }
+            : bot
+        ),
+      }));
+    } catch (err) {
+      console.error("setBotDepositBalance hata:", err);
+      // istersen burada toast da atabilirsin
+    }
+  },
+
   updateBot: async (updatedBot) => {
     try {
+      console.log("updateBot botData:", updatedBot); // DEBUG
       //console.log("Updating bot with data:", updatedBot);
       const result = await updateBot(updatedBot.id, updatedBot);
       if (!result || !result.id) return;

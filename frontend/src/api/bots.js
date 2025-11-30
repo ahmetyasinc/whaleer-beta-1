@@ -103,6 +103,19 @@ export const createBot = async (botData) => {
   }
 };
 
+export const updateBotDepositBalance = async (id, deposit_balance) => {
+  try {
+    const res = await axios.patch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/bots/${id}/deposit-balance`,
+      { deposit_balance }
+    );
+    return res.data; // { id, deposit_balance }
+  } catch (error) {
+    console.error("Deposit balance güncellenirken hata:", error);
+    throw error;
+  }
+};
+
 export const updateBot = async (id, botData) => {
   try {
     // 🔹 SADECE deposit_balance güncellenecekse:

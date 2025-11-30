@@ -5,6 +5,7 @@ import sys
 from typing import Dict, Any, List
 from decimal import Decimal
 from rental_engine.profit_engine import run_daily_profit_calculation
+from datetime import datetime
 
 
 import psycopg
@@ -173,6 +174,7 @@ async def run_daily_check() -> None:
 # ------------------ Listener ------------------
 async def handle_notification(payload: str) -> None:
     print(f"\n🔔 Notify alındı → daily profit hesaplanıyor...")
+    print("Time:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     await run_daily_profit_calculation()
 
 

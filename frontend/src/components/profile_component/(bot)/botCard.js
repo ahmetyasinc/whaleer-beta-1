@@ -92,7 +92,7 @@ export const BotCard = ({ bot, column }) => {
   // === STORE & ACTIONLAR ===
   const removeBot = useBotStore((state) => state.removeBot);
   const shutDownBot = useBotStore((state) => state.shutDownBot);
-  const updateBot = useBotStore((state) => state.updateBot);
+  const setBotDepositBalance = useBotStore((state) => state.setBotDepositBalance);
   const toggleBotActive = useBotStore((state) => state.toggleBotActive);
   const { fetchAndStoreBotAnalysis } = useBotExamineStore.getState();
   
@@ -135,9 +135,9 @@ export const BotCard = ({ bot, column }) => {
       });
 
       // i128 -> number (7 decimal varsayıyoruz)
-      const rawBalance = Number(vault.balance) / 1e7;
-
-      updateBot(bot.id, { deposit_balance: rawBalance });
+      const rawBalance = Number(vault.balance_usdc) / 1e7;
+      console.log("getVault fetched balance:", rawBalance);
+      await useBotStore.getState().setBotDepositBalance(bot.id, rawBalance);
     } catch (err) {
       console.error("getVault / refreshVaultBalance error:", err);
       toast.error("Depozito bakiyesi getirilemedi.");

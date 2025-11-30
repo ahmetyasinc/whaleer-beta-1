@@ -4,6 +4,7 @@ from app.routes.auth import router as auth_router
 from app.routes.phantom.auth import router as phantom_auth_router
 from app.routes.phantom.payments import router as phantom_purchase_router
 from app.routes.stellar.market import router as stellar_market_router
+from app.routes.stellar.settle_api import router as settle_api_router
 from app.routes.mobile.auth.auth import router as auth_router_mobile
 from app.routes.mobile.bots.bots import protected_router as bot_router_mobile
 from app.routes.mobile.showcase.showcase import protected_router as showcase_router_mobile
@@ -54,6 +55,7 @@ api_router.include_router(auth_router_mobile)
 api_router.include_router(phantom_auth_router)
 api_router.include_router(phantom_purchase_router)
 api_router.include_router(stellar_market_router)
+api_router.include_router(settle_api_router)
 # COINS ROUTES
 api_router.include_router(binance_coins_router)
 # INDICATOR ROUTES

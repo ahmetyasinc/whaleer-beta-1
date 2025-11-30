@@ -67,6 +67,64 @@ Bot adı: <b>{new_bot.name}</b> ✅
 
 
 from decimal import Decimal, InvalidOperation
+from pydantic import BaseModel
+
+class BotDepositUpdate(BaseModel):
+    deposit_balance: Decimal | float | int
+
+@protected_router.patch("/api/bots/{bot_id}/deposit-balance", response_model=BotsOut)
+async def update_bot_deposit_balance(
+    bot_id: int,
+    payload: BotDepositUpdate,
+    db: AsyncSession = Depends(get_db),
+    user_id: dict = Depends(verify_token),
+):
+    """
+    Sadece deposit_balance alanını günceller.
+    - Bot, giriş yapan kullanıcıya ait değilse 404 döner.
+    - deposit_balance >= 0 olmalı.
+    """
+    # --- Bot'u yetki ve silinmemişlik kontrolü ile getir ---
+    result = await db.execute(
+      select(Bots).where(
+          Bots.id == bot_id,
+          Bots.user_id == int(user_id),
+          Bots.deleted.is_(False),
+      )
+    )
+    bot = result.scalar_one_or_none()
+    if not bot:
+        raise HTTPException(status_code=404, detail="Bot not found or unauthorized")
+
+    # --- deposit_balance doğrulama ---
+    raw_val = payload.deposit_balance
+
+    try:
+        val = Decimal(str(raw_val))
+    except (InvalidOperation, ValueError):
+        raise HTTPException(
+            status_code=422,
+            detail="deposit_balance must be a valid decimal number.",
+        )
+
+    if val < 0:
+        raise HTTPException(
+            status_code=422,
+            detail="deposit_balance must be ≥ 0.",
+        )
+
+    # Eğer değer aynıysa gereksiz commit yapmayalım
+    changed = False
+    if bot.deposit is None or bot.deposit != val:
+        bot.deposit = val
+        changed = True
+
+    if changed:
+        await db.commit()
+        await db.refresh(bot)
+
+    # BotsOut şemasına uygun tam bot objesini döndürür
+    return bot
 
 @protected_router.put("/api/update-bot/{bot_id}", response_model=BotsOut)
 async def update_bot(

@@ -12,6 +12,8 @@ import SwitchConfirmModal from "@/components/profile_component/(bot)/switchConfi
 import 'react-toastify/dist/ReactToastify.css';
 import { useTranslation } from 'react-i18next';
 import { RiRobot2Line } from "react-icons/ri";
+import { toast } from "react-toastify";
+import { settleAllProfits } from "@/api/stellar/settle_api";
 
 const TABS = [
   { key: 'ORIGINAL' },
@@ -54,6 +56,7 @@ export default function BotsPageClient() {
   const loadApiKeys = useApiStore((state) => state.loadApiKeys);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const { deactivateAllBots } = useBotStore();
+  const [settleLoading, setSettleLoading] = useState(false);
 
   // --- Gruplar
   const originals  = useMemo(() => (bots || []).filter(b => b?.acquisition_type === 'ORIGINAL'),  [bots]);
@@ -117,6 +120,7 @@ export default function BotsPageClient() {
     }
   }, [activeTab, originals, purchased, rented]);
 
+
   const sortedBots = useMemo(() => {
     const locale = typeof navigator !== 'undefined' ? navigator.language : 'tr';
     const collator = new Intl.Collator(locale, { sensitivity: 'base', numeric: true });
@@ -150,6 +154,32 @@ export default function BotsPageClient() {
     return arr;
   }, [visibleBots]);
 
+    const handleSettleAllClick = async () => {
+    try {
+      setSettleLoading(true);
+
+      // Backend'e isteği yolla
+      const res = await settleAllProfits();
+
+      // İsteğe göre backend'den dönen mesajı da kullanabilirsin
+      console.log("Settle all profits response:", res);
+
+      toast.success("Tüm kâr komisyonu işlemleri tetiklendi.");
+      
+      // UI'yi güncellemek istersen tekrar botları çek
+      await loadBots();
+    } catch (err) {
+      console.error("Settle all profits error:", err);
+      const msg =
+        err?.response?.data?.detail ||
+        err?.message ||
+        "Komisyon tahsil işlemi sırasında bir hata oluştu.";
+      toast.error(msg);
+    } finally {
+      setSettleLoading(false);
+    }
+  };
+
   // --- Sekme etiketleri (i18n)
   const tabLabels = {
     ORIGINAL: t('tabs.myBots'),
@@ -182,6 +212,23 @@ export default function BotsPageClient() {
 
         {/* Right actions */}
         <div className="ml-auto flex items-center gap-4">
+          {/* Tüm komisyonları şimdi tahsil et */}
+          <button
+            onClick={handleSettleAllClick}
+            disabled={settleLoading}
+            title="Gün sonunu beklemeden tüm kâr komisyonlarını şimdi tahsil et"
+            className={[
+              "relative inline-flex items-center justify-center px-6 py-1 text-sm font-semibold rounded-md overflow-hidden",
+              "bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500",
+              "text-white shadow-md shadow-emerald-800/40",
+              "transition-all duration-200",
+              settleLoading ? "opacity-60 cursor-wait" : "hover:shadow-lg hover:scale-[1.01] cursor-pointer",
+            ].join(" ")}
+          >
+            <span className="relative z-10">
+              {settleLoading ? "İşlem yapılıyor..." : "Kâr Komisyonlarını Öde"}
+            </span>
+          </button>
           {/* Panic Button */}
           <button
             className="relative inline-flex items-center justify-center px-8 py-1 overflow-hidden tracking-tighter text-white bg-[#661b1b9c] rounded-md group"

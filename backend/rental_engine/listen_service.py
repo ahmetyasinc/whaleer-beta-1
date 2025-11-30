@@ -4,6 +4,9 @@ import asyncio
 import sys
 from typing import Dict, Any, List
 from decimal import Decimal
+from rental_engine.profit_engine import run_daily_profit_calculation
+from datetime import datetime
+
 
 import psycopg
 from psycopg import rows
@@ -202,7 +205,7 @@ async def run_daily_check() -> None:
 
 async def handle_notification(payload: str) -> None:
     print(f"\n🔔 Notify alındı → daily profit hesaplanıyor...")
-    # 1) Önce profit_engine ile botların current_usd_value vs. güncellensin
+    print("Time:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     await run_daily_profit_calculation()
     # 2) Sonra bizim günlük kontrol + settle_profit çalışsın
     await run_daily_check()

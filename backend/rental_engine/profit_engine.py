@@ -2,14 +2,18 @@
 
 from decimal import Decimal
 from typing import Dict, Any, List
+import asyncio
+
 import psycopg
 from psycopg import rows
 
 from app.database import DATABASE_URL as SA_DATABASE_URL
+from rental_engine.soroban_client import SorobanClient
 
 # Bots tablosu kolonları
 BOTS_TABLE = "bots"
 BOT_ID_COL = "id"
+BOT_USER_ID_COL = "user_id"          # <-- user_id kolonu
 BOT_DELETED_COL = "deleted"
 BOT_ACTIVE_COL = "active"
 BOT_INITIAL_USD_COL = "initial_usd_value"
@@ -24,11 +28,19 @@ ACQ_TYPES_FOR_CHECK = ("RENTED", "PURCHASED")
 # Minimum depozito limiti
 MIN_DEPOSIT_USD = Decimal("10.0")
 
+# Kardan komisyon için token decimal (şu an kullanılmıyor ama dursun)
+TOKEN_DECIMALS = 7
+
+# Soroban client (sync olduğu için global tek instance)
+soroban_client = SorobanClient()
+
+
 # DB DSN dönüştürücü
 def build_psycopg_dsn(sa_url: str) -> str:
     if sa_url.startswith("postgresql+asyncpg://"):
         return sa_url.replace("postgresql+asyncpg://", "postgresql://", 1)
     return sa_url
+
 
 PG_DSN = build_psycopg_dsn(str(SA_DATABASE_URL))
 
@@ -120,6 +132,7 @@ async def run_daily_profit_calculation():
 
     for bot in bots:
         bot_id = bot[BOT_ID_COL]
+        user_id = bot[BOT_USER_ID_COL]
 
         # Depozito / değerler → SADECE OKUNUYOR, DB'de değiştirmiyoruz
         initial = Decimal(str(bot[BOT_INITIAL_USD_COL] or 0))
@@ -132,11 +145,9 @@ async def run_daily_profit_calculation():
             else None
         )
 
-        # ---- KAR/ZARAR HESABI (sadece değişkenler, DB yok) ----
+        # ---- KAR/ZARAR HESABI ----
         first_day, ref, daily, total = compute_profit(initial, current, max_prev)
-
-        # daily burada “o günün kar/zararı” → sadece variable
-        daily_profit = daily  # isimlendirme için, ileride komisyon hesapta kullanırsın
+        daily_profit = daily
 
         tag = "FIRST" if first_day else "DAY"
         print(
@@ -144,10 +155,26 @@ async def run_daily_profit_calculation():
             f"cur={current} / maximum_usd_value={ref} / daily={daily_profit} / total={total}"
         )
 
-        # MAX sadece new high olunca güncellenir
+        # ---- KARDAN KOMİSYON → Soroban settle_profit_usd ----
+        if daily_profit > 0:
+            try:
+                # daily_profit = USD cinsinden kâr
+                resp = await asyncio.to_thread(
+                    soroban_client.settle_profit_usd,
+                    bot_id,
+                    user_id,
+                    float(daily_profit),
+                )
+                print(f"   💸 settle_profit OK → tx={resp['tx_hash']}")
+            except Exception as e:
+                print(f"   ❌ settle_profit FAILED (bot={bot_id}, user={user_id}): {e}")
+        else:
+            print(f"   ℹ️ Komisyon yok (daily={daily_profit}).")
+
+        # ---- MAX GÜNCELLEME ----
         await update_bot_max(bot_id, current, max_prev)
 
-        # Depozito kontrolü (DEĞİŞTİRMİYORUZ, SADECE BAKIYORUZ)
+        # ---- DEPOZİTO KONTROLÜ ----
         if current < MIN_DEPOSIT_USD:
             await deactivate_bot(bot_id, current)
         else:

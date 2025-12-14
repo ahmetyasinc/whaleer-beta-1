@@ -149,6 +149,10 @@ export default function ChartComponent() {
   const [chartData, setChartData] = useState([]);
   const handleLogout = useLogout();
   const { isMagnetMode } = useMagnetStore();
+  const isMagnetModeRef = useRef(isMagnetMode);
+  // Sync ref with store
+  useEffect(() => { isMagnetModeRef.current = isMagnetMode; }, [isMagnetMode]);
+
   const { isRulerMode } = useRulerStore();
   const rulerModeRef = useRef(isRulerMode);
   const { end } = usePanelStore();
@@ -389,7 +393,7 @@ export default function ChartComponent() {
     const chartOptions = {
       layout: { textColor, background: { type: 'solid', color: settings.bgColor || (settings.theme === 'light' ? '#ffffff' : 'rgb(0,0,7)') } },
       grid: { vertLines: { color: gridColor, style: 1, visible: true }, horzLines: { color: gridColor, style: 1, visible: true } },
-      crosshair: { mode: isMagnetMode ? CrosshairMode.Magnet : CrosshairMode.Normal },
+      crosshair: { mode: CrosshairMode.Normal }, // Always normal, we handle magnet manually
       localization: { timeFormatter: fmt },
       timeScale: { timeVisible: !['1d', '1w'].includes(selectedPeriod), secondsVisible: false, tickMarkFormatter: fmt, rightBarStaysOnScroll: true, shiftVisibleRangeOnNewBar: false },
     };
@@ -646,6 +650,35 @@ export default function ChartComponent() {
 
     // Crosshair sync
     chart.subscribeCrosshairMove((param) => {
+      // 1) Custom Magnet Logic (if enabled)
+      if (isMagnetModeRef.current && param.time && param.point && priceSeriesRef.current) {
+        const data = param.seriesData.get(priceSeriesRef.current);
+        if (data && (data.open !== undefined)) {
+          // It's an OHLC-like data (Candlestick/Bar)
+          // We need to find closer price
+          const priceY = priceSeriesRef.current.coordinateToPrice(param.point.y);
+          if (typeof priceY === 'number') {
+            const { open, high, low, close } = data;
+            const candidates = [open, high, low, close];
+            // Find closest
+            let closest = close;
+            let minDiff = Math.abs(priceY - close);
+
+            for (const c of candidates) {
+              const diff = Math.abs(priceY - c);
+              if (diff < minDiff) {
+                minDiff = diff;
+                closest = c;
+              }
+            }
+            // Snap
+            chart.setCrosshairPosition(closest, param.time, priceSeriesRef.current);
+          }
+        } else if (data && typeof data.value === 'number') {
+          // Line/Area etc. -> Snap to value
+          chart.setCrosshairPosition(data.value, param.time, priceSeriesRef.current);
+        }
+      }
       if (!isMountedRef.current || chartInstanceIdRef.current !== myInstanceId) return;
 
       // Update local labels
@@ -762,8 +795,7 @@ export default function ChartComponent() {
     };
   }, [chartData, indicatorData, strategyData, selectedPeriod, settings]);
 
-  // Crosshair mode live change
-  useEffect(() => { if (chartRef.current) { chartRef.current.applyOptions({ crosshair: { mode: isMagnetMode ? CrosshairMode.Magnet : CrosshairMode.Normal } }); } }, [isMagnetMode]);
+
 
   return (
     <div className="relative w-full h-full">

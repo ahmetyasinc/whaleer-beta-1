@@ -18,6 +18,6 @@ export const unmarkLeader = (chartId) => {
 };
 export const isLeader = (chartId) => W.__whaleerLeaderId === chartId;
 
-export const minBarsFor = (_period) => 50;
+export const minBarsFor = (_period) => 5;
 
 export const FUTURE_PADDING_BARS = 50;

@@ -1,5 +1,6 @@
 export const RANGE_EVENT = 'whaleer:range';
 export const RANGE_REQUEST_EVENT = 'whaleer:range:request';
+export const CROSSHAIR_EVENT = 'whaleer:crosshair';
 
 // Son yayınlanan görünümü globalde tut
 const G = typeof window !== 'undefined' ? window : {};

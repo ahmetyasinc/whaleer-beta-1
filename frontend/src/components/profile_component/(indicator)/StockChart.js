@@ -20,7 +20,7 @@ import usePanelStore from "@/store/indicator/panelStore";
 import { useChartSettingsStore } from "@/store/indicator/chartSettingsStore";
 import useWatchListStore from "@/store/indicator/watchListStore";
 
-import { RANGE_EVENT, RANGE_REQUEST_EVENT, CROSSHAIR_EVENT, nextSeq, markLeader, unmarkLeader, isLeader, minBarsFor, FUTURE_PADDING_BARS, setLastRangeCache, getLastRangeCache, setCrosshairCache } from "@/utils/chartSync";
+import { RANGE_EVENT, RANGE_REQUEST_EVENT, nextSeq, markLeader, unmarkLeader, isLeader, minBarsFor, FUTURE_PADDING_BARS, setLastRangeCache, getLastRangeCache } from "@/utils/chartSync";
 
 export default function ChartComponent() {
   const pad = (n) => String(n).padStart(2, '0');
@@ -69,9 +69,9 @@ export default function ChartComponent() {
     return new Date(msUTC + (offsetMinutes || 0) * 60 * 1000);
   }
   function makeZonedFormatter(period, offsetMinutes) {
-    const isMins = ['1m', '3m', '5m', '15m', '30m'].includes(period);
-    const isHours = ['1h', '2h', '4h'].includes(period);
-    const isDays = period === '1d';
+    const isMins  = ['1m','3m','5m','15m','30m'].includes(period);
+    const isHours = ['1h','2h','4h'].includes(period);
+    const isDays  = period === '1d';
     const isWeeks = period === '1w';
     const twoDigitYear = (Y) => String(Y).slice(2);
     return (t) => {
@@ -82,9 +82,9 @@ export default function ChartComponent() {
       const D = pad(d.getUTCDate());
       const h = pad(d.getUTCHours());
       const m = pad(d.getUTCMinutes());
-      if (isMins) return `${D}.${M} ${h}:${m}`;
+      if (isMins)  return `${D}.${M} ${h}:${m}`;
       if (isHours) return `${D}.${M}.${yy} ${h}:00`;
-      if (isDays) return `${D}.${M}.${yy}`;
+      if (isDays)  return `${D}.${M}.${yy}`;
       if (isWeeks) return `${D}.${M}.${yy}`;
       return `${D}.${M}.${yy} ${h}:${m}`;
     };
@@ -120,7 +120,7 @@ export default function ChartComponent() {
       const haClose = (open + high + low + close) / 4;
       const haOpen = i === 0 ? (open + close) / 2 : (prev.open + prev.close) / 2;
       const haHigh = Math.max(high, haOpen, haClose);
-      const haLow = Math.min(low, haOpen, haClose);
+      const haLow  = Math.min(low, haOpen, haClose);
       out.push({ time, open: haOpen, high: haHigh, low: haLow, close: haClose });
     }
     return out;
@@ -209,46 +209,46 @@ export default function ChartComponent() {
   // ===== Watchlist ile klavye ok tuşlarıyla geçiş =====
 
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      // Input/text alanındayken çalışmasın
-      const target = e.target;
-      if (
-        target &&
-        (target.tagName === "INPUT" || target.tagName === "TEXTAREA") &&
-        !target.classList.contains("whaleer-hotkey-enabled")
-      ) {
-        return;
-      }
+  const handleKeyDown = (e) => {
+    // Input/text alanındayken çalışmasın
+    const target = e.target;
+    if (
+      target &&
+      (target.tagName === "INPUT" || target.tagName === "TEXTAREA") &&
+      !target.classList.contains("whaleer-hotkey-enabled")
+    ) {
+      return;
+    }
 
-      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
-      if (!selectedCrypto || !watchlist.length) return;
+    if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+    if (!selectedCrypto || !watchlist.length) return;
 
-      // Sayfa scroll’unu engelle
-      e.preventDefault();
+    // Sayfa scroll’unu engelle
+    e.preventDefault();
 
-      const ids = watchlist;
-      const currentIndex = ids.indexOf(selectedCrypto.id);
+    const ids = watchlist; 
+    const currentIndex = ids.indexOf(selectedCrypto.id);
 
-      if (currentIndex === -1) return;
+    if (currentIndex === -1) return;
 
-      let nextIndex = currentIndex;
+    let nextIndex = currentIndex;
 
-      if (e.key === "ArrowUp") {
-        nextIndex = (currentIndex - 1 + ids.length) % ids.length;
-      } else if (e.key === "ArrowDown") {
-        nextIndex = (currentIndex + 1) % ids.length;
-      }
+    if (e.key === "ArrowUp") {
+      nextIndex = (currentIndex - 1 + ids.length) % ids.length;
+    } else if (e.key === "ArrowDown") {
+      nextIndex = (currentIndex + 1) % ids.length;
+    }
 
-      const nextId = ids[nextIndex];
-      const nextCoin = coins.find((c) => c.id === nextId);
-      if (!nextCoin) return;
+    const nextId = ids[nextIndex];
+    const nextCoin = coins.find((c) => c.id === nextId);
+    if (!nextCoin) return;
 
-      setSelectedCrypto(nextCoin);
-    };
+    setSelectedCrypto(nextCoin);
+  };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedCrypto, watchlist, coins, setSelectedCrypto]);
+  window.addEventListener("keydown", handleKeyDown);
+  return () => window.removeEventListener("keydown", handleKeyDown);
+}, [selectedCrypto, watchlist, coins, setSelectedCrypto]);
 
   // ===== Fetch data =====
   useEffect(() => {
@@ -277,7 +277,7 @@ export default function ChartComponent() {
   useEffect(() => {
     if (!chartRef.current) return;
     const chart = chartRef.current;
-    const timeVisible = !['1d', '1w'].includes(selectedPeriod);
+    const timeVisible = !['1d','1w'].includes(selectedPeriod);
     const fmt = makeZonedFormatter(selectedPeriod, tzOffsetMin);
     chart.applyOptions({
       localization: { timeFormatter: fmt },
@@ -285,9 +285,9 @@ export default function ChartComponent() {
     });
   }, [selectedPeriod, tzOffsetMin]);
 
-  const hexToRgba = (hex, alpha = 1) => {
-    const h = hex.replace('#', '');
-    const bigint = parseInt(h.length === 3 ? h.split('').map(x => x + x).join('') : h, 16);
+  const hexToRgba = (hex, alpha=1) => {
+    const h = hex.replace('#','');
+    const bigint = parseInt(h.length===3 ? h.split('').map(x=>x+x).join('') : h, 16);
     const r = (bigint >> 16) & 255; const g = (bigint >> 8) & 255; const b = bigint & 255;
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   };
@@ -300,8 +300,8 @@ export default function ChartComponent() {
   function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
 
   function buildMainSeries(chart, seriesType, s, data) {
-    try { priceSeriesRef.current?.setData([]); } catch { }
-    try { priceSeriesRef.current && chart.removeSeries?.(priceSeriesRef.current); } catch { }
+    try { priceSeriesRef.current?.setData([]); } catch {}
+    try { priceSeriesRef.current && chart.removeSeries?.(priceSeriesRef.current); } catch {}
 
     let series;
     switch (seriesType) {
@@ -319,7 +319,7 @@ export default function ChartComponent() {
         break;
       case 'baseline':
         series = chart.addBaselineSeries({ baseValue: { type: 'price', price: s.baseline.baseValue }, topFillColor1: s.baseline.topColor, topFillColor2: s.baseline.topColor, bottomFillColor1: s.baseline.bottomColor, bottomFillColor2: s.baseline.bottomColor });
-        series.setData(mapToSingleValue(data, s.series.valueSource));
+        series.setData(mapToSingleValue(data, s.series.valueSource ));
         break;
       case 'histogram':
         series = chart.addHistogramSeries({ color: hexToRgba(s.histogram.color, s.histogram.alpha) });
@@ -362,7 +362,7 @@ export default function ChartComponent() {
     if (chartData.length === 0 || !chartContainerRef.current) return;
 
     // önceki chart'ı ve series'i bırak
-    try { chartRef.current?.remove?.(); } catch { }
+    try { chartRef.current?.remove?.(); } catch {}
     chartRef.current = null;
     priceSeriesRef.current = null;
 
@@ -388,13 +388,13 @@ export default function ChartComponent() {
       grid: { vertLines: { color: gridColor, style: 1, visible: true }, horzLines: { color: gridColor, style: 1, visible: true } },
       crosshair: { mode: isMagnetMode ? CrosshairMode.Magnet : CrosshairMode.Normal },
       localization: { timeFormatter: fmt },
-      timeScale: { timeVisible: !['1d', '1w'].includes(selectedPeriod), secondsVisible: false, tickMarkFormatter: fmt, rightBarStaysOnScroll: true, shiftVisibleRangeOnNewBar: false },
+      timeScale: { timeVisible: !['1d','1w'].includes(selectedPeriod), secondsVisible: false, tickMarkFormatter: fmt, rightBarStaysOnScroll: true, shiftVisibleRangeOnNewBar: false },
     };
 
     const chart = createChart(chartContainerRef.current, chartOptions);
     chartRef.current = chart;
 
-    // YENİ WATERMARK KODU
+// YENİ WATERMARK KODU
     const wmVisible = settings?.watermark?.visible ?? true;
     const wmColorKey = settings?.watermark?.color ?? settings.textColor; // Metin rengini yedek olarak kullan
     const wmColorBase = COLOR_MAP[wmColorKey.toLowerCase()] ?? "#8C8C8C"; // Seçilen renge çevir
@@ -402,18 +402,18 @@ export default function ChartComponent() {
 
     // Metin renginin %5 opacity'sini al, bu sayede arka plandan bağımsız olur
     const wmColor = hexToRgba(wmColorBase, 0.05);
-
+    
     // Watermark ayarlarını uygula
     const symbolText = selectedCrypto?.binance_symbol || selectedCrypto?.symbol || '—';
-    chart.applyOptions({
-      watermark: {
-        color: wmColor,
-        visible: wmVisible,
-        text: symbolText,
-        fontSize: wmFontSize,
-        horzAlign: 'center',
-        vertAlign: 'center'
-      }
+    chart.applyOptions({ 
+        watermark: { 
+            color: wmColor, 
+            visible: wmVisible, 
+            text: symbolText, 
+            fontSize: wmFontSize, 
+            horzAlign: 'center', 
+            vertAlign: 'center' 
+        } 
     });
 
     const el = chartContainerRef.current; const cleanupFns = [];
@@ -440,7 +440,7 @@ export default function ChartComponent() {
 
     // Ruler tool
     const removeRuler = installRulerTool({ chart, series: mainSeries, container: chartContainerRef.current, isRulerModeRef: rulerModeRef });
-    cleanupFns.push(() => { try { removeRuler?.(); } catch { } });
+    cleanupFns.push(() => { try { removeRuler?.(); } catch {} });
 
     // Cursor-centered zoom
     const removeWheelZoom = installCursorWheelZoom({ chart, chartId, selectedPeriod, containerEl: chartContainerRef.current, isApplyingRef, lastSeqAppliedRef });
@@ -477,7 +477,7 @@ export default function ChartComponent() {
       });
     });
     allMarkers.sort((a, b) => a.time - b.time);
-    try { mainSeries.setMarkers(allMarkers); } catch { }
+    try { mainSeries.setMarkers(allMarkers); } catch {}
 
     // === STRATEGIES & INDICATORS ===
     const strategyLabelsContainer = document.getElementById("strategy-labels");
@@ -501,7 +501,7 @@ export default function ChartComponent() {
         `;
         const title = document.createElement('span'); title.textContent = strategyName || `${strategyId} (${subId})`;
         const settingsBtn = document.createElement('button'); settingsBtn.style.cssText = 'background:none;border:none;color:white;cursor:pointer;'; settingsBtn.onclick = () => { setActiveStrategyId(strategyId); setActiveSubStrategyId(subId); setSettingsStrategyModalOpen(true); };
-        createRoot(settingsBtn).render(<RiSettingsLine size={13} className="hover:text-gray-400" />);
+        createRoot(settingsBtn).render(<RiSettingsLine size={13} className="hover:text-gray-400"/>);
         const removeBtn = document.createElement('button'); removeBtn.style.cssText = 'background:none;border:none;color:white;cursor:pointer;'; removeBtn.onclick = () => { labelDiv.remove(); removeSubStrategy(strategyId, subId); };
         createRoot(removeBtn).render(<AiOutlineClose size={13} className="hover:text-gray-400" />);
         labelDiv.appendChild(title); labelDiv.appendChild(settingsBtn); labelDiv.appendChild(removeBtn);
@@ -525,7 +525,7 @@ export default function ChartComponent() {
           }
           const timeValueMap = new Map();
           data.forEach(([time, value]) => { if (value === undefined) return; const unixTime = toUnixSecUTC(time); if (unixTime !== undefined) timeValueMap.set(unixTime, value); });
-          const formattedData = Array.from(timeValueMap.entries()).sort(([a], [b]) => a - b).map(([time, value]) => ({ time, value }));
+          const formattedData = Array.from(timeValueMap.entries()).sort(([a],[b]) => a-b).map(([time, value]) => ({ time, value }));
           series.setData(formattedData);
 
           // Label UI
@@ -548,7 +548,7 @@ export default function ChartComponent() {
           const title = document.createElement("span");
           title.textContent = indicatorName || `${indicatorId} (${subId})`;
           const settingsBtn = document.createElement("button");
-          createRoot(settingsBtn).render(<RiSettingsLine size={13} className="hover:text-gray-400" />);
+          createRoot(settingsBtn).render(<RiSettingsLine size={13} className="hover:text-gray-400"/>);
           settingsBtn.style.cssText = "background:none;border:none;color:white;cursor:pointer;";
           settingsBtn.onclick = () => { setActiveIndicatorId(indicatorId); setActiveSubIndicatorId(subId); setSettingsIndicatorModalOpen(true); };
           const removeBtn = document.createElement("button");
@@ -566,12 +566,12 @@ export default function ChartComponent() {
       if (!isMountedRef.current || chartInstanceIdRef.current !== myInstanceId) return;
       if (isApplyingRef.current) return;
       if (!isLeader(chartId)) return;
-
+    
       const logical = timeScale.getVisibleLogicalRange();
       if (!logical) return;
       let { from, to } = logical;
       const minBars = minBarsFor(selectedPeriod);
-
+    
       if (to - from < minBars) {
         const c = (from + to) / 2;
         from = c - minBars / 2;
@@ -580,9 +580,9 @@ export default function ChartComponent() {
         timeScale.setVisibleLogicalRange({ from, to });
         requestAnimationFrame(() => { isApplyingRef.current = false; });
       }
-
+    
       const rightOffset = timeScale.getRightOffset ? timeScale.getRightOffset() : FUTURE_PADDING_BARS;
-
+    
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       const seq = nextSeq();
       setLastRangeCache({ from, to, rightOffset, sourceId: chartId });
@@ -617,63 +617,6 @@ export default function ChartComponent() {
     };
     window.addEventListener(RANGE_REQUEST_EVENT, onRangeRequest);
 
-    // === CROSSHAIR SYNC - Yayın ===
-    chart.subscribeCrosshairMove((param) => {
-      if (!isMountedRef.current || chartInstanceIdRef.current !== myInstanceId) return;
-      if (isApplyingRef.current) return;
-
-      const time = param.time;
-      const logical = param.logical;
-      const point = param.point;
-
-      // Mouse chart dışına çıktıysa null yayınla (diğer chartlar da kaldırsın)
-      const isOutside = !point || point.x < 0 || point.y < 0;
-
-      setCrosshairCache({ time, logical, sourceId: chartId, isOutside });
-      window.dispatchEvent(new CustomEvent(CROSSHAIR_EVENT, {
-        detail: { time, logical, sourceId: chartId, isOutside }
-      }));
-    });
-
-    // === CROSSHAIR SYNC - Dinle ===
-    const onCrosshairEvent = (e) => {
-      if (!isMountedRef.current || chartInstanceIdRef.current !== myInstanceId) return;
-      const { time, logical, sourceId, isOutside } = (e && e.detail) || {};
-      if (sourceId === chartId) return; // kendi event'ini dinleme
-
-      if (isOutside || time == null) {
-        // Crosshair'i gizle
-        chart.clearCrosshairPosition();
-      } else {
-        // Senkronize etmek için: seriden o zaman noktasındaki fiyatı bul
-        try {
-          const data = priceSeriesRef.current?.data?.() || [];
-          let priceAtTime = null;
-          for (const bar of data) {
-            if (bar.time === time) {
-              priceAtTime = bar.close !== undefined ? bar.close : bar.value;
-              break;
-            }
-          }
-          // Eğer fiyat bulamazsak, görünür aralığın ortasını kullan
-          if (priceAtTime == null) {
-            const priceScale = chart.priceScale('right');
-            const priceRange = priceScale?.getVisiblePriceRange?.();
-            if (priceRange) {
-              priceAtTime = (priceRange.minValue + priceRange.maxValue) / 2;
-            } else {
-              priceAtTime = 0;
-            }
-          }
-          // setCrosshairPosition(price, time, series) formatında çağır
-          chart.setCrosshairPosition(priceAtTime, time, mainSeries);
-        } catch (err) {
-          // Hata durumunda sessizce geç
-        }
-      }
-    };
-    window.addEventListener(CROSSHAIR_EVENT, onCrosshairEvent);
-
     const resizeObserver = new ResizeObserver(() => {
       if (!isMountedRef.current || chartInstanceIdRef.current !== myInstanceId) return;
       if (!chartContainerRef.current) return;
@@ -691,17 +634,16 @@ export default function ChartComponent() {
         cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
       }
-
+    
       resizeObserver.disconnect();
       window.removeEventListener(RANGE_EVENT, onRangeEvent);
       window.removeEventListener(RANGE_REQUEST_EVENT, onRangeRequest);
-      window.removeEventListener(CROSSHAIR_EVENT, onCrosshairEvent);
-
+    
       // helper'ların cleanup'ı
-      cleanupFns.forEach(fn => { try { fn?.(); } catch { } });
-
+      cleanupFns.forEach(fn => { try { fn?.(); } catch {} });
+    
       // en sonda chart'ı güvenle sök
-      try { chartRef.current?.remove?.(); } catch { }
+      try { chartRef.current?.remove?.(); } catch {}
       chartRef.current = null;
       priceSeriesRef.current = null;
     };

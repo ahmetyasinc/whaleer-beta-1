@@ -135,6 +135,8 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
   const chartId = `${indicatorId}-${subId}`;
   const isApplyingRef = useRef(false);
   const lastSeqAppliedRef = useRef(0);
+  const isHoveringButtonsRef = useRef(false); // Track hover state
+  const clearTimerRef = useRef(null); // Debounce clear
   let rafHandle = null;
 
   // 🔽 YENİ: timezone cookie'sini settings değişince de yeniden oku (main ile aynı davranış)
@@ -145,6 +147,9 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
   // formatter’ı settings’e bağlı hale getir
   const fmt = makeZonedFormatter(selectedPeriod, tzOffsetMin);
 
+  // Series -> { span: HTMLElement, data: Map<time, value> } mapping
+  const seriesLabelMap = new Map();
+
   useEffect(() => {
     const indicatorInfo = indicatorData?.[indicatorId]?.subItems?.[subId];
     if (!chartContainerRef.current || !indicatorInfo?.result) return;
@@ -154,7 +159,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     if (firstNonGraphItem?.name) setDisplayName(firstNonGraphItem.name);
 
     // 🔽 YENİ: main chart’taki görsel ayarları kullan
-    const textColor = settings.textColor === "black" ? "#111111" : "#ffffff";
+    const textColor = settings.textColor === "black" ? "#8C8C8C" : "#8C8C8C";
     const gridColor = settings?.grid?.color || "#111111";
     const bgColor = settings.bgColor || (settings.theme === 'light' ? '#ffffff' : 'rgb(0,0,7)');
 
@@ -203,6 +208,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
 
     // Seriler (mevcut mantığa dokunmuyoruz)
     let firstSeries = null;
+    seriesLabelMap.clear(); // Ensure map is empty before repopulating
     result
       .filter((item) => item?.on_graph === false)
       .forEach(({ type, settings: s, data }) => {
@@ -250,6 +256,20 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
           .sort(([a], [b]) => a - b)
           .map(([time, value]) => ({ time, value }));
         series.setData(formattedData);
+
+        // --- Label & Span Creation (same logic, adapted for PanelChart single label container) ---
+        // PanelChart header is outside loop (top-2 left-2). 
+        // We need to APPEND to that container. 
+        // Note: PanelChart currently has a single hardcoded title in return JSX.
+        // We should move that title logic here to be dynamic OR append next to it.
+        // Let's modify the JSX part later to be empty ref, and build it here.
+        // OR better: Append spans to a ref container.
+
+        // Actually, PanelChart handles multiple series in one chart (e.g. MACD has histogram and 2 lines).
+        // They all share the same "indicatorName".
+        // It's better to add the values next to the name.
+
+        seriesLabelMap.set(series, { color: s?.color || (series.options ? series.options().color : 'white'), dataMap: timeValueMap });
       });
 
     chart.timeScale().fitContent();
@@ -343,6 +363,40 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
 
     // Crosshair Sync
     chart.subscribeCrosshairMove((param) => {
+      // Update values
+      const container = document.getElementById(`panel-values-${indicatorId}-${subId}`);
+      if (container) {
+        if (param.time) {
+          if (clearTimerRef.current) { clearTimeout(clearTimerRef.current); clearTimerRef.current = null; }
+          const fragment = document.createDocumentFragment();
+          param.seriesData.forEach((value, series) => {
+            const info = seriesLabelMap.get(series);
+            if (info) {
+              let v = value;
+              if (v && typeof v === 'object' && 'value' in v) v = v.value;
+              if (typeof v === 'number') {
+                const sp = document.createElement('span');
+                sp.style.color = info.color;
+                sp.style.marginLeft = '8px';
+                sp.textContent = v.toFixed(2);
+                fragment.appendChild(sp);
+              }
+            }
+          });
+          container.innerHTML = '';
+          container.appendChild(fragment);
+        } else {
+          if (!clearTimerRef.current) {
+            clearTimerRef.current = setTimeout(() => {
+              if (!isHoveringButtonsRef.current && container) {
+                container.innerHTML = '';
+              }
+              clearTimerRef.current = null;
+            }, 100);
+          }
+        }
+      }
+
       if (!param.time) {
         window.dispatchEvent(new CustomEvent(CROSSHAIR_EVENT, { detail: { time: null, sourceId: chartId } }));
         return;
@@ -353,6 +407,31 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     const onCrosshairCode = (e) => {
       const { time, sourceId } = (e && e.detail) || {};
       if (sourceId === chartId) return;
+
+      // Sync Values
+      const container = document.getElementById(`panel-values-${indicatorId}-${subId}`);
+      if (container) {
+        if (time !== null && time !== undefined) {
+          // Create a fragment
+          const fragment = document.createDocumentFragment();
+          seriesLabelMap.forEach(({ color, dataMap }) => {
+            const val = dataMap.get(time);
+            if (val !== undefined && val !== null) {
+              const sp = document.createElement('span');
+              sp.style.color = color;
+              sp.style.marginLeft = '8px';
+              sp.textContent = Number(val).toFixed(2);
+              fragment.appendChild(sp);
+            }
+          });
+          // Replace content
+          container.innerHTML = '';
+          container.appendChild(fragment);
+        } else {
+          container.innerHTML = '';
+        }
+      }
+
       if (time === null) {
         chart.clearCrosshairPosition();
         return;
@@ -399,10 +478,19 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
 
   return (
     <div className="relative w-full h-full">
-      <div className="absolute top-2 left-2 z-10 flex items-center gap-2 bg-transparent border border-gray-400/10 text-white text-xs px-2 py-1 rounded shadow-md">
+      <div className="absolute top-2 left-2 z-10 flex items-center gap-2 bg-transparent border border-gray-400/10 text-white text-xs px-2 py-1 rounded shadow-md pointer-events-none">
         <span>{indicatorName}</span>
-        <button className="hover:text-gray-400" onClick={() => setSettingsOpen(true)}><RiSettingsLine /></button>
-        <button className="hover:text-gray-400" onClick={() => removeSubIndicator(indicatorId, subId)}><AiOutlineClose /></button>
+        <div id={`panel-values-${indicatorId}-${subId}`} className="flex items-center"></div>
+        <button className="hover:text-gray-400 pointer-events-auto"
+          onMouseEnter={() => isHoveringButtonsRef.current = true}
+          onMouseLeave={() => isHoveringButtonsRef.current = false}
+          onClick={() => setSettingsOpen(true)}><RiSettingsLine />
+        </button>
+        <button className="hover:text-gray-400 pointer-events-auto"
+          onMouseEnter={() => isHoveringButtonsRef.current = true}
+          onMouseLeave={() => isHoveringButtonsRef.current = false}
+          onClick={() => removeSubIndicator(indicatorId, subId)}><AiOutlineClose />
+        </button>
       </div>
       <div ref={chartContainerRef} className="absolute top-0 left-0 w-full h-full"></div>
       <IndicatorSettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} indicatorId={indicatorId} subId={subId} />

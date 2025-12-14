@@ -370,6 +370,9 @@ export default function ChartComponent() {
     const myInstanceId = ++chartInstanceIdRef.current;
 
     const fmt = makeZonedFormatter(selectedPeriod, tzOffsetMin);
+    const seriesLabelMap = new Map();
+    let isHoveringButtons = false;
+    let clearTimer = null;
 
     const COLOR_MAP = {
       white: "#FFFFFF",
@@ -489,6 +492,7 @@ export default function ChartComponent() {
         const labelDiv = document.createElement('div');
         labelDiv.id = labelId;
         labelDiv.style.cssText = `
+          pointer-events: none;
           background: rgba(30,30,30,0);
           color: white;
           font-size: 12px;
@@ -500,9 +504,11 @@ export default function ChartComponent() {
           border: 1px solid rgba(156,163,175,0.1);
         `;
         const title = document.createElement('span'); title.textContent = strategyName || `${strategyId} (${subId})`;
-        const settingsBtn = document.createElement('button'); settingsBtn.style.cssText = 'background:none;border:none;color:white;cursor:pointer;'; settingsBtn.onclick = () => { setActiveStrategyId(strategyId); setActiveSubStrategyId(subId); setSettingsStrategyModalOpen(true); };
+        const settingsBtn = document.createElement('button'); settingsBtn.style.cssText = 'pointer-events:auto;background:none;border:none;color:white;cursor:pointer;'; settingsBtn.onclick = () => { setActiveStrategyId(strategyId); setActiveSubStrategyId(subId); setSettingsStrategyModalOpen(true); };
+        settingsBtn.onmouseenter = () => { isHoveringButtons = true; }; settingsBtn.onmouseleave = () => { isHoveringButtons = false; };
         createRoot(settingsBtn).render(<RiSettingsLine size={13} className="hover:text-gray-400" />);
-        const removeBtn = document.createElement('button'); removeBtn.style.cssText = 'background:none;border:none;color:white;cursor:pointer;'; removeBtn.onclick = () => { labelDiv.remove(); removeSubStrategy(strategyId, subId); };
+        const removeBtn = document.createElement('button'); removeBtn.style.cssText = 'pointer-events:auto;background:none;border:none;color:white;cursor:pointer;'; removeBtn.onclick = () => { labelDiv.remove(); removeSubStrategy(strategyId, subId); };
+        removeBtn.onmouseenter = () => { isHoveringButtons = true; }; removeBtn.onmouseleave = () => { isHoveringButtons = false; };
         createRoot(removeBtn).render(<AiOutlineClose size={13} className="hover:text-gray-400" />);
         labelDiv.appendChild(title); labelDiv.appendChild(settingsBtn); labelDiv.appendChild(removeBtn);
         strategyLabelsContainer && strategyLabelsContainer.appendChild(labelDiv);
@@ -530,33 +536,63 @@ export default function ChartComponent() {
 
           // Label UI
           const labelId = `indicator-label-${indicatorId}-${subId}`;
-          if (document.getElementById(labelId)) return;
-          const labelDiv = document.createElement("div");
-          labelDiv.id = labelId;
-          labelDiv.id = labelId;
-          labelDiv.style.cssText = `
-            background: rgba(30,30,30,0);
-            color: white;
-            font-size: 12px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            border: 1px solid rgba(156,163,175,0.1);
-          `;
-          const title = document.createElement("span");
-          title.textContent = indicatorName || `${indicatorId} (${subId})`;
-          const settingsBtn = document.createElement("button");
-          createRoot(settingsBtn).render(<RiSettingsLine size={13} className="hover:text-gray-400" />);
-          settingsBtn.style.cssText = "background:none;border:none;color:white;cursor:pointer;";
-          settingsBtn.onclick = () => { setActiveIndicatorId(indicatorId); setActiveSubIndicatorId(subId); setSettingsIndicatorModalOpen(true); };
-          const removeBtn = document.createElement("button");
-          createRoot(removeBtn).render(<AiOutlineClose size={13} className="hover:text-gray-400" />);
-          removeBtn.style.cssText = "background:none;border:none;color:white;cursor:pointer;";
-          removeBtn.onclick = () => { series.setData([]); labelDiv.remove(); removeSubIndicator(indicatorId, subId); };
-          labelDiv.appendChild(title); labelDiv.appendChild(settingsBtn); labelDiv.appendChild(removeBtn);
-          indicatorLabelsContainer && indicatorLabelsContainer.appendChild(labelDiv);
+          const valueContainerId = `indicator-values-${indicatorId}-${subId}`;
+          let labelDiv = document.getElementById(labelId);
+          let valuesContainer = document.getElementById(valueContainerId);
+
+          if (!labelDiv) {
+            labelDiv = document.createElement("div");
+            labelDiv.id = labelId;
+            labelDiv.style.cssText = `
+              pointer-events: none;
+              background: rgba(30,30,30,0);
+              color: white;
+              font-size: 12px;
+              padding: 4px 8px;
+              border-radius: 4px;
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              border: 1px solid rgba(156,163,175,0.1);
+            `;
+            const title = document.createElement("span");
+            title.textContent = indicatorName || `${indicatorId} (${subId})`;
+
+            valuesContainer = document.createElement("div");
+            valuesContainer.id = valueContainerId;
+            valuesContainer.style.display = "flex";
+            valuesContainer.style.gap = "8px";
+
+            const settingsBtn = document.createElement("button");
+            createRoot(settingsBtn).render(<RiSettingsLine size={13} className="hover:text-gray-400" />);
+            settingsBtn.style.cssText = "pointer-events:auto;background:none;border:none;color:white;cursor:pointer;";
+            settingsBtn.onclick = () => { setActiveIndicatorId(indicatorId); setActiveSubIndicatorId(subId); setSettingsIndicatorModalOpen(true); };
+            settingsBtn.onmouseenter = () => { isHoveringButtons = true; }; settingsBtn.onmouseleave = () => { isHoveringButtons = false; };
+
+            const removeBtn = document.createElement("button");
+            createRoot(removeBtn).render(<AiOutlineClose size={13} className="hover:text-gray-400" />);
+            removeBtn.style.cssText = "pointer-events:auto;background:none;border:none;color:white;cursor:pointer;";
+            removeBtn.onclick = () => { series.setData([]); labelDiv.remove(); removeSubIndicator(indicatorId, subId); };
+            removeBtn.onmouseenter = () => { isHoveringButtons = true; }; removeBtn.onmouseleave = () => { isHoveringButtons = false; };
+
+            labelDiv.appendChild(title);
+            labelDiv.appendChild(valuesContainer);
+            labelDiv.appendChild(settingsBtn);
+            labelDiv.appendChild(removeBtn);
+            indicatorLabelsContainer && indicatorLabelsContainer.appendChild(labelDiv);
+          }
+
+          // Value Span
+          const valueSpan = document.createElement("span");
+          valueSpan.style.cssText = `color: ${series.options ? series.options().color : (s?.color || 'white')}; font-variant-numeric: tabular-nums;`;
+          valueSpan.textContent = "";
+
+          if (valuesContainer) {
+            valuesContainer.appendChild(valueSpan);
+          }
+
+          // Map for updates
+          seriesLabelMap.set(series, { span: valueSpan, dataMap: timeValueMap });
         });
       });
     });
@@ -611,6 +647,39 @@ export default function ChartComponent() {
     // Crosshair sync
     chart.subscribeCrosshairMove((param) => {
       if (!isMountedRef.current || chartInstanceIdRef.current !== myInstanceId) return;
+
+      // Update local labels
+      if (param.time) {
+        if (clearTimer) { clearTimeout(clearTimer); clearTimer = null; }
+        param.seriesData.forEach((value, series) => {
+          const entry = seriesLabelMap.get(series);
+          if (entry && entry.span) {
+            // value obje olabilir {value: ...} falan ? lightweight-charts version?
+            // Genelde value directly number or {value, ...} depending on series type
+            // Line/Area/Histogram -> value is number
+            // Candlestick -> value is {open, high, low, close}
+            // Indicator series are mostly line/hist/area.
+            let v = value;
+            if (v && typeof v === 'object' && 'value' in v) v = v.value;
+            if (typeof v === 'number') {
+              entry.span.textContent = v.toFixed(2); // TODO: Dynamic precision?
+            } else {
+              entry.span.textContent = "";
+            }
+          }
+        });
+      } else {
+        // Debounce clear to prevent flicker on button hover
+        if (!clearTimer) {
+          clearTimer = setTimeout(() => {
+            if (!isHoveringButtons) {
+              seriesLabelMap.forEach(({ span }) => { if (span) span.textContent = ""; });
+            }
+            clearTimer = null;
+          }, 100);
+        }
+      }
+
       if (!param.time) {
         window.dispatchEvent(new CustomEvent(CROSSHAIR_EVENT, { detail: { time: null, sourceId: chartId } }));
         return;
@@ -622,6 +691,25 @@ export default function ChartComponent() {
       if (!isMountedRef.current || chartInstanceIdRef.current !== myInstanceId) return;
       const { time, sourceId } = (e && e.detail) || {};
       if (sourceId === chartId) return;
+
+      // Sync Labels for external crosshair
+      if (time !== null && time !== undefined) {
+        seriesLabelMap.forEach(({ span, dataMap }) => {
+          if (span && dataMap) {
+            const val = dataMap.get(time);
+            if (val !== undefined) {
+              span.textContent = Number(val).toFixed(2);
+            } else {
+              span.textContent = "";
+            }
+          }
+        });
+      } else {
+        if (!isHoveringButtons) {
+          seriesLabelMap.forEach(({ span }) => { if (span) span.textContent = ""; });
+        }
+      }
+
       if (time === null) {
         chart.clearCrosshairPosition();
         return;
@@ -679,8 +767,8 @@ export default function ChartComponent() {
 
   return (
     <div className="relative w-full h-full">
-      <div id="indicator-labels" className="absolute top-2 left-2 z-10 flex flex-col gap-1"></div>
-      <div id="strategy-labels" style={{ position: 'absolute', top: 10, right: 80, zIndex: 10, display: 'flex', flexDirection: 'column', gap: '6px' }}></div>
+      <div id="indicator-labels" className="absolute top-2 left-2 z-10 flex flex-col gap-1 pointer-events-none"></div>
+      <div id="strategy-labels" style={{ position: 'absolute', top: 10, right: 80, zIndex: 10, display: 'flex', flexDirection: 'column', gap: '6px', pointerEvents: 'none' }}></div>
       <div ref={chartContainerRef} className="absolute top-0 left-0 w-full h-full"></div>
 
       <IndicatorSettingsModal isOpen={settingsIndicatorModalOpen} onClose={() => setSettingsIndicatorModalOpen(false)} indicatorId={activeIndicatorId} subId={activeSubIndicatorId} />

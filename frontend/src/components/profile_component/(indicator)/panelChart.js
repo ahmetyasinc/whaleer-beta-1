@@ -13,6 +13,7 @@ import { installCursorWheelZoom } from "@/utils/cursorCoom";
 import {
   RANGE_EVENT,
   RANGE_REQUEST_EVENT,
+  CROSSHAIR_EVENT,
   nextSeq,
   markLeader,
   unmarkLeader,
@@ -20,6 +21,7 @@ import {
   minBarsFor,
   FUTURE_PADDING_BARS,
   getLastRangeCache,
+  setCrosshairCache,
 } from "@/utils/chartSync";
 // 🔽 YENİ: settings’i içeri al
 import { useChartSettingsStore } from "@/store/indicator/chartSettingsStore";
@@ -45,9 +47,9 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
   }
 
   function makeUTCFormatter(period) {
-    const isMins  = ["1m","3m","5m","15m","30m"].includes(period);
-    const isHours = ["1h","2h","4h"].includes(period);
-    const isDays  = ["1d"].includes(period);
+    const isMins = ["1m", "3m", "5m", "15m", "30m"].includes(period);
+    const isHours = ["1h", "2h", "4h"].includes(period);
+    const isDays = ["1d"].includes(period);
     const isWeeks = ["1w"].includes(period);
     return (t) => {
       const d = timeToUTCDate(t);
@@ -56,9 +58,9 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       const D = pad(d.getUTCDate());
       const h = pad(d.getUTCHours());
       const m = pad(d.getUTCMinutes());
-      if (isMins)  return `${D}.${M} ${h}:${m}`;
+      if (isMins) return `${D}.${M} ${h}:${m}`;
       if (isHours) return `${D}.${M} ${h}:00`;
-      if (isDays)  return `${D}.${M}.${Y}`;
+      if (isDays) return `${D}.${M}.${Y}`;
       if (isWeeks) return `${D}.${M}.${Y}`;
       return `${D}.${M} ${h}:${m}`;
     };
@@ -98,9 +100,9 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     return new Date(msUTC + (offsetMinutes || 0) * 60 * 1000);
   }
   function makeZonedFormatter(period, offsetMinutes) {
-    const isMins  = ["1m","3m","5m","15m","30m"].includes(period);
-    const isHours = ["1h","2h","4h"].includes(period);
-    const isDays  = period === "1d";
+    const isMins = ["1m", "3m", "5m", "15m", "30m"].includes(period);
+    const isHours = ["1h", "2h", "4h"].includes(period);
+    const isDays = period === "1d";
     const isWeeks = period === "1w";
     const twoDigitYear = (Y) => String(Y).slice(2);
     return (t) => {
@@ -111,9 +113,9 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       const D = pad(d.getUTCDate());
       const h = pad(d.getUTCHours());
       const m = pad(d.getUTCMinutes());
-      if (isMins)  return `${D}.${M} ${h}:${m}`;
+      if (isMins) return `${D}.${M} ${h}:${m}`;
       if (isHours) return `${D}.${M}.${yy} ${h}:00`;
-      if (isDays)  return `${D}.${M}.${yy}`;
+      if (isDays) return `${D}.${M}.${yy}`;
       if (isWeeks) return `${D}.${M}.${yy}`;
       return `${D}.${M}.${yy} ${h}:${m}`;
     };
@@ -122,6 +124,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
   const { selectedPeriod } = useCryptoStore();
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
+  const panelSeriesRef = useRef(null); // Crosshair sync için seri referansı
   const { indicatorData, removeSubIndicator } = useIndicatorDataStore();
 
   const [displayName, setDisplayName] = useState(`${indicatorId} (${subId})`);
@@ -167,7 +170,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       timeScale: {
         rightBarStaysOnScroll: true,
         shiftVisibleRangeOnNewBar: false,
-        timeVisible: !["1d","1w"].includes(selectedPeriod),
+        timeVisible: !["1d", "1w"].includes(selectedPeriod),
         secondsVisible: false,
         tickMarkFormatter: fmt,
       },
@@ -247,6 +250,11 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
           .sort(([a], [b]) => a - b)
           .map(([time, value]) => ({ time, value }));
         series.setData(formattedData);
+
+        // İlk seriyi crosshair sync için sakla
+        if (!panelSeriesRef.current) {
+          panelSeriesRef.current = series;
+        }
       });
 
     chart.timeScale().fitContent();
@@ -274,14 +282,14 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       window.addEventListener(RANGE_EVENT, oneShot);
       window.dispatchEvent(new CustomEvent(RANGE_REQUEST_EVENT));
       setTimeout(() => {
-        try { window.removeEventListener(RANGE_EVENT, oneShot); } catch (_) {}
+        try { window.removeEventListener(RANGE_EVENT, oneShot); } catch (_) { }
         let dataLen = 0;
         try {
           const firstNonGraph = (indicatorInfo?.result || []).find(r => r.on_graph === false);
           if (firstNonGraph && Array.isArray(firstNonGraph.data)) {
             dataLen = firstNonGraph.data.length;
           }
-        } catch (_) {}
+        } catch (_) { }
         const barsToShow = 5;
         const rightPad = Math.floor((barsToShow - 1) / 2);
         const lastIndex = Math.max(0, dataLen - 1);
@@ -338,6 +346,60 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     };
     window.addEventListener(RANGE_EVENT, onRangeEvent);
 
+    // === CROSSHAIR SYNC - Yayın ===
+    chart.subscribeCrosshairMove((param) => {
+      if (isApplyingRef.current) return;
+
+      const time = param.time;
+      const logical = param.logical;
+      const point = param.point;
+
+      const isOutside = !point || point.x < 0 || point.y < 0;
+
+      setCrosshairCache({ time, logical, sourceId: chartId, isOutside });
+      window.dispatchEvent(new CustomEvent(CROSSHAIR_EVENT, {
+        detail: { time, logical, sourceId: chartId, isOutside }
+      }));
+    });
+
+    // === CROSSHAIR SYNC - Dinle ===
+    const onCrosshairEvent = (e) => {
+      const { time, logical, sourceId, isOutside } = (e && e.detail) || {};
+      if (sourceId === chartId) return;
+
+      if (isOutside || time == null) {
+        chart.clearCrosshairPosition();
+      } else {
+        // Crosshair senkronizasyonu için seriden fiyat bul
+        try {
+          const series = panelSeriesRef.current;
+          if (series) {
+            const data = series.data?.() || [];
+            let priceAtTime = null;
+            for (const bar of data) {
+              if (bar.time === time) {
+                priceAtTime = bar.value !== undefined ? bar.value : bar.close;
+                break;
+              }
+            }
+            // Fiyat bulunamazsa görünür aralığın ortasını kullan
+            if (priceAtTime == null) {
+              const priceScale = chart.priceScale('right');
+              const priceRange = priceScale?.getVisiblePriceRange?.();
+              if (priceRange) {
+                priceAtTime = (priceRange.minValue + priceRange.maxValue) / 2;
+              } else {
+                priceAtTime = 0;
+              }
+            }
+            // setCrosshairPosition(price, time, series) formatında çağır
+            chart.setCrosshairPosition(priceAtTime, time, series);
+          }
+        } catch { }
+      }
+    };
+    window.addEventListener(CROSSHAIR_EVENT, onCrosshairEvent);
+
     const resizeObserver = new ResizeObserver(() => {
       if (chartContainerRef.current) {
         chart.applyOptions({
@@ -350,11 +412,12 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
 
     return () => {
       window.removeEventListener(RANGE_EVENT, onRangeEvent);
+      window.removeEventListener(CROSSHAIR_EVENT, onCrosshairEvent);
       resizeObserver.disconnect();
-      if (chartRef.current) { try { chartRef.current.remove(); } catch {} }
-      cleanupFns.forEach((fn) => { try { fn(); } catch {} });
+      if (chartRef.current) { try { chartRef.current.remove(); } catch { } }
+      cleanupFns.forEach((fn) => { try { fn(); } catch { } });
     };
-  // 🔽 settings bağımlılığı eklendi (bg/text/grid de değişince yeniden kur)
+    // 🔽 settings bağımlılığı eklendi (bg/text/grid de değişince yeniden kur)
   }, [indicatorData, indicatorId, subId, selectedPeriod, tzOffsetMin, settings]);
 
   // 🔽 YENİ: settings görseli değişirse chart’ı yeniden yaratmadan da güncelle (opsiyonel ama akıcı)

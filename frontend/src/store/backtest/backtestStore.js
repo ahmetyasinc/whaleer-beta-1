@@ -33,7 +33,7 @@ const useBacktestStore = create((set, get) => ({
   runBacktest: async () => {
     const { selectedStrategy, selectedPeriod, selectedCrypto, initialBalanceInput } = get();
 
-    set({ isBacktestLoading: true, backtestError: null });
+    set({ isBacktestLoading: true, backtestError: null, backtestResults: null });
 
     try {
       const initial_balance = parseInitialBalance(initialBalanceInput); // number | undefined

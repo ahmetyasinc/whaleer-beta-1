@@ -268,7 +268,7 @@ async def startup():
     db_pool = await asyncpg.create_pool(DATABASE_URL)
 
     # WebSocket'i çalıştır ve görevi sakla
-    websocket_task = asyncio.create_task(run_websocket_with_reconnect())
+    # websocket_task = asyncio.create_task(run_websocket_with_reconnect())
 
 # ✅ FastAPI kapandığında temizleme işlemleri
 @websocket_router.on_event("shutdown")

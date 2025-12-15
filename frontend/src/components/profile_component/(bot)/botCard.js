@@ -128,7 +128,7 @@ export const BotCard = ({ bot, column }) => {
 
     try {
       setVaultLoading(true);
-
+      console.log("Refreshing vault balance for bot:", bot.id, "and user:", bot.user_id, "with publicKey:", stellarAddress);
       const vault = await getVault({
         botId: bot.id,
         userId: bot.user_id,
@@ -254,9 +254,12 @@ export const BotCard = ({ bot, column }) => {
         amountUsdc: amount,
         publicKey: stellarAddress,
       });
-    
-      await refreshVaultBalance();   // DB + store güncellemesi
-      toast.success("Depozito çekme işlemi gönderildi.");
+      
+      setTimeout(() => {
+        refreshVaultBalance();   // DB + store güncellemesi
+      }, 5000);
+      
+        //toast.success("Depozito çekme işlemi gönderildi.");
     
       setWithdrawModalOpen(false);
       setWithdrawAmount("");
@@ -298,7 +301,7 @@ export const BotCard = ({ bot, column }) => {
 
       setTimeout(() => {
         refreshVaultBalance();
-      }, 2000);
+      }, 5000);
 
       //toast.success("Process initiated: Deposit to vault.");
       setDepositModalOpen(false);
@@ -455,7 +458,7 @@ export const BotCard = ({ bot, column }) => {
                         onClick={handleDepositWithdraw}
                         className="flex-1 text-[13px] font-medium px-3 py-1.5 rounded-lg bg-transparent border border-slate-600 hover:border-sky-500 text-slate-200 hover:text-white transition"
                       >
-                        Çek
+                        Withdraw
                       </button>
                     </div>
                   </div>
@@ -607,7 +610,7 @@ export const BotCard = ({ bot, column }) => {
                   disabled={!withdrawAmount || Number(withdrawAmount) <= 0 || withdrawLoading}
                   className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 border border-cyan-400/40 text-white shadow-md hover:from-violet-600 hover:to-sky-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {withdrawLoading ? "Gönderiliyor..." : "Çek"}
+                  {withdrawLoading ? "Sending..." : "Withdraw"}
                 </button>
               </div>
             </div>
@@ -967,13 +970,11 @@ export const BotCard = ({ bot, column }) => {
               </button>
 
               <button
-                onClick={() => {
-                  // Şimdilik boş
-                }}
-                disabled={!withdrawAmount || Number(withdrawAmount) <= 0}
+                onClick={() => {handleConfirmWithdraw}}
+                disabled={!withdrawAmount || Number(withdrawAmount) <= 0 || withdrawLoading}
                 className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 border border-cyan-400/40 text-white shadow-md hover:from-violet-600 hover:to-sky-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Withdraw
+                {withdrawLoading ? "Sending..." : "Withdraw"}
               </button>
             </div>
           </div>

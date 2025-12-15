@@ -23,18 +23,19 @@ async def simulate_daily_bots(
     - Eğer botun `api_id` değeri boş ise 30 değerini girer.
     - Eğer botun `initial_usd_value` değeri boş ise
       `initial_usd_value`, `current_usd_value` ve `maximum_usd_value` için 100 değerini girer.
-    - Eğer botun eksik verisi yok ise:
-        - -10 ile +10 arasında rastgele bir kar yüzdesi üretir.
-        - Bu yüzdelik karı `current_usd_value` üzerinden hesaplar
+    - Tüm eksik değerler tamamlandıktan sonra:
+        - -2 ile +10 arasında rastgele bir kar yüzdesi üretir.
+        - Bu yüzdelik karı önceki `current_usd_value` üzerinden hesaplar
           ve sonucu tekrar `current_usd_value` alanına yazar.
         - Eğer yeni `current_usd_value`, `maximum_usd_value`'dan büyükse,
           `maximum_usd_value` da güncellenir.
+    - Frontende her bot için id, name, dolar bazlı değişim ve yüzde değişim döner.
     """
 
     try:
-      uid = int(user_id)
+        uid = int(user_id)
     except (TypeError, ValueError):
-      raise HTTPException(status_code=400, detail="Invalid user id")
+        raise HTTPException(status_code=400, detail="Invalid user id")
 
     # Kullanıcının satın aldığı veya kiraladığı, silinmemiş botlar
     result = await db.execute(
@@ -47,7 +48,6 @@ async def simulate_daily_bots(
     bots = result.scalars().all()
 
     if not bots:
-        # İstersen 404 yerine boş liste de dönebilirdin; tercih meselesi.
         raise HTTPException(status_code=404, detail="Simüle edilecek bot bulunamadı.")
 
     updated_summary = []
@@ -60,7 +60,7 @@ async def simulate_daily_bots(
             bot.api_id = 30
             changed = True
 
-        # 2) initial_usd_value boşsa hepsini 100 yap
+        # 2) Eksik para değerlerini tamamla
         if bot.initial_usd_value is None:
             base = Decimal("100")
             bot.initial_usd_value = base
@@ -68,7 +68,6 @@ async def simulate_daily_bots(
             bot.maximum_usd_value = base
             changed = True
         else:
-            # current veya maximum eksikse minimumda toparla
             if bot.current_usd_value is None:
                 bot.current_usd_value = bot.initial_usd_value
                 changed = True
@@ -77,37 +76,37 @@ async def simulate_daily_bots(
                 bot.maximum_usd_value = bot.current_usd_value
                 changed = True
 
-            # 3) Eksik veri artık yoksa: random günlük PnL uygula
-            # -10 ile +10 arasında random yüzde (2 ondalık)
-            pct = Decimal(str(round(random.uniform(-2, 10), 2)))
+        # Artık current_usd_value kesinlikle dolu
+        previous_value = bot.current_usd_value
 
-            base_val = bot.current_usd_value
-            delta = (base_val * pct) / Decimal("100")
-            new_current = base_val + delta
+        # 3) Günlük PnL uygula: -2 ile +10 arası random yüzde
+        pct = Decimal(str(round(random.uniform(-6, 10), 2)))
+        delta = (previous_value * pct) / Decimal("100")
+        new_current = previous_value + delta
 
-            bot.current_usd_value = new_current
+        bot.current_usd_value = new_current
 
-            changed = True
+        # Maximum güncelle
+        #if bot.maximum_usd_value is None or new_current > bot.maximum_usd_value:
+        #    bot.maximum_usd_value = new_current
+
+        changed = True
 
         if changed:
             updated_summary.append(
                 {
                     "id": bot.id,
-                    "api_id": bot.api_id,
-                    "initial_usd_value": str(bot.initial_usd_value)
-                    if bot.initial_usd_value is not None
-                    else None,
-                    "current_usd_value": str(bot.current_usd_value)
-                    if bot.current_usd_value is not None
-                    else None,
-                    "maximum_usd_value": str(bot.maximum_usd_value)
-                    if bot.maximum_usd_value is not None
-                    else None,
+                    "name": bot.name,  # Bots modelinde name kolonu olduğunu varsayıyorum
+                    "previous_usd_value": str(previous_value),
+                    "current_usd_value": str(bot.current_usd_value),
+                    "maximum_usd_value": str(bot.maximum_usd_value),
+                    "pnl_usd": str(delta),      # kaç dolar arttı/azaldı
+                    "pnl_pct": str(pct),        # yüzde kaç arttı/azaldı
                 }
             )
-        
+
         print(f"Bot ID {bot.id} için simülasyon tamamlandı.")
-        print("summary:", updated_summary)
+        print("summary item:", updated_summary[-1])
 
     await db.commit()
 

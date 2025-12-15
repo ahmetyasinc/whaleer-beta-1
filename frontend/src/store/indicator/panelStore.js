@@ -7,13 +7,13 @@ const getDefaultEndDate = () => {
 };
 
 const usePanelStore = create((set, get) => ({
-  
+
   synced_panels: ["chart"],
 
   end: getDefaultEndDate(),
   setEnd: (newEnd) => set({ end: newEnd }),
 
-  panelWidth: 16,
+  panelWidth: 60,
   customPanels: [],
 
   addSyncedPanel: (panelId, subId) => {
@@ -25,7 +25,7 @@ const usePanelStore = create((set, get) => ({
       return {};
     });
   },
-  
+
 
   removeSyncedPanel: (panelId, subId) => {
     const panelKey = `panel-${panelId}-${subId}`;
@@ -58,16 +58,17 @@ const usePanelStore = create((set, get) => ({
 
   setPanelWidth: (width) => {
     set({ panelWidth: width });
-    const currentLayout = get().layouts;
-    if (Array.isArray(currentLayout)) {
-      const updatedLayout = currentLayout.map(item => {
+    const currentLayouts = get().layouts;
+    const currentLg = currentLayouts ? currentLayouts.lg : [];
+    if (Array.isArray(currentLg)) {
+      const updatedLayout = currentLg.map(item => {
         if (get().synced_panels.includes(item.i)) {
           return { ...item, w: width };
         }
         return item;
       });
       set({
-        layouts: updatedLayout
+        layouts: { ...currentLayouts, lg: updatedLayout }
       });
     }
   },
@@ -80,15 +81,15 @@ const usePanelStore = create((set, get) => ({
       ...state.layouts,
       lg: !state.isChatBoxVisible
         ? [...(state.layouts.lg || []).filter(item => item.i !== "f"), {
-            i: "f",
-            x: 8,
-            y: 21,
-            w: 8,
-            h: 17,
-            minH: 8,
-            minW: 4,
-            maxH: 30
-          }]
+          i: "f",
+          x: 8,
+          y: 21,
+          w: 8,
+          h: 17,
+          minH: 8,
+          minW: 4,
+          maxH: 30
+        }]
         : (state.layouts.lg || []).filter(item => item.i !== "f")
     } : state.layouts
   })),
@@ -100,7 +101,7 @@ const usePanelStore = create((set, get) => ({
     const updatedLayout = layouts.lg.map(item => {
       if (item.i === "panel-indicator-editor" || item.i === "panel-strategy-editor") {
         // Bu paneller genişliğini korusun
-        return { ...item, w: item.w || 8 };
+        return { ...item, w: item.w || 34 };
       }
       if (get().synced_panels.includes(item.i)) {
         return { ...item, w: currentPanelWidth, h: item.h || 6 }; // ← default yükseklik sabitlenebilir
@@ -112,7 +113,7 @@ const usePanelStore = create((set, get) => ({
       lg: updatedLayout
     };
   },
-  
+
 
   updateLayouts: (newLayouts) => {
     set({ layouts: newLayouts });

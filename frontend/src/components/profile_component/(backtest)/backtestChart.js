@@ -49,24 +49,24 @@ function timeToZonedDate(t, offsetMinutes) {
 
 // Saatlik ve daha uzun periyotlarda iki haneli yıl (yy) gösterir
 function makeZonedFormatter(period, offsetMinutes) {
-  const isMins  = ['1m','5m','15m'].includes(period) || period === '3m' || period === '30m';
-  const isHours = ['1h','2h','4h'].includes(period);
-  const isDays  = period === '1d';
+  const isMins = ['1m', '5m', '15m'].includes(period) || period === '3m' || period === '30m';
+  const isHours = ['1h', '2h', '4h'].includes(period);
+  const isDays = period === '1d';
   const isWeeks = period === '1w';
   const twoDigitYear = (Y) => String(Y).slice(2);
 
   return (t) => {
-    const d  = timeToZonedDate(t, offsetMinutes);
-    const Y  = d.getUTCFullYear();
+    const d = timeToZonedDate(t, offsetMinutes);
+    const Y = d.getUTCFullYear();
     const yy = twoDigitYear(Y);
-    const M  = pad(d.getUTCMonth() + 1);
-    const D  = pad(d.getUTCDate());
-    const h  = pad(d.getUTCHours());
-    const m  = pad(d.getUTCMinutes());
+    const M = pad(d.getUTCMonth() + 1);
+    const D = pad(d.getUTCDate());
+    const h = pad(d.getUTCHours());
+    const m = pad(d.getUTCMinutes());
 
-    if (isMins)  return `${D}.${M} ${h}:${m}`;     // 1–30m → yıl yok
+    if (isMins) return `${D}.${M} ${h}:${m}`;     // 1–30m → yıl yok
     if (isHours) return `${D}.${M}.${yy} ${h}:00`; // 1h–4h → DD.MM.yy HH:00
-    if (isDays)  return `${D}.${M}.${yy}`;         // 1d     → DD.MM.yy
+    if (isDays) return `${D}.${M}.${yy}`;         // 1d     → DD.MM.yy
     if (isWeeks) return `${D}.${M}.${yy}`;         // 1w     → DD.MM.yy
     return `${D}.${M}.${yy} ${h}:${m}`;
   };
@@ -101,20 +101,20 @@ export default function BacktestChart() {
     width: 0,
     height,
     layout: {
-      textColor: 'white',
-      background: { type: 'solid', color: 'rgb(0, 4, 10)' },
+      textColor: '#a1a1aa', // zinc-400
+      background: { type: 'solid', color: '#18181b' }, // zinc-900 (matches bg-zinc-900)
     },
     grid: {
-      vertLines: { color: '#111', style: 1 },
-      horzLines: { color: '#111', style: 1 },
+      vertLines: { color: '#27272a', style: 1 }, // zinc-800
+      horzLines: { color: '#27272a', style: 1 }, // zinc-800
     },
     timeScale: {
-      borderColor: '#334155',
+      borderColor: '#27272a',
       timeVisible: true,
       secondsVisible: ['1m', '5m', '15m'].includes(period),
     },
     priceScale: {
-      borderColor: '#334155',
+      borderColor: '#27272a',
     },
     crosshair: {
       mode: 1,
@@ -138,7 +138,7 @@ export default function BacktestChart() {
   useEffect(() => {
     const container = mainChartContainerRef.current;
     if (!container) return;
-    
+
     const fmt = makeZonedFormatter(period, tzOffsetMin);
 
     const mainChart = createChart(container, {
@@ -148,18 +148,24 @@ export default function BacktestChart() {
       timeScale: {
         ...getChartConfig(300).timeScale,
         timeVisible: true,
-        secondsVisible: ['1m','5m','15m'].includes(period),
+        secondsVisible: ['1m', '5m', '15m'].includes(period),
         tickMarkFormatter: fmt,
       },
     });
 
     mainChartRef.current = mainChart;
 
-    const candlestickSeries = mainChart.addCandlestickSeries();
+    const candlestickSeries = mainChart.addCandlestickSeries({
+      upColor: '#10b981', // emerald-500
+      downColor: '#ef4444', // red-500
+      borderVisible: false,
+      wickUpColor: '#10b981',
+      wickDownColor: '#ef4444'
+    });
     candlestickSeriesRef.current = candlestickSeries;
 
     const lineSeries = mainChart.addLineSeries({
-      color: '#3b82f6',
+      color: '#3b82f6', // blue-500
       lineWidth: 2,
     });
     lineSeriesRef.current = lineSeries;
@@ -190,7 +196,7 @@ export default function BacktestChart() {
       timeScale: {
         ...getChartConfig(150).timeScale,
         timeVisible: true,
-        secondsVisible: ['1m','5m','15m'].includes(period),
+        secondsVisible: ['1m', '5m', '15m'].includes(period),
         tickMarkFormatter: fmt,
       },
     });
@@ -199,7 +205,7 @@ export default function BacktestChart() {
     returnsChartRef.current = returnsChart;
 
     const histogramSeries = returnsChart.addHistogramSeries({
-      color: '#22c55e',
+      color: '#10b981', // emerald-500
       priceFormat: { type: 'percent', precision: 4 }, // default; we’ll switch per metric later
     });
     histogramSeriesRef.current = histogramSeries;
@@ -289,7 +295,7 @@ export default function BacktestChart() {
       mainChartRef.current.applyOptions({
         localization: { timeFormatter: fmt },
         timeScale: {
-          secondsVisible: ['1m','5m','15m'].includes(period),
+          secondsVisible: ['1m', '5m', '15m'].includes(period),
           tickMarkFormatter: fmt,
         },
       });
@@ -299,7 +305,7 @@ export default function BacktestChart() {
       returnsChartRef.current.applyOptions({
         localization: { timeFormatter: fmt },
         timeScale: {
-          secondsVisible: ['1m','5m','15m'].includes(period),
+          secondsVisible: ['1m', '5m', '15m'].includes(period),
           tickMarkFormatter: fmt,
         },
       });
@@ -339,12 +345,12 @@ export default function BacktestChart() {
           // color logic:
           // - returns / percentage: green >=0, red <0
           // - position: green >0, gray =0, red <0
-          let color = '#22c55e';
+          let color = '#10b981'; // emerald-500
           const valNum = +rawVal;
           if (bottomMetric === 'position') {
-            color = valNum > 0 ? '#22c55e' : valNum < 0 ? '#ef4444' : '#94a3b8';
+            color = valNum > 0 ? '#10b981' : valNum < 0 ? '#ef4444' : '#94a3b8';
           } else {
-            color = valNum >= 0 ? '#22c55e' : '#ef4444';
+            color = valNum >= 0 ? '#10b981' : '#ef4444';
           }
 
           return { time, value: valNum, color };
@@ -395,7 +401,7 @@ export default function BacktestChart() {
       returnsChartRef.current.applyOptions({
         localization: { timeFormatter: fmt },
         timeScale: {
-          secondsVisible: ['1m','5m','15m'].includes(period),
+          secondsVisible: ['1m', '5m', '15m'].includes(period),
           tickMarkFormatter: fmt,
         },
       });
@@ -403,65 +409,65 @@ export default function BacktestChart() {
   }, [returns, period, bottomMetric, tzOffsetMin]);
 
   return (
-    <div className="w-full h-full flex flex-col space-y-2">
-      <div className="flex-1 relative">
-        <div ref={mainChartContainerRef} className="w-full h-78" />
-        <div className="absolute top-2 left-2 flex items-center gap-4 text-sm font-light pointer-events-auto z-10">
-          <span className="text-gray-400">{t('titles.priceChart')}</span>
-          <div className="flex gap-2">
-            <button
-              onClick={toggleCandlestick}
-              disabled={showCandlestick && !showLine}
-              className={`px-2 py-1 rounded text-xs border transition-colors ${
-                showCandlestick
-                  ? 'bg-green-600 border-green-500 text-white'
-                  : 'bg-gray-700 border-gray-600 text-gray-400'
-              } ${
-                showCandlestick && !showLine
-                  ? 'opacity-50 cursor-not-allowed'
-                  : 'hover:bg-opacity-80 cursor-pointer'
+    <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-xl p-5 shadow-lg flex flex-col space-y-4">
+
+      {/* Chart Title Container - Metallic Header style used elsewhere */}
+      <div className="flex justify-between items-center border-b border-zinc-800/50 pb-3">
+        <h3 className="text-zinc-100 text-sm font-bold uppercase tracking-wider flex items-center gap-2">
+          <span className="w-1 h-4 bg-cyan-500 rounded-full shadow-[0_0_10px_rgba(6,182,212,0.5)]"></span>
+          {t('titles.priceChart')}
+        </h3>
+
+        <div className="flex gap-2">
+          <button
+            onClick={toggleCandlestick}
+            disabled={showCandlestick && !showLine}
+            className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all duration-100 ${showCandlestick
+              ? 'bg-emerald-950/30 border-emerald-500/50 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.2)]'
+              : 'bg-zinc-900 border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600'
+              } ${showCandlestick && !showLine
+                ? 'opacity-50 cursor-not-allowed'
+                : 'cursor-pointer'
               }`}
-              aria-label={t('buttons.candles')}
-              title={t('buttons.candles')}
-            >
-              {t('buttons.candles')}
-            </button>
-            <button
-              onClick={toggleLine}
-              disabled={showLine && !showCandlestick}
-              className={`px-2 py-1 rounded text-xs border transition-colors ${
-                showLine
-                  ? 'bg-blue-600 border-blue-500 text-white'
-                  : 'bg-gray-700 border-gray-600 text-gray-400'
-              } ${
-                showLine && !showCandlestick
-                  ? 'opacity-50 cursor-not-allowed'
-                  : 'hover:bg-opacity-80 cursor-pointer'
+            aria-label={t('buttons.candles')}
+            title={t('buttons.candles')}
+          >
+            {t('buttons.candles')}
+          </button>
+          <button
+            onClick={toggleLine}
+            disabled={showLine && !showCandlestick}
+            className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all duration-100 ${showLine
+              ? 'bg-blue-950/30 border-blue-500/50 text-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.2)]'
+              : 'bg-zinc-900 border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600'
+              } ${showLine && !showCandlestick
+                ? 'opacity-50 cursor-not-allowed'
+                : 'cursor-pointer'
               }`}
-              aria-label={t('buttons.line')}
-              title={t('buttons.line')}
-            >
-              {t('buttons.line')}
-            </button>
-          </div>
+            aria-label={t('buttons.line')}
+            title={t('buttons.line')}
+          >
+            {t('buttons.line')}
+          </button>
         </div>
       </div>
 
-      <div className="flex-shrink-0 relative">
-        <div ref={returnsChartContainerRef} className="w-full h-36" />
-        {/* NEW: metric switcher */}
-        <div className="absolute top-2 left-2 flex itemsellers gap-2 text-sm font-light z-10 pointer-events-auto">
-          <span className="text-gray-400">
-            {t(`metrics.${bottomMetric}`)}
-          </span>
-          <div className="flex gap-2">
+      <div className="flex-1 relative rounded-lg overflow-hidden border border-zinc-800/50">
+        <div ref={mainChartContainerRef} className="w-full h-80" />
+      </div>
+
+      <div className="relative rounded-lg overflow-hidden border border-zinc-800/50">
+        <div ref={returnsChartContainerRef} className="w-full h-40" />
+
+        {/* Metric Switcher Overlay */}
+        <div className="absolute top-2 left-2 flex items-center gap-2 p-1 bg-zinc-900/80 backdrop-blur-sm rounded-lg border border-zinc-800/50 z-10 pointer-events-auto">
+          <div className="flex gap-1">
             <button
               onClick={() => setBottomMetric('returns')}
-              className={`px-2 py-1 rounded text-xs border transition-colors ${
-                bottomMetric === 'returns'
-                  ? 'bg-emerald-700 border-emerald-600 text-white'
-                  : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-opacity-80'
-              }`}
+              className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide transition-colors ${bottomMetric === 'returns'
+                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                : 'text-zinc-500 hover:text-zinc-300'
+                }`}
               aria-label={t('metrics.returns')}
               title={t('metrics.returns')}
             >
@@ -469,11 +475,10 @@ export default function BacktestChart() {
             </button>
             <button
               onClick={() => setBottomMetric('position')}
-              className={`px-2 py-1 rounded text-xs border transition-colors ${
-                bottomMetric === 'position'
-                  ? 'bg-indigo-700 border-indigo-600 text-white'
-                  : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-opacity-80'
-              }`}
+              className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide transition-colors ${bottomMetric === 'position'
+                ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                : 'text-zinc-500 hover:text-zinc-300'
+                }`}
               aria-label={t('metrics.position')}
               title={t('metrics.position')}
             >
@@ -481,11 +486,10 @@ export default function BacktestChart() {
             </button>
             <button
               onClick={() => setBottomMetric('percentage')}
-              className={`px-2 py-1 rounded text-xs border transition-colors ${
-                bottomMetric === 'percentage'
-                  ? 'bg-cyan-700 border-cyan-600 text-white'
-                  : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-opacity-80'
-              }`}
+              className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide transition-colors ${bottomMetric === 'percentage'
+                ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
+                : 'text-zinc-500 hover:text-zinc-300'
+                }`}
               aria-label={t('metrics.percentage')}
               title={t('metrics.percentage')}
             >

@@ -13,6 +13,7 @@ import { installCursorWheelZoom } from "@/utils/cursorCoom";
 import {
   RANGE_EVENT,
   RANGE_REQUEST_EVENT,
+  CROSSHAIR_EVENT,
   nextSeq,
   markLeader,
   unmarkLeader,
@@ -45,9 +46,9 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
   }
 
   function makeUTCFormatter(period) {
-    const isMins  = ["1m","3m","5m","15m","30m"].includes(period);
-    const isHours = ["1h","2h","4h"].includes(period);
-    const isDays  = ["1d"].includes(period);
+    const isMins = ["1m", "3m", "5m", "15m", "30m"].includes(period);
+    const isHours = ["1h", "2h", "4h"].includes(period);
+    const isDays = ["1d"].includes(period);
     const isWeeks = ["1w"].includes(period);
     return (t) => {
       const d = timeToUTCDate(t);
@@ -56,9 +57,9 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       const D = pad(d.getUTCDate());
       const h = pad(d.getUTCHours());
       const m = pad(d.getUTCMinutes());
-      if (isMins)  return `${D}.${M} ${h}:${m}`;
+      if (isMins) return `${D}.${M} ${h}:${m}`;
       if (isHours) return `${D}.${M} ${h}:00`;
-      if (isDays)  return `${D}.${M}.${Y}`;
+      if (isDays) return `${D}.${M}.${Y}`;
       if (isWeeks) return `${D}.${M}.${Y}`;
       return `${D}.${M} ${h}:${m}`;
     };
@@ -98,9 +99,9 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     return new Date(msUTC + (offsetMinutes || 0) * 60 * 1000);
   }
   function makeZonedFormatter(period, offsetMinutes) {
-    const isMins  = ["1m","3m","5m","15m","30m"].includes(period);
-    const isHours = ["1h","2h","4h"].includes(period);
-    const isDays  = period === "1d";
+    const isMins = ["1m", "3m", "5m", "15m", "30m"].includes(period);
+    const isHours = ["1h", "2h", "4h"].includes(period);
+    const isDays = period === "1d";
     const isWeeks = period === "1w";
     const twoDigitYear = (Y) => String(Y).slice(2);
     return (t) => {
@@ -111,9 +112,9 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       const D = pad(d.getUTCDate());
       const h = pad(d.getUTCHours());
       const m = pad(d.getUTCMinutes());
-      if (isMins)  return `${D}.${M} ${h}:${m}`;
+      if (isMins) return `${D}.${M} ${h}:${m}`;
       if (isHours) return `${D}.${M}.${yy} ${h}:00`;
-      if (isDays)  return `${D}.${M}.${yy}`;
+      if (isDays) return `${D}.${M}.${yy}`;
       if (isWeeks) return `${D}.${M}.${yy}`;
       return `${D}.${M}.${yy} ${h}:${m}`;
     };
@@ -134,6 +135,8 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
   const chartId = `${indicatorId}-${subId}`;
   const isApplyingRef = useRef(false);
   const lastSeqAppliedRef = useRef(0);
+  const isHoveringButtonsRef = useRef(false); // Track hover state
+  const clearTimerRef = useRef(null); // Debounce clear
   let rafHandle = null;
 
   // 🔽 YENİ: timezone cookie'sini settings değişince de yeniden oku (main ile aynı davranış)
@@ -144,6 +147,9 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
   // formatter’ı settings’e bağlı hale getir
   const fmt = makeZonedFormatter(selectedPeriod, tzOffsetMin);
 
+  // Series -> { span: HTMLElement, data: Map<time, value> } mapping
+  const seriesLabelMap = new Map();
+
   useEffect(() => {
     const indicatorInfo = indicatorData?.[indicatorId]?.subItems?.[subId];
     if (!chartContainerRef.current || !indicatorInfo?.result) return;
@@ -153,7 +159,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     if (firstNonGraphItem?.name) setDisplayName(firstNonGraphItem.name);
 
     // 🔽 YENİ: main chart’taki görsel ayarları kullan
-    const textColor = settings.textColor === "black" ? "#111111" : "#ffffff";
+    const textColor = settings.textColor === "black" ? "#8C8C8C" : "#8C8C8C";
     const gridColor = settings?.grid?.color || "#111111";
     const bgColor = settings.bgColor || (settings.theme === 'light' ? '#ffffff' : 'rgb(0,0,7)');
 
@@ -167,7 +173,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       timeScale: {
         rightBarStaysOnScroll: true,
         shiftVisibleRangeOnNewBar: false,
-        timeVisible: !["1d","1w"].includes(selectedPeriod),
+        timeVisible: !["1d", "1w"].includes(selectedPeriod),
         secondsVisible: false,
         tickMarkFormatter: fmt,
       },
@@ -201,6 +207,8 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     timeScale.applyOptions({ rightOffset: FUTURE_PADDING_BARS });
 
     // Seriler (mevcut mantığa dokunmuyoruz)
+    let firstSeries = null;
+    seriesLabelMap.clear(); // Ensure map is empty before repopulating
     result
       .filter((item) => item?.on_graph === false)
       .forEach(({ type, settings: s, data }) => {
@@ -243,10 +251,25 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
           const unixTime = Math.floor(ms / 1000);
           timeValueMap.set(unixTime, value);
         });
+        if (!firstSeries) firstSeries = series;
         const formattedData = Array.from(timeValueMap.entries())
           .sort(([a], [b]) => a - b)
           .map(([time, value]) => ({ time, value }));
         series.setData(formattedData);
+
+        // --- Label & Span Creation (same logic, adapted for PanelChart single label container) ---
+        // PanelChart header is outside loop (top-2 left-2). 
+        // We need to APPEND to that container. 
+        // Note: PanelChart currently has a single hardcoded title in return JSX.
+        // We should move that title logic here to be dynamic OR append next to it.
+        // Let's modify the JSX part later to be empty ref, and build it here.
+        // OR better: Append spans to a ref container.
+
+        // Actually, PanelChart handles multiple series in one chart (e.g. MACD has histogram and 2 lines).
+        // They all share the same "indicatorName".
+        // It's better to add the values next to the name.
+
+        seriesLabelMap.set(series, { color: s?.color || (series.options ? series.options().color : 'white'), dataMap: timeValueMap });
       });
 
     chart.timeScale().fitContent();
@@ -274,14 +297,14 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       window.addEventListener(RANGE_EVENT, oneShot);
       window.dispatchEvent(new CustomEvent(RANGE_REQUEST_EVENT));
       setTimeout(() => {
-        try { window.removeEventListener(RANGE_EVENT, oneShot); } catch (_) {}
+        try { window.removeEventListener(RANGE_EVENT, oneShot); } catch (_) { }
         let dataLen = 0;
         try {
           const firstNonGraph = (indicatorInfo?.result || []).find(r => r.on_graph === false);
           if (firstNonGraph && Array.isArray(firstNonGraph.data)) {
             dataLen = firstNonGraph.data.length;
           }
-        } catch (_) {}
+        } catch (_) { }
         const barsToShow = 5;
         const rightPad = Math.floor((barsToShow - 1) / 2);
         const lastIndex = Math.max(0, dataLen - 1);
@@ -338,6 +361,87 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     };
     window.addEventListener(RANGE_EVENT, onRangeEvent);
 
+    // Crosshair Sync
+    chart.subscribeCrosshairMove((param) => {
+      // Update values
+      const container = document.getElementById(`panel-values-${indicatorId}-${subId}`);
+      if (container) {
+        if (param.time) {
+          if (clearTimerRef.current) { clearTimeout(clearTimerRef.current); clearTimerRef.current = null; }
+          const fragment = document.createDocumentFragment();
+          param.seriesData.forEach((value, series) => {
+            const info = seriesLabelMap.get(series);
+            if (info) {
+              let v = value;
+              if (v && typeof v === 'object' && 'value' in v) v = v.value;
+              if (typeof v === 'number') {
+                const sp = document.createElement('span');
+                sp.style.color = info.color;
+                sp.style.marginLeft = '8px';
+                sp.textContent = v.toFixed(2);
+                fragment.appendChild(sp);
+              }
+            }
+          });
+          container.innerHTML = '';
+          container.appendChild(fragment);
+        } else {
+          if (!clearTimerRef.current) {
+            clearTimerRef.current = setTimeout(() => {
+              if (!isHoveringButtonsRef.current && container) {
+                container.innerHTML = '';
+              }
+              clearTimerRef.current = null;
+            }, 100);
+          }
+        }
+      }
+
+      if (!param.time) {
+        window.dispatchEvent(new CustomEvent(CROSSHAIR_EVENT, { detail: { time: null, sourceId: chartId } }));
+        return;
+      }
+      window.dispatchEvent(new CustomEvent(CROSSHAIR_EVENT, { detail: { time: param.time, sourceId: chartId } }));
+    });
+
+    const onCrosshairCode = (e) => {
+      const { time, sourceId } = (e && e.detail) || {};
+      if (sourceId === chartId) return;
+
+      // Sync Values
+      const container = document.getElementById(`panel-values-${indicatorId}-${subId}`);
+      if (container) {
+        if (time !== null && time !== undefined) {
+          // Create a fragment
+          const fragment = document.createDocumentFragment();
+          seriesLabelMap.forEach(({ color, dataMap }) => {
+            const val = dataMap.get(time);
+            if (val !== undefined && val !== null) {
+              const sp = document.createElement('span');
+              sp.style.color = color;
+              sp.style.marginLeft = '8px';
+              sp.textContent = Number(val).toFixed(2);
+              fragment.appendChild(sp);
+            }
+          });
+          // Replace content
+          container.innerHTML = '';
+          container.appendChild(fragment);
+        } else {
+          container.innerHTML = '';
+        }
+      }
+
+      if (time === null) {
+        chart.clearCrosshairPosition();
+        return;
+      }
+      if (firstSeries) {
+        chart.setCrosshairPosition(NaN, time, firstSeries);
+      }
+    };
+    window.addEventListener(CROSSHAIR_EVENT, onCrosshairCode);
+
     const resizeObserver = new ResizeObserver(() => {
       if (chartContainerRef.current) {
         chart.applyOptions({
@@ -349,12 +453,13 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     resizeObserver.observe(chartContainerRef.current);
 
     return () => {
+      window.removeEventListener(CROSSHAIR_EVENT, onCrosshairCode);
       window.removeEventListener(RANGE_EVENT, onRangeEvent);
       resizeObserver.disconnect();
-      if (chartRef.current) { try { chartRef.current.remove(); } catch {} }
-      cleanupFns.forEach((fn) => { try { fn(); } catch {} });
+      if (chartRef.current) { try { chartRef.current.remove(); } catch { } }
+      cleanupFns.forEach((fn) => { try { fn(); } catch { } });
     };
-  // 🔽 settings bağımlılığı eklendi (bg/text/grid de değişince yeniden kur)
+    // 🔽 settings bağımlılığı eklendi (bg/text/grid de değişince yeniden kur)
   }, [indicatorData, indicatorId, subId, selectedPeriod, tzOffsetMin, settings]);
 
   // 🔽 YENİ: settings görseli değişirse chart’ı yeniden yaratmadan da güncelle (opsiyonel ama akıcı)
@@ -373,10 +478,19 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
 
   return (
     <div className="relative w-full h-full">
-      <div className="absolute top-2 left-2 z-10 flex items-center gap-2 bg-transparent border border-gray-400/10 text-white text-xs px-2 py-1 rounded shadow-md">
+      <div className="absolute top-2 left-2 z-10 flex items-center gap-2 bg-transparent border border-gray-400/10 text-white text-xs px-2 py-1 rounded shadow-md pointer-events-none">
         <span>{indicatorName}</span>
-        <button className="hover:text-gray-400" onClick={() => setSettingsOpen(true)}><RiSettingsLine /></button>
-        <button className="hover:text-gray-400" onClick={() => removeSubIndicator(indicatorId, subId)}><AiOutlineClose /></button>
+        <div id={`panel-values-${indicatorId}-${subId}`} className="flex items-center"></div>
+        <button className="hover:text-gray-400 pointer-events-auto"
+          onMouseEnter={() => isHoveringButtonsRef.current = true}
+          onMouseLeave={() => isHoveringButtonsRef.current = false}
+          onClick={() => setSettingsOpen(true)}><RiSettingsLine />
+        </button>
+        <button className="hover:text-gray-400 pointer-events-auto"
+          onMouseEnter={() => isHoveringButtonsRef.current = true}
+          onMouseLeave={() => isHoveringButtonsRef.current = false}
+          onClick={() => removeSubIndicator(indicatorId, subId)}><AiOutlineClose />
+        </button>
       </div>
       <div ref={chartContainerRef} className="absolute top-0 left-0 w-full h-full"></div>
       <IndicatorSettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} indicatorId={indicatorId} subId={subId} />

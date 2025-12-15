@@ -116,8 +116,9 @@ export default function PerformanceMetrics({ performance }) {
   ];
 
   return (
-    <div className="bg-gray-900 rounded-xl p-4 shadow-md border border-gray-800">
-      <h3 className="text-white text-base font-semibold mb-4 flex items-center gap-2">
+    <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-xl p-5 shadow-lg">
+      <h3 className="text-zinc-100 text-sm font-bold uppercase tracking-wider mb-5 flex items-center gap-2 border-b border-zinc-800/50 pb-3">
+        <span className="w-1 h-4 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
         {t('titles.performanceMetrics')}
       </h3>
 
@@ -125,10 +126,12 @@ export default function PerformanceMetrics({ performance }) {
         {metrics.map((metric, index) => (
           <div
             key={index}
-            className="bg-gray-800 rounded-lg px-3 py-2 shadow-sm hover:shadow-md transition-all duration-200"
+            className="group bg-zinc-900/60 border border-zinc-800 hover:border-zinc-700/80 rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-100"
           >
-            <div className="text-gray-300 text-xs mb-1">{metric.label}</div>
-            <div className={`text-base font-semibold ${metric.color}`}>
+            <div className="text-zinc-500 text-[10px] font-medium uppercase tracking-wide mb-1.5 whitespace-normal leading-tight" title={metric.label}>
+              {metric.label}
+            </div>
+            <div className={`text-sm font-bold font-mono tracking-tight ${metric.color} drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]`}>
               {metric.value}
             </div>
           </div>

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { FiNavigation } from "react-icons/fi";
 import { AiOutlineStar } from "react-icons/ai"; // Favorilerim ikonu
 import { MdOutlinePeopleAlt } from "react-icons/md"; // Topluluk ikonu
@@ -12,7 +13,7 @@ import FavoriteIndicators from "../(modal_tabs)/favIndicator";
 import i18n from "@/i18n";
 import { useTranslation } from "react-i18next";
 
-const IndicatorsButton = ({locale}) => {
+const IndicatorsButton = ({ locale }) => {
   const { t } = useTranslation("indicator");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(1);
@@ -45,70 +46,69 @@ const IndicatorsButton = ({locale}) => {
   const renderContent = () => {
     switch (activeTab) {
       case 1:
-            // TechnicalIndicators için closeModal prop'u (önceki istekten korunmuştur)
-            return <TechnicalIndicators locale={locale} addFavorite={addFavorite} favorites={favorites} closeModal={() => setIsModalOpen(false)} />;
+        return <TechnicalIndicators locale={locale} addFavorite={addFavorite} favorites={favorites} closeModal={() => setIsModalOpen(false)} />;
       case 2:
-            // YENİ: PersonalIndicators için closeModal prop'u eklendi
-            return <PersonalIndicators closeModal={() => setIsModalOpen(false)} />; 
+        return <PersonalIndicators closeModal={() => setIsModalOpen(false)} />;
       case 3:
-        return <CommunityIndicators locale={locale} closeModal={() => setIsModalOpen(false)}/>;
+        return <CommunityIndicators locale={locale} closeModal={() => setIsModalOpen(false)} />;
       case 4:
-        return <FavoriteIndicators favorites={favorites} addFavorite={addFavorite} closeModal={() => setIsModalOpen(false)} />;      default:
-        return <p className="text-white">t("NotFound")</p>;
+        return <FavoriteIndicators favorites={favorites} addFavorite={addFavorite} closeModal={() => setIsModalOpen(false)} />; default:
+        return <p className="text-zinc-500 p-6">{t("NotFound")}</p>;
     }
   };
-// from-[rgb(42,158,48)] to-[hsl(300,100%,54%)]
+
+  const modalContent = (
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 backdrop-blur-sm">
+      <div className="bg-zinc-950 text-zinc-200 rounded-md w-[800px] h-[584px] shadow-lg flex flex-col relative border border-zinc-800">
+
+        {/* Modal Başlık Kısmı */}
+        <div className="flex justify-between items-center px-6 py-4 border-b border-zinc-800 h-16 bg-zinc-900/50">
+          <h2 className="text-lg font-bold text-zinc-100">{t("indicators")}</h2>
+          <button
+            className="text-zinc-500 hover:text-white text-3xl transition-colors"
+            onClick={() => setIsModalOpen(false)}
+          >
+            &times;
+          </button>
+        </div>
+
+        <div className="flex flex-grow">
+          {/* Sol Panel (Butonlar) */}
+          <div className="w-[200px] bg-zinc-900 pt-3 flex flex-col gap-2 border-r border-zinc-800">
+            {tabs.map((tab) => (
+              <button
+                key={tab.name}
+                className={`flex items-center gap-2 py-2 px-4 text-left transition-all ${activeTab === tab.id
+                  ? "bg-gradient-to-r from-[hsl(180,81%,19%)] to-[hsl(215,22%,56%)] text-white px-4 rounded-3xl py-2 shadow-sm"
+                  : "hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200"
+                  }`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.icon} {tab.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Sağ Panel */}
+          <div className="flex-1 flex flex-col bg-zinc-950">
+            {/* İçerik */}
+            <div className="flex-grow scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-zinc-900">{renderContent()}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <>
-      {/* Buton */}
       <button
-        className="flex items-center justify-center w-[130px] h-[40px] rounded-md transition duration-100 bg-black border border-gray-800 hover:border-gray-600 text-gray-200"
+        className="flex items-center justify-center w-[130px] h-[40px] rounded-md transition duration-100 bg-transparent border border-gray-700 hover:border-gray-500 text-zinc-200"
         onClick={() => setIsModalOpen(true)}
       >
         <FiNavigation className="mr-2 text-[19px]" /> {t("indicators")}
       </button>
 
-      {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 ">
-          <div className="bg-gray-900 text-white rounded-md w-[800px] h-[584px] shadow-lg flex flex-col relative">
-            
-            {/* Modal Başlık Kısmı */}
-            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-700 h-16">
-              <h2 className="text-lg font-bold">{t("indicators")}</h2>
-              <button
-                className="text-gray-400 hover:text-white text-3xl"
-                onClick={() => setIsModalOpen(false)}
-              >
-                &times;
-              </button>
-            </div>
-
-            <div className="flex flex-grow">
-              {/* Sol Panel (Butonlar) */}
-              <div className="w-[200px] bg-gray-800 pt-3 flex flex-col gap-2 border-r border-gray-700">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.name}
-                    className={`flex items-center gap-2 py-2 px-4 text-left transition-all ${
-                      activeTab === tab.id ? "bg-gradient-to-r from-[hsl(180,81%,19%)] to-[hsl(215,22%,56%)] text-white px-4 rounded-3xl py-2 hover:bg-[rgba(15,19,73,0.76)]" : "hover:bg-gray-700"
-                    }`}
-                    onClick={() => setActiveTab(tab.id)}
-                  >
-                    {tab.icon} {tab.name}
-                  </button>
-                ))}
-              </div>
-
-              {/* Sağ Panel */}
-              <div className="flex-1 flex flex-col">
-                {/* İçerik */}
-                <div className="flex-grow">{renderContent()}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {isModalOpen && createPortal(modalContent, document.body)}
     </>
   );
 };

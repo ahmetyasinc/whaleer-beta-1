@@ -6,7 +6,7 @@ import { createChart } from "lightweight-charts";
 import useIndicatorDataStore from "@/store/indicator/indicatorDataStore";
 import IndicatorSettingsModal from "./(modal_tabs)/indicatorSettingsModal";
 import { RiSettingsLine } from "react-icons/ri";
-import { AiOutlineClose } from "react-icons/ai";
+import { AiOutlineClose, AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import PropTypes from "prop-types";
 import useCryptoStore from "@/store/indicator/cryptoPinStore";
 import { installCursorWheelZoom } from "@/utils/cursorCoom";
@@ -148,7 +148,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
   const fmt = makeZonedFormatter(selectedPeriod, tzOffsetMin);
 
   // Series -> { span: HTMLElement, data: Map<time, value> } mapping
-  const seriesLabelMap = new Map();
+  const seriesLabelMapRef = useRef(new Map());
 
   useEffect(() => {
     const indicatorInfo = indicatorData?.[indicatorId]?.subItems?.[subId];
@@ -208,7 +208,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
 
     // Seriler (mevcut mantığa dokunmuyoruz)
     let firstSeries = null;
-    seriesLabelMap.clear(); // Ensure map is empty before repopulating
+    seriesLabelMapRef.current.clear(); // Ensure map is empty before repopulating
     result
       .filter((item) => item?.on_graph === false)
       .forEach(({ type, settings: s, data }) => {
@@ -269,7 +269,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
         // They all share the same "indicatorName".
         // It's better to add the values next to the name.
 
-        seriesLabelMap.set(series, { color: s?.color || (series.options ? series.options().color : 'white'), dataMap: timeValueMap });
+        seriesLabelMapRef.current.set(series, { color: s?.color || (series.options ? series.options().color : 'white'), dataMap: timeValueMap });
       });
 
     chart.timeScale().fitContent();
@@ -370,7 +370,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
           if (clearTimerRef.current) { clearTimeout(clearTimerRef.current); clearTimerRef.current = null; }
           const fragment = document.createDocumentFragment();
           param.seriesData.forEach((value, series) => {
-            const info = seriesLabelMap.get(series);
+            const info = seriesLabelMapRef.current.get(series);
             if (info) {
               let v = value;
               if (v && typeof v === 'object' && 'value' in v) v = v.value;
@@ -414,7 +414,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
         if (time !== null && time !== undefined) {
           // Create a fragment
           const fragment = document.createDocumentFragment();
-          seriesLabelMap.forEach(({ color, dataMap }) => {
+          seriesLabelMapRef.current.forEach(({ color, dataMap }) => {
             const val = dataMap.get(time);
             if (val !== undefined && val !== null) {
               const sp = document.createElement('span');
@@ -476,11 +476,29 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     });
   }, [settings, selectedPeriod, tzOffsetMin]);
 
+  const [isVisible, setIsVisible] = useState(true);
+
+  const toggleVisibility = () => {
+    const nextState = !isVisible;
+    setIsVisible(nextState);
+    if (seriesLabelMapRef.current) {
+      seriesLabelMapRef.current.forEach((_, series) => {
+        series.applyOptions({ visible: nextState });
+      });
+    }
+  };
+
   return (
     <div className="relative w-full h-full">
-      <div className="absolute top-2 left-2 z-10 flex items-center gap-2 bg-transparent border border-gray-400/10 text-white text-xs px-2 py-1 rounded shadow-md pointer-events-none">
+      <div className={`absolute top-2 left-2 z-10 flex items-center gap-2 bg-transparent border border-gray-400/10 text-white text-xs px-2 py-1 rounded shadow-md pointer-events-none transition-opacity duration-200 ${isVisible ? 'opacity-100' : 'opacity-50'}`}>
         <span>{indicatorName}</span>
-        <div id={`panel-values-${indicatorId}-${subId}`} className="flex items-center"></div>
+        <div id={`panel-values-${indicatorId}-${subId}`} className="flex items-center" style={{ display: isVisible ? 'flex' : 'none' }}></div>
+        <button className="hover:text-gray-400 pointer-events-auto"
+          onMouseEnter={() => isHoveringButtonsRef.current = true}
+          onMouseLeave={() => isHoveringButtonsRef.current = false}
+          onClick={toggleVisibility}>
+          {isVisible ? <AiOutlineEye size={15} /> : <AiOutlineEyeInvisible size={15} />}
+        </button>
         <button className="hover:text-gray-400 pointer-events-auto"
           onMouseEnter={() => isHoveringButtonsRef.current = true}
           onMouseLeave={() => isHoveringButtonsRef.current = false}

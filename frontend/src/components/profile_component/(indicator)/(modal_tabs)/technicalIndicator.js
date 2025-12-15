@@ -12,18 +12,18 @@ import { useTranslation } from "react-i18next";
 axios.defaults.withCredentials = true; // Tüm axios isteklerinde cookie'yi göndermeyi etkinleştir
 
 // GÜNCELLEME: closeModal prop'u eklendi
-const TechnicalIndicators = ({locale, closeModal}) => {
+const TechnicalIndicators = ({ locale, closeModal }) => {
     const { t } = useTranslation("indicator");
 
     const { favorites, toggleFavorite, setTecnicIndicators, setPersonalIndicators, setCommunityIndicators, tecnic } = useIndicatorStore();
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedIndicator, setSelectedIndicator] = useState(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);    
-    
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
     useEffect(() => {
-      if (locale && i18n.language !== locale) {
-        i18n.changeLanguage(locale);
-      }
+        if (locale && i18n.language !== locale) {
+            i18n.changeLanguage(locale);
+        }
     }, [locale]);
 
 
@@ -34,13 +34,13 @@ const TechnicalIndicators = ({locale, closeModal}) => {
         const fetchIndicators = async () => {
             try {
                 const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/all-indicators/`);
-                
+
                 const tecnic_indicators = response.data.tecnic_indicators || [];
                 setTecnicIndicators(tecnic_indicators);
-                
+
                 const personal_indicators = response.data.personal_indicators || [];
                 setPersonalIndicators(personal_indicators);
-                
+
                 const public_indicators = response.data.public_indicators || [];
                 setCommunityIndicators(public_indicators);
 
@@ -56,12 +56,12 @@ const TechnicalIndicators = ({locale, closeModal}) => {
     const handleToggleFavorite = async (indicator) => {
         const isAlreadyFavorite = favorites.some((fav) => fav.id === indicator.id);
         toggleFavorite(indicator);
-        
+
         try {
             if (isAlreadyFavorite) {
                 await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/indicator-remove-favourite/`, {
                     data: { indicator_id: indicator.id }
-                });                
+                });
             } else {
                 await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/indicator-add-favorite/`, {
                     indicator_id: indicator.id
@@ -80,21 +80,21 @@ const TechnicalIndicators = ({locale, closeModal}) => {
 
 
     return (
-        <div className="text-white">
+        <div className="text-zinc-200">
             {/* Arama Çubuğu */}
-            <div className="bg-gray-800 flex items-center border-b border-gray-800 mb-2">
+            <div className="bg-zinc-900 flex items-center border-b border-zinc-800 mb-2">
                 <input
                     type="text"
-                    placeholder= {t("search")}
-                    className="w-full px-3 py-2 bg-gray-800 text-white focus:outline-none"
+                    placeholder={t("search")}
+                    className="w-full px-3 py-2 bg-zinc-900 text-zinc-200 focus:outline-none placeholder:text-zinc-600"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <IoMdSearch className="text-gray-400 text-[20px] mr-2" />
+                <IoMdSearch className="text-zinc-500 text-[20px] mr-2" />
             </div>
 
             {/* İndikatör Listesi */}
-            <div className="flex flex-col gap-2 w-full mt-2 max-h-[440px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
+            <div className="flex flex-col gap-2 w-full mt-2 max-h-[440px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-zinc-900">
                 {tecnic
                     .filter((indicator) =>
                         indicator.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -102,35 +102,35 @@ const TechnicalIndicators = ({locale, closeModal}) => {
                     .map((indicator) => (
                         <div
                             key={indicator.id}
-                            className="bg-gray-900 hover:bg-gray-800 pl-1 pr-2 flex items-center justify-between w-full h-[40px]"
+                            className="bg-zinc-950 hover:bg-zinc-900 pl-1 pr-2 flex items-center justify-between w-full h-[40px]"
                         >
                             {/* Kartın sol kısmı */}
                             <div className="flex items-center">
                                 <button
-                                    className="bg-transparent p-2 rounded-md hover:bg-gray-800"
+                                    className="bg-transparent p-2 rounded-md text-zinc-400 hover:text-zinc-200 transition-colors"
                                     onClick={() => handleToggleFavorite(indicator)}
                                 >
                                     {favorites.some((fav) => fav.id === indicator.id) ? (
-                                        <IoMdStar className="text-lg text-yellow-500" />
+                                        <IoMdStar className="text-lg text-yellow-500 drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]" />
                                     ) : (
-                                        <IoIosStarOutline className="text-lg text-gray-600" />
+                                        <IoIosStarOutline className="text-lg" />
                                     )}
                                 </button>
-                                <span className="text-[14px]">{indicator.name}</span>
+                                <span className="text-[14px] text-zinc-300">{indicator.name}</span>
                             </div>
 
                             {/* Kartın sağ kısmı */}
                             <div className="flex gap-2">
                                 {/* Göster/Gizle Butonu */}
                                 {/* GÜNCELLEME: closeModal prop'u AddIndicatorButton'a aktarılıyor */}
-                                <AddIndicatorButton indicatorId={indicator.id} closeModal={closeModal} /> 
+                                <AddIndicatorButton indicatorId={indicator.id} closeModal={closeModal} />
 
                                 {/* Kod Butonu */}
                                 <button
-                                    className="bg-transparent p-2 rounded-md hover:bg-gray-800"
+                                    className="bg-transparent p-2 rounded-md transition-colors"
                                     onClick={() => openCodeModal(indicator)}
                                 >
-                                    <IoIosCode className="text-[hsl(305,57%,44%)] hover:text-[#eb48dd] text-2xl cursor-pointer" />
+                                    <IoIosCode className="text-fuchsia-700 hover:text-fuchsia-500 text-2xl cursor-pointer" />
                                 </button>
                             </div>
                         </div>

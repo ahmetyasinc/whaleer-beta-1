@@ -88,8 +88,8 @@ export default function PersonalIndicators({ closeModal }) {
   };
 
   return (
-    <div className="text-white pt-2 flex flex-col items-center w-full">
-      <div className="w-full max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
+    <div className="text-zinc-200 pt-2 flex flex-col items-center w-full">
+      <div className="w-full max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-zinc-900">
         {groups.size === 0 ? (
           <></>
         ) : (
@@ -105,25 +105,25 @@ export default function PersonalIndicators({ closeModal }) {
             const displayName = selected?.name;
 
             return (
-              <div key={groupId} className="bg-gray-900 hover:bg-gray-800 flex items-center justify-between w-full h-[40px] mb-2">
+              <div key={groupId} className="bg-zinc-950 hover:bg-zinc-900 flex items-center justify-between w-full h-[40px] mb-2">
                 <div className="flex items-center pl-2 gap-2">
                   <button
-                    className="bg-transparent p-2 rounded-md hover:bg-gray-800"
+                    className="bg-transparent p-2 rounded-md text-zinc-400 hover:text-zinc-200 transition-colors"
                     onClick={() => handleToggleFavorite(selected)}
                     title={t("actions.favorite")}
                   >
                     {favorites.some((fav) => fav.id === selected.id) ? (
-                      <IoMdStar className="text-lg text-yellow-500" />
+                      <IoMdStar className="text-lg text-yellow-500 drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]" />
                     ) : (
-                      <IoIosStarOutline className="text-lg text-gray-600" />
+                      <IoIosStarOutline className="text-lg" />
                     )}
                   </button>
 
-                  <span className="text-[15px]">{displayName}</span>
+                  <span className="text-[15px] text-zinc-300">{displayName}</span>
 
                   {versions.length > 1 && (
                     <select
-                      className="ml-2 bg-gray-800 text-sm px-2 py-1 rounded border border-gray-700"
+                      className="ml-2 bg-zinc-900 text-zinc-300 text-sm px-2 py-1 rounded border border-zinc-700 focus:outline-none"
                       value={selectedId}
                       onChange={(e) =>
                         setSelectedByGroup((s) => ({ ...s, [groupId]: Number(e.target.value) }))
@@ -137,10 +137,10 @@ export default function PersonalIndicators({ closeModal }) {
 
                   {hasError && (
                     <div className="group relative p-2 rounded-full">
-                      <RiErrorWarningFill className="text-red-600" />
-                      <div className="bg-[#cc4242] p-1 rounded-sm group-hover:flex hidden absolute top-1/2 -translate-y-1/2 -right-2 translate-x-full">
+                      <RiErrorWarningFill className="text-red-500" />
+                      <div className="bg-red-900/90 text-red-100 p-1 rounded-sm group-hover:flex hidden absolute top-1/2 -translate-y-1/2 -right-2 translate-x-full border border-red-500/50">
                         <span className="whitespace-nowrap text-sm">{errorMessage}</span>
-                        <div className="bg-inherit rotate-45 p-1 absolute top-1/2 -translate-y-1/2 left-0 -translate-x-1/2"></div>
+                        <div className="bg-inherit rotate-45 p-1 absolute top-1/2 -translate-y-1/2 left-0 -translate-x-1/2 border-l border-b border-red-500/50"></div>
                       </div>
                     </div>
                   )}
@@ -150,7 +150,7 @@ export default function PersonalIndicators({ closeModal }) {
                   <AddIndicatorButton indicatorId={selected.id} closeModal={closeModal} />
 
                   <button
-                    className="bg-transparent p-2 rounded-md hover:bg-gray-800"
+                    className="bg-transparent p-2 rounded-md transition-colors"
                     onClick={() => {
                       openPanel({
                         groupId,
@@ -158,19 +158,19 @@ export default function PersonalIndicators({ closeModal }) {
                         initialSelectedId: selected.id,
                       });
                       // YENİ: Modalı kapat
-                      if(closeModal) closeModal(); 
+                      if (closeModal) closeModal();
                     }}
                     title={t("actions.edit")}
                   >
-                    <SiRobinhood className="text-blue-400 hover:text-blue-700 text-lg cursor-pointer" />
+                    <SiRobinhood className="text-blue-400 hover:text-blue-600 text-lg cursor-pointer" />
                   </button>
 
                   <button
-                    className="bg-transparent pr-4 pl-2 rounded-md hover:bg-gray-800"
+                    className="bg-transparent pr-4 pl-2 rounded-md transition-colors"
                     onClick={() => askDelete(selected)}
                     title={t("actions.delete")}
                   >
-                    <HiOutlineTrash className="text-red-700 hover:text-red-900 text-[19.5px] cursor-pointer" />
+                    <HiOutlineTrash className="text-red-600 hover:text-red-500 text-[19.5px] cursor-pointer" />
                   </button>
                 </div>
               </div>
@@ -180,11 +180,11 @@ export default function PersonalIndicators({ closeModal }) {
       </div>
 
       <button
-        className="mt-1 p-3 bg-green-500 hover:bg-green-600 text-white rounded-sm flex items-center justify-center h-3 w-16"
+        className="mt-1 p-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-sm flex items-center justify-center h-3 w-16 transition-colors shadow-lg shadow-emerald-900/20"
         onClick={() => {
           openPanel({ groupId: null, versions: [], initialSelectedId: null });
           // YENİ: Modalı kapat
-          if(closeModal) closeModal(); 
+          if (closeModal) closeModal();
         }}
         title={t("actions.new")}
       >
@@ -192,19 +192,19 @@ export default function PersonalIndicators({ closeModal }) {
       </button>
 
       {showDeleteModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/10">
-          <div className="bg-gray-900 text-white rounded-md w-[400px] p-6 shadow-lg relative">
-            <h2 className="text-lg font-bold mb-4">{t("deleteModal.title")}</h2>
-            <p>{t("deleteModal.confirm", { name: toDelete?.name })}</p>
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-[60]">
+          <div className="bg-zinc-900 text-zinc-200 rounded-md w-[400px] p-6 shadow-xl relative border border-zinc-800">
+            <h2 className="text-lg font-bold mb-4 text-zinc-100">{t("deleteModal.title")}</h2>
+            <p className="text-zinc-400">{t("deleteModal.confirm", { name: toDelete?.name })}</p>
             <div className="flex justify-end mt-4 gap-2">
               <button
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded"
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded transition-colors"
                 onClick={() => { setShowDeleteModal(false); setToDelete(null); }}
               >
                 {t("deleteModal.no")}
               </button>
               <button
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded"
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded transition-colors"
                 onClick={confirmDelete}
               >
                 {t("deleteModal.yes")}

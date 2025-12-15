@@ -272,6 +272,17 @@ export default function BacktestChart() {
   }, [mainChartRef.current, returnsChartRef.current]);
 
   // price + overlay updates
+  // Visibility updates
+  useEffect(() => {
+    if (candlestickSeriesRef.current) {
+      candlestickSeriesRef.current.applyOptions({ visible: showCandlestick });
+    }
+    if (lineSeriesRef.current) {
+      lineSeriesRef.current.applyOptions({ visible: showLine });
+    }
+  }, [showCandlestick, showLine]);
+
+  // price + overlay updates
   useEffect(() => {
     // seri güncellemeleri
     if (candlestickSeriesRef.current && candles.length > 0) {
@@ -282,11 +293,11 @@ export default function BacktestChart() {
         low: +c.low,
         close: +c.close,
       }));
-      candlestickSeriesRef.current.setData(showCandlestick ? formatted : []);
+      candlestickSeriesRef.current.setData(formatted);
     }
 
     if (lineSeriesRef.current && chartData.length > 0) {
-      lineSeriesRef.current.setData(showLine ? chartData : []);
+      lineSeriesRef.current.setData(chartData);
     }
 
     const fmt = makeZonedFormatter(period, tzOffsetMin);
@@ -310,7 +321,7 @@ export default function BacktestChart() {
         },
       });
     }
-  }, [candles, chartData, period, showCandlestick, showLine, tzOffsetMin]);
+  }, [candles, chartData, period, tzOffsetMin]);
 
 
   // bottom chart updates (NEW: switchable metric)

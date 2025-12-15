@@ -6,7 +6,7 @@ import { createChart } from "lightweight-charts";
 import useRulerStore from "@/store/indicator/rulerStore";
 import { createRoot } from "react-dom/client";
 import { RiSettingsLine } from "react-icons/ri";
-import { AiOutlineClose } from "react-icons/ai";
+import { AiOutlineClose, AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { installRulerTool } from "@/utils/rulerTool";
 import { useLogout } from "@/utils/HookLogout";
 import useMagnetStore from "@/store/indicator/magnetStore";
@@ -374,6 +374,7 @@ export default function ChartComponent() {
     const myInstanceId = ++chartInstanceIdRef.current;
 
     const fmt = makeZonedFormatter(selectedPeriod, tzOffsetMin);
+
     const seriesLabelMap = new Map();
     let isHoveringButtons = false;
     let clearTimer = null;
@@ -422,6 +423,7 @@ export default function ChartComponent() {
         vertAlign: 'center'
       }
     });
+
 
     const el = chartContainerRef.current; const cleanupFns = [];
     if (el) {
@@ -579,11 +581,44 @@ export default function ChartComponent() {
             removeBtn.onclick = () => { series.setData([]); labelDiv.remove(); removeSubIndicator(indicatorId, subId); };
             removeBtn.onmouseenter = () => { isHoveringButtons = true; }; removeBtn.onmouseleave = () => { isHoveringButtons = false; };
 
+            labelDiv._seriesList = [];
+
+            const visibilityBtn = document.createElement("button");
+            visibilityBtn.style.cssText = "pointer-events:auto;background:none;border:none;color:white;cursor:pointer;";
+            let isVisible = true;
+            const visibilityRoot = createRoot(visibilityBtn);
+
+            const updateVisibilityIcon = () => {
+              visibilityRoot.render(
+                isVisible ? <AiOutlineEye size={15} className="hover:text-gray-400" /> : <AiOutlineEyeInvisible size={15} className="text-gray-500 hover:text-gray-400" />
+              );
+              labelDiv.style.opacity = isVisible ? "1" : "0.5";
+              if (valuesContainer) {
+                valuesContainer.style.display = isVisible ? "flex" : "none";
+              }
+            };
+            updateVisibilityIcon();
+
+            visibilityBtn.onclick = () => {
+              isVisible = !isVisible;
+              if (labelDiv._seriesList) {
+                labelDiv._seriesList.forEach(s => s.applyOptions({ visible: isVisible }));
+              }
+              updateVisibilityIcon();
+            };
+            visibilityBtn.onmouseenter = () => { isHoveringButtons = true; };
+            visibilityBtn.onmouseleave = () => { isHoveringButtons = false; };
+
             labelDiv.appendChild(title);
             labelDiv.appendChild(valuesContainer);
+            labelDiv.appendChild(visibilityBtn);
             labelDiv.appendChild(settingsBtn);
             labelDiv.appendChild(removeBtn);
             indicatorLabelsContainer && indicatorLabelsContainer.appendChild(labelDiv);
+          }
+
+          if (labelDiv._seriesList) {
+            labelDiv._seriesList.push(series);
           }
 
           // Value Span
@@ -799,7 +834,7 @@ export default function ChartComponent() {
 
   return (
     <div className="relative w-full h-full">
-      <div id="indicator-labels" className="absolute top-2 left-2 z-10 flex flex-col gap-1 pointer-events-none"></div>
+      <div id="indicator-labels" className="absolute top-2 left-2 z-10 flex flex-col gap-1 pointer-events-none items-start"></div>
       <div id="strategy-labels" style={{ position: 'absolute', top: 10, right: 80, zIndex: 10, display: 'flex', flexDirection: 'column', gap: '6px', pointerEvents: 'none' }}></div>
       <div ref={chartContainerRef} className="absolute top-0 left-0 w-full h-full"></div>
 

@@ -397,6 +397,7 @@ export default function ChartComponent() {
       crosshair: { mode: CrosshairMode.Normal }, // Always normal, we handle magnet manually
       localization: { timeFormatter: fmt },
       timeScale: { timeVisible: !['1d', '1w'].includes(selectedPeriod), secondsVisible: false, tickMarkFormatter: fmt, rightBarStaysOnScroll: true, shiftVisibleRangeOnNewBar: false },
+      rightPriceScale: { minimumWidth: 70, autoScale: true },
     };
 
     const chart = createChart(chartContainerRef.current, chartOptions);

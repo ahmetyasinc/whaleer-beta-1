@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { createChart } from "lightweight-charts";
+import { createChart, CrosshairMode } from "lightweight-charts";
 import useIndicatorDataStore from "@/store/indicator/indicatorDataStore";
 import IndicatorSettingsModal from "./(modal_tabs)/indicatorSettingsModal";
 import { RiSettingsLine } from "react-icons/ri";
@@ -176,6 +176,10 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
         timeVisible: !["1d", "1w"].includes(selectedPeriod),
         secondsVisible: false,
         tickMarkFormatter: fmt,
+      },
+      rightPriceScale: { minimumWidth: 70, autoScale: true },
+      crosshair: {
+        mode: CrosshairMode.Normal,
       },
     });
 

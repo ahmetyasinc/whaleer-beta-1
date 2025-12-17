@@ -1,0 +1,49 @@
+multi_bot_data = {
+        
+        
+        "120": [ 
+            {
+                "trade_type": "futures",
+                "coin_id": "SOLUSDT",
+                "side": "buy",
+                "order_type": "MARKET",
+                "value": 50.0,
+                "leverage": 5,
+                "positionside": "long"
+            },
+            {
+                "trade_type": "spot",
+                "coin_id": "SOLUSDT",
+                "side": "buy",
+                "order_type": "MARKET",
+                "value": 16.0,
+                
+                
+            }
+        ],
+
+        
+        "157": [
+            {
+                "trade_type": "futures",
+                "coin_id": "SOLUSDT",
+                "side": "buy",
+                "order_type": "MARKET",
+                "value": 45.0,
+                "leverage": 5,
+                "positionside": "long"
+            }
+        ],
+
+        
+        "156": [
+            {
+                "trade_type": "futures",
+                "coin_id": "ADAUSDT",
+                "side": "buy",
+                "order_type": "MARKET",
+                "value": 20.0,
+                "positionside": "long"
+            }
+        ]
+    }

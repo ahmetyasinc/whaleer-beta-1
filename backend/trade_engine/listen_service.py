@@ -8,6 +8,7 @@ from backend.trade_engine.taha_part.utils.price_cache_new import (
 )
 import asyncpg
 import os
+from backend.trade_engine.order_engine.core.order_execution_service import OrderExecutionService, OrderRequest
 
 from backend.trade_engine.data.last_data_load import load_last_data
 from backend.trade_engine.process.trade_engine import run_trade_engine
@@ -31,6 +32,55 @@ interval_locks = {interval: asyncio.Lock() for interval in supported_intervals}
 priority_interval = "1m"
 priority_lock = asyncio.Lock()
 queued_intervals = set()  # 🔐 Kuyrukta bekleyen interval'leri takip eder
+
+order_service = OrderExecutionService()
+
+async def dispatch_orders_to_engine(result_dict):
+    """
+    Strateji sonuçlarını (result_dict) tarar, OrderRequest nesnelerine çevirir
+    ve yeni Execution Service kuyruğuna atar.
+    """
+    if not result_dict:
+        return
+
+    print(f"⚡ Emirler Order Engine v2'ye iletiliyor... (Toplam Bot: {len(result_dict)})")
+    
+    for bot_id, trades in result_dict.items():
+        # trades listesi içindeki her bir işlem kararı için:
+        # Not: result_dict yapısının {bot_id: [trade_obj, ...]} döndüğünü varsayıyoruz.
+        # Eğer yapı {bot_id: {symbol: details}} ise döngüyü ona göre düzenleyin.
+        
+        # aggregate_results_by_bot_id çıktısının liste döndürdüğü senaryosu:
+        iterator = trades if isinstance(trades, list) else [trades]
+        
+        for trade in iterator:
+            # Trade objesi bir dict mi yoksa class mı kontrolü (genelde dict döner)
+            symbol = trade.get("symbol")
+            side = trade.get("signal")  # BUY / SELL
+            amount = trade.get("amount", 0) # USD cinsinden değer
+            
+            # Trade tipi (varsayılan futures, bottan geliyorsa onu kullan)
+            trade_type = trade.get("trade_type", "futures") 
+            
+            if not side or side == "NEUTRAL":
+                continue
+
+            # --- YENİ SİSTEME UYGUN ORDER REQUEST OLUŞTURMA ---
+            req = OrderRequest(
+                bot_id=int(bot_id),
+                symbol=symbol,
+                side=side.upper(),
+                amount_usd=float(amount),
+                exchange_name="binance",    # İleride dinamik olabilir
+                trade_type=trade_type,      # spot / futures
+                leverage=int(trade.get("leverage", 1)),
+                order_type="MARKET",        # Strateji market emri üretiyor varsayımı
+                reduce_only=trade.get("reduce_only", False),
+                # stop_price vs. eklenebilir eğer strateji veriyorsa
+            )
+
+            # Kuyruğa at (Fire and Forget)
+            await order_service.submit_order(req)
 
 async def handle_new_data(payload):
     interval = payload.strip()
@@ -101,11 +151,15 @@ async def execute_bot_logic(interval):
             # 4) Sonuçları grupla + JSON'a kaydet (sadece varsa)
             
             result_dict = aggregate_results_by_bot_id(results)
+            if result_dict:
+                # Köprü fonksiyonunu çağırıyoruz. Servis nesnesini (order_service) gönderiyoruz.
+                await dispatch_orders_to_engine(order_service, result_dict)
             #if result_dict:
             #    await save_result_to_json(result_dict, last_time, interval)
-
+            
             # TAHANIN PARTI
             print("result_dict:", result_dict)
+
             #result = await send_order(await prepare_order_data(result_dict))
             
             elapsed = time.time() - start_time
@@ -117,9 +171,14 @@ async def execute_bot_logic(interval):
 async def listen_for_notifications():
     conn_str = "postgresql://postgres:admin@localhost/balina_db"
 
+
     # Pool ve cache'i önce başlat
     await start_connection_pool()
     await wait_for_cache_ready()
+
+    await order_service.start(futures_workers=5, spot_workers=2)
+
+    print("🏁 Dinleyici ve Emir Motoru (V2) Aktif.")
 
     while True:
         try:

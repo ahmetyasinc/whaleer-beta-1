@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { IoMdClose } from "react-icons/io";
-import { FaRegSave } from "react-icons/fa";
+import { FaRegSave, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { MdOpenInFull } from "react-icons/md";
 import CodeEditor from "../../CodeEditor";
 import usePanelStore from "@/store/indicator/panelStore";
@@ -42,6 +42,7 @@ const CodePanel = () => {
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [codeModalIndicator, setCodeModalIndicator] = useState(null);
   const terminalRef = useRef(null);
+  const [isTerminalOpen, setIsTerminalOpen] = useState(true);
 
   const runButtonRef = useRef(null); // 🔑 RunButton için ref
   const { t } = useTranslation("indicatorEditor");
@@ -139,8 +140,8 @@ const CodePanel = () => {
           {isNewVersion
             ? t("titles.addNewVersion")
             : selected
-            ? t("titles.editIndicator")
-            : t("titles.addNewIndicator")}
+              ? t("titles.editIndicator")
+              : t("titles.addNewIndicator")}
         </h2>
       </div>
 
@@ -211,11 +212,30 @@ const CodePanel = () => {
         />
       </div>
 
-      <TerminalIndicator
-        {...(selected ? { id: selected.id } : {})}
-        ref={terminalRef}
-        initialOutput={t("terminal.ready")}
-      />
+      <div className={`relative border-t border-zinc-800 pt-1 ${isTerminalOpen ? "" : "hidden"}`}>
+        <TerminalIndicator
+          {...(selected ? { id: selected.id } : {})}
+          ref={terminalRef}
+          initialOutput={t("terminal.ready")}
+        />
+        <button
+          onClick={() => setIsTerminalOpen(false)}
+          className="absolute top-0 right-0 p-1 bg-black hover:bg-zinc-950 rounded-sm text-gray-400 hover:text-white transition-colors z-[60]"
+          title={t("tooltips.closeTerminal")}
+        >
+          <FaChevronDown size={14} />
+        </button>
+      </div>
+
+      {!isTerminalOpen && (
+        <button
+          onClick={() => setIsTerminalOpen(true)}
+          className="absolute bottom-2 right-2 py-[1px] px-[5px] bg-black hover:bg-zinc-950 rounded-tl-sm shadow-lg text-gray-400 hover:text-white transition-all z-[60]"
+          title={t("tooltips.openTerminal")}
+        >
+          <FaChevronUp size={16} />
+        </button>
+      )}
 
       <CodeModal
         isOpen={isCodeModalOpen}

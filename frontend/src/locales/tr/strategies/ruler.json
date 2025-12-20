@@ -5,7 +5,8 @@
     "start": "Başlangıç",
     "end": "Bitiş",
     "change": "Değişim",
-    "duration": "Süre"
+    "duration": "Süre",
+    "bars": "Bar Sayısı"
   },
   "units": {
     "d": "gün",

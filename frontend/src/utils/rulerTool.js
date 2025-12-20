@@ -5,8 +5,8 @@
 
 import i18n from "@/i18n";
 
-export function installRulerTool({ chart, series, container, isRulerModeRef }) {
-  if (!chart || !series || !container) return () => {};
+export function installRulerTool({ chart, series, container, isRulerModeRef, onComplete, isMagnetModeRef }) {
+  if (!chart || !series || !container) return () => { };
 
   // i18n helper
   const tr = (k, o) => i18n.t(`ruler:${k}`, o);
@@ -14,7 +14,7 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
   // Ensure container is positioned
   try {
     if (!container.style.position) container.style.position = "relative";
-  } catch {}
+  } catch { }
 
   const timeScale = chart.timeScale();
 
@@ -50,7 +50,7 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
   }
   function unlockInteractions() {
     chart.applyOptions({
-      handleScale: savedHandleScale ?? false,
+      handleScale: savedHandleScale ?? { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
       handleScroll: savedHandleScroll ?? { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: true },
     });
     savedHandleScale = null; savedHandleScroll = null;
@@ -62,25 +62,26 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
     const el = document.createElement("div");
     el.style.position = "absolute";
     el.style.pointerEvents = "none";
-    el.style.background = "rgba(16,24,40,0.92)"; // dark navy (not pure black)
-    el.style.color = "#e5e7eb";
+    el.style.background = "#00838F"; // dark navy (not pure black)
+    el.style.color = "#000000";
     el.style.padding = "8px 12px";
     el.style.fontSize = "12px";
-    el.style.borderRadius = "2px";
+    el.style.borderRadius = "4px";
     el.style.zIndex = "9999";
     el.style.boxShadow = "0 6px 16px rgba(0,0,0,0.35)";
+    el.style.whiteSpace = "nowrap";
     container.appendChild(el);
     overlayBox = el;
     return overlayBox;
   }
   function removeOverlayBox() {
-    if (overlayBox) { try { overlayBox.remove(); } catch {} overlayBox = null; }
+    if (overlayBox) { try { overlayBox.remove(); } catch { } overlayBox = null; }
   }
   function setOverlayHtml(html, x, y) {
     const el = ensureOverlayBox();
     el.innerHTML = html;
     el.style.left = `${x + 4}px`;
-    el.style.top  = `${y + 4}px`;
+    el.style.top = `${y + 4}px`;
   }
 
   // ---------- SVG + shapes ----------
@@ -88,16 +89,15 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
   const LINE_COLOR_NEG = "rgb(255,100,100)";
 
   function setRulerColor(isPositive) {
-  const color = isPositive ? LINE_COLOR_POS : LINE_COLOR_NEG;
-  setRulerColor(positive);
+    const color = isPositive ? LINE_COLOR_POS : LINE_COLOR_NEG;
+    // setRulerColor(positive); // Infinite recursion bug, removing this line
 
-  
     if (line) {
       line.setAttribute("stroke", color);
     }
     if (rect) {
-      rect.setAttribute("fill", isPositive ? "rgba(100,180,255,0.15)" : "rgba(255,100,100,0.15)");
-      rect.setAttribute("stroke", isPositive ? "rgba(100,180,255,0.5)" : "rgba(255,100,100,0.5)");
+      rect.setAttribute("fill", isPositive ? "rgba(100,180,255,1)" : "rgba(255,100,100,0.15)");
+      // No stroke for rect
     }
     if (svg) {
       const startArrow = svg.querySelector("#rulerArrowStart path");
@@ -108,7 +108,7 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
   }
 
   function ensureSvg() {
-    if (svg && line && rect && vGuide && hGuide) return { svg, line, rect, vGuide, hGuide };
+    if (svg && line && rect) return { svg, line, rect };
     if (!svg) {
       svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
@@ -142,8 +142,8 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
       mkEnd.setAttribute("viewBox", "0 0 10 10");
       mkEnd.setAttribute("refX", "7");
       mkEnd.setAttribute("refY", "5");
-      mkEnd.setAttribute("markerWidth", "4");
-      mkEnd.setAttribute("markerHeight", "4");
+      mkEnd.setAttribute("markerWidth", "3");
+      mkEnd.setAttribute("markerHeight", "3");
       mkEnd.setAttribute("orient", "auto-start-reverse");
       const endPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
       endPath.setAttribute("d", "M0 0 L10 5 L0 10 Z");
@@ -155,41 +155,26 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
     }
     if (!rect) {
       rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      rect.setAttribute("fill", "rgba(100,180,255,0.15)");
-      rect.setAttribute("stroke", "rgba(100,180,255,0.5)");
-      rect.setAttribute("stroke-width", "1");
-      rect.setAttribute("stroke-dasharray", "4,4");
+      rect.setAttribute("fill", "rgba(100,180,255,0.12)");
+      // No stroke
       svg.appendChild(rect);
     }
     if (!line) {
       line = document.createElementNS("http://www.w3.org/2000/svg", "line");
       line.setAttribute("stroke", LINE_COLOR_POS);
-      line.setAttribute("stroke-width", "2");
-      line.setAttribute("stroke-dasharray", "6,6");
+      line.setAttribute("stroke-width", "1");
+      line.setAttribute("stroke-dasharray", "4,4");
       line.setAttribute("stroke-linecap", "round");
       line.setAttribute("marker-start", "url(#rulerArrowStart)");
       line.setAttribute("marker-end", "url(#rulerArrowEnd)");
       svg.appendChild(line);
     }
-    if (!vGuide) {
-      vGuide = document.createElementNS("http://www.w3.org/2000/svg", "line");
-      vGuide.setAttribute("stroke", "rgba(255,255,255,0.25)");
-      vGuide.setAttribute("stroke-width", "1");
-      vGuide.setAttribute("stroke-dasharray", "3,3");
-      svg.appendChild(vGuide);
-    }
-    if (!hGuide) {
-      hGuide = document.createElementNS("http://www.w3.org/2000/svg", "line");
-      hGuide.setAttribute("stroke", "rgba(255,255,255,0.25)");
-      hGuide.setAttribute("stroke-width", "1");
-      hGuide.setAttribute("stroke-dasharray", "3,3");
-      svg.appendChild(hGuide);
-    }
-    return { svg, line, rect, vGuide, hGuide };
+    // No guides
+    return { svg, line, rect };
   }
 
   function drawAllPx(p1, p2) {
-    const { line, rect, vGuide, hGuide } = ensureSvg();
+    const { line, rect } = ensureSvg();
     // Main diagonal line
     line.setAttribute("x1", String(p1.x));
     line.setAttribute("y1", String(p1.y));
@@ -202,46 +187,38 @@ export function installRulerTool({ chart, series, container, isRulerModeRef }) {
     rect.setAttribute("y", String(y));
     rect.setAttribute("width", String(Math.abs(p2.x - p1.x)));
     rect.setAttribute("height", String(Math.abs(p2.y - p1.y)));
-    // Guides (reference p2)
-    vGuide.setAttribute("x1", String(p2.x));
-    vGuide.setAttribute("y1", "0");
-    vGuide.setAttribute("x2", String(p2.x));
-    vGuide.setAttribute("y2", "100%");
-    hGuide.setAttribute("x1", "0");
-    hGuide.setAttribute("y1", String(p2.y));
-    hGuide.setAttribute("x2", "100%");
-    hGuide.setAttribute("y2", String(p2.y));
+    // No guides update
   }
   function clearShapes() {
     hasFinalShape = false;
     if (svg) {
       for (const el of [line, rect, vGuide, hGuide]) {
-        if (el) { try { svg.removeChild(el); } catch {} }
+        if (el) { try { svg.removeChild(el); } catch { } }
       }
       line = rect = vGuide = hGuide = null;
     }
   }
   function removeSvg() {
     clearShapes();
-    if (svg) { try { svg.remove(); } catch {} svg = null; }
+    if (svg) { try { svg.remove(); } catch { } svg = null; }
   }
 
   // ---------- Helpers ----------
-function fmtDuration(sec) {
-  const s = Math.max(0, Math.floor(sec));
+  function fmtDuration(sec) {
+    const s = Math.max(0, Math.floor(sec));
 
-  const d = Math.floor(s / 86400); // gün
-  const h = Math.floor((s % 86400) / 3600); // saat
-  const m = Math.floor((s % 3600) / 60);   // dakika
+    const d = Math.floor(s / 86400); // gün
+    const h = Math.floor((s % 86400) / 3600); // saat
+    const m = Math.floor((s % 3600) / 60);   // dakika
 
-  const ud = tr("units.d");
-  const uh = tr("units.h");
-  const um = tr("units.m");
+    const ud = tr("units.d");
+    const uh = tr("units.h");
+    const um = tr("units.m");
 
-  if (d) return `${d}${ud} ${h}${uh} ${m}${um}`;
-  if (h) return `${h}${uh} ${m}${um}`;
-  return `${m}${um}`;
-}
+    if (d) return `${d}${ud} ${h}${uh} ${m}${um}`;
+    if (h) return `${h}${uh} ${m}${um}`;
+    return `${m}${um}`;
+  }
 
 
   function compute(param) {
@@ -249,21 +226,57 @@ function fmtDuration(sec) {
     let time = null;
     if (param.time != null) time = Number(param.time);
     else {
-      try { const t = timeScale.coordinateToTime(param.point.x); if (t != null) time = Number(t); } catch {}
+      try { const t = timeScale.coordinateToTime(param.point.x); if (t != null) time = Number(t); } catch { }
     }
     if (!Number.isFinite(time)) return null;
-    let price = param.seriesPrices?.get?.(series);
-    if (price == null && typeof series.coordinateToPrice === "function") price = series.coordinateToPrice(param.point.y);
-    if (price == null) {
-      try {
-        const psR = chart.priceScale && chart.priceScale("right");
-        const psL = chart.priceScale && chart.priceScale("left");
-        if (psR?.coordinateToPrice) price = psR.coordinateToPrice(param.point.y);
-        else if (psL?.coordinateToPrice) price = psL.coordinateToPrice(param.point.y);
-      } catch {}
+
+    let price = null;
+    // --- Magnet Snap Logic ---
+    if (isMagnetModeRef?.current && series && param.seriesData) {
+      const data = param.seriesData.get(series);
+      if (data) {
+        if (data.open !== undefined) {
+          // OHLC
+          const rawPrice = series.coordinateToPrice(param.point.y);
+          if (rawPrice != null) {
+            const { open, high, low, close } = data;
+            const candidates = [open, high, low, close];
+            let closest = close;
+            let minDiff = Math.abs(rawPrice - close);
+            for (const c of candidates) {
+              const diff = Math.abs(rawPrice - c);
+              if (diff < minDiff) { minDiff = diff; closest = c; }
+            }
+            price = closest;
+          }
+        } else if (typeof data.value === 'number') {
+          // Line/Area
+          price = data.value;
+        }
+      }
     }
+
+    // Default price logic if no snap
+    if (price == null) {
+      price = param.seriesPrices?.get?.(series);
+      if (price == null && typeof series.coordinateToPrice === "function") price = series.coordinateToPrice(param.point.y);
+      if (price == null) {
+        try {
+          const psR = chart.priceScale && chart.priceScale("right");
+          const psL = chart.priceScale && chart.priceScale("left");
+          if (psR?.coordinateToPrice) price = psR.coordinateToPrice(param.point.y);
+          else if (psL?.coordinateToPrice) price = psL.coordinateToPrice(param.point.y);
+        } catch { }
+      }
+    }
+
     if (!Number.isFinite(price)) return null;
-    return { time: Number(time), price: Number(price), point: param.point };
+    // Logical index for bar counting
+    let logical = param.logical;
+    if (logical == null && timeScale.coordinateToLogical) {
+      logical = timeScale.coordinateToLogical(param.point.x);
+    }
+    return { time: Number(time), price: Number(price), point: param.point, logical: Number(logical ?? 0) };
   }
   function toPx(a) {
     const x = timeScale.timeToCoordinate(a.time);
@@ -275,16 +288,15 @@ function fmtDuration(sec) {
     const dPrice = b.price - a.price;
     const pct = (dPrice / a.price) * 100;
     const dSec = Math.abs(b.time - a.time);
+    const dBars = Math.round(Math.abs(b.logical - a.logical));
     const positive = pct >= 0;
-    const pctColor = positive ? "#18b26b" : "#e74c3c";
+    const pctColor = positive ? "#3ae809" : "#ba0000";
     const title = live ? tr("titleLive") : tr("title");
     return `
-      <div style="min-width:220px;display:grid;gap:6px;">
-        <div style="font-weight:700;letter-spacing:.3px;">${title}</div>
-        <div>${tr("fields.start")}: <b>${a.price.toFixed(2)}</b></div>
-        <div>${tr("fields.end")}: <b>${b.price.toFixed(2)}</b></div>
+      <div style="display:grid;gap:6px;text-align:center">
         <div>${tr("fields.change")}: <b style="color:${pctColor}">${positive ? "▲" : "▼"} ${pct.toFixed(2)}%</b> (${dPrice.toFixed(2)})</div>
         <div>${tr("fields.duration")}: <b>${fmtDuration(dSec)}</b></div>
+        <div>${tr("fields.bars")}: <b>${dBars}</b></div>
       </div>`;
   }
 
@@ -371,6 +383,7 @@ function fmtDuration(sec) {
     if (p1 && p2) {
       drawAllPx(p1, p2);
       hasFinalShape = true;
+      onComplete?.();
     }
     setOverlayHtml(measureHTML(start, end, { live: false }), end.point.x, end.point.y);
     unlockInteractions();
@@ -426,13 +439,13 @@ function fmtDuration(sec) {
 
   // Cleanup
   return () => {
-    try { chart.unsubscribeClick(onClick); } catch {}
-    try { chart.unsubscribeCrosshairMove(onMoveThrottled); } catch {}
-    try { container.removeEventListener("contextmenu", onRightClick); } catch {}
-    try { container.removeEventListener("mousedown", onMouseDown); } catch {}
-    try { window.removeEventListener("mouseup", onMouseUp); } catch {}
-    try { container.removeEventListener("mousemove", onMouseMovePanDetect); } catch {}
-    try { timeScale.unsubscribeVisibleTimeRangeChange(onVisibleRangeChanged); } catch {}
+    try { chart.unsubscribeClick(onClick); } catch { }
+    try { chart.unsubscribeCrosshairMove(onMoveThrottled); } catch { }
+    try { container.removeEventListener("contextmenu", onRightClick); } catch { }
+    try { container.removeEventListener("mousedown", onMouseDown); } catch { }
+    try { window.removeEventListener("mouseup", onMouseUp); } catch { }
+    try { container.removeEventListener("mousemove", onMouseMovePanDetect); } catch { }
+    try { timeScale.unsubscribeVisibleTimeRangeChange(onVisibleRangeChanged); } catch { }
     if (moveRafId) cancelAnimationFrame(moveRafId);
     if (watchId) cancelAnimationFrame(watchId);
     removeOverlayBox();

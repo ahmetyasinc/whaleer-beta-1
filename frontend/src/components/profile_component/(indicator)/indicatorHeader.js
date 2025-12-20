@@ -15,7 +15,7 @@ import useStrategyCodePanelStore from "@/store/indicator/strategyCodePanelStore"
 import usePanelStore from "@/store/indicator/panelStore";
 import i18n from "@/i18n";
 import { useTranslation } from "react-i18next";
-import SettingsModal from "@/components/profile_component/(indicator)/(modal_tabs)/SettingsModal";
+import SettingsModal from "@/components/profile_component/(indicator)/(header_element)/SettingsModal";
 
 const IndicatorHeader = ({ locale }) => {
   const { t } = useTranslation("strategiesHeader");
@@ -122,7 +122,7 @@ const IndicatorHeader = ({ locale }) => {
             disabled={isRefreshing}
             className={`mr-2 flex items-center justify-center w-[50px] h-[40px] rounded-md border transition duration-100 text-gray-200 text-[22px]
               ${isRefreshing
-                ? "bg-gray-900 border-gray-700 opacity-80 cursor-not-allowed"
+                ? "bg-black border-gray-700 opacity-80 cursor-not-allowed"
                 : "bg-black border-gray-800 hover:border-gray-600"}`}
             aria-label={t("buttons.refresh")}
             title={isRefreshing ? t("loading") : t("buttons.refresh")}

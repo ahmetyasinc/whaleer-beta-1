@@ -18,6 +18,43 @@ const TZ_OFFSETS = (() => {
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 const ONE_OF = (v, arr, d) => (arr.includes(v) ? v : d);
 
+// --- Styled Components ---
+const SettingToggle = ({ label, value, onChange }) => (
+  <div className="flex items-center justify-between">
+    <label className="text-gray-300 text-sm cursor-pointer select-none" onClick={() => onChange(!value)}>
+      {label}
+    </label>
+    <button
+      onClick={() => onChange(!value)}
+      className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-950 focus:ring-blue-600 ${value ? 'bg-blue-600' : 'bg-zinc-700'
+        }`}
+    >
+      <span
+        className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 transform ${value ? 'translate-x-5' : 'translate-x-0'
+          }`}
+      />
+    </button>
+  </div>
+);
+
+const ColorPicker = ({ value, onChange }) => (
+  <div className="relative w-8 h-8 rounded-full overflow-hidden border border-zinc-700 ring-2 ring-transparent hover:ring-zinc-600 transition-all duration-100 shrink-0">
+    <input
+      type="color"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] cursor-pointer p-0 border-0"
+    />
+  </div>
+);
+
+const Section = ({ title, children }) => (
+  <div className="border border-gray-800 rounded-xl p-4 bg-black/60 mb-4">
+    <div className="text-sm font-medium text-gray-200 mb-3">{title}</div>
+    <div className="grid gap-3">{children}</div>
+  </div>
+);
+
 export default function SettingsModal({ open, onClose, locale }) {
   const { t } = useTranslation("strategiesSettings");
   const { settings, save, reset, writeTimezoneCookie } = useChartSettingsStore();
@@ -154,10 +191,10 @@ export default function SettingsModal({ open, onClose, locale }) {
   };
 
   useEffect(() => {
-  if (scrollRef.current) {
-    scrollRef.current.scrollTop = scrollPosRef.current;
-  }
-}, [localState]);
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollPosRef.current;
+    }
+  }, [localState]);
 
 
 
@@ -187,13 +224,6 @@ export default function SettingsModal({ open, onClose, locale }) {
 
     onClose?.();
   };
-
-  const Section = ({ title, children }) => (
-    <div className="border border-gray-800 rounded-xl p-4 bg-black/60 mb-4">
-      <div className="text-sm font-medium text-gray-200 mb-3">{title}</div>
-      <div className="grid gap-3">{children}</div>
-    </div>
-  );
 
   if (!open) return null;
 
@@ -245,41 +275,39 @@ export default function SettingsModal({ open, onClose, locale }) {
           </div>
 
           {/* Body */}
-            <div
-              ref={scrollRef}
-              className="flex-1 overflow-y-auto p-5 custom-scrollbar"
-            >
+          <div
+            ref={scrollRef}
+            className="flex-1 overflow-y-auto p-5 custom-scrollbar"
+          >
             {/* Appearance */}
             <Section title={t("labels.appearance")}>
               {/* Background */}
               <div className="flex items-center justify-between gap-3">
                 <label className="text-gray-300 text-sm w-40">{t("fields.background")}</label>
-                <input
-                  aria-label={t("fields.background")}
-                  type="color"
+                <ColorPicker
                   value={localState.bgColor}
-                  onChange={(e) => handleChange("bgColor", e.target.value)}
+                  onChange={(val) => handleChange("bgColor", val)}
                 />
               </div>
 
-            {/* Text/Price Color */}
-            <div className="flex items-center justify-between">
-              <label className="text-gray-300 text-sm">{t("fields.textPriceColor")}</label>
+              {/* Text/Price Color */}
+              <div className="flex items-center justify-between">
+                <label className="text-gray-300 text-sm">{t("fields.textPriceColor")}</label>
 
-              <select
-                className="bg-black border border-gray-700 rounded-md px-2 py-1 text-gray-200"
-                value={localState.textColor}
-                onChange={(e) => handleChange("textColor", e.target.value)}
-                aria-label={t("fields.textPriceColor")}
-              >
-                <option value="white">{t("options.white")}</option>
-                <option value="black">{t("options.black")}</option>
-                <option value="gray">{t("options.gray")}</option>
-                <option value="yellow">{t("options.yellow")}</option>
-                <option value="red">{t("options.red")}</option>
-                <option value="green">{t("options.green")}</option>
-              </select>
-            </div>
+                <select
+                  className="bg-black border border-gray-700 rounded-md px-2 py-1 text-gray-200"
+                  value={localState.textColor}
+                  onChange={(e) => handleChange("textColor", e.target.value)}
+                  aria-label={t("fields.textPriceColor")}
+                >
+                  <option value="white">{t("options.white")}</option>
+                  <option value="black">{t("options.black")}</option>
+                  <option value="gray">{t("options.gray")}</option>
+                  <option value="yellow">{t("options.yellow")}</option>
+                  <option value="red">{t("options.red")}</option>
+                  <option value="green">{t("options.green")}</option>
+                </select>
+              </div>
 
 
               {/* Series type */}
@@ -303,11 +331,9 @@ export default function SettingsModal({ open, onClose, locale }) {
               {/* Grid color */}
               <div className="flex items-center justify-between gap-3">
                 <label className="text-gray-300 text-sm w-40">{t("fields.gridColor")}</label>
-                <input
-                  aria-label={t("fields.gridColor")}
-                  type="color"
+                <ColorPicker
                   value={localState.grid.color}
-                  onChange={(e) => handleChange("grid.color", e.target.value)}
+                  onChange={(val) => handleChange("grid.color", val)}
                 />
               </div>
             </Section>
@@ -348,15 +374,11 @@ export default function SettingsModal({ open, onClose, locale }) {
 
             {/* WaterMark */}
             <Section title={t("labels.watermark")}>
-              <div className="flex items-center justify-between">
-                <label className="text-gray-300 text-sm">{t("fields.visible")}</label>
-                <input
-                  type="checkbox"
-                  checked={!!localState.watermark.visible}
-                  onChange={(e) => handleChange("watermark.visible", e.target.checked)}
-                  aria-label={t("fields.visible")}
-                />
-              </div>
+              <SettingToggle
+                label={t("fields.visible")}
+                value={!!localState.watermark.visible}
+                onChange={(val) => handleChange("watermark.visible", val)}
+              />
               <div className="flex items-center justify-between">
                 <label className="text-gray-300 text-sm">{t("fields.wmSize")}</label>
                 <input
@@ -394,24 +416,16 @@ export default function SettingsModal({ open, onClose, locale }) {
             {/* Candle options */}
             {isCandle && (
               <Section title={t("labels.candles")}>
-                <div className="flex items-center justify-between">
-                  <label className="text-gray-300 text-sm">{t("fields.hollow")}</label>
-                  <input
-                    type="checkbox"
-                    checked={!!localState.series.hollow}
-                    onChange={(e) => handleChange("series.hollow", e.target.checked)}
-                    aria-label={t("fields.hollow")}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-gray-300 text-sm">{t("fields.heikinAshi")}</label>
-                  <input
-                    type="checkbox"
-                    checked={!!localState.series.heikinAshi}
-                    onChange={(e) => handleChange("series.heikinAshi", e.target.checked)}
-                    aria-label={t("fields.heikinAshi")}
-                  />
-                </div>
+                <SettingToggle
+                  label={t("fields.hollow")}
+                  value={!!localState.series.hollow}
+                  onChange={(val) => handleChange("series.hollow", val)}
+                />
+                <SettingToggle
+                  label={t("fields.heikinAshi")}
+                  value={!!localState.series.heikinAshi}
+                  onChange={(val) => handleChange("series.heikinAshi", val)}
+                />
 
                 {[
                   { k: "upBody", L: t("fields.upBody") },
@@ -421,11 +435,9 @@ export default function SettingsModal({ open, onClose, locale }) {
                 ].map(({ k, L }) => (
                   <div key={k} className="flex items-center justify-between gap-3">
                     <label className="text-gray-300 text-sm w-28">{L}</label>
-                    <input
-                      aria-label={L}
-                      type="color"
+                    <ColorPicker
                       value={localState.candle[k]}
-                      onChange={(e) => handleChange(`candle.${k}`, e.target.value)}
+                      onChange={(val) => handleChange(`candle.${k}`, val)}
                     />
                     <input
                       aria-label={t("fields.opacityFor", { target: L })}
@@ -441,28 +453,26 @@ export default function SettingsModal({ open, onClose, locale }) {
                   </div>
                 ))}
 
-                <div className="flex items-center justify-between gap-3">
-                  <label className="text-gray-300 text-sm w-28">{t("fields.border")}</label>
-                  <input
-                    type="checkbox"
-                    checked={!!localState.candle.border}
-                    onChange={(e) => handleChange("candle.border", e.target.checked)}
-                    aria-label={t("fields.border")}
+                <div>
+                  <SettingToggle
+                    label={t("fields.border")}
+                    value={!!localState.candle.border}
+                    onChange={(val) => handleChange("candle.border", val)}
                   />
-                  <input
-                    aria-label={t("fields.borderUp")}
-                    type="color"
-                    value={localState.candle.borderUp || localState.candle.upBody}
-                    onChange={(e) => handleChange("candle.borderUp", e.target.value)}
-                    title={t("fields.borderUp")}
-                  />
-                  <input
-                    aria-label={t("fields.borderDown")}
-                    type="color"
-                    value={localState.candle.borderDown || localState.candle.downBody}
-                    onChange={(e) => handleChange("candle.borderDown", e.target.value)}
-                    title={t("fields.borderDown")}
-                  />
+                  {localState.candle.border && (
+                    <div className="flex items-center justify-end gap-3 mt-2">
+                      <span className="text-xs text-zinc-500">{t("fields.borderUp")}</span>
+                      <ColorPicker
+                        value={localState.candle.borderUp || localState.candle.upBody}
+                        onChange={(val) => handleChange("candle.borderUp", val)}
+                      />
+                      <span className="text-xs text-zinc-500">{t("fields.borderDown")}</span>
+                      <ColorPicker
+                        value={localState.candle.borderDown || localState.candle.downBody}
+                        onChange={(val) => handleChange("candle.borderDown", val)}
+                      />
+                    </div>
+                  )}
                 </div>
               </Section>
             )}
@@ -472,18 +482,14 @@ export default function SettingsModal({ open, onClose, locale }) {
               <Section title={t("labels.barOptions")}>
                 <div className="flex items-center justify-between gap-3">
                   <label className="text-gray-300 text-sm w-28">{t("fields.upColor")}</label>
-                  <input
-                    aria-label={t("fields.upColor")}
-                    type="color"
+                  <ColorPicker
                     value={localState.bar?.upColor || "#26A69A"}
-                    onChange={(e) => handleChange("bar.upColor", e.target.value)}
+                    onChange={(val) => handleChange("bar.upColor", val)}
                   />
                   <label className="text-gray-300 text-sm w-28">{t("fields.downColor")}</label>
-                  <input
-                    aria-label={t("fields.downColor")}
-                    type="color"
+                  <ColorPicker
                     value={localState.bar?.downColor || "#EF5350"}
-                    onChange={(e) => handleChange("bar.downColor", e.target.value)}
+                    onChange={(val) => handleChange("bar.downColor", val)}
                   />
                 </div>
               </Section>
@@ -493,30 +499,32 @@ export default function SettingsModal({ open, onClose, locale }) {
             {(isLine || isArea || isBaseline) && (
               <Section title={t("labels.seriesOptions", { type: t(`series.${type}`) })}>
                 {isLine && (
-                  <div className="flex items-center justify-between gap-3">
-                    <label className="text-gray-300 text-sm w-28">{t("fields.color")}</label>
-                    <input
-                      aria-label={t("fields.color")}
-                      type="color"
-                      value={localState.line?.color || "#f9d71c"}
-                      onChange={(e) => handleChange("line.color", e.target.value)}
-                    />
-                    <label className="text-gray-300 text-sm w-16">{t("fields.width")}</label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={5}
-                      className="w-16 bg-black border border-gray-700 rounded px-2 py-1 text-gray-200"
-                      value={localState.line?.width ?? 2}
-                      onChange={(e) => handleChange("line.width", clamp(+e.target.value || 1, 1, 5))}
-                      aria-label={t("fields.width")}
-                    />
-                    <label className="text-gray-300 text-sm w-20">{t("fields.stepped")}</label>
-                    <input
-                      type="checkbox"
-                      checked={!!localState.line?.stepped}
-                      onChange={(e) => handleChange("line.stepped", e.target.checked)}
-                      aria-label={t("fields.stepped")}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <label className="text-gray-300 text-sm">{t("fields.color")}</label>
+                        <ColorPicker
+                          value={localState.line?.color || "#f9d71c"}
+                          onChange={(val) => handleChange("line.color", val)}
+                        />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <label className="text-gray-300 text-sm">{t("fields.width")}</label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={5}
+                          className="w-16 bg-black border border-gray-700 rounded px-2 py-1 text-gray-200"
+                          value={localState.line?.width ?? 2}
+                          onChange={(e) => handleChange("line.width", clamp(+e.target.value || 1, 1, 5))}
+                          aria-label={t("fields.width")}
+                        />
+                      </div>
+                    </div>
+                    <SettingToggle
+                      label={t("fields.stepped")}
+                      value={!!localState.line?.stepped}
+                      onChange={(val) => handleChange("line.stepped", val)}
                     />
                   </div>
                 )}
@@ -524,20 +532,16 @@ export default function SettingsModal({ open, onClose, locale }) {
                   <>
                     <div className="flex items-center justify-between gap-3">
                       <label className="text-gray-300 text-sm w-28">{t("fields.lineColor")}</label>
-                      <input
-                        aria-label={t("fields.lineColor")}
-                        type="color"
+                      <ColorPicker
                         value={localState.area?.lineColor || "#ff9800"}
-                        onChange={(e) => handleChange("area.lineColor", e.target.value)}
+                        onChange={(val) => handleChange("area.lineColor", val)}
                       />
                     </div>
                     <div className="flex items-center justify-between gap-3">
                       <label className="text-gray-300 text-sm w-28">{t("fields.topColor")}</label>
-                      <input
-                        aria-label={t("fields.topColor")}
-                        type="color"
+                      <ColorPicker
                         value={localState.area?.topColor || "#ff9800"}
-                        onChange={(e) => handleChange("area.topColor", e.target.value)}
+                        onChange={(val) => handleChange("area.topColor", val)}
                       />
                       <input
                         aria-label={t("fields.topOpacity")}
@@ -553,11 +557,9 @@ export default function SettingsModal({ open, onClose, locale }) {
                     </div>
                     <div className="flex items-center justify-between gap-3">
                       <label className="text-gray-300 text-sm w-28">{t("fields.bottomColor")}</label>
-                      <input
-                        aria-label={t("fields.bottomColor")}
-                        type="color"
+                      <ColorPicker
                         value={localState.area?.bottomColor || "#ff9800"}
-                        onChange={(e) => handleChange("area.bottomColor", e.target.value)}
+                        onChange={(val) => handleChange("area.bottomColor", val)}
                       />
                       <input
                         aria-label={t("fields.bottomOpacity")}
@@ -595,7 +597,7 @@ export default function SettingsModal({ open, onClose, locale }) {
                           el.value = next;
                           const pos = Math.max(0, caret + delta);
                           // setSelectionRange hataya düşmesin diye try-catch
-                          try { el.setSelectionRange(pos, pos); } catch {}
+                          try { el.setSelectionRange(pos, pos); } catch { }
                         }}
                         onWheel={(e) => e.currentTarget.blur()}
                         aria-label={t("fields.baseValue")}
@@ -603,18 +605,14 @@ export default function SettingsModal({ open, onClose, locale }) {
                     </div>
                     <div className="flex items-center justify-between gap-3">
                       <label className="text-gray-300 text-sm w-28">{t("fields.topColor")}</label>
-                      <input
-                        aria-label={t("fields.topColor")}
-                        type="color"
+                      <ColorPicker
                         value={localState.baseline?.topColor || "#26A69A"}
-                        onChange={(e) => handleChange("baseline.topColor", e.target.value)}
+                        onChange={(val) => handleChange("baseline.topColor", val)}
                       />
                       <label className="text-gray-300 text-sm w-28">{t("fields.bottomColor")}</label>
-                      <input
-                        aria-label={t("fields.bottomColor")}
-                        type="color"
+                      <ColorPicker
                         value={localState.baseline?.bottomColor || "#EF5350"}
-                        onChange={(e) => handleChange("baseline.bottomColor", e.target.value)}
+                        onChange={(val) => handleChange("baseline.bottomColor", val)}
                       />
                     </div>
                   </>
@@ -627,11 +625,9 @@ export default function SettingsModal({ open, onClose, locale }) {
               <Section title={t("labels.histogramOptions")}>
                 <div className="flex items-center justify-between gap-3">
                   <label className="text-gray-300 text-sm w-28">{t("fields.color")}</label>
-                  <input
-                    aria-label={t("fields.color")}
-                    type="color"
+                  <ColorPicker
                     value={localState.histogram?.color || "#00FF88"}
-                    onChange={(e) => handleChange("histogram.color", e.target.value)}
+                    onChange={(val) => handleChange("histogram.color", val)}
                   />
                   <label className="text-gray-300 text-sm w-20">{t("fields.opacity")}</label>
                   <input

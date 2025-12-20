@@ -14,14 +14,14 @@ import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 axios.defaults.withCredentials = true;
 
-const RunButtonStr = forwardRef(({ strategyId, onBeforeRun }, ref) => {
+const RunButtonStr = forwardRef(({ strategyId, onBeforeRun, className }, ref) => {
   const { toggleStrategy } = useStrategyStore();
   const { addSyncedPanel, end } = usePanelStore();
   const { selectedCrypto, selectedPeriod } = useCryptoStore();
   const { insertOrReplaceLastSubStrategyData } = useStrategyDataStore();
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation("strategyCodePanel");
-  
+
 
   const fetchStrategyData = useCallback(async () => {
     try {
@@ -94,8 +94,8 @@ const RunButtonStr = forwardRef(({ strategyId, onBeforeRun }, ref) => {
   return (
     <button
       ref={ref} // 🔑 forwardRef ile dışarıdan tetiklenebilir
-      className="absolute top-1 right-16 gap-1 px-[9px] py-[5px] mr-4 rounded font-medium transition-all"
-      title={`${t("buttons.run")} (F5)`} 
+      className={className !== undefined ? className : "absolute top-1 right-16 gap-1 px-[9px] py-[5px] mr-4 rounded font-medium transition-all"}
+      title={`${t("buttons.run")} (F5)`}
       onClick={handleClick}
     >
       {isLoading ? (

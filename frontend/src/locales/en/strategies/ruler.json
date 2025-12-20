@@ -5,7 +5,8 @@
     "start": "Start",
     "end": "End",
     "change": "Change",
-    "duration": "Duration"
+    "duration": "Duration",
+    "bars": "Bars"
   },
   "units": {
     "h": "h",

@@ -219,13 +219,13 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
         let series;
         switch (type) {
           case "line":
-            series = chart.addLineSeries({ color: s?.color || "white", lineWidth: s?.width || 1, priceLineVisible: false, lastValueVisible: false });
+            series = chart.addLineSeries({ color: s?.color || "white", lineWidth: s?.width || 1, priceLineVisible: false, lastValueVisible: false, visible: isVisibleRef.current });
             break;
           case "histogram": {
             const defaultColor = s?.color ?? "0, 128, 0";
             const opacity = s?.opacity ?? 1;
             const colorString = defaultColor.includes(",") ? `rgba(${defaultColor}, ${opacity})` : hexToRgba(defaultColor, opacity);
-            series = chart.addHistogramSeries({ color: colorString, priceLineVisible: false, lastValueVisible: false });
+            series = chart.addHistogramSeries({ color: colorString, priceLineVisible: false, lastValueVisible: false, visible: isVisibleRef.current });
             break;
           }
           case "area":
@@ -235,10 +235,11 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
               lineColor: s?.color || "blue",
               priceLineVisible: false,
               lastValueVisible: false,
+              visible: isVisibleRef.current,
             });
             break;
           default:
-            series = chart.addLineSeries({ color: "white", lineWidth: 2, priceLineVisible: false, lastValueVisible: false });
+            series = chart.addLineSeries({ color: "white", lineWidth: 2, priceLineVisible: false, lastValueVisible: false, visible: isVisibleRef.current });
         }
         const timeValueMap = new Map();
         data.forEach(([time, value]) => {
@@ -469,7 +470,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
   // 🔽 YENİ: settings görseli değişirse chart’ı yeniden yaratmadan da güncelle (opsiyonel ama akıcı)
   useEffect(() => {
     if (!chartRef.current) return;
-    const textColor = settings.textColor === "black" ? "#111111" : "#ffffff";
+    const textColor = settings.textColor === "black" ? "#8C8C8C" : "#8C8C8C";
     const gridColor = settings?.grid?.color || "#111111";
     const bgColor = settings.bgColor || (settings.theme === 'light' ? '#ffffff' : 'rgb(0,0,7)');
     chartRef.current.applyOptions({
@@ -481,10 +482,12 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
   }, [settings, selectedPeriod, tzOffsetMin]);
 
   const [isVisible, setIsVisible] = useState(true);
+  const isVisibleRef = useRef(true);
 
   const toggleVisibility = () => {
     const nextState = !isVisible;
     setIsVisible(nextState);
+    isVisibleRef.current = nextState;
     if (seriesLabelMapRef.current) {
       seriesLabelMapRef.current.forEach((_, series) => {
         series.applyOptions({ visible: nextState });

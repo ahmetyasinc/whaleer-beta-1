@@ -135,6 +135,11 @@ export default function ChartComponent() {
   const chartInstanceIdRef = useRef(0); // her chart yaratımında artar
   const rafRef = useRef(null);          // tekil RAF id
 
+  // Strategy visibility ref
+  const hiddenStrategyIdsRef = useRef(new Set());
+  // Indicator visibility ref
+  const hiddenIndicatorIdsRef = useRef(new Set());
+
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
@@ -153,7 +158,7 @@ export default function ChartComponent() {
   // Sync ref with store
   useEffect(() => { isMagnetModeRef.current = isMagnetMode; }, [isMagnetMode]);
 
-  const { isRulerMode } = useRulerStore();
+  const { isRulerMode, toggleRulerMode } = useRulerStore();
   const rulerModeRef = useRef(isRulerMode);
   const { end } = usePanelStore();
   useEffect(() => { rulerModeRef.current = isRulerMode; }, [isRulerMode]);
@@ -449,7 +454,7 @@ export default function ChartComponent() {
     const mainSeries = buildMainSeries(chart, settings.series.type, settings, chartData);
 
     // Ruler tool
-    const removeRuler = installRulerTool({ chart, series: mainSeries, container: chartContainerRef.current, isRulerModeRef: rulerModeRef });
+    const removeRuler = installRulerTool({ chart, series: mainSeries, container: chartContainerRef.current, isRulerModeRef: rulerModeRef, onComplete: toggleRulerMode, isMagnetModeRef });
     cleanupFns.push(() => { try { removeRuler?.(); } catch { } });
 
     // Cursor-centered zoom
@@ -466,12 +471,17 @@ export default function ChartComponent() {
     timeScale.setVisibleLogicalRange({ from, to });
     setLastRangeCache({ from, to, rightOffset: rightPad, sourceId: chartId });
 
-    // === STRATEGY MARKERS ===
-    const allMarkers = [];
-    Object.values(strategyData).forEach((strategyInfo) => {
+    // === STRATEGY MARKERS & VISIBILITY ===
+    const strategyMarkersMap = new Map(); // Key: `${strategyId}-${subId}`
+
+    Object.entries(strategyData).forEach(([strategyId, strategyInfo]) => {
       const subItems = strategyInfo?.subItems || {};
-      Object.values(subItems).forEach((sub) => {
-        const result = sub?.strategy_result?.[0]; if (!result?.data) return;
+      Object.entries(subItems).forEach(([subId, sub]) => {
+        const key = `${strategyId}-${subId}`;
+        const markers = [];
+        const result = sub?.strategy_result?.[0];
+        if (!result?.data) return;
+
         result.data.forEach(([time, signal, _value, note = ""]) => {
           const unixTime = toUnixSecUTC(time);
           const m = { time: unixTime, position: 'aboveBar', color: '', shape: '', text: note || '' };
@@ -482,12 +492,24 @@ export default function ChartComponent() {
             case 'Short Close': m.shape = 'arrowUp'; m.color = 'green'; m.position = 'belowBar'; break;
             default: return;
           }
-          allMarkers.push(m);
+          markers.push(m);
         });
+        strategyMarkersMap.set(key, markers);
       });
     });
-    allMarkers.sort((a, b) => a.time - b.time);
-    try { mainSeries.setMarkers(allMarkers); } catch { }
+
+    const updateStrategyMarkers = () => {
+      const visibleMarkers = [];
+      strategyMarkersMap.forEach((markers, key) => {
+        if (!hiddenStrategyIdsRef.current.has(key)) {
+          visibleMarkers.push(...markers);
+        }
+      });
+      visibleMarkers.sort((a, b) => a.time - b.time);
+      try { mainSeries.setMarkers(visibleMarkers); } catch { }
+    };
+
+    updateStrategyMarkers();
 
     // === STRATEGIES & INDICATORS ===
     const strategyLabelsContainer = document.getElementById("strategy-labels");
@@ -511,13 +533,41 @@ export default function ChartComponent() {
           border: 1px solid rgba(156,163,175,0.1);
         `;
         const title = document.createElement('span'); title.textContent = strategyName || `${strategyId} (${subId})`;
+
+        // Visibility Button
+        const visibilityBtn = document.createElement('button');
+        visibilityBtn.style.cssText = 'pointer-events:auto;background:none;border:none;color:white;cursor:pointer;';
+        const visibilityRoot = createRoot(visibilityBtn);
+        const key = `${strategyId}-${subId}`;
+
+        const updateVisIcon = () => {
+          const isHidden = hiddenStrategyIdsRef.current.has(key);
+          visibilityRoot.render(
+            !isHidden ? <AiOutlineEye size={15} className="hover:text-gray-400" /> : <AiOutlineEyeInvisible size={15} className="text-gray-500 hover:text-gray-400" />
+          );
+          labelDiv.style.opacity = !isHidden ? "1" : "0.5";
+        };
+        updateVisIcon();
+
+        visibilityBtn.onclick = () => {
+          if (hiddenStrategyIdsRef.current.has(key)) {
+            hiddenStrategyIdsRef.current.delete(key);
+          } else {
+            hiddenStrategyIdsRef.current.add(key);
+          }
+          updateVisIcon();
+          updateStrategyMarkers();
+        };
+        visibilityBtn.onmouseenter = () => { isHoveringButtons = true; };
+        visibilityBtn.onmouseleave = () => { isHoveringButtons = false; };
+
         const settingsBtn = document.createElement('button'); settingsBtn.style.cssText = 'pointer-events:auto;background:none;border:none;color:white;cursor:pointer;'; settingsBtn.onclick = () => { setActiveStrategyId(strategyId); setActiveSubStrategyId(subId); setSettingsStrategyModalOpen(true); };
         settingsBtn.onmouseenter = () => { isHoveringButtons = true; }; settingsBtn.onmouseleave = () => { isHoveringButtons = false; };
         createRoot(settingsBtn).render(<RiSettingsLine size={13} className="hover:text-gray-400" />);
         const removeBtn = document.createElement('button'); removeBtn.style.cssText = 'pointer-events:auto;background:none;border:none;color:white;cursor:pointer;'; removeBtn.onclick = () => { labelDiv.remove(); removeSubStrategy(strategyId, subId); };
         removeBtn.onmouseenter = () => { isHoveringButtons = true; }; removeBtn.onmouseleave = () => { isHoveringButtons = false; };
         createRoot(removeBtn).render(<AiOutlineClose size={13} className="hover:text-gray-400" />);
-        labelDiv.appendChild(title); labelDiv.appendChild(settingsBtn); labelDiv.appendChild(removeBtn);
+        labelDiv.appendChild(title); labelDiv.appendChild(visibilityBtn); labelDiv.appendChild(settingsBtn); labelDiv.appendChild(removeBtn);
         strategyLabelsContainer && strategyLabelsContainer.appendChild(labelDiv);
       });
     });
@@ -530,11 +580,14 @@ export default function ChartComponent() {
         if (!indicatorInfo?.result) return; if (!Array.isArray(indicatorInfo?.result)) return;
         indicatorInfo.result.filter((item) => item.on_graph === true).forEach((indicatorResult) => {
           const { type, settings: s, data } = indicatorResult; let series;
+          const key = `${indicatorId}-${subId}`;
+          const isInitiallyVisible = !hiddenIndicatorIdsRef.current.has(key);
+
           switch (type) {
-            case 'line': series = chart.addLineSeries({ color: s?.color || 'yellow', lineWidth: s?.width || 2, lastValueVisible: false, priceLineVisible: false }); break;
-            case 'area': series = chart.addAreaSeries({ topColor: s?.color || 'rgba(33,150,243,0.5)', bottomColor: 'rgba(33,150,243,0.1)', lineColor: s?.color || 'blue', lastValueVisible: false, priceLineVisible: false }); break;
-            case 'histogram': { const c = s?.color ?? '0, 128, 0'; const opacity = s?.opacity ?? 0.3; series = chart.addHistogramSeries({ color: `rgba(${c}, ${opacity})`, lastValueVisible: false, priceLineVisible: false }); break; }
-            default: series = chart.addLineSeries({ color: 'white', lineWidth: 2, lastValueVisible: false, priceLineVisible: false });
+            case 'line': series = chart.addLineSeries({ color: s?.color || 'yellow', lineWidth: s?.width || 2, lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible }); break;
+            case 'area': series = chart.addAreaSeries({ topColor: s?.color || 'rgba(33,150,243,0.5)', bottomColor: 'rgba(33,150,243,0.1)', lineColor: s?.color || 'blue', lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible }); break;
+            case 'histogram': { const c = s?.color ?? '0, 128, 0'; const opacity = s?.opacity ?? 0.3; series = chart.addHistogramSeries({ color: `rgba(${c}, ${opacity})`, lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible }); break; }
+            default: series = chart.addLineSeries({ color: 'white', lineWidth: 2, lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible });
           }
           const timeValueMap = new Map();
           data.forEach(([time, value]) => { if (value === undefined) return; const unixTime = toUnixSecUTC(time); if (unixTime !== undefined) timeValueMap.set(unixTime, value); });
@@ -586,8 +639,11 @@ export default function ChartComponent() {
 
             const visibilityBtn = document.createElement("button");
             visibilityBtn.style.cssText = "pointer-events:auto;background:none;border:none;color:white;cursor:pointer;";
-            let isVisible = true;
             const visibilityRoot = createRoot(visibilityBtn);
+            const key = `${indicatorId}-${subId}`;
+
+            // Initial visibility check
+            let isVisible = !hiddenIndicatorIdsRef.current.has(key);
 
             const updateVisibilityIcon = () => {
               visibilityRoot.render(
@@ -600,8 +656,19 @@ export default function ChartComponent() {
             };
             updateVisibilityIcon();
 
+            // Apply initial visibility to series (if they exist)
+            if (labelDiv._seriesList) {
+              labelDiv._seriesList.forEach(s => s.applyOptions({ visible: isVisible }));
+            }
+
             visibilityBtn.onclick = () => {
               isVisible = !isVisible;
+              if (isVisible) {
+                hiddenIndicatorIdsRef.current.delete(key);
+              } else {
+                hiddenIndicatorIdsRef.current.add(key);
+              }
+
               if (labelDiv._seriesList) {
                 labelDiv._seriesList.forEach(s => s.applyOptions({ visible: isVisible }));
               }
@@ -836,7 +903,7 @@ export default function ChartComponent() {
   return (
     <div className="relative w-full h-full">
       <div id="indicator-labels" className="absolute top-2 left-2 z-10 flex flex-col gap-1 pointer-events-none items-start"></div>
-      <div id="strategy-labels" style={{ position: 'absolute', top: 10, right: 80, zIndex: 10, display: 'flex', flexDirection: 'column', gap: '6px', pointerEvents: 'none' }}></div>
+      <div id="strategy-labels" style={{ position: 'absolute', top: 10, right: 80, zIndex: 10, display: 'flex', flexDirection: 'column', gap: '6px', pointerEvents: 'none', alignItems: 'flex-end' }}></div>
       <div ref={chartContainerRef} className="absolute top-0 left-0 w-full h-full"></div>
 
       <IndicatorSettingsModal isOpen={settingsIndicatorModalOpen} onClose={() => setSettingsIndicatorModalOpen(false)} indicatorId={activeIndicatorId} subId={activeSubIndicatorId} />

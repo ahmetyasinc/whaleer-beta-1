@@ -2,16 +2,16 @@
 
 import { useState, useEffect, useRef } from "react";
 import { IoMdClose } from "react-icons/io";
-import { FaRegSave } from "react-icons/fa";
+import { FaRegSave, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { MdOpenInFull } from "react-icons/md";
 import CodeEditor from "../../CodeEditor";
 import usePanelStore from "@/store/indicator/panelStore";
-import useCodePanelStore from "@/store/indicator/strategyCodePanelStore"; 
+import useCodePanelStore from "@/store/indicator/strategyCodePanelStore";
 import useStrategyStore from "@/store/indicator/strategyStore";
 import RunButton from "./run_button_str";
 import TerminalStrategy from "./terminalStrategy";
 import VersionSelect from "./versionSelect";
-import CodeModal from "./fullScreenStrategyCodeModal"; 
+import CodeModal from "./fullScreenStrategyCodeModal";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
 
@@ -46,6 +46,7 @@ const CodePanel = () => {
 
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [codeModalStrategy, setCodeModalStrategy] = useState(null);
+  const [isTerminalOpen, setIsTerminalOpen] = useState(true);
 
   const runButtonRef = useRef(null); // 🔑 RunButtonStr için ref
   const { t } = useTranslation("strategyCodePanel");
@@ -160,8 +161,8 @@ const CodePanel = () => {
           {isNewVersion
             ? t("titles.addNewVersion")
             : selected
-            ? t("titles.editStrategy")
-            : t("titles.addNewStrategy")}
+              ? t("titles.editStrategy")
+              : t("titles.addNewStrategy")}
         </h2>
       </div>
 
@@ -187,11 +188,10 @@ const CodePanel = () => {
       )}
 
       <button
-        className={`absolute top-2 right-10 gap-1 px-[9px] py-[5px] mr-[6px] rounded text-xs font-medium flex items-center ${
-          isLockedActive
-            ? "bg-gray-700 cursor-not-allowed opacity-60"
-            : "bg-[rgb(16,45,100)] hover:bg-[rgb(27,114,121)]"
-        }`}
+        className={`absolute top-2 right-10 gap-1 px-[9px] py-[5px] mr-[6px] rounded text-xs font-medium flex items-center ${isLockedActive
+          ? "bg-gray-700 cursor-not-allowed opacity-60"
+          : "bg-[rgb(16,45,100)] hover:bg-[rgb(27,114,121)]"
+          }`}
         title={isLockedActive ? t("tooltips.saveLocked") : t("buttons.save")}
         onClick={() => handleSaveStrategy()}
         disabled={isLockedActive || isSaving}
@@ -215,9 +215,8 @@ const CodePanel = () => {
       <div className="flex items-center gap-2 mb-3">
         <input
           type="text"
-          className={`w-64 h-[32px] p-2 bg-[#232323] text-white focus:outline-none rounded-sm ${
-            isLockedActive ? "opacity-60 cursor-not-allowed" : ""
-          }`}
+          className={`w-64 h-[32px] p-2 bg-[#232323] text-white focus:outline-none rounded-sm ${isLockedActive ? "opacity-60 cursor-not-allowed" : ""
+            }`}
           placeholder={t("inputs.namePlaceholder")}
           value={localName}
           onChange={(e) => {
@@ -264,11 +263,30 @@ const CodePanel = () => {
         )}
       </div>
 
-      <TerminalStrategy
-        {...(selected ? { id: selected.id } : {})}
-        ref={terminalRef}
-        initialOutput={t("terminalReady")}
-      />
+      <div className={`relative border-t border-zinc-800 pt-1 ${isTerminalOpen ? "" : "hidden"}`}>
+        <TerminalStrategy
+          {...(selected ? { id: selected.id } : {})}
+          ref={terminalRef}
+          initialOutput={t("terminalReady")}
+        />
+        <button
+          onClick={() => setIsTerminalOpen(false)}
+          className="absolute top-0 right-0 p-1 bg-black hover:bg-zinc-950 rounded-sm text-gray-400 hover:text-white transition-colors z-[60]"
+          title={t("tooltips.closeTerminal")}
+        >
+          <FaChevronDown size={14} />
+        </button>
+      </div>
+
+      {!isTerminalOpen && (
+        <button
+          onClick={() => setIsTerminalOpen(true)}
+          className="absolute bottom-2 right-2 py-[1px] px-[5px] bg-black hover:bg-zinc-950 rounded-tl-sm shadow-lg text-gray-400 hover:text-white transition-all z-[60]"
+          title={t("tooltips.openTerminal")}
+        >
+          <FaChevronUp size={16} />
+        </button>
+      )}
 
       <CodeModal
         isOpen={isCodeModalOpen}

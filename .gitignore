@@ -21,7 +21,7 @@ venv/
 .venv/
 env/
 
-# Çevresel Değişkenler (Hassas şifreler buradadır, ASLA yükleme!)
+# Çevresel Değişkenler
 .env
 .env.*
 !.env.example

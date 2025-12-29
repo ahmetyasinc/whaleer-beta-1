@@ -51,7 +51,7 @@ const useBotExamineStore = create((set, get) => ({
       axios.defaults.withCredentials = true;
 
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/bots/${botId}/analysis`
+        `${process.env.NEXT_PUBLIC_API_URL}/bots/${botId}/analysis`
       );
 
       const botData = response.data;

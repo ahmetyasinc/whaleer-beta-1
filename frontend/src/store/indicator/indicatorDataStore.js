@@ -151,7 +151,7 @@ const useIndicatorDataStore = create((set, get) => ({
         return { result: [], prints: [] };
       }
   
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/run-updated-indicator/`, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/run-updated-indicator/`, {
         indicator_id: indicatorId,
         inputs: inputs,
         binance_symbol: selectedCrypto.binance_symbol,
@@ -364,7 +364,7 @@ const useIndicatorDataStore = create((set, get) => ({
         return { result: [], prints: [], status: "error", message: "Eksik bilgi" };
       }
 
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/run-updated-indicator/`, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/run-updated-indicator/`, {
         indicator_id: indicatorId,
         inputs: inputs,
         binance_symbol: selectedCrypto.binance_symbol,

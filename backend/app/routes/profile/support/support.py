@@ -58,7 +58,7 @@ USER_ROLE = "USER"
 
 protected_router = APIRouter()
 
-@protected_router.get("/api/support/admin/tickets", response_model=List[SupportTicketOut])
+@protected_router.get("/support/admin/tickets", response_model=List[SupportTicketOut])
 async def get_admin_tickets(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
@@ -164,7 +164,7 @@ async def get_admin_tickets(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching tickets: {str(e)}")
 
-@protected_router.get("/api/users/moderators")
+@protected_router.get("/users/moderators")
 async def get_moderators(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token)
@@ -191,7 +191,7 @@ async def get_moderators(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching moderators: {str(e)}")
 
-@protected_router.post("/api/support/admin/tickets/{ticket_id}/assign")
+@protected_router.post("/support/admin/tickets/{ticket_id}/assign")
 async def assign_ticket(
     ticket_id: int,
     assignment_data: SupportAssignmentCreate,
@@ -253,7 +253,7 @@ async def assign_ticket(
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Error assigning ticket: {str(e)}")
 
-@protected_router.delete("/api/support/tickets/{ticket_id}/assign")
+@protected_router.delete("/support/tickets/{ticket_id}/assign")
 async def unassign_ticket(
     ticket_id: int,
     db: AsyncSession = Depends(get_db),
@@ -292,7 +292,7 @@ async def unassign_ticket(
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Error unassigning ticket: {str(e)}")
 
-@protected_router.patch("/api/support/tickets/{ticket_id}")
+@protected_router.patch("/support/tickets/{ticket_id}")
 async def update_ticket_status(
     ticket_id: int,
     status_update: dict,
@@ -348,7 +348,7 @@ async def update_ticket_status(
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Error updating ticket: {str(e)}")
 
-@protected_router.get("/api/support/admin/tickets/{ticket_id}", response_model=SupportTicketDetailOut)
+@protected_router.get("/support/admin/tickets/{ticket_id}", response_model=SupportTicketDetailOut)
 async def get_admin_ticket_detail(
     ticket_id: int,
     db: AsyncSession = Depends(get_db),
@@ -421,7 +421,7 @@ async def get_admin_ticket_detail(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching ticket: {str(e)}")
 
-@protected_router.get("/api/support/categories", response_model=List[SupportCategoryOut])
+@protected_router.get("/support/categories", response_model=List[SupportCategoryOut])
 async def get_support_categories(
     db: AsyncSession = Depends(get_db)
 ):
@@ -436,7 +436,7 @@ async def get_support_categories(
         raise HTTPException(status_code=500, detail=f"Error fetching categories: {str(e)}")
 
 # Ticket listesi endpoint'i
-@protected_router.get("/api/support/tickets", response_model=List[SupportTicketOut])
+@protected_router.get("/support/tickets", response_model=List[SupportTicketOut])
 async def get_tickets(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
@@ -494,7 +494,7 @@ async def get_tickets(
         raise HTTPException(status_code=500, detail=f"Error fetching tickets: {str(e)}")
 
 # Ticket detaylarını getir
-@protected_router.get("/api/support/tickets/{ticket_id}", response_model=SupportTicketDetailOut)
+@protected_router.get("/support/tickets/{ticket_id}", response_model=SupportTicketDetailOut)
 async def get_ticket(
     ticket_id: int,
     db: AsyncSession = Depends(get_db),
@@ -592,7 +592,7 @@ async def get_ticket(
         raise HTTPException(status_code=500, detail=f"Error fetching ticket: {str(e)}")
 
 # Ticket'a mesaj ekle
-@protected_router.post("/api/support/tickets/{ticket_id}/messages", response_model=SupportMessageOut)
+@protected_router.post("/support/tickets/{ticket_id}/messages", response_model=SupportMessageOut)
 async def add_message(
     ticket_id: int,
     message_data: SupportMessageCreate,
@@ -647,7 +647,7 @@ async def add_message(
         raise HTTPException(status_code=500, detail=f"Error adding message: {str(e)}")
 
 # Ticket'ı memnuniyet ile kapat
-@protected_router.post("/api/support/tickets/{ticket_id}/close")
+@protected_router.post("/support/tickets/{ticket_id}/close")
 async def close_ticket(
     ticket_id: int,
     satisfaction_data: SupportTicketSatisfaction,
@@ -692,7 +692,7 @@ async def close_ticket(
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Error closing ticket: {str(e)}")
 
-@protected_router.post("/api/support/admin/tickets/{ticket_id}/messages")
+@protected_router.post("/support/admin/tickets/{ticket_id}/messages")
 async def admin_add_message(
     ticket_id: int,
     message_data: SupportMessageCreate,
@@ -741,7 +741,7 @@ UPLOAD_DIR = "uploads/support"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # GET single ticket by ID
-@protected_router.get("/api/support/tickets/{ticket_id}", response_model=SupportTicketOut)
+@protected_router.get("/support/tickets/{ticket_id}", response_model=SupportTicketOut)
 async def get_ticket(
     ticket_id: int,
     db: AsyncSession = Depends(get_db),
@@ -770,7 +770,7 @@ async def get_ticket(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching ticket: {str(e)}")
 
-@protected_router.post("/api/support/tickets", response_model=SupportTicketOut)
+@protected_router.post("/support/tickets", response_model=SupportTicketOut)
 async def create_ticket(
     subject: str = Form(..., min_length=1, max_length=200),
     message: str = Form(..., min_length=1),
@@ -878,7 +878,7 @@ async def create_ticket(
         raise HTTPException(status_code=500, detail=f"Error creating ticket: {str(e)}")
 
 # PUT update ticket
-@protected_router.put("/api/support/tickets/{ticket_id}", response_model=SupportTicketOut)
+@protected_router.put("/support/tickets/{ticket_id}", response_model=SupportTicketOut)
 async def update_ticket(
     ticket_id: int,
     ticket_data: SupportTicketUpdate,
@@ -917,7 +917,7 @@ async def update_ticket(
         raise HTTPException(status_code=500, detail=f"Error updating ticket: {str(e)}")
 
 # DELETE ticket (soft delete)
-@protected_router.delete("/api/support/tickets/{ticket_id}")
+@protected_router.delete("/support/tickets/{ticket_id}")
 async def delete_ticket(
     ticket_id: int,
     db: AsyncSession = Depends(get_db),
@@ -951,7 +951,7 @@ async def delete_ticket(
         raise HTTPException(status_code=500, detail=f"Error deleting ticket: {str(e)}")
 
 # POST upload attachment
-@protected_router.post("/api/support/attachments", response_model=SupportAttachmentOut)
+@protected_router.post("/support/attachments", response_model=SupportAttachmentOut)
 async def upload_attachment(
     file: UploadFile = File(...),
     ticket_id: Optional[int] = Form(None),
@@ -1070,7 +1070,7 @@ async def upload_attachment(
 
 # GET attachments for a ticket
 # app/routes/profile/support/support.py içinde
-@protected_router.get("/api/support/tickets/{ticket_id}/attachments", response_model=List[SupportAttachmentOut])
+@protected_router.get("/support/tickets/{ticket_id}/attachments", response_model=List[SupportAttachmentOut])
 async def get_ticket_attachments(
     ticket_id: int,
     db: AsyncSession = Depends(get_db),
@@ -1109,7 +1109,7 @@ async def get_ticket_attachments(
         raise HTTPException(status_code=500, detail=f"Error fetching attachments: {str(e)}")
 
 # GET file by attachment ID (serve files)
-@protected_router.get("/api/support/attachments/{attachment_id}/file")
+@protected_router.get("/support/attachments/{attachment_id}/file")
 async def get_attachment_file(
     attachment_id: int,
     db: AsyncSession = Depends(get_db),
@@ -1175,7 +1175,7 @@ async def get_attachment_file(
 
 
 # GET thumbnail by attachment ID
-@protected_router.get("/api/support/attachments/{attachment_id}/thumbnail")
+@protected_router.get("/support/attachments/{attachment_id}/thumbnail")
 async def get_attachment_thumbnail(
     attachment_id: int,
     size: int = Query(150, ge=50, le=500),

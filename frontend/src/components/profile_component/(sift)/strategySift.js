@@ -60,7 +60,7 @@ export default function StrategySift() {
         target: extractTarget(selectedOffset),
       };
 
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/scan/`, payload);
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/scan/`, payload);
       const result = response.data;
 
       const longResults = [];

@@ -193,7 +193,7 @@ const useStrategyDataStore = create((set, get) => ({
             }
 
             const response = await axios.post(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/run-updated-strategy/`,
+                `${process.env.NEXT_PUBLIC_API_URL}/run-updated-strategy/`,
                 {
                     strategy_id: strategyId,
                     inputs: inputs,

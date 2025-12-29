@@ -41,7 +41,7 @@ const CryptoSelectButton = ({ locale }) => {
     const fetchCoins = async () => {
       try {
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/get-coin-list/`
+          `${process.env.NEXT_PUBLIC_API_URL}/get-coin-list/`
         );
 
         if (response.data && response.data.coins) {
@@ -85,7 +85,7 @@ const CryptoSelectButton = ({ locale }) => {
 
       try {
         await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/pin-binance_coin/`,
+          `${process.env.NEXT_PUBLIC_API_URL}/pin-binance_coin/`,
           { coin_id: crypto.id }
         );
       } catch (error) {
@@ -99,7 +99,7 @@ const CryptoSelectButton = ({ locale }) => {
 
     try {
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/unpin-binance-coin/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/unpin-binance-coin/`,
         {
           data: { coin_id: crypto.id },
         }

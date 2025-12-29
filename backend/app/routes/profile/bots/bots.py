@@ -30,7 +30,7 @@ from app.routes.profile.telegram.telegram_service import notify_user_by_telegram
 protected_router = APIRouter()
 
 # GET all bots for user
-@protected_router.get("/api/get-bots", response_model=list[BotsOut])
+@protected_router.get("/get-bots", response_model=list[BotsOut])
 async def get_all_bots(db: AsyncSession = Depends(get_db), user_id: dict = Depends(verify_token)):
     result = await db.execute(
         select(Bots)
@@ -40,7 +40,7 @@ async def get_all_bots(db: AsyncSession = Depends(get_db), user_id: dict = Depen
     return result.scalars().all()
 
 # POST new bot (otomatik user_id eklenir)
-@protected_router.post("/api/create-bots", response_model=BotsOut)
+@protected_router.post("/create-bots", response_model=BotsOut)
 async def create_bot(
     bot: BotsCreate,
     db: AsyncSession = Depends(get_db),
@@ -72,7 +72,7 @@ from pydantic import BaseModel
 class BotDepositUpdate(BaseModel):
     deposit_balance: Decimal | float | int
 
-@protected_router.patch("/api/bots/{bot_id}/deposit-balance", response_model=BotsOut)
+@protected_router.patch("/bots/{bot_id}/deposit-balance", response_model=BotsOut)
 async def update_bot_deposit_balance(
     bot_id: int,
     payload: BotDepositUpdate,
@@ -126,7 +126,7 @@ async def update_bot_deposit_balance(
     # BotsOut şemasına uygun tam bot objesini döndürür
     return bot
 
-@protected_router.put("/api/update-bot/{bot_id}", response_model=BotsOut)
+@protected_router.put("/update-bot/{bot_id}", response_model=BotsOut)
 async def update_bot(
     bot_id: int,
     bot_data: BotsUpdate,
@@ -249,7 +249,7 @@ async def update_bot(
 
 
 # DELETE bot (sadece kendi botunu silebilir)
-@protected_router.delete("/api/bots/{bot_id}")
+@protected_router.delete("/bots/{bot_id}")
 async def delete_bot(bot_id: int, db: AsyncSession = Depends(get_db), user_id: dict = Depends(verify_token)):
     # Bot'u sorgula
     result = await db.execute(
@@ -272,7 +272,7 @@ async def delete_bot(bot_id: int, db: AsyncSession = Depends(get_db), user_id: d
 
     return {"detail": "Bot and all related data deleted"}
 
-@protected_router.post("/api/bots/delete/{bot_id}")
+@protected_router.post("/bots/delete/{bot_id}")
 async def soft_delete_bot(
     bot_id: int,
     db: AsyncSession = Depends(get_db),
@@ -300,7 +300,7 @@ async def soft_delete_bot(
 
 
 # PATCH activate (sadece kendi botunu aktif hale getirebilir)
-@protected_router.post("/api/bots/{bot_id}/activate")
+@protected_router.post("/bots/{bot_id}/activate")
 async def activate_bot(bot_id: int, db: AsyncSession = Depends(get_db), user_id: dict = Depends(verify_token)):
     result = await db.execute(select(Bots).where(Bots.id == bot_id, Bots.user_id == int(user_id),Bots.deleted.is_(False)))
     bot = result.scalar_one_or_none()
@@ -311,7 +311,7 @@ async def activate_bot(bot_id: int, db: AsyncSession = Depends(get_db), user_id:
     return {"detail": "Bot activated"}
 
 # PATCH deactivate (sadece kendi botunu pasif hale getirebilir)
-@protected_router.post("/api/bots/{bot_id}/deactivate")
+@protected_router.post("/bots/{bot_id}/deactivate")
 async def deactivate_bot(bot_id: int, db: AsyncSession = Depends(get_db), user_id: dict = Depends(verify_token)):
     result = await db.execute(select(Bots).where(Bots.id == bot_id, Bots.user_id == int(user_id),Bots.deleted.is_(False)))
     bot = result.scalar_one_or_none()
@@ -321,7 +321,7 @@ async def deactivate_bot(bot_id: int, db: AsyncSession = Depends(get_db), user_i
     await db.commit()
     return {"detail": "Bot deactivated"}
 
-@protected_router.get("/api/bots/{bot_id}/analysis", response_model=BotAnalysisOut)
+@protected_router.get("/bots/{bot_id}/analysis", response_model=BotAnalysisOut)
 async def get_bot_analysis(
     bot_id: int,
     db: AsyncSession = Depends(get_db),
@@ -502,7 +502,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-@protected_router.patch("/api/bots/{bot_id}/listing", response_model=BotsOut)
+@protected_router.patch("/bots/{bot_id}/listing", response_model=BotsOut)
 async def update_bot_listing(
     bot_id: int,
     payload: BotListingUpdate,
@@ -659,7 +659,7 @@ async def update_bot_listing(
 
 
 @protected_router.get(
-    "/api/bots/{bot_id}/checkout-summary",
+    "/bots/{bot_id}/checkout-summary",
     response_model=CheckoutSummaryOut
 )
 async def get_checkout_summary(
@@ -743,7 +743,7 @@ async def get_checkout_summary(
         revenue_wallet=bot.revenue_wallet,
     )
 
-@protected_router.post("/api/bots/{bot_id}/acquire", response_model=AcquireBotOut)
+@protected_router.post("/bots/{bot_id}/acquire", response_model=AcquireBotOut)
 async def acquire_bot(
     bot_id: int,
     payload: AcquireBotIn = Body(...),

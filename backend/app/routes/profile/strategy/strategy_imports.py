@@ -10,7 +10,7 @@ from app.schemas.strategy.strategy_imports import StrategyIndicatorUpdate
 
 protected_router = APIRouter()
 
-@protected_router.put("/api/strategies/update")
+@protected_router.put("/strategies/update")
 async def update_strategy_indicators(
     data: StrategyIndicatorUpdate,
     db: AsyncSession = Depends(get_db),
@@ -59,7 +59,7 @@ async def update_strategy_indicators(
         "indicator_ids": resolved_ids
     }
 
-@protected_router.get("/api/strategies/{strategy_id}")
+@protected_router.get("/strategies/{strategy_id}")
 async def get_strategy(
     strategy_id: int,
     db: AsyncSession = Depends(get_db),

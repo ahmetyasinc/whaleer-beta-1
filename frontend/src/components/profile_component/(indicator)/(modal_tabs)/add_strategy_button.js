@@ -28,7 +28,7 @@ const AddStrategyButton = ({ strategyId, closeModal }) => {
       }
 
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/run-strategy/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/run-strategy/`,
         {
           strategy_id: strategyId,
           binance_symbol: selectedCrypto.binance_symbol,

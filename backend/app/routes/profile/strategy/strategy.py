@@ -18,7 +18,7 @@ from app.models.profile.bots.bots import Bots
 from sqlalchemy import select, and_, or_
 from app.models.profile.bots.bots import Bots
 
-@protected_router.get("/api/all-strategies/")
+@protected_router.get("/all-strategies/")
 async def get_all_strategies(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token)
@@ -327,7 +327,7 @@ async def get_all_strategies(
         "public_strategies": shape_public(public_rows),
     }
 
-@protected_router.get("/api/public-strategies/")
+@protected_router.get("/public-strategies/")
 async def get_public_strategies(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token)
@@ -352,7 +352,7 @@ async def get_public_strategies(
 
     return {"public_strategies": public_strategies}
 
-@protected_router.get("/api/tecnic-strategies/")
+@protected_router.get("/tecnic-strategies/")
 async def get_tecnic_strategies(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token)
@@ -377,7 +377,7 @@ async def get_tecnic_strategies(
 
     return {"tecnic_strategies": public_strategies}
 
-@protected_router.get("/api/get-strategies/")
+@protected_router.get("/get-strategies/")
 async def get_strategies(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token)
@@ -405,7 +405,7 @@ async def get_strategies(
 
     return {"strategies": [dict(row) for row in strategies]}
 
-@protected_router.post("/api/add-strategy/")
+@protected_router.post("/add-strategy/")
 async def create_strategy(
     strategy_data: StrategyCreate,  # name, code, optional parent_strategy_id
     db: AsyncSession = Depends(get_db),
@@ -506,7 +506,7 @@ async def create_strategy(
         "favorite": False,
     }
 
-@protected_router.put("/api/edit-strategy/")
+@protected_router.put("/edit-strategy/")
 async def update_strategy(
     strategy_data: StrategyUpdate,
     db: AsyncSession = Depends(get_db),
@@ -576,7 +576,7 @@ async def update_strategy(
 
     return {"message": "Strategy updated successfully", "strategy": strategy}
 
-@protected_router.delete("/api/delete-strategy/{strategy_id}/")
+@protected_router.delete("/delete-strategy/{strategy_id}/")
 async def delete_strategy(
     strategy_id: int,
     db: AsyncSession = Depends(get_db),

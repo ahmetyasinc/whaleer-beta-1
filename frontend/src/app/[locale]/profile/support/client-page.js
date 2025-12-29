@@ -28,7 +28,7 @@ export default function ClientPage() {
     (async () => {
       try {
         setLoadingUser(true);
-        const res = await api.get("/api/user-info", { signal: controller.signal });
+        const res = await api.get("/user-info", { signal: controller.signal });
         if (!ignore) setUserInfo(res.data);
       } catch (err) {
         if (!ignore) {

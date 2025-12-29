@@ -56,11 +56,11 @@ const CommunityIndicators = ({ locale, closeModal }) => {
     toggleFavorite(indicator); // optimistic
     try {
       if (isAlreadyFavorite) {
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/indicator-remove-favourite/`, {
+        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/indicator-remove-favourite/`, {
           data: { indicator_id: indicator.id },
         });
       } else {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/indicator-add-favorite/`, {
+        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/indicator-add-favorite/`, {
           indicator_id: indicator.id,
         });
       }
@@ -93,7 +93,7 @@ const CommunityIndicators = ({ locale, closeModal }) => {
     if (!releaseId) return;
     try {
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/indicator-releases/${releaseId}/view`
+        `${process.env.NEXT_PUBLIC_API_URL}/indicator-releases/${releaseId}/view`
       );
     } catch (e) {
       console.debug("indicator view ping error:", e?.message || e);

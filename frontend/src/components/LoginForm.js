@@ -41,7 +41,7 @@ export default function LoginForm({ locale }) {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/login/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/login/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

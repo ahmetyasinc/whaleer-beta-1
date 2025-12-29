@@ -12,7 +12,7 @@ from fastapi import HTTPException
 
 protected_router = APIRouter()
 
-@protected_router.post("/api/fetch-and-add-binance-coins/")
+@protected_router.post("/fetch-and-add-binance-coins/")
 async def fetch_and_add_binance_coins(db: AsyncSession = Depends(get_db)):
     # Binance exchangeInfo endpoint'inden verileri çek
     response = requests.get("https://api.binance.com/api/v3/exchangeInfo")
@@ -62,7 +62,7 @@ async def fetch_and_add_binance_coins(db: AsyncSession = Depends(get_db)):
         "atlananlar": skipped_coins
     }
 
-@protected_router.get("/api/get-coin-list/")
+@protected_router.get("/get-coin-list/")
 async def get_coin_list(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token)
@@ -93,7 +93,7 @@ async def get_coin_list(
 
     return {"coins": [dict(row) for row in coins]}
 
-@protected_router.post("/api/pin-binance_coin/") 
+@protected_router.post("/pin-binance_coin/") 
 async def pin_binance_coin(
     pin_coin_data: PinCoin,
     db: AsyncSession = Depends(get_db),
@@ -134,7 +134,7 @@ async def pin_binance_coin(
 
     return {"message": "Coin added to pinned successfully"}
 
-@protected_router.delete("/api/unpin-binance-coin/")
+@protected_router.delete("/unpin-binance-coin/")
 async def unpin_binance_coin(
     pin_coin_data: PinCoin,
     db: AsyncSession = Depends(get_db),

@@ -15,7 +15,7 @@ import time
 
 protected_router = APIRouter()
 
-@protected_router.post("/api/run-indicator/")
+@protected_router.post("/run-indicator/")
 async def run_indicator(
     indicator_data: IndicatorRun,
     db: AsyncSession = Depends(get_db),
@@ -95,7 +95,7 @@ async def run_indicator(
 
     return {"indicator_id": indicator.id, "indicator_name": indicator.name, "indicator_result": indicator_result, "prints": print_outputs, "inputs": inputs}
 
-@protected_router.post("/api/run-updated-indicator/")
+@protected_router.post("/run-updated-indicator/")
 async def run_updated_indicator(
     indicator_data: UpdatedIndicatorRun,
     db: AsyncSession = Depends(get_db),

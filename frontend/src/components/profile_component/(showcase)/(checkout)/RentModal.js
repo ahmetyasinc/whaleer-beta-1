@@ -155,7 +155,7 @@ export default function RentModal({ botId, onClose, minDays = 1 }) {
         setLoading(true);
         setError(null);
         const res = await axios.get(
-          `${API}/api/bots/${botId}/checkout-summary`,
+          `${API}/bots/${botId}/checkout-summary`,
           { params: { action: "rent" }, withCredentials: true }
         );
         const data = res?.data;

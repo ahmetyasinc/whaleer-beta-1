@@ -18,7 +18,7 @@ from sqlalchemy import select, and_, or_
 
 protected_router = APIRouter()
 
-@protected_router.post("/api/run-strategy/")
+@protected_router.post("/run-strategy/")
 async def run_strategy(
     strategy_data: StrategyRun,
     db: AsyncSession = Depends(get_db),
@@ -99,7 +99,7 @@ async def run_strategy(
 
 
 
-@protected_router.post("/api/run-updated-strategy/")
+@protected_router.post("/run-updated-strategy/")
 async def run_updated_strategy(
     strategy_data: UpdatedStrategyRun,
     db: AsyncSession = Depends(get_db),

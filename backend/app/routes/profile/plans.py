@@ -13,7 +13,7 @@ from app.models import User  # sadece doğrulama için
 
 router = APIRouter()
 
-@router.post("/api/plans/purchase")
+@router.post("/plans/purchase")
 async def purchase_plan(
     plan_code: str = Form(...),
     months: int = Form(0),
@@ -95,7 +95,7 @@ async def purchase_plan(
     }
 
 
-@router.get("/api/plans/me")
+@router.get("/plans/me")
 async def my_plan(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token),

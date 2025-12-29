@@ -37,7 +37,7 @@ class Ed25519PairOut(BaseModel):
 
 protected_router = APIRouter()
 
-@protected_router.get("/api/get-apis/")
+@protected_router.get("/get-apis/")
 async def get_user_apis(db: AsyncSession = Depends(get_db), user_id: dict = Depends(verify_token)):
     result = await db.execute(
         select(APIKey).where(APIKey.user_id == int(user_id)).order_by(APIKey.id)
@@ -45,7 +45,7 @@ async def get_user_apis(db: AsyncSession = Depends(get_db), user_id: dict = Depe
     api_keys = result.scalars().all()
     return api_keys
 
-@protected_router.post("/api/change-default-api")
+@protected_router.post("/change-default-api")
 async def change_default_api(
     payload: ChangeDefaultReq,
     db: AsyncSession = Depends(get_db),
@@ -82,7 +82,7 @@ async def change_default_api(
 
     return {"ok": True, "id": payload.id, "message": "Default API updated."}
 
-@protected_router.post("/api/ed25519/claim-one", response_model=Ed25519PairOut)
+@protected_router.post("/ed25519/claim-one", response_model=Ed25519PairOut)
 async def claim_ed25519_pair(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token),
@@ -112,7 +112,7 @@ async def claim_ed25519_pair(
     # 3) Anahtarları döndür
     return Ed25519PairOut(public_key=row.public_key, private_key=row.private_key)
 
-@protected_router.get("/api/get-user-apis/")
+@protected_router.get("/get-user-apis/")
 async def get_user_apis(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token)
@@ -125,7 +125,7 @@ async def get_user_apis(
     api_keys = result.all()
     return [dict(row._mapping) for row in api_keys]
 
-@protected_router.post("/api/create-api/", response_model=APIKeyOut, status_code=201)
+@protected_router.post("/create-api/", response_model=APIKeyOut, status_code=201)
 async def create_api_key(
     api_key: APIKeyCreate,
     db: AsyncSession = Depends(get_db),
@@ -170,7 +170,7 @@ async def create_api_key(
 
     return APIKeyOut(id=record.id)
 
-@protected_router.get("/api/api-bots/{api_id}", response_model=list[BotMiniOut])
+@protected_router.get("-bots/{api_id}", response_model=list[BotMiniOut])
 async def get_api_bots(
     api_id: int,
     db: AsyncSession = Depends(get_db),
@@ -195,7 +195,7 @@ async def get_api_bots(
         for b in bots
     ]
 
-@protected_router.post("/api/delete-api/", response_model=DeleteApiOut)
+@protected_router.post("/delete-api/", response_model=DeleteApiOut)
 async def delete_api_key(
     payload: DeleteApiIn,
     db: AsyncSession = Depends(get_db),
@@ -273,7 +273,7 @@ async def delete_api_key(
         default_reassigned_to=default_reassigned_to,
     )
 
-@protected_router.post("/api/update-api/")
+@protected_router.post("/update-api/")
 async def update_api_key(
     data: UpdateApiRequest,
     db: AsyncSession = Depends(get_db),
@@ -296,10 +296,10 @@ async def update_api_key(
     return {"detail": "API anahtarı başarıyla güncellendi.", "updated_api": {"id": api_key.id, "name": api_key.api_name}}
 
 
-@protected_router.post("/api/get-balance/")
+@protected_router.post("/get-balance/")
 async def get_binance_balance(data: BalanceRequest):
-    base_url = "https://api.binance.com"
-    endpoint = "/api/v3/account"
+    base_url = "https:/.binance.com"
+    endpoint = "/v3/account"
 
     timestamp = int(time.time() * 1000)
     query_string = f"timestamp={timestamp}"

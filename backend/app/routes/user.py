@@ -7,7 +7,7 @@ from app.core.auth import verify_token
 
 router = APIRouter()
 
-@router.get("/api/user-info")
+@router.get("/user-info")
 async def get_user_info(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token)

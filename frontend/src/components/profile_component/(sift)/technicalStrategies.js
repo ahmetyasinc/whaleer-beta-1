@@ -23,7 +23,7 @@ const TechnicalStrategies = ({ onSelect }) => {
 
     const fetchStrategies = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/all-strategies/`);
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/all-strategies/`);
         const tecnic_strategies = response.data.tecnic_strategies || [];
         setTecnicStrategies(tecnic_strategies);
 

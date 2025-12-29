@@ -68,7 +68,7 @@ const CodePanel = () => {
         setIndicatorCode(codeToSave);
 
         const updateRequest = axios.put(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/edit-indicator/`,
+          `${process.env.NEXT_PUBLIC_API_URL}/edit-indicator/`,
           { id: selected.id, name: localName, code: codeToSave },
           { withCredentials: true, headers: { "Content-Type": "application/json" } }
         );
@@ -83,7 +83,7 @@ const CodePanel = () => {
         setIndicatorEditing({ ...selected, name: localName, code: codeToSave });
       } else {
         const postRequest = axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/add-indicator/`,
+          `${process.env.NEXT_PUBLIC_API_URL}/add-indicator/`,
           { name: localName, code: codeToSave, parent_indicator_id },
           { withCredentials: true, headers: { "Content-Type": "application/json" } }
         );

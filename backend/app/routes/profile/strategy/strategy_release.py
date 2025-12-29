@@ -43,7 +43,7 @@ async def _next_release_no(db: AsyncSession, strategy_id: int) -> int:
 
 
 # ---------- Endpoint: Publish ----------
-@protected_router.post("/api/strategies/publish", response_model=PublishResponse)
+@protected_router.post("/strategies/publish", response_model=PublishResponse)
 async def publish_strategy(
     payload: PublishPayload,
     db: AsyncSession = Depends(get_db),
@@ -103,7 +103,7 @@ async def publish_strategy(
 
 
 
-@protected_router.post("/api/strategy-releases/{release_id}/view")
+@protected_router.post("/strategy-releases/{release_id}/view")
 async def add_view(
     release_id: int,
     db: AsyncSession = Depends(get_db),

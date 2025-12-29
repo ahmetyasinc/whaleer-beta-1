@@ -28,7 +28,7 @@ class ShutdownResponse(BaseModel):
     closed_positions: int = 0
     message: str = "Shutdown completed."
 
-@router.post("/api/shutdown/bots", response_model=ShutdownResponse)
+@router.post("/shutdown/bots", response_model=ShutdownResponse)
 async def shutdown_bots(
     payload: ShutdownRequest,
     db: AsyncSession = Depends(get_db),

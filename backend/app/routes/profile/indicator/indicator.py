@@ -15,7 +15,7 @@ from sqlalchemy import select, or_, func
 
 protected_router = APIRouter()
 
-@protected_router.get("/api/all-indicators/")
+@protected_router.get("/all-indicators/")
 async def get_all_indicators(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token)
@@ -270,7 +270,7 @@ async def get_all_indicators(
     }
 
 
-@protected_router.get("/api/public-indicators/")
+@protected_router.get("/public-indicators/")
 async def get_public_indicators(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token)
@@ -295,7 +295,7 @@ async def get_public_indicators(
 
     return {"public_indicators": public_indicators}
 
-@protected_router.get("/api/tecnic-indicators/")
+@protected_router.get("/tecnic-indicators/")
 async def get_tecnic_indicators(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token)
@@ -322,7 +322,7 @@ async def get_tecnic_indicators(
         "tecnic_indicators": public_indicators
     }
 
-@protected_router.get("/api/get-indicators/")
+@protected_router.get("/get-indicators/")
 async def get_indicators(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token)
@@ -350,7 +350,7 @@ async def get_indicators(
 
     return {"indicators": [dict(row) for row in indicators]}
 
-@protected_router.post("/api/add-indicator/")
+@protected_router.post("/add-indicator/")
 async def create_indicator(
     indicator_data: IndicatorCreate,
     db: AsyncSession = Depends(get_db),
@@ -451,7 +451,7 @@ async def create_indicator(
         "favorite": False,
     }
 
-@protected_router.put("/api/edit-indicator/")
+@protected_router.put("/edit-indicator/")
 async def update_indicator(
     indicator_data: IndicatorUpdate,
     db: AsyncSession = Depends(get_db),
@@ -474,7 +474,7 @@ async def update_indicator(
 
     return {"message": "Indicator updated successfully", "indicator": indicator}
 
-@protected_router.delete("/api/delete-indicator/{indicator_id}/")
+@protected_router.delete("/delete-indicator/{indicator_id}/")
 async def delete_indicator(
     indicator_id: int,
     db: AsyncSession = Depends(get_db),

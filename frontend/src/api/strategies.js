@@ -5,7 +5,7 @@ axios.defaults.withCredentials = true;
 
 export const getStrategies = async () => {
   try {
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/all-strategies/`);
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/all-strategies/`);
 
     // Backend'den dönen veriyi kategorilere ayır
     const tecnic_strategies = response.data.tecnic_strategies || [];
@@ -42,7 +42,7 @@ export const publishStrategy = async ({ strategyId, permissions, description }) 
       allow_bot_execution: !!permissions?.botRun,
     };
     const { data } = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/strategies/publish`,
+      `${process.env.NEXT_PUBLIC_API_URL}/strategies/publish`,
       payload
     );
 
@@ -72,7 +72,7 @@ export const publishIndicator = async ({ indicatorId, permissions, description }
     };
 
     const { data } = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/indicators/publish`,
+      `${process.env.NEXT_PUBLIC_API_URL}/indicators/publish`,
       payload
     );
 

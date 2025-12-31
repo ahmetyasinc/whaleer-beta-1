@@ -19,6 +19,7 @@ import ExamineBot from "./examineBot";
 import { FaBan } from "react-icons/fa6";
 import DeleteBotConfirmModal from "./deleteBotConfirmModal";
 import ShutDownBotModal from "./shutDownBotModal";
+import BotToggleConfirmModal from "./botToggleConfirmModal";
 import { useTranslation } from "react-i18next";
 import useStellarAuth from "@/hooks/useStellarAuth";
 
@@ -96,12 +97,14 @@ export const BotCard = ({ bot, column }) => {
   const setBotDepositBalance = useBotStore((state) => state.setBotDepositBalance);
   const toggleBotActive = useBotStore((state) => state.toggleBotActive);
   const { fetchAndStoreBotAnalysis } = useBotExamineStore.getState();
-  
+
   // === UI STATE ===
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedBotId, setSelectedBotId] = useState(null);
   const [isShotDownModalOpen, setShotDownModalOpen] = useState(false);
-  
+  const [isToggleConfirmOpen, setToggleConfirmOpen] = useState(false);
+  const [toggleAction, setToggleAction] = useState(null); // 'start' or 'stop'
+
   const [editing, setEditing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isExamineOpen, setIsExamineOpen] = useState(false);
@@ -118,7 +121,7 @@ export const BotCard = ({ bot, column }) => {
   // Depozito işlemi loading
   const [depositLoading, setDepositLoading] = useState(false);
   const [withdrawLoading, setWithdrawLoading] = useState(false); // şimdilik kullanılmıyor
-  
+
   // === ON-CHAIN VAULT ===
   const [vaultLoading, setVaultLoading] = useState(false);
 
@@ -149,25 +152,25 @@ export const BotCard = ({ bot, column }) => {
 
   // === RENTED KONTROL & SAYAÇ ===
   const isRented = bot?.acquisition_type === "RENTED";
-  
+
   // Kira bitişi (ms cinsinden)
   const expiryMs =
     isRented && bot?.rent_expires_at
       ? new Date(bot.rent_expires_at).getTime()
       : null;
-  
+
   // Süresi dolmuş mu?
   const isExpired = isRented && (expiryMs ? Date.now() >= expiryMs : true);
-  
+
   // Saniyelik tick (countdown için)
   const [nowTick, setNowTick] = useState(() => Date.now());
-  
+
   useEffect(() => {
     if (!expiryMs) return;
     const id = setInterval(() => setNowTick(Date.now()), 1000);
     return () => clearInterval(id);
   }, [expiryMs]);
-  
+
   // === MENÜ DIŞINA TIKLAMA ===
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -184,28 +187,28 @@ export const BotCard = ({ bot, column }) => {
     bot?.initial_usd_value == null ||
     bot?.current_usd_value == null ||
     typeof bot?.api === "undefined";
-  
+
   // Toggle için temel disable title (bakiyeye bakmadan önce)
   const disableTitle = isBlocked
     ? t("toggle.blocked")
     : isRented && isExpired
-    ? t("toggle.expired")
-    : undefined;
-  
+      ? t("toggle.expired")
+      : undefined;
+
   // === DEPOZİTO & TOGGLE LOGIC ===
   const isProfitShareMode = !!bot?.profit_share_only;
   const [showDeposit, setShowDeposit] = useState(false);
-  
+
   const balance = bot?.deposit_balance ?? 0;
-  
+
   const canToggle = !isBlocked && !!bot.api;
   const isDepositTooLow = isProfitShareMode && balance < 10;
   const finalToggleDisabled = !canToggle || isDepositTooLow;
-  
+
   const finalDisableTitle = isDepositTooLow
     ? "Depozito bakiyesi 10$ altında olduğu için bot çalıştırılamaz."
     : disableTitle;
-  
+
   const redDisableWrap = finalToggleDisabled
     ? "ring-1 ring-red-700 rounded-md p-1 bg-red-500/10"
     : "";
@@ -223,7 +226,7 @@ export const BotCard = ({ bot, column }) => {
   const handleDepositLoad = () => {
     setDepositModalOpen(true);
   };
-  
+
   const handleDepositWithdraw = () => {
     setWithdrawModalOpen(true);
   };
@@ -234,33 +237,33 @@ export const BotCard = ({ bot, column }) => {
       toast.error("Lütfen geçerli bir miktar girin.");
       return;
     }
-  
+
     if (!bot?.id || !bot?.user_id) {
       toast.error("Bot bilgileri eksik (id / user_id).");
       return;
     }
-  
+
     if (!stellarAddress) {
       toast.error("Lütfen önce Stellar cüzdanınızı bağlayın.");
       return;
     }
-  
+
     try {
       setWithdrawLoading(true);
-    
+
       await withdrawFromVault({
         botId: bot.id,
         userId: bot.user_id,
         amountUsdc: amount,
         publicKey: stellarAddress,
       });
-      
+
       setTimeout(() => {
         refreshVaultBalance();   // DB + store güncellemesi
       }, 5000);
-      
-        //toast.success("Depozito çekme işlemi gönderildi.");
-    
+
+      //toast.success("Depozito çekme işlemi gönderildi.");
+
       setWithdrawModalOpen(false);
       setWithdrawAmount("");
     } catch (err) {
@@ -314,15 +317,22 @@ export const BotCard = ({ bot, column }) => {
     }
   };
 
+  const handleConfirmToggle = () => {
+    if (bot?.id) {
+      toggleBotActive(bot.id);
+    }
+    setToggleConfirmOpen(false);
+  };
+
   /* ==== SOL KART ==== */
   if (column === "left") {
     return (
       <>
         <div className="rounded-r-full px-4 py-4 relative border-2 border-cyan-900 bg-[hsl(227,82%,2%)] text-gray-200">
           <div className="grid grid-cols-3 divide-x divide-gray-700">
-    
+
             {/* SOL: Bot Bilgi Alanı */}
-            <div className="pr-4"> 
+            <div className="pr-4">
               {/* Başlık satırı: İsim + Type + Menü */}
               <div className="flex items-center gap-2 border-b border-gray-600 pb-[10px] mb-2">
                 <h3 className="text-[18px] font-semibold text-white truncate flex-1">{bot.name}</h3>
@@ -343,13 +353,13 @@ export const BotCard = ({ bot, column }) => {
                         className="flex items-center gap-2 w-full px-4 py-2 text-sm text-blue-400 hover:bg-gray-800">
                         <FiEdit3 size={16} /> {t("menu.edit")}
                       </button>
-    
+
                       <button
                         onClick={() => { setSelectedBotId(bot.id); setDeleteModalOpen(true); setMenuOpen(false); }}
                         className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-800">
                         <FaRegTrashAlt size={16} /> {t("menu.deleteDev")}
                       </button>
-    
+
                       <button
                         onClick={() => {
                           if (isBlocked) return;
@@ -367,7 +377,7 @@ export const BotCard = ({ bot, column }) => {
                       >
                         <IoSearch size={16} /> {t("menu.examine")}
                       </button>
-    
+
                       <button
                         onClick={() => { setSelectedBotId(bot.id); setShotDownModalOpen(true); setMenuOpen(false); }}
                         className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-gray-700"
@@ -378,7 +388,7 @@ export const BotCard = ({ bot, column }) => {
                   )}
                 </div>
               </div>
-    
+
               <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.api")}</span> {bot.api}</p>
               <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.strategy")}</span> {bot.strategy}</p>
               <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.period")}</span> {bot.period}</p>
@@ -393,18 +403,18 @@ export const BotCard = ({ bot, column }) => {
                 </span>
               </p>
             </div>
-    
+
             {/* ORTA: Kripto Paralar ve Depozito */}
             <div className="flex flex-col px-6">
               {isRented && (
                 <RentedCountdown rent_expires_at={bot?.rent_expires_at} />
               )}
-    
+
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-sm font-semibold bg-gradient-to-r from-violet-900 via-sky-600 to-purple-500 text-transparent bg-clip-text">
                   {t("fields.cryptocurrencies")}
                 </h4>
-            
+
                 {isProfitShareMode && (
                   <button
                     type="button"
@@ -415,7 +425,7 @@ export const BotCard = ({ bot, column }) => {
                   </button>
                 )}
               </div>
-              
+
               <div className="h-44 overflow-y-auto scrollbar-hide space-y-2">
                 {showDeposit && (
                   <div className="rounded-xl border border-cyan-900 bg-gradient-to-r from-[rgb(10,18,35)] via-[rgb(8,29,54)] to-[rgb(18,24,48)] px-3 py-3 shadow-lg">
@@ -427,7 +437,7 @@ export const BotCard = ({ bot, column }) => {
                         Commission
                       </span>
                     </div>
-                
+
                     {/* Bakiye kutusu */}
                     <div className="mb-3 rounded-lg border border-slate-700 bg-black/40 px-3 py-2 flex items-baseline justify-between">
                       <span className="text-[11px] text-slate-400">
@@ -442,7 +452,7 @@ export const BotCard = ({ bot, column }) => {
                         ${balance.toFixed(2)}
                       </span>
                     </div>
-                
+
                     {/* Yükle / Çek butonları */}
                     <div className="flex gap-2">
                       <button
@@ -463,7 +473,7 @@ export const BotCard = ({ bot, column }) => {
                     </div>
                   </div>
                 )}
-    
+
                 {/* Coin listesi */}
                 {bot.cryptos?.length > 0 ? (
                   bot.cryptos.map((coin) => (
@@ -479,7 +489,7 @@ export const BotCard = ({ bot, column }) => {
                 )}
               </div>
             </div>
-    
+
             {/* SAĞ: Toggle + Spinner */}
             <div className="flex flex-col justify-center items-center relative pl-4">
               <div className="absolute flex items-center gap-3 mb-[148px] mr-[7px] z-10 pointer-events-none">
@@ -496,17 +506,24 @@ export const BotCard = ({ bot, column }) => {
               >
                 <RunBotToggle
                   checked={bot.isActive}
-                  onChange={!finalToggleDisabled ? () => toggleBotActive(bot.id) : undefined}
+                  onChange={
+                    !finalToggleDisabled
+                      ? () => {
+                        setToggleAction(bot.isActive ? 'stop' : 'start');
+                        setToggleConfirmOpen(true);
+                      }
+                      : undefined
+                  }
                   disabled={finalToggleDisabled}
                 />
               </div>
             </div>
           </div>
-    
+
           {editing && <BotModal mode="edit" bot={bot} onClose={() => setEditing(false)} />}
           {isExamineOpen && <ExamineBot isOpen={isExamineOpen} onClose={() => setIsExamineOpen(false)} botId={bot.id} />}
         </div>
-    
+
         <DeleteBotConfirmModal
           isOpen={isDeleteModalOpen}
           onClose={() => setDeleteModalOpen(false)}
@@ -517,18 +534,24 @@ export const BotCard = ({ bot, column }) => {
           onClose={() => setShotDownModalOpen(false)}
           onConfirm={() => { shutDownBot({ scope: "bot", id: selectedBotId }); setSelectedBotId(null); }}
         />
+        <BotToggleConfirmModal
+          isOpen={isToggleConfirmOpen}
+          onClose={() => setToggleConfirmOpen(false)}
+          onConfirm={handleConfirmToggle}
+          actionType={toggleAction}
+        />
 
         {/* === DEPOSIT MODAL === */}
         {isDepositModalOpen && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
             <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-full max-w-md shadow-xl animate-fadeIn">
               <h2 className="text-xl font-semibold text-white mb-4">Deposit Load</h2>
-        
+
               <div className="mb-4">
                 <label className="text-sm text-zinc-400 block mb-1">
                   Load Amount (USDC)
                 </label>
-        
+
                 <input
                   type="number"
                   value={depositAmount}
@@ -537,7 +560,7 @@ export const BotCard = ({ bot, column }) => {
                   className="w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
                 />
               </div>
-        
+
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setDepositModalOpen(false)}
@@ -545,13 +568,12 @@ export const BotCard = ({ bot, column }) => {
                 >
                   Cancel
                 </button>
-        
+
                 <button
                   onClick={handleConfirmDeposit}
                   disabled={depositLoading}
-                  className={`px-4 py-2 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 border border-cyan-400/40 text-white shadow-md hover:from-violet-600 hover:to-sky-500 transition ${
-                    depositLoading ? "opacity-60 cursor-not-allowed" : ""
-                  }`}
+                  className={`px-4 py-2 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 border border-cyan-400/40 text-white shadow-md hover:from-violet-600 hover:to-sky-500 transition ${depositLoading ? "opacity-60 cursor-not-allowed" : ""
+                    }`}
                 >
                   {depositLoading ? "Gönderiliyor..." : "Yükle"}
                 </button>
@@ -567,12 +589,12 @@ export const BotCard = ({ bot, column }) => {
               <h2 className="text-xl font-semibold text-white mb-4">
                 Withdraw Deposit
               </h2>
-        
+
               <div className="mb-4">
                 <label className="text-sm text-zinc-400 block mb-1">
                   Withdraw Amount (Max: {balance})
                 </label>
-        
+
                 <input
                   type="number"
                   value={withdrawAmount}
@@ -595,7 +617,7 @@ export const BotCard = ({ bot, column }) => {
                   </p>
                 )}
               </div>
-              
+
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setWithdrawModalOpen(false)}
@@ -603,7 +625,7 @@ export const BotCard = ({ bot, column }) => {
                 >
                   İptal
                 </button>
-              
+
                 <button
                   type="button"
                   onClick={handleConfirmWithdraw}
@@ -625,7 +647,7 @@ export const BotCard = ({ bot, column }) => {
     <>
       <div className="rounded-l-full px-4 py-4 border-2 border-cyan-900 relative bg-[hsl(227,82%,2%)] text-gray-200">
         <div className="grid grid-cols-3 divide-x divide-gray-700">
-          
+
           {/* SOL: Toggle + Spinner */}
           <div className="flex flex-col justify-center items-center relative pr-4">
             <div className="absolute flex items-center gap-3 mb-[148px] ml-[7px] z-10 pointer-events-none scale-x-[-1]">
@@ -643,7 +665,12 @@ export const BotCard = ({ bot, column }) => {
               <RunBotToggle
                 checked={bot.isActive}
                 onChange={
-                  !finalToggleDisabled ? () => toggleBotActive(bot.id) : undefined
+                  !finalToggleDisabled
+                    ? () => {
+                      setToggleAction(bot.isActive ? 'stop' : 'start');
+                      setToggleConfirmOpen(true);
+                    }
+                    : undefined
                 }
                 disabled={finalToggleDisabled}
               />
@@ -879,6 +906,12 @@ export const BotCard = ({ bot, column }) => {
           setSelectedBotId(null);
         }}
       />
+      <BotToggleConfirmModal
+        isOpen={isToggleConfirmOpen}
+        onClose={() => setToggleConfirmOpen(false)}
+        onConfirm={handleConfirmToggle}
+        actionType={toggleAction}
+      />
 
       {/* Depozito modalları (sağ kart için de aynı state kullanılıyor) */}
       {isDepositModalOpen && (
@@ -913,9 +946,8 @@ export const BotCard = ({ bot, column }) => {
               <button
                 onClick={handleConfirmDeposit}
                 disabled={depositLoading}
-                className={`px-4 py-2 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 border border-cyan-400/40 text-white shadow-md hover:from-violet-600 hover:to-sky-500 transition ${
-                  depositLoading ? "opacity-60 cursor-not-allowed" : ""
-                }`}
+                className={`px-4 py-2 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 border border-cyan-400/40 text-white shadow-md hover:from-violet-600 hover:to-sky-500 transition ${depositLoading ? "opacity-60 cursor-not-allowed" : ""
+                  }`}
               >
                 {depositLoading ? "Gönderiliyor..." : "Yükle"}
               </button>
@@ -947,11 +979,10 @@ export const BotCard = ({ bot, column }) => {
                   setWithdrawAmount(val);
                 }}
                 placeholder="Örn: 50"
-                className={`w-full rounded-lg px-3 py-2 bg-zinc-800 border ${
-                  Number(withdrawAmount) > balance
-                    ? "border-red-500"
-                    : "border-zinc-700"
-                } text-white focus:outline-none focus:border-cyan-500`}
+                className={`w-full rounded-lg px-3 py-2 bg-zinc-800 border ${Number(withdrawAmount) > balance
+                  ? "border-red-500"
+                  : "border-zinc-700"
+                  } text-white focus:outline-none focus:border-cyan-500`}
               />
 
               {Number(withdrawAmount) > balance && (
@@ -970,7 +1001,7 @@ export const BotCard = ({ bot, column }) => {
               </button>
 
               <button
-                onClick={() => {handleConfirmWithdraw}}
+                onClick={() => { handleConfirmWithdraw }}
                 disabled={!withdrawAmount || Number(withdrawAmount) <= 0 || withdrawLoading}
                 className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 border border-cyan-400/40 text-white shadow-md hover:from-violet-600 hover:to-sky-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >

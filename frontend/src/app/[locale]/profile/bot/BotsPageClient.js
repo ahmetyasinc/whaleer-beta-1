@@ -15,6 +15,7 @@ import { RiRobot2Line } from "react-icons/ri";
 import { toast } from "react-toastify";
 import { settleAllProfits } from "@/api/stellar/settle_api";
 import { simulateDailyBotResults } from "@/api/stellar/simulate";
+import { useRef } from 'react';
 
 const TABS = [
   { key: 'ORIGINAL' },
@@ -133,7 +134,8 @@ export default function BotsPageClient() {
     }
   }, [activeTab, originals, purchased, rented]);
 
-  const sortedBots = useMemo(() => {
+  // --- Bot List Sorting Helper ---
+  const getSortedBots = (listToSort) => {
     const locale = typeof navigator !== 'undefined' ? navigator.language : 'tr';
     const collator = new Intl.Collator(locale, { sensitivity: 'base', numeric: true });
 
@@ -144,8 +146,7 @@ export default function BotsPageClient() {
       return !!v;
     };
 
-    const arr = [...(visibleBots ?? [])];
-
+    const arr = [...(listToSort ?? [])];
     arr.sort((a, b) => {
       const aActive = isOn(a);
       const bActive = isOn(b);
@@ -157,9 +158,65 @@ export default function BotsPageClient() {
 
       return (a?.id ?? 0) - (b?.id ?? 0);
     });
-
     return arr;
-  }, [visibleBots]);
+  };
+
+  // --- Stable Sorting State ---
+  const [orderedIds, setOrderedIds] = useState(null);
+  const lastTabRef = useRef(activeTab);
+
+  useEffect(() => {
+    const currentTab = activeTab;
+    const isTabChanged = currentTab !== lastTabRef.current;
+
+    // Helper to extract IDs
+    const getIds = (list) => new Set(list.map(b => b.id));
+
+    if (isTabChanged || !orderedIds) {
+      // 1. Tab changed or Initial Load: Full Re-sort
+      const sorted = getSortedBots(visibleBots);
+      setOrderedIds(sorted.map(b => b.id));
+      lastTabRef.current = currentTab;
+    } else {
+      // 2. Same Tab: Handle Add/Remove without re-sorting existing
+      const currentIdSet = getIds(visibleBots);
+      const prevIdSet = new Set(orderedIds);
+
+      const hasAdded = visibleBots.some(b => !prevIdSet.has(b.id));
+      const hasRemoved = orderedIds.some(id => !currentIdSet.has(id));
+
+      if (hasAdded || hasRemoved) {
+        // Keep existing order for those that remain
+        const preserved = orderedIds.filter(id => currentIdSet.has(id));
+
+        // Find new bots (not in orderedIds)
+        const newBots = visibleBots.filter(b => !prevIdSet.has(b.id));
+        // Sort new bots among themselves (optional, but good practice)
+        const sortedNew = getSortedBots(newBots);
+
+        // Add new bots to top (or bottom, user prefers active top initially, 
+        // usually new items go top in UI). Let's prepend.
+        setOrderedIds([...sortedNew.map(b => b.id), ...preserved]);
+      }
+      // Else: Just property updates (toggle loops) -> Do NOT update orderedIds
+    }
+  }, [activeTab, visibleBots]); // Depend on visibleBots to catch add/remove/updates
+
+  const displayBots = useMemo(() => {
+    if (!orderedIds) return getSortedBots(visibleBots);
+
+    const botMap = new Map((visibleBots || []).map(b => [b.id, b]));
+    // Map orderedIds to objects, filtering out any that might have been removed (safety)
+    // and appending any that might be missing from orderedIds (failsafe)
+
+    const list = orderedIds.map(id => botMap.get(id)).filter(Boolean);
+
+    // Failsafe: if there are bots in visibleBots not in orderedIds yet (render cycle gap)
+    const listIds = new Set(list.map(b => b.id));
+    const leftovers = visibleBots.filter(b => !listIds.has(b.id));
+
+    return [...leftovers, ...list];
+  }, [orderedIds, visibleBots]);
 
   const handleSettleAllClick = async () => {
     try {
@@ -385,7 +442,7 @@ export default function BotsPageClient() {
         <ToastContainer position="top-center" />
         {modalOpen && <BotModal onClose={() => setModalOpen(false)} />}
 
-        {sortedBots.length === 0 ? (
+        {displayBots.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-center text-white/70 py-24">
             <RiRobot2Line className="text-8xl text-gray-400 mb-4 animate-pulse" />
 
@@ -435,7 +492,7 @@ export default function BotsPageClient() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 px-4">
-            {sortedBots.map((bot, index) => (
+            {displayBots.map((bot, index) => (
               <BotCard
                 key={bot.id}
                 bot={bot}
@@ -548,8 +605,8 @@ export default function BotsPageClient() {
                               isProfit
                                 ? "text-emerald-400"
                                 : isLoss
-                                ? "text-red-400"
-                                : "text-zinc-300",
+                                  ? "text-red-400"
+                                  : "text-zinc-300",
                             ].join(" ")}
                           >
                             {abs === 0
@@ -577,15 +634,15 @@ export default function BotsPageClient() {
                       totalChangeAbs > 0
                         ? "text-emerald-400"
                         : totalChangeAbs < 0
-                        ? "text-red-400"
-                        : "text-zinc-200",
+                          ? "text-red-400"
+                          : "text-zinc-200",
                     ].join(" ")}
                   >
                     {totalChangeAbs === 0
                       ? "+0.00"
                       : `${totalChangeAbs > 0 ? "+" : ""}${totalChangeAbs.toFixed(
-                          2
-                        )} USDT`}
+                        2
+                      )} USDT`}
                   </span>
                 </div>
               </>
@@ -671,9 +728,8 @@ export default function BotsPageClient() {
 
                           <div className="text-right">
                             <div
-                              className={`font-semibold ${
-                                dist ? "text-emerald-400" : "text-zinc-400"
-                              }`}
+                              className={`font-semibold ${dist ? "text-emerald-400" : "text-zinc-400"
+                                }`}
                             >
                               {dist ? "Eligible" : "No Profit"}
                             </div>

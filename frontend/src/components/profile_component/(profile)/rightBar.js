@@ -1,7 +1,10 @@
 "use client";
 
 import { FaChartBar, FaHistory, FaRecycle, FaBolt } from "react-icons/fa";
-import useIndicatorStore from "@/store/indicator/indicatorStore";
+import { IoStatsChart, IoTrendingUp, IoTrendingDown } from "react-icons/io5";
+import { HiOutlineChartBar } from "react-icons/hi";
+import { BsRobot, BsLightningCharge } from "react-icons/bs";
+import { MdMultilineChart } from "react-icons/md"; import useIndicatorStore from "@/store/indicator/indicatorStore";
 import useStrategyStore from "@/store/indicator/strategyStore";
 import { useMemo } from "react";
 import { useProfileStore } from "@/store/profile/profileStore";
@@ -17,7 +20,7 @@ function startOfToday() {
 function startOfWeekMonday() {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
-  const day = d.getDay(); // 0=Pazar, 1=Pazartesi
+  const day = d.getDay();
   const diff = day === 0 ? -6 : 1 - day;
   d.setDate(d.getDate() + diff);
   return d;
@@ -36,18 +39,16 @@ function toDateLocal(v) {
 
   if (typeof v === "number" || (typeof v === "string" && /^\d+$/.test(v.trim()))) {
     const n = Number(v);
-    if (n < 1e11) return new Date(n * 1000); // saniye
-    if (n < 1e14) return new Date(n);        // ms
-    return new Date(Math.floor(n / 1000));   // mikro/nano → ms'e indir
+    if (n < 1e11) return new Date(n * 1000);
+    if (n < 1e14) return new Date(n);
+    return new Date(Math.floor(n / 1000));
   }
 
   if (typeof v === "string") {
     let s = v.trim();
-
     if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(s)) {
       s = s.replace(" ", "T");
     }
-
     const m = s.match(
       /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?$/
     );
@@ -59,10 +60,8 @@ function toDateLocal(v) {
         Number(frac.slice(0, 3))
       );
     }
-
     return new Date(s);
   }
-
   return new Date(NaN);
 }
 
@@ -114,13 +113,8 @@ function toDateSmartFromTrade(trade) {
   return { date: parsed, key, raw };
 }
 
-/* ------------- Performans ve debug log hesaplayıcı ------------- */
+/* ------------- Performans hesaplayıcı ------------- */
 function computePerformanceForRange({ label, apiId, snapshots, trades, rangeStart, rangeEnd }) {
-  const fmt = (d) =>
-    d instanceof Date && !isNaN(d.getTime())
-      ? d.toLocaleString() // local görünsün
-      : String(d);
-
   const pts = normalizeSnapshots(snapshots);
   const inRange = pts.filter((p) => p.x >= rangeStart && p.x <= rangeEnd);
   const firstPoint = inRange[0];
@@ -134,42 +128,12 @@ function computePerformanceForRange({ label, apiId, snapshots, trades, rangeStar
   }
 
   const filteredTrades = [];
-  const excluded = [];
-
   (trades || []).forEach((t) => {
-    const { date, key, raw } = toDateSmartFromTrade(t);
-
-    if (!(date instanceof Date) || isNaN(date.getTime())) {
-      excluded.push({ reason: "invalid_date", key, raw, parsed: String(date) });
-      return;
-    }
-    if (date < rangeStart) {
-      excluded.push({ reason: "before_range", key, raw, parsed: fmt(date) });
-      return;
-    }
-    if (date > rangeEnd) {
-      excluded.push({ reason: "after_range", key, raw, parsed: fmt(date) });
-      return;
-    }
-    filteredTrades.push({ ...t, _parsedAt: date, _dateKey: key });
+    const { date } = toDateSmartFromTrade(t);
+    if (!(date instanceof Date) || isNaN(date.getTime())) return;
+    if (date < rangeStart || date > rangeEnd) return;
+    filteredTrades.push(t);
   });
-
-  try {
-    const sample = (trades || []).slice(0, 3).map((t, i) => {
-      const keys = Object.keys(t || {});
-      const { key, raw, date } = toDateSmartFromTrade(t);
-      return {
-        i,
-        keys: keys.slice(0, 15).join(","),
-        chosenKey: key,
-        rawValue: raw,
-        parsedLocal: fmt(date),
-      };
-    });
-    console.groupEnd();
-  } catch (err) {
-    console.warn("[RightBar] Debug log error:", err);
-  }
 
   return { value: pct, trades: filteredTrades.length };
 }
@@ -185,7 +149,7 @@ export default function RightBar() {
   const snapshotsByApiId = useAccountDataStore((s) => s.snapshotsByApiId);
   const tradesByApiId = useAccountDataStore((s) => s.tradesByApiId);
 
-  /* ---- Tüm API’lerdeki botlar ---- */
+  /* ---- Tüm API'lerdeki botlar ---- */
   const allBots = useMemo(() => {
     if (!botsByApiId) return [];
     return Object.values(botsByApiId).flat();
@@ -197,7 +161,7 @@ export default function RightBar() {
   const indicatorsCount = Array.isArray(indicators) ? indicators.length : 0;
   const strategiesCount = Array.isArray(strategies) ? strategies.length : 0;
 
-  /* ---- Aktif API’ye ait veriler ---- */
+  /* ---- Aktif API'ye ait veriler ---- */
   const activeSnapshots = useMemo(
     () => (snapshotsByApiId && snapshotsByApiId[activeApiId]) || [],
     [snapshotsByApiId, activeApiId]
@@ -252,105 +216,180 @@ export default function RightBar() {
   const performance = { daily, weekly, monthly };
 
   const stats = [
-    { title: t("stats.numberOfIndicators"), value: indicatorsCount },
-    { title: t("stats.numberOfStrategies"), value: strategiesCount },
-    { title: t("stats.numberOfTotalBots"), value: botCount },
-    { title: t("stats.totalActiveBots"), value: activeBotCount },
+    {
+      title: t("stats.numberOfIndicators"),
+      value: indicatorsCount,
+      icon: MdMultilineChart,
+      color: "cyan"
+    },
+    {
+      title: t("stats.numberOfStrategies"),
+      value: strategiesCount,
+      icon: HiOutlineChartBar,
+      color: "purple"
+    },
+    {
+      title: t("stats.numberOfTotalBots"),
+      value: botCount,
+      icon: BsRobot,
+      color: "blue"
+    },
+    {
+      title: t("stats.totalActiveBots"),
+      value: activeBotCount,
+      icon: BsLightningCharge,
+      color: "emerald"
+    },
   ];
 
-return (
-    // 1. Dış Kapsayıcı: h-full ile ebeveyninin boyunu alır, overflow-hidden ile taşmayı engeller.
-    <div className="w-[260px] h-full bg-black text-white shrink-0 flex flex-col overflow-hidden border-l border-zinc-800/50">
-    
-            {/* Üst Aksiyon Butonları */}
-      
-      {/*<div className="p-3 border-b border-neutral-800">
-        <div className="grid grid-cols-1 gap-[10px]">
-          <button className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-pink-700 hover:from-pink-700 hover:to-orange-500 duration-200 text-white px-3 py-2 rounded-lg text-xs font-medium hover:shadow-lg transition">
-            <FaBolt className="text-[16px]" /> {t("buttons.quickActions")}
-          </button>
-          <button className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-blue-800 hover:from-blue-700 hover:to-indigo-500 duration-200 text-white px-3 py-2 rounded-lg text-xs font-medium hover:shadow-lg transition">
-            <FaChartBar className="text-[16px]" /> {t("buttons.publishedIndicators")}
-          </button>
-          <button className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-700 hover:from-emerald-700 hover:to-green-600 duration-200 text-white px-3 py-2 rounded-lg text-xs font-medium hover:shadow-lg transition">
-            <FaRecycle className="text-[16px]" /> {t("buttons.recycleBin")}
-          </button>
-          <button className="flex items-center gap-2 bg-gradient-to-r from-fuchsia-600 to-rose-700 hover:from-rose-700 hover:to-fuchsia-600 duration-200 text-white px-3 py-2 rounded-lg text-xs font-medium hover:shadow-lg transition">
-            <FaHistory className="text-[16px]" /> {t("buttons.purchaseHistory")}
-          </button>
-        </div>
-      </div>*/}
-      
-      <div className="flex flex-col h-full p-3 gap-4">
-        
+  const getColorClasses = (color) => {
+    const colors = {
+      cyan: {
+        bg: "bg-cyan-500/10",
+        border: "border-cyan-500/20",
+        text: "text-cyan-400",
+        glow: "shadow-[0_0_15px_rgba(34,211,238,0.15)]",
+        indicator: "bg-cyan-400"
+      },
+      purple: {
+        bg: "bg-purple-500/10",
+        border: "border-purple-500/20",
+        text: "text-purple-400",
+        glow: "shadow-[0_0_15px_rgba(168,85,247,0.15)]",
+        indicator: "bg-purple-400"
+      },
+      blue: {
+        bg: "bg-blue-500/10",
+        border: "border-blue-500/20",
+        text: "text-blue-400",
+        glow: "shadow-[0_0_15px_rgba(59,130,246,0.15)]",
+        indicator: "bg-blue-400"
+      },
+      emerald: {
+        bg: "bg-emerald-500/10",
+        border: "border-emerald-500/20",
+        text: "text-emerald-400",
+        glow: "shadow-[0_0_15px_rgba(16,185,129,0.15)]",
+        indicator: "bg-emerald-400"
+      }
+    };
+    return colors[color] || colors.cyan;
+  };
+
+  return (
+    <div className="w-[260px] h-full bg-zinc-950 backdrop-blur-sm text-white shrink-0 flex flex-col overflow-hidden border-l border-zinc-800">
+
+      <div className="flex flex-col h-full p-3 gap-4 overflow-y-auto custom-scrollbar">
+
         {/* --- BÖLÜM 1: Genel İstatistikler --- */}
-        {/* flex-1: Bu grup mevcut alanın yarısını (veya orantılısını) kaplar. 
-            min-h-0: Küçülmesi gerekirse küçülür. */}
-        <div className="flex-1 flex flex-col gap-3 min-h-0">
-          {stats.map((stat, index) => (
-            <div
-              key={stat.title}
-              // 3. Kart Ayarları:
-              // flex-1: Her kart eşit yükseklikte yer kaplar.
-              // h-auto: Sabit h-16 kaldırıldı.
-              // min-h-0: İçerik sığmasa bile kutu küçülebilir.
-              className="flex-1 min-h-0 bg-gradient-to-r from-gray-950 to-zinc-900 rounded-lg shadow-md hover:shadow-lg border border-neutral-700 transition-all duration-300 flex flex-col justify-center px-4"
-              style={{
-                animationDelay: `${index * 200}ms`,
-                animation: "fadeInUpRightBar 1s ease-out forwards",
-              }}
-            >
-              <h4 className="text-xs font-medium text-zinc-400 mb-1 truncate">
-                {stat.title}
-              </h4>
-              <p className="text-lg font-semibold text-white truncate">
-                {stat.value}
-              </p>
-            </div>
-          ))}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 px-1 mb-2">
+            <IoStatsChart className="text-cyan-400 text-sm" />
+            <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest">{t("sections.statistics") || "Statistics"}</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            {stats.map((stat, index) => {
+              const colors = getColorClasses(stat.color);
+              const Icon = stat.icon;
+              return (
+                <div
+                  key={stat.title}
+                  className={`group relative bg-zinc-900/60 backdrop-blur-sm rounded-lg border ${colors.border} hover:${colors.bg} transition-all duration-300 p-3 cursor-default ${colors.glow}`}
+                  style={{
+                    animationDelay: `${index * 100}ms`,
+                    animation: "fadeInUpRightBar 0.6s ease-out forwards",
+                  }}
+                >
+                  {/* Glow effect on hover */}
+                  <div className={`absolute inset-0 rounded-lg ${colors.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
+
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-2">
+                      <Icon className={`text-lg ${colors.text}`} />
+                      <div className={`w-1.5 h-1.5 rounded-full ${colors.indicator} shadow-[0_0_6px_currentColor]`}></div>
+                    </div>
+                    <p className="text-xl font-bold text-zinc-100 mb-0.5">
+                      {stat.value}
+                    </p>
+                    <h4 className="text-[10px] font-medium text-zinc-500 leading-tight">
+                      {stat.title}
+                    </h4>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
+
+        {/* Divider */}
+        <div className="h-px bg-gradient-to-r from-transparent via-zinc-700/50 to-transparent"></div>
 
         {/* --- BÖLÜM 2: Performans --- */}
-        {/* flex-1: Alt kısım da kalan alanı doldurur. */}
-        <div className="flex-1 flex flex-col gap-3 min-h-0">
-          {["daily", "weekly", "monthly"].map((period, index) => {
-            const perf = performance[period] || { value: null, trades: 0 };
-            const val = perf.value;
-            const trades = perf.trades || 0;
+        <div className="space-y-2 flex-1">
+          <div className="flex items-center gap-2 px-1 mb-2">
+            <IoTrendingUp className="text-cyan-400 text-sm" />
+            <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest">{t("sections.performance") || "Performance"}</span>
+          </div>
 
-            const colorClass =
-              val === null
-                ? "text-zinc-300"
-                : val >= 0
-                ? "text-emerald-400"
-                : "text-red-400";
+          <div className="space-y-2">
+            {["daily", "weekly", "monthly"].map((period, index) => {
+              const perf = performance[period] || { value: null, trades: 0 };
+              const val = perf.value;
+              const trades = perf.trades || 0;
 
-            return (
-              <div
-                key={period}
-                // Kart Ayarları: Sabit h-20 kaldırıldı, yerine flex-1 geldi.
-                className="flex-1 min-h-0 bg-gradient-to-r from-gray-950 to-zinc-900 rounded-lg shadow-md hover:shadow-lg border border-neutral-700 transition-all duration-300 flex flex-col justify-center px-4"
-                style={{
-                  animationDelay: `${index * 200}ms`,
-                  animation: "fadeInUpRightBar 1s ease-out forwards",
-                }}
-              >
-                <h4 className="text-xs font-medium text-zinc-400 capitalize mb-1 truncate">
-                  {t(`performance.labels.${period}`)}
-                </h4>
-                <div className="flex justify-between items-center">
-                  <p className={`text-lg font-bold ${colorClass} truncate`}>
-                    {val === null
-                      ? "–"
-                      : `${val >= 0 ? "+" : "-"}${Math.abs(val).toFixed(2)}%`}
-                  </p>
-                  <span className="text-xs text-zinc-400 whitespace-nowrap ml-2">
-                    {t("performance.trades", { count: trades })}
-                  </span>
+              const isPositive = val !== null && val >= 0;
+              const isNegative = val !== null && val < 0;
+
+              return (
+                <div
+                  key={period}
+                  className="group relative bg-zinc-900/60 backdrop-blur-sm rounded-lg border border-zinc-800/50 hover:border-cyan-500/30 transition-all duration-300 p-3"
+                  style={{
+                    animationDelay: `${(index + 4) * 100}ms`,
+                    animation: "fadeInUpRightBar 0.6s ease-out forwards",
+                  }}
+                >
+                  {/* Subtle glow on hover */}
+                  <div className="absolute inset-0 rounded-lg bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-xs font-medium text-zinc-400 capitalize flex items-center gap-2">
+                        <div className={`w-1 h-3 rounded-full ${period === 'daily' ? 'bg-cyan-400' :
+                          period === 'weekly' ? 'bg-blue-400' : 'bg-purple-400'
+                          } shadow-[0_0_6px_currentColor]`}></div>
+                        {t(`performance.labels.${period}`)}
+                      </h4>
+                      <span className="text-[10px] text-zinc-600 bg-zinc-800/50 px-1.5 py-0.5 rounded">
+                        {t("performance.trades", { count: trades })}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {val !== null && (
+                        isPositive ? (
+                          <IoTrendingUp className="text-emerald-400 text-lg" />
+                        ) : (
+                          <IoTrendingDown className="text-red-400 text-lg" />
+                        )
+                      )}
+                      <p className={`text-xl font-bold tracking-tight ${val === null
+                        ? "text-zinc-500"
+                        : isPositive
+                          ? "text-emerald-400"
+                          : "text-red-400"
+                        }`}>
+                        {val === null
+                          ? "–"
+                          : `${val >= 0 ? "+" : ""}${val.toFixed(2)}%`}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -358,12 +397,25 @@ return (
         @keyframes fadeInUpRightBar {
           from {
             opacity: 0;
-            transform: translateX(40px);
+            transform: translateX(20px);
           }
           to {
             opacity: 1;
             transform: translateX(0);
           }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(113, 113, 122, 0.3);
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(113, 113, 122, 0.5);
         }
       `}</style>
     </div>

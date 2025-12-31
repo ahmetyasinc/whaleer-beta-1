@@ -62,8 +62,8 @@ export function installRulerTool({ chart, series, container, isRulerModeRef, onC
     const el = document.createElement("div");
     el.style.position = "absolute";
     el.style.pointerEvents = "none";
-    el.style.background = "#00838F"; // dark navy (not pure black)
-    el.style.color = "#000000";
+    el.style.background = "#2883c8"; // dark navy (not pure black)
+    el.style.color = "#ffffff";
     el.style.padding = "8px 12px";
     el.style.fontSize = "12px";
     el.style.borderRadius = "4px";
@@ -290,7 +290,7 @@ export function installRulerTool({ chart, series, container, isRulerModeRef, onC
     const dSec = Math.abs(b.time - a.time);
     const dBars = Math.round(Math.abs(b.logical - a.logical));
     const positive = pct >= 0;
-    const pctColor = positive ? "#3ae809" : "#ba0000";
+    const pctColor = positive ? "#3ae809" : "#c22121";
     const title = live ? tr("titleLive") : tr("title");
     return `
       <div style="display:grid;gap:6px;text-align:center">

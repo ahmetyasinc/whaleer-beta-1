@@ -5,6 +5,48 @@ import { useChartSettingsStore } from "@/store/indicator/chartSettingsStore";
 import i18n from "@/i18n";
 import { useTranslation } from "react-i18next";
 
+// --- DEFAULT SETTINGS (USER REQUESTED LOCAL DEFINITION - DUZENLENEBILIR) ---
+const DEFAULTS = {
+  theme: "dark",
+  bgColor: "#000007",
+  textColor: "white",
+  timezoneMode: "local",
+  timezoneFixed: "GMT+03:00",
+  autoPrecision: true,
+  pricePrecision: 2,
+  volumeVisible: true,
+  crosshair: {
+    mode: "magnet",
+    style: 1,
+    width: 1,
+    color: "#758696",
+  },
+  grid: { show: true, xLines: 4, yLines: 4, color: "#111111" },
+  series: {
+    type: "candlestick",
+    hollow: false,
+    heikinAshi: false,
+    valueSource: "close",
+  },
+  candle: {
+    upBody: "#26A69A",
+    downBody: "#EF5350",
+    upWick: "#26A69A",
+    downWick: "#EF5350",
+    border: false,
+    borderUp: "#26A69A",
+    borderDown: "#EF5350",
+  },
+  candleAlpha: { upBody: 1, downBody: 1, upWick: 1, downWick: 1 },
+  bar: { upColor: "#26A69A", downColor: "#EF5350" },
+  line: { color: "#f9d71c", width: 2, stepped: false },
+  area: { lineColor: "#ff9800", topColor: "#ff9800", bottomColor: "#ff9800", topAlpha: 0.4, bottomAlpha: 0.08 },
+  baseline: { baseValue: 0, topColor: "#26A69A", bottomColor: "#EF5350" },
+  histogram: { color: "#00FF88", alpha: 0.4 },
+  watermark: { visible: true, fontSize: 20 }
+};
+// --------------------------------------------------------------------------
+
 const TZ_OFFSETS = (() => {
   const res = [];
   for (let h = -12; h <= 14; h++) {
@@ -48,9 +90,12 @@ const ColorPicker = ({ value, onChange }) => (
   </div>
 );
 
-const Section = ({ title, children }) => (
+const Section = ({ title, action, children }) => (
   <div className="border border-gray-800 rounded-xl p-4 bg-black/60 mb-4">
-    <div className="text-sm font-medium text-gray-200 mb-3">{title}</div>
+    <div className="flex items-center justify-between mb-3">
+      <div className="text-sm font-medium text-gray-200">{title}</div>
+      {action}
+    </div>
     <div className="grid gap-3">{children}</div>
   </div>
 );
@@ -119,6 +164,12 @@ export default function SettingsModal({ open, onClose, locale }) {
       bottomColor: settings?.baseline?.bottomColor || "#EF5350",
     },
     histogram: { color: settings?.histogram?.color || "#00FF88", alpha: settings?.histogram?.alpha ?? 0.4 },
+    crosshair: {
+      mode: settings?.crosshair?.mode || "magnet",
+      style: settings?.crosshair?.style ?? 1,
+      width: settings?.crosshair?.width ?? 1,
+      color: settings?.crosshair?.color || "#758696",
+    },
     timezoneMode: ONE_OF(settings?.timezoneMode, ["local", "utc", "fixed"], "local"),
     timezoneFixed: settings?.timezoneFixed || "GMT+03:00",
     pricePrecision: clamp(+settings?.pricePrecision || 2, 0, 8),
@@ -280,7 +331,26 @@ export default function SettingsModal({ open, onClose, locale }) {
             className="flex-1 overflow-y-auto p-5 custom-scrollbar"
           >
             {/* Appearance */}
-            <Section title={t("labels.appearance")}>
+            <Section
+              title={t("labels.appearance")}
+              action={
+                <button
+                  onClick={() =>
+                    setLocalState((prev) => ({
+                      ...prev,
+                      bgColor: DEFAULTS.bgColor,
+                      textColor: DEFAULTS.textColor,
+                      grid: { ...prev.grid, color: DEFAULTS.grid.color },
+                      series: { ...prev.series, type: DEFAULTS.series.type },
+                    }))
+                  }
+                  className="text-xs text-cyan-500 hover:text-cyan-400 font-medium"
+                  title={t("buttons.resetToDefault")}
+                >
+                  {t("buttons.default")}
+                </button>
+              }
+            >
               {/* Background */}
               <div className="flex items-center justify-between gap-3">
                 <label className="text-gray-300 text-sm w-40">{t("fields.background")}</label>
@@ -338,8 +408,70 @@ export default function SettingsModal({ open, onClose, locale }) {
               </div>
             </Section>
 
+            {/* Crosshair */}
+            <Section
+              title={t("labels.crosshair")}
+              action={
+                <button
+                  onClick={() => handleChange("crosshair", { ...DEFAULTS.crosshair })}
+                  className="text-xs text-cyan-500 hover:text-cyan-400 font-medium"
+                  title={t("buttons.resetToDefault")}
+                >
+                  {t("buttons.default")}
+                </button>
+              }
+            >
+              <div className="flex items-center justify-between gap-3">
+                <label className="text-gray-300 text-sm">{t("fields.style")}</label>
+                <select
+                  className="bg-black border border-gray-700 rounded-md px-2 py-1 text-gray-200"
+                  value={localState.crosshair?.style ?? 1}
+                  onChange={(e) => handleChange("crosshair.style", +e.target.value)}
+                >
+                  <option value={0}>{t("options.solid")}</option>
+                  <option value={1}>{t("options.dotted")}</option>
+                  <option value={2}>{t("options.dashed")}</option>
+                </select>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <label className="text-gray-300 text-sm">{t("fields.width")}</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={5}
+                  className="w-16 bg-black border border-gray-700 rounded px-2 py-1 text-gray-200"
+                  value={localState.crosshair?.width ?? 1}
+                  onChange={(e) => handleChange("crosshair.width", clamp(+e.target.value || 1, 1, 5))}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <label className="text-gray-300 text-sm">{t("fields.color")}</label>
+                <ColorPicker
+                  value={localState.crosshair?.color || "#758696"}
+                  onChange={(val) => handleChange("crosshair.color", val)}
+                />
+              </div>
+            </Section>
+
             {/* Timezone */}
-            <Section title={t("labels.timezone")}>
+            <Section
+              title={t("labels.timezone")}
+              action={
+                <button
+                  onClick={() =>
+                    setLocalState((prev) => ({
+                      ...prev,
+                      timezoneMode: DEFAULTS.timezoneMode,
+                      timezoneFixed: DEFAULTS.timezoneFixed,
+                    }))
+                  }
+                  className="text-xs text-cyan-500 hover:text-cyan-400 font-medium"
+                  title={t("buttons.resetToDefault")}
+                >
+                  {t("buttons.default")}
+                </button>
+              }
+            >
               <div className="flex items-center justify-between">
                 <label className="text-gray-300 text-sm">{t("fields.mode")}</label>
                 <select
@@ -373,7 +505,18 @@ export default function SettingsModal({ open, onClose, locale }) {
             </Section>
 
             {/* WaterMark */}
-            <Section title={t("labels.watermark")}>
+            <Section
+              title={t("labels.watermark")}
+              action={
+                <button
+                  onClick={() => handleChange("watermark", { visible: true, fontSize: 20 })} // DEFAULTS doesn't have watermark fully explicit in store but used in modal logic
+                  className="text-xs text-cyan-500 hover:text-cyan-400 font-medium"
+                  title={t("buttons.resetToDefault")}
+                >
+                  {t("buttons.default")}
+                </button>
+              }
+            >
               <SettingToggle
                 label={t("fields.visible")}
                 value={!!localState.watermark.visible}
@@ -395,7 +538,18 @@ export default function SettingsModal({ open, onClose, locale }) {
 
             {/* Value source for single-value series */}
             {isSingleValue && (
-              <Section title={t("labels.valueSource")}>
+              <Section
+                title={t("labels.valueSource")}
+                action={
+                  <button
+                    onClick={() => handleChange("series.valueSource", DEFAULTS.series.valueSource)}
+                    className="text-xs text-cyan-500 hover:text-cyan-400 font-medium"
+                    title={t("buttons.resetToDefault")}
+                  >
+                    {t("buttons.default")}
+                  </button>
+                }
+              >
                 <div className="flex items-center justify-between">
                   <label className="text-gray-300 text-sm">{t("fields.useValue")}</label>
                   <select
@@ -415,7 +569,29 @@ export default function SettingsModal({ open, onClose, locale }) {
 
             {/* Candle options */}
             {isCandle && (
-              <Section title={t("labels.candles")}>
+              <Section
+                title={t("labels.candles")}
+                action={
+                  <button
+                    onClick={() =>
+                      setLocalState((prev) => ({
+                        ...prev,
+                        candle: { ...DEFAULTS.candle },
+                        candleAlpha: { ...DEFAULTS.candleAlpha },
+                        series: {
+                          ...prev.series,
+                          hollow: DEFAULTS.series.hollow,
+                          heikinAshi: DEFAULTS.series.heikinAshi,
+                        },
+                      }))
+                    }
+                    className="text-xs text-cyan-500 hover:text-cyan-400 font-medium"
+                    title={t("buttons.resetToDefault")}
+                  >
+                    {t("buttons.default")}
+                  </button>
+                }
+              >
                 <SettingToggle
                   label={t("fields.hollow")}
                   value={!!localState.series.hollow}
@@ -479,7 +655,18 @@ export default function SettingsModal({ open, onClose, locale }) {
 
             {/* Bar options */}
             {isBar && (
-              <Section title={t("labels.barOptions")}>
+              <Section
+                title={t("labels.barOptions")}
+                action={
+                  <button
+                    onClick={() => handleChange("bar", { ...DEFAULTS.bar })}
+                    className="text-xs text-cyan-500 hover:text-cyan-400 font-medium"
+                    title={t("buttons.resetToDefault")}
+                  >
+                    {t("buttons.default")}
+                  </button>
+                }
+              >
                 <div className="flex items-center justify-between gap-3">
                   <label className="text-gray-300 text-sm w-28">{t("fields.upColor")}</label>
                   <ColorPicker
@@ -497,7 +684,26 @@ export default function SettingsModal({ open, onClose, locale }) {
 
             {/* Line / Area / Baseline options */}
             {(isLine || isArea || isBaseline) && (
-              <Section title={t("labels.seriesOptions", { type: t(`series.${type}`) })}>
+              <Section
+                title={t("labels.seriesOptions", { type: t(`series.${type}`) })}
+                action={
+                  <button
+                    onClick={() => {
+                      setLocalState((prev) => {
+                        const next = { ...prev };
+                        if (type === "line") next.line = { ...DEFAULTS.line };
+                        if (type === "area") next.area = { ...DEFAULTS.area };
+                        if (type === "baseline") next.baseline = { ...DEFAULTS.baseline };
+                        return next;
+                      });
+                    }}
+                    className="text-xs text-cyan-500 hover:text-cyan-400 font-medium"
+                    title={t("buttons.resetToDefault")}
+                  >
+                    {t("buttons.default")}
+                  </button>
+                }
+              >
                 {isLine && (
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center justify-between gap-3">
@@ -622,7 +828,18 @@ export default function SettingsModal({ open, onClose, locale }) {
 
             {/* Histogram options */}
             {isHistogram && (
-              <Section title={t("labels.histogramOptions")}>
+              <Section
+                title={t("labels.histogramOptions")}
+                action={
+                  <button
+                    onClick={() => handleChange("histogram", { ...DEFAULTS.histogram })}
+                    className="text-xs text-cyan-500 hover:text-cyan-400 font-medium"
+                    title={t("buttons.resetToDefault")}
+                  >
+                    {t("buttons.default")}
+                  </button>
+                }
+              >
                 <div className="flex items-center justify-between gap-3">
                   <label className="text-gray-300 text-sm w-28">{t("fields.color")}</label>
                   <ColorPicker
@@ -643,7 +860,18 @@ export default function SettingsModal({ open, onClose, locale }) {
             )}
 
             {/* Price settings */}
-            <Section title={t("labels.priceSettings")}>
+            <Section
+              title={t("labels.priceSettings")}
+              action={
+                <button
+                  onClick={() => handleChange("pricePrecision", DEFAULTS.pricePrecision)}
+                  className="text-xs text-cyan-500 hover:text-cyan-400 font-medium"
+                  title={t("buttons.resetToDefault")}
+                >
+                  {t("buttons.default")}
+                </button>
+              }
+            >
               <div className="flex items-center justify-between">
                 <label className="text-gray-300 text-sm">{t("fields.pricePrecision")}</label>
                 <input
@@ -663,7 +891,13 @@ export default function SettingsModal({ open, onClose, locale }) {
           <div className="p-4 border-t border-gray-700 flex justify-end gap-3">
             <div className="flex items-center gap-3">
               <button
-                onClick={reset}
+                onClick={() => {
+                  reset();
+                  setLocalState({
+                    ...DEFAULTS,
+                    watermark: { visible: true, fontSize: 20 },
+                  });
+                }}
                 className="px-3 py-2 text-sm rounded-md border border-gray-700 text-gray-200 hover:bg-stone-900"
               >
                 {t("buttons.reset")}

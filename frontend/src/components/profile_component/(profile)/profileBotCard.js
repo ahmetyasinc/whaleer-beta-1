@@ -64,21 +64,24 @@ export default function ModernBotList({ bots = [] }) {
     `${Number(v || 0) >= 0 ? "" : "-"}${Math.abs(Number(v || 0)).toFixed(2)}%`;
 
   return (
-    <div className="w-full h-full flex flex-col overflow-hidden p-6 bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl border border-gray-700">
+    <div className="relative bg-zinc-950/90 backdrop-blur-sm border border-zinc-700 rounded-xl p-5 shadow-lg flex flex-col w-full h-full overflow-hidden group/container hover:border-blue-900/80 transition-all duration-300">
+
+      {/* Glow effects */}
+      <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/5 blur-3xl rounded-full pointer-events-none"></div>
+
       {/* Header */}
-      <div className="mb-8 border-b border-gray-700 pb-2">
-        <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-white to-gray-100 bg-clip-text text-transparent">
-            {t("title")}
-          </h1>
-        </div>
+      <div className="pb-3 mb-4 border-b border-zinc-800/50 relative z-10 flex-shrink-0">
+        <h3 className="text-zinc-100 text-sm font-bold uppercase tracking-wider flex items-center gap-2">
+          <span className="w-1 h-4 bg-cyan-500 rounded-full shadow-[0_0_10px_rgba(6,182,212,0.5)]"></span>
+          {t("title")}
+        </h3>
       </div>
 
       {/* Bot List */}
-      <div className="flex-1 flex flex-col">
-        <div className="flex-1 overflow-y-auto px-3 max-h-[calc(100vh-250px)]">
+      <div className="flex-1 flex flex-col relative z-10 min-h-0">
+        <div className="flex-1 overflow-y-auto px-2 -mx-2 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
           {list.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {list.map((bot, index) => {
                 const isOpen = menuOpen === bot.id;
                 const isActive = !!bot.active;
@@ -89,64 +92,63 @@ export default function ModernBotList({ bots = [] }) {
                 return (
                   <div
                     key={bot.id}
-                    className={`group relative bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-lg py-3 px-3 border border-slate-700 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-0.5
-                    ${isOpen ? "z-50" : ""}`}
-                    style={{ animationDelay: `${index * 200}ms`, animation: "fadeInUp 1s ease-out forwards" }}
+                    className={`group relative bg-zinc-900/30 backdrop-blur-sm rounded-lg py-3 px-4 border border-zinc-800/50 hover:bg-zinc-800/50 hover:border-blue-500/30 transition-all duration-300 hover:shadow-[0_0_15px_-5px_rgba(59,130,246,0.15)] hover:-translate-y-0.5
+                    ${isOpen ? "z-50 border-blue-500/40 bg-zinc-800" : ""}`}
+                    style={{ animationDelay: `${index * 100}ms`, animation: "fadeInUp 0.5s ease-out forwards" }}
                   >
                     <div className="flex items-center justify-between">
                       {/* Left */}
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3">
                         <div className="relative">
-                          <div className="p-2.5 rounded-full bg-gray-600">
-                            <RiRobotLine className="w-5 h-5 text-neutral-400" />
+                          <div className="p-2 rounded-lg bg-zinc-800 border border-zinc-700 group-hover:border-blue-500/40 transition-colors">
+                            <RiRobotLine className="w-5 h-5 text-zinc-400 group-hover:text-blue-400 transition-colors" />
                           </div>
                           <div className="absolute -top-1 -right-1">
-                            <div className={`w-2.5 h-2.5 rounded-full ${isActive ? "bg-emerald-400" : "bg-red-400"} animate-pulse`} />
-                            <div className={`absolute inset-0 w-2.5 h-2.5 rounded-full ${isActive ? "bg-emerald-400" : "bg-red-400"} opacity-30 animate-ping`} />
+                            <div className={`w-2 h-2 rounded-full ${isActive ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"}`} />
                           </div>
                         </div>
 
                         <div>
-                          <h3 className="text-base font-semibold text-white truncate max-w-[200px] group-hover:text-blue-300 transition-colors duration-300">
+                          <h3 className="text-sm font-bold text-zinc-200 truncate max-w-[150px] group-hover:text-blue-300 transition-colors duration-300">
                             {bot.name}
                           </h3>
-                          <p className={`text-xs ${isActive ? "text-emerald-400" : "text-red-400"} font-medium`}>
+                          <div className={`text-[10px] uppercase tracking-wide font-bold ${isActive ? "text-emerald-500" : "text-red-500"}`}>
                             {isActive ? t("status.active") : t("status.inactive")}
-                          </p>
+                          </div>
                         </div>
                       </div>
 
                       {/* Right */}
-                      <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-4 sm:gap-6">
                         {/* Current Value */}
-                        <div className="text-right">
-                          <div className="flex items-center gap-1.5 mb-1">
-                            <FaDollarSign className="w-3.5 h-3.5 text-blue-400" />
-                            <span className="text-xs text-gray-400">{t("fields.currentValue")}</span>
+                        <div className="text-right hidden sm:block">
+                          <div className="flex items-center justify-end gap-1 mb-0.5">
+                            <FaDollarSign className="w-3 h-3 text-blue-500/70" />
+                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide">{t("fields.currentValue")}</span>
                           </div>
-                          <span className="text-sm font-bold text-blue-400">
+                          <span className="text-sm font-mono font-bold text-blue-400">
                             {formatUsd(currentValue)}
                           </span>
                         </div>
 
                         {/* Margin (profit %) */}
                         <div className="text-right">
-                          <div className="flex items-center gap-1.5 mb-1">
-                            <FaChartLine className="w-3.5 h-3.5 text-emerald-400" />
-                            <span className="text-xs text-gray-400">{t("fields.margin")}</span>
+                          <div className="flex items-center justify-end gap-1 mb-0.5">
+                            <FaChartLine className="w-3 h-3 text-emerald-500/70" />
+                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide">{t("fields.margin")}</span>
                           </div>
-                          <span className={`text-sm font-bold ${Number(totalPnl) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          <span className={`text-sm font-mono font-bold ${Number(totalPnl) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                             {formatPercent(marginPct)}
                           </span>
                         </div>
 
                         {/* Total P&L (USD) */}
                         <div className="text-right">
-                          <div className="flex items-center gap-1.5 mb-1">
-                            <FaDollarSign className="w-3.5 h-3.5 text-purple-400" />
-                            <span className="text-xs text-gray-400">{t("fields.totalPl")}</span>
+                          <div className="flex items-center justify-end gap-1 mb-0.5">
+                            <FaDollarSign className="w-3 h-3 text-purple-500/70" />
+                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide">{t("fields.totalPl")}</span>
                           </div>
-                          <span className={`text-sm font-bold ${Number(totalPnl) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          <span className={`text-sm font-mono font-bold ${Number(totalPnl) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                             {`${Number(totalPnl) >= 0 ? "+" : ""}${formatUsd(totalPnl).replace("$", "")}`}
                           </span>
                         </div>
@@ -155,47 +157,41 @@ export default function ModernBotList({ bots = [] }) {
                         <div className="relative inline-block text-left menu-container" ref={menuOpen === bot.id ? menuRef : null}>
                           <button
                             onClick={() => setMenuOpen(menuOpen === bot.id ? null : bot.id)}
-                            className="p-2 rounded hover:bg-gray-700 transition-colors duration-200"
+                            className="p-1.5 rounded-lg hover:bg-zinc-700/50 text-zinc-400 hover:text-zinc-200 transition-colors duration-200"
                           >
-                            <BsThreeDotsVertical className="text-gray-300" size={20} />
+                            <BsThreeDotsVertical size={16} />
                           </button>
 
                           {menuOpen === bot.id && (
-                            <div className="absolute top-0 right-10 w-36 bg-gray-900 rounded-lg shadow-lg z-50 border border-gray-700">
+                            <div className="absolute top-8 right-0 w-32 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-50 overflow-hidden">
                               <button
                                 onClick={() => handleExamineBot(bot.id)}
-                                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-amber-400 hover:bg-gray-800 rounded-t-lg transition-colors duration-200 disabled:opacity-60"
+                                className="flex items-center gap-2 w-full px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-amber-500 hover:bg-zinc-800 transition-colors duration-200 disabled:opacity-60"
                                 disabled={examineLoadingId === bot.id}
                               >
-                                <IoSearch size={16} />
+                                <IoSearch size={14} />
                                 {examineLoadingId === bot.id ? t("menu.loading") : t("menu.examine")}
                               </button>
-                              {/*<button
-                                onClick={() => handlePreviewBot(bot.id)}
-                                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-violet-400 hover:bg-stone-800 rounded-b-lg transition-colors duration-200"
-                              >
-                                <FaEye size={16} /> {t("menu.preview")}
-                              </button>*/}
                             </div>
                           )}
                         </div>
                       </div>
                     </div>
-
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="p-6 bg-slate-800/30 rounded-full mb-4">
-                <FaRobot className="w-12 h-12 text-gray-500" />
+            <div className="flex flex-col items-center justify-center h-full text-center py-10 gap-3">
+              <div className="w-16 h-16 rounded-full bg-zinc-900/50 border border-zinc-700/50 flex items-center justify-center shadow-[0_0_15px_-5px_rgba(0,0,0,0.5)]">
+                <RiRobotLine className="w-8 h-8 text-zinc-600" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-300 mb-2">{t("empty.title")}</h3>
-              <p className="text-gray-500 max-w-sm">
-                {t("empty.desc")}
-              </p>
+              <div>
+                <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wide mb-1">{t("empty.title")}</h3>
+                <p className="text-xs text-zinc-600 max-w-[200px] mx-auto leading-relaxed">
+                  {t("empty.desc")}
+                </p>
+              </div>
             </div>
           )}
         </div>
@@ -209,8 +205,8 @@ export default function ModernBotList({ bots = [] }) {
 
       <style jsx>{`
         @keyframes fadeInUp {
-          from { opacity: 0; transform: translateX(-40px); }
-          to   { opacity: 1; transform: translateX(0); }
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>

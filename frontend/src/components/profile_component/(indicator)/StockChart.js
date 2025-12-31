@@ -396,10 +396,21 @@ export default function ChartComponent() {
     const textColor = COLOR_MAP[settings.textColor] ?? "#8C8C8C";
     const gridColor = settings?.grid?.color || "#111111";
 
+    const crosshairStyle = {
+      color: settings?.crosshair?.color || "#758696",
+      width: settings?.crosshair?.width ?? 1,
+      style: settings?.crosshair?.style ?? 1, // 0=Solid, 1=Dotted, 2=Dashed
+      labelBackgroundColor: settings?.crosshair?.color || "#758696",
+    };
+
     const chartOptions = {
       layout: { textColor, background: { type: 'solid', color: settings.bgColor || (settings.theme === 'light' ? '#ffffff' : 'rgb(0,0,7)') } },
       grid: { vertLines: { color: gridColor, style: 1, visible: true }, horzLines: { color: gridColor, style: 1, visible: true } },
-      crosshair: { mode: CrosshairMode.Normal }, // Always normal, we handle magnet manually
+      crosshair: {
+        mode: CrosshairMode.Normal, // Always normal, we handle magnet manually
+        vertLine: crosshairStyle,
+        horzLine: crosshairStyle,
+      },
       localization: { timeFormatter: fmt },
       timeScale: { timeVisible: !['1d', '1w'].includes(selectedPeriod), secondsVisible: false, tickMarkFormatter: fmt, rightBarStaysOnScroll: true, shiftVisibleRangeOnNewBar: false },
       rightPriceScale: { minimumWidth: 70, autoScale: true },
@@ -465,7 +476,7 @@ export default function ChartComponent() {
     const timeScale = chart.timeScale();
 
     // Center last bar (initial range)
-    const barsToShow = 50; const rightPad = Math.floor((barsToShow - 1) / 2);
+    const barsToShow = 200; const rightPad = Math.floor((barsToShow - 1) / 2);
     const lastIndex = Math.max(0, chartData.length - 1); const to = lastIndex + rightPad; const from = to - (barsToShow - 1);
     timeScale.applyOptions({ rightOffset: rightPad });
     timeScale.setVisibleLogicalRange({ from, to });
@@ -898,7 +909,34 @@ export default function ChartComponent() {
     };
   }, [chartData, indicatorData, strategyData, selectedPeriod, settings]);
 
+  // 🔽 YENİ: Ruler mode veya settings değişince crosshair güncelle
+  useEffect(() => {
+    if (!chartRef.current) return;
 
+    let chStyle;
+    if (isRulerMode) {
+      chStyle = {
+        color: "rgb(5,50,90)",
+        width: 1,
+        style: 1, // Dotted
+        labelBackgroundColor: "rgb(5,50,90)",
+      };
+    } else {
+      chStyle = {
+        color: settings?.crosshair?.color || "#758696",
+        width: settings?.crosshair?.width ?? 1,
+        style: settings?.crosshair?.style ?? 1,
+        labelBackgroundColor: settings?.crosshair?.color || "#758696",
+      };
+    }
+
+    chartRef.current.applyOptions({
+      crosshair: {
+        vertLine: chStyle,
+        horzLine: chStyle,
+      },
+    });
+  }, [isRulerMode, settings]);
 
   return (
     <div className="relative w-full h-full">

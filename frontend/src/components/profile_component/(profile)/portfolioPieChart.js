@@ -77,22 +77,35 @@ export default function PortfolioPieChart() {
   const isEmpty = portfolio.length === 0 || total === 0;
 
   return (
-    <div className="bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl shadow-lg border border-zinc-700 p-6 text-white w-full h-full flex flex-col">
+    <div className="relative bg-zinc-950/90 backdrop-blur-sm border border-zinc-700 rounded-xl shadow-lg p-5 text-white w-full h-full flex flex-col group hover:border-blue-900/80 transition-all duration-300">
+
+      {/* Glow effects */}
+      <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/5 blur-3xl rounded-full pointer-events-none"></div>
+
       {/* Başlık */}
-      <div className="pb-3 mb-4 border-b border-zinc-700">
-        <h3 className="text-lg font-semibold text-center">{t("title")}</h3>
+      <div className="pb-3 mb-4 border-b border-zinc-800/50 relative z-10">
+        <h3 className="text-zinc-100 text-sm font-bold uppercase tracking-wider flex items-center gap-2">
+          <span className="w-1 h-4 bg-cyan-500 rounded-full shadow-[0_0_10px_rgba(6,182,212,0.5)]"></span>
+          {t("title")}
+        </h3>
       </div>
 
       {/* Grafik Alanı */}
-      <div className="relative w-full h-[300px] mb-4 flex items-center justify-center">
+      <div className="relative flex-1 w-full min-h-0 flex items-center justify-center z-10">
         {isEmpty ? (
-          <div className="flex flex-col items-center justify-center text-center text-gray-400 animate-fadeIn">
-            <RiPieChartLine className="text-6xl text-gray-500 mb-2 animate-pulse" />
-            <p className="text-sm font-medium">{t("noData", { defaultValue: "No portfolio data available" })}</p>
-            <p className="text-xs text-gray-500 mt-1">{t("connectExchange", { defaultValue: "Connect an API key or fund your account to see data." })}</p>
+          <div className="flex flex-col items-center justify-center text-center text-zinc-600 animate-fadeIn gap-3">
+            <div className="w-16 h-16 rounded-full bg-zinc-900/50 border border-zinc-700/50 flex items-center justify-center shadow-[0_0_15px_-5px_rgba(0,0,0,0.5)]">
+              <RiPieChartLine className="text-3xl text-zinc-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium uppercase tracking-wide text-zinc-500">{t("noData", { defaultValue: "No portfolio data available" })}</p>
+              <p className="text-xs text-zinc-600 mt-1">{t("connectExchange", { defaultValue: "Connect an API key or fund your account to see data." })}</p>
+            </div>
           </div>
         ) : (
-          <Doughnut data={doughnutData} options={doughnutOptions} />
+          <div className="w-full h-full max-h-[300px]">
+            <Doughnut data={doughnutData} options={doughnutOptions} />
+          </div>
         )}
       </div>
     </div>

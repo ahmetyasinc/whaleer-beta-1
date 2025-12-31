@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useLayoutEffect } from "react";
 import useIndicatorStore from "@/store/indicator/indicatorStore";
 import useStrategyStore from "@/store/indicator/strategyStore";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -14,42 +14,73 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 
-function Portal({ children }) {
+/* ------------------------ Portal & Menu ------------------------ */
+function PositionedMenu({ position, onClose, children }) {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  if (!mounted) return null;
-  return createPortal(children, document.body);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  if (!mounted || !position) return null;
+
+  const style = {
+    top: position.top,
+    left: position.left,
+  };
+
+  return createPortal(
+    <>
+      {/* Invisible backdrop to catch outside clicks */}
+      <div
+        className="fixed inset-0 z-[9998]"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+      />
+      {/* The actual menu */}
+      <div
+        className="fixed z-[9999] w-44 bg-zinc-900/95 backdrop-blur-md rounded-lg shadow-2xl border border-zinc-700/50 overflow-hidden"
+        style={style}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {children}
+      </div>
+    </>,
+    document.body
+  );
 }
 
 
-/* ------------------------ Toast (yüksek kontrast) ------------------------ */
+/* ------------------------ Toast ------------------------ */
 function Toast({ toasts }) {
   const { t } = useTranslation("strategyIndicator");
   return (
-    <div className="fixed top-4 right-4 space-y-3">
+    <div className="fixed top-4 right-4 space-y-3 z-[1000]">
       {toasts.map((to) => {
         const title =
           to.title ||
           (to.type === "success"
             ? t("toast.titles.success")
             : to.type === "error"
-            ? t("toast.titles.error")
-            : t("toast.titles.info"));
+              ? t("toast.titles.error")
+              : t("toast.titles.info"));
         return (
           <div
             key={to.id}
             className={`min-w-[260px] max-w-[380px] px-4 py-3 rounded-xl text-sm shadow-2xl border backdrop-blur-md animate-[toastIn_0.25s_ease-out]
-            ${
-              to.type === "success"
-                ? "bg-emerald-600/80 text-white border-emerald-300/30"
+            ${to.type === "success"
+                ? "bg-zinc-900/90 text-emerald-200 border-emerald-500/30 shadow-emerald-500/10"
                 : to.type === "error"
-                ? "bg-rose-600/80 text-white border-rose-300/30"
-                : "bg-black/80 text-white border-white/10"
-            }`}
+                  ? "bg-zinc-900/90 text-rose-200 border-rose-500/30 shadow-rose-500/10"
+                  : "bg-zinc-900/90 text-zinc-200 border-zinc-500/30"
+              }`}
             role="status"
           >
             <div className="font-medium">{title}</div>
-            {to.msg && <div className="opacity-90 mt-0.5">{to.msg}</div>}
+            {to.msg && <div className="opacity-80 mt-0.5 text-xs">{to.msg}</div>}
           </div>
         );
       })}
@@ -70,49 +101,49 @@ function PermissionPill({ ok, labelKey }) {
   const label = t(`permissions.${labelKey}`);
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border ${
-        ok
-          ? "bg-emerald-500/15 text-emerald-200 border-emerald-400/30"
-          : "bg-zinc-700/50 text-zinc-300 border-zinc-500/40"
-      }`}
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border ${ok
+        ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/20 shadow-[0_0_6px_rgba(16,185,129,0.15)]"
+        : "bg-zinc-800/50 text-zinc-500 border-zinc-700/50"
+        }`}
     >
       {ok ? <IoCheckmarkCircle size={12} /> : <IoCloseCircle size={12} />} {label}
     </span>
   );
 }
 
-/* undefined olan izinleri gizler; böylece indicator tarafında Scan/Backtest/Bot görünmez */
 function ReleaseStrip({ titleKey, color, release }) {
   const { t } = useTranslation("strategyIndicator");
   if (!release) return null;
   const p = release.permissions || {};
+  const isBlue = color === "blue";
+
   const ColorBar = () => (
-    <div className={`w-1 h-5 rounded ${color === "blue" ? "bg-blue-400" : "bg-amber-400"}`}></div>
+    <div className={`w-1 h-4 rounded-full shadow-[0_0_6px_currentColor] ${isBlue ? "bg-cyan-400 text-cyan-400" : "bg-amber-400 text-amber-400"}`}></div>
   );
 
   const pills = [
-    Object.prototype.hasOwnProperty.call(p, "allow_code_view")   ? <PermissionPill key="code"   ok={!!p.allow_code_view}   labelKey="code" /> : null,
-    Object.prototype.hasOwnProperty.call(p, "allow_chart_view")  ? <PermissionPill key="chart"  ok={!!p.allow_chart_view}  labelKey="chart" /> : null,
-    Object.prototype.hasOwnProperty.call(p, "allow_scanning")    ? <PermissionPill key="scan"   ok={!!p.allow_scanning}    labelKey="scan" /> : null,
-    Object.prototype.hasOwnProperty.call(p, "allow_backtesting") ? <PermissionPill key="back"   ok={!!p.allow_backtesting} labelKey="backtest" /> : null,
+    Object.prototype.hasOwnProperty.call(p, "allow_code_view") ? <PermissionPill key="code" ok={!!p.allow_code_view} labelKey="code" /> : null,
+    Object.prototype.hasOwnProperty.call(p, "allow_chart_view") ? <PermissionPill key="chart" ok={!!p.allow_chart_view} labelKey="chart" /> : null,
+    Object.prototype.hasOwnProperty.call(p, "allow_scanning") ? <PermissionPill key="scan" ok={!!p.allow_scanning} labelKey="scan" /> : null,
+    Object.prototype.hasOwnProperty.call(p, "allow_backtesting") ? <PermissionPill key="back" ok={!!p.allow_backtesting} labelKey="backtest" /> : null,
     Object.prototype.hasOwnProperty.call(p, "allow_bot_execution") ? <PermissionPill key="bot" ok={!!p.allow_bot_execution} labelKey="bot" /> : null,
   ].filter(Boolean);
 
   return (
-    <div className="flex items-center gap-2 text-[11px] bg-zinc-900/80 border border-zinc-600/70 rounded-md px-2 py-1 mt-2">
+    <div className="flex items-center gap-2 text-[11px] bg-zinc-900/60 border border-zinc-800/50 rounded-lg px-2.5 py-1.5 mt-2 backdrop-blur-sm">
       <ColorBar />
-      <span className={`font-medium ${color === "blue" ? "text-blue-300" : "text-amber-300"}`}>
+      <span className={`font-medium ${isBlue ? "text-cyan-300" : "text-amber-300"}`}>
         {t(`release.${titleKey}`)}
       </span>
-      <span className="text-zinc-400">{t("release.versionPrefix")}{release.no ?? "-"}</span>
+      <span className="text-zinc-500 text-[10px]">{t("release.versionPrefix")}{release.no ?? "-"}</span>
       {typeof release.views_count === "number" && (
-        <span className="inline-flex items-center gap-1 text-zinc-200 ml-1">
-          <IoEye size={12} /> {release.views_count}
+        <span className="inline-flex items-center gap-1 text-zinc-400 ml-1 text-[10px]">
+          <IoEye size={11} /> {release.views_count}
         </span>
       )}
       {pills.length > 0 && (
         <>
-          <span className="mx-2 text-zinc-600">|</span>
+          <span className="mx-1.5 text-zinc-700">|</span>
           <div className="flex flex-wrap gap-1">{pills}</div>
         </>
       )}
@@ -121,14 +152,14 @@ function ReleaseStrip({ titleKey, color, release }) {
 }
 
 function EmptyState({ color = "blue", text }) {
-  const ring = color === "purple" ? "bg-purple-500/15" : "bg-blue-500/15";
-  const dot  = color === "purple" ? "bg-purple-400/50" : "bg-blue-400/50";
+  const ring = color === "purple" ? "bg-purple-500/10 border-purple-500/20" : "bg-cyan-500/10 border-cyan-500/20";
+  const dot = color === "purple" ? "bg-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.4)]" : "bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.4)]";
   return (
-    <div className="flex flex-col items-center justify-center py-8 text-center">
-      <div className={`w-12 h-12 ${ring} rounded-full flex items-center justify-center mb-3`}>
-        <div className={`w-6 h-6 ${dot} rounded-full`}></div>
+    <div className="flex flex-col items-center justify-center py-16 text-center opacity-70">
+      <div className={`w-16 h-16 ${ring} border rounded-full flex items-center justify-center mb-4`}>
+        <div className={`w-3 h-3 ${dot} rounded-full`}></div>
       </div>
-      <p className="text-gray-400 text-xs">{text}</p>
+      <p className="text-zinc-500 text-xs uppercase tracking-wider font-medium">{text}</p>
     </div>
   );
 }
@@ -138,22 +169,23 @@ export default function StrategyIndicatorCard() {
   const { t, i18n } = useTranslation("strategyIndicator");
   const locale = i18n.language || "en";
 
-  const [menuOpenKey, setMenuOpenKey] = useState(null); // "s-<id>" | "i-<id>"
-  const menuRef = useRef(null);
+  // Menu State: { key: string | null, position: { top: number, left: number } | null }
+  const [menuState, setMenuState] = useState({ key: null, position: null });
+
   const [showStrategyModal, setShowStrategyModal] = useState(false);
   const [showIndicatorModal, setShowIndicatorModal] = useState(false);
   const [selectedStrategyId, setSelectedStrategyId] = useState(null);
   const [selectedIndicatorId, setSelectedIndicatorId] = useState(null);
   const [initialLoad, setInitialLoad] = useState(true);
 
-  // 👇 Inspect → CodeModal state (view ping YOK)
+  // Inspect → CodeModal state
   const [isInspectOpen, setIsInspectOpen] = useState(false);
   const [inspectTarget, setInspectTarget] = useState(null);
 
   const { strategies, setStrategyPendingRelease } = useStrategyStore();
   const { indicators, setIndicatorPendingRelease } = useIndicatorStore();
 
-  // 🔔 Toast state
+  // Toast state
   const [toasts, setToasts] = useState([]);
   const showToast = (type, msg, title) => {
     const id = Math.random().toString(36).slice(2);
@@ -233,16 +265,11 @@ export default function StrategyIndicatorCard() {
 
   /* ----------------------------- EFFECTS ----------------------------- */
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) setMenuOpenKey(null);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
     const timer = setTimeout(() => setInitialLoad(false), 1500);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      clearTimeout(timer);
-    };
+    return () => clearTimeout(timer);
   }, []);
+
+  const closeMenu = () => setMenuState({ key: null, position: null });
 
   /* ---------------------------- HANDLERS ----------------------------- */
   const handleModalPublish = async ({ permissions, description }) => {
@@ -255,10 +282,10 @@ export default function StrategyIndicatorCard() {
           no: res.data?.release_no,
           status: "pending",
           permissions: {
-            allow_code_view:  !!permissions?.codeView,
+            allow_code_view: !!permissions?.codeView,
             allow_chart_view: !!permissions?.chartView,
-            allow_scanning:   !!permissions?.scan,
-            allow_backtesting:!!permissions?.backtest,
+            allow_scanning: !!permissions?.scan,
+            allow_backtesting: !!permissions?.backtest,
             allow_bot_execution: !!permissions?.botRun,
           },
         };
@@ -286,7 +313,7 @@ export default function StrategyIndicatorCard() {
           no: res.data?.release_no,
           status: "pending",
           permissions: {
-            allow_code_view:  !!permissions?.codeView,
+            allow_code_view: !!permissions?.codeView,
             allow_chart_view: !!permissions?.chartView,
           },
         };
@@ -304,11 +331,10 @@ export default function StrategyIndicatorCard() {
     }
   };
 
-  // Inspect: sadece modal aç (view notify YOK)
   const handleInspect = (item) => {
     setInspectTarget(item);
     setIsInspectOpen(true);
-    setMenuOpenKey(null);
+    closeMenu();
   };
 
   /* --------------------------- ITEMS --------------------------- */
@@ -317,35 +343,42 @@ export default function StrategyIndicatorCard() {
     const selected = group.versions.find((v) => v.id === selectedId) || group.latest;
     const menuKey = `s-${selected.id}`;
     const approved = selected?.approved_release || null;
-    const pending  = selected?.pending_release  || null;//
+    const pending = selected?.pending_release || null;
+
     const onChangeVersion = (e) => {
       const newId = Number(e.target.value);
       setSelectedVersionByStrategyGroup((prev) => ({ ...prev, [group.groupId]: newId }));
     };
+
+    const isMenuOpen = menuState.key === menuKey;
+
     return (
       <div
-        className="group bg-gradient-to-r from-slate-800/60 to-slate-900/60 rounded-lg p-3 hover:bg-zinc-900 transition-all duration-200 border border-zinc-700 hover:border-zinc-500 relative
-               max-h-56 overflow-y-auto"
-        style={initialLoad ? { animationDelay: `${index * 200}ms`, animation: "fadeInUp 1s ease-out forwards" } : {}}
+        className="group bg-zinc-900/40 backdrop-blur-sm rounded-xl p-4 hover:bg-zinc-800/50 transition-all duration-300 border border-zinc-800/50 hover:border-cyan-500/30 relative hover:shadow-[0_0_20px_rgba(34,211,238,0.08)]"
+        style={initialLoad ? { animationDelay: `${index * 100}ms`, animation: "fadeInUp 0.6s ease-out forwards" } : {}}
       >
         <div className="flex justify-between items-start gap-3">
           <div className="flex-1 pr-3">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="font-medium text-white text-sm">{selected?.name || group.latest?.name}</div>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/30 text-blue-100 border border-blue-300/30">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="font-semibold text-zinc-100 text-sm group-hover:text-cyan-50 transition-colors">{selected?.name || group.latest?.name}</div>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 shadow-[0_0_8px_rgba(34,211,238,0.1)]">
                 {t("release.versionPrefix")}{selected?.version ?? "-"}
               </span>
               {group.versions.length > 1 && (
-                <span className="text-[10px] px-1 py-0.5 rounded bg-zinc-700/60 text-zinc-200 border border-zinc-500/50">
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800/80 text-zinc-400 border border-zinc-700/50">
                   {t("badges.versions", { count: group.versions.length })}
                 </span>
               )}
-            </div>          
+            </div>
             {group.versions.length > 1 && (
               <select
                 value={selectedId}
                 onChange={onChangeVersion}
-                className="bg-zinc-900/80 border border-zinc-600 rounded-md text-xs px-2 py-1 text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                className="bg-zinc-950/60 border border-zinc-700/50 rounded-lg text-[11px] px-2.5 py-1.5 text-zinc-300 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 mt-1 cursor-pointer hover:bg-zinc-900/80 transition-colors"
+                onClick={(e) => {
+                  if (menuState.key) closeMenu();
+                  e.stopPropagation();
+                }}
               >
                 {group.versions.map((v) => (
                   <option key={v.id} value={v.id}>
@@ -355,39 +388,57 @@ export default function StrategyIndicatorCard() {
               </select>
             )}
 
-            <ReleaseStrip titleKey="approved" color="blue"  release={approved} />
-            <ReleaseStrip titleKey="pending"  color="amber" release={pending} />        
+            <ReleaseStrip titleKey="approved" color="blue" release={approved} />
+            <ReleaseStrip titleKey="pending" color="amber" release={pending} />
             {selected?.description && (
-              <div className="text-xs text-gray-300/90 line-clamp-2 mt-2">{selected.description}</div>
+              <div className="text-xs text-zinc-500 line-clamp-2 mt-2 font-light leading-relaxed">{selected.description}</div>
             )}
-          </div>        
-          <div className="relative" ref={menuOpenKey === menuKey ? menuRef : null}>
+          </div>
+          <div>
             <button
-              onClick={() => setMenuOpenKey(menuOpenKey === menuKey ? null : menuKey)}
-              className="p-1.5 rounded-full hover:bg-zinc-700 transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isMenuOpen) {
+                  closeMenu();
+                } else {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setMenuState({
+                    key: menuKey,
+                    position: {
+                      top: rect.bottom + 5,
+                      left: Math.max(10, rect.right - 176)
+                    }
+                  });
+                }
+              }}
+              className={`p-2 rounded-lg transition-all duration-200 ${isMenuOpen ? "bg-cyan-500/20 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.2)]" : "hover:bg-zinc-800 text-zinc-400 hover:text-cyan-300"}`}
               title={t("menu.actions")}
             >
-              <BsThreeDotsVertical className="text-gray-200" size={14} />
-            </button>        
-            {menuOpenKey === menuKey && (
-              <div className="absolute top-0 right-8 w-40 bg-gray-900/95 backdrop-blur-sm rounded-lg shadow-xl border border-gray-700 overflow-hidden">
-                <button
-                  onClick={() => handleInspect(selected)} // 👈 sadece modal
-                  className="flex items-center gap-2 w-full px-3 py-2 text-xs text-yellow-300 hover:bg-gray-800/80 transition-colors"
-                >
-                  <IoSearch size={14} /> {t("menu.inspect")} ({t("release.versionPrefix")}{selected.version ?? "-"})
-                </button>
-                <button
-                  onClick={() => {
-                    setMenuOpenKey(null);
-                    setSelectedStrategyId(selected.id);
-                    setShowStrategyModal(true);
-                  }}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-xs text-blue-300 hover:bg-gray-800/80 transition-colors border-t border-gray-700"
-                >
-                  <FiUpload size={14} /> {t("menu.publish")}
-                </button>
-              </div>
+              <BsThreeDotsVertical size={16} />
+            </button>
+            {isMenuOpen && (
+              <PositionedMenu position={menuState.position} onClose={closeMenu}>
+                <div className="flex flex-col py-1">
+                  <button
+                    onClick={() => handleInspect(selected)}
+                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-xs text-zinc-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-colors"
+                  >
+                    <IoSearch size={15} /> {t("menu.inspect")}
+                  </button>
+                  <div className="h-px bg-zinc-800 mx-3 my-1"></div>
+                  <button
+                    onClick={() => {
+                      closeMenu();
+                      setSelectedStrategyId(selected.id);
+                      setShowStrategyModal(true);
+                    }}
+                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-xs text-zinc-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-colors"
+                  >
+                    <FiUpload size={15} /> {t("menu.publish")}
+                  </button>
+                </div>
+              </PositionedMenu>
             )}
           </div>
         </div>
@@ -400,35 +451,42 @@ export default function StrategyIndicatorCard() {
     const selected = group.versions.find((v) => v.id === selectedId) || group.latest;
     const menuKey = `i-${selected.id}`;
     const approved = selected?.approved_release || null;
-    const pending  = selected?.pending_release  || null;//
+    const pending = selected?.pending_release || null;
+
     const onChangeVersion = (e) => {
       const newId = Number(e.target.value);
       setSelectedVersionByIndicatorGroup((prev) => ({ ...prev, [group.groupId]: newId }));
     };
+
+    const isMenuOpen = menuState.key === menuKey;
+
     return (
       <div
-        className="group bg-gradient-to-r from-slate-800/60 to-slate-900/60 rounded-lg p-3 hover:bg-zinc-900 transition-all duration-200 border border-zinc-700 hover:border-zinc-500 relative
-               max-h-56 overflow-y-auto"
-        style={initialLoad ? { animationDelay: `${index * 200}ms`, animation: "fadeInUp 1s ease-out forwards" } : {}}
+        className="group bg-zinc-900/40 backdrop-blur-sm rounded-xl p-4 hover:bg-zinc-800/50 transition-all duration-300 border border-zinc-800/50 hover:border-purple-500/30 relative hover:shadow-[0_0_20px_rgba(168,85,247,0.08)]"
+        style={initialLoad ? { animationDelay: `${index * 100}ms`, animation: "fadeInUp 0.6s ease-out forwards" } : {}}
       >
         <div className="flex justify-between items-start gap-3">
           <div className="flex-1 pr-3">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="font-medium text-white text-sm">{selected?.name || group.latest?.name}</div>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/30 text-purple-100 border border-purple-300/30">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="font-semibold text-zinc-100 text-sm group-hover:text-purple-50 transition-colors">{selected?.name || group.latest?.name}</div>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 shadow-[0_0_8px_rgba(168,85,247,0.1)]">
                 {t("release.versionPrefix")}{selected?.version ?? "-"}
               </span>
               {group.versions.length > 1 && (
-                <span className="text-[10px] px-1 py-0.5 rounded bg-zinc-700/60 text-zinc-200 border border-zinc-500/50">
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800/80 text-zinc-400 border border-zinc-700/50">
                   {t("badges.versions", { count: group.versions.length })}
                 </span>
               )}
-            </div>          
+            </div>
             {group.versions.length > 1 && (
               <select
                 value={selectedId}
                 onChange={onChangeVersion}
-                className="bg-zinc-900/80 border border-zinc-600 rounded-md text-xs px-2 py-1 text-zinc-100 focus:outline-none focus:ring-1 focus:ring-purple-400"
+                className="bg-zinc-950/60 border border-zinc-700/50 rounded-lg text-[11px] px-2.5 py-1.5 text-zinc-300 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/20 mt-1 cursor-pointer hover:bg-zinc-900/80 transition-colors"
+                onClick={(e) => {
+                  if (menuState.key) closeMenu();
+                  e.stopPropagation();
+                }}
               >
                 {group.versions.map((v) => (
                   <option key={v.id} value={v.id}>
@@ -438,39 +496,57 @@ export default function StrategyIndicatorCard() {
               </select>
             )}
 
-            <ReleaseStrip titleKey="approved" color="blue"  release={approved} />
-            <ReleaseStrip titleKey="pending"  color="amber" release={pending} />        
+            <ReleaseStrip titleKey="approved" color="blue" release={approved} />
+            <ReleaseStrip titleKey="pending" color="amber" release={pending} />
             {selected?.description && (
-              <div className="text-xs text-gray-300/90 line-clamp-2 mt-2">{selected.description}</div>
+              <div className="text-xs text-zinc-500 line-clamp-2 mt-2 font-light leading-relaxed">{selected.description}</div>
             )}
-          </div>        
-          <div className="relative" ref={menuOpenKey === menuKey ? menuRef : null}>
+          </div>
+          <div>
             <button
-              onClick={() => setMenuOpenKey(menuOpenKey === menuKey ? null : menuKey)}
-              className="p-1.5 rounded-full hover:bg-zinc-700 transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isMenuOpen) {
+                  closeMenu();
+                } else {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setMenuState({
+                    key: menuKey,
+                    position: {
+                      top: rect.bottom + 5,
+                      left: Math.max(10, rect.right - 176)
+                    }
+                  });
+                }
+              }}
+              className={`p-2 rounded-lg transition-all duration-200 ${isMenuOpen ? "bg-purple-500/20 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.2)]" : "hover:bg-zinc-800 text-zinc-400 hover:text-purple-300"}`}
               title={t("menu.actions")}
             >
-              <BsThreeDotsVertical className="text-gray-200" size={14} />
-            </button>        
-            {menuOpenKey === menuKey && (
-              <div className="absolute top-0 right-8 w-40 bg-gray-900/95 backdrop-blur-sm rounded-lg shadow-xl border border-gray-700 z-20 overflow-hidden">
-                <button
-                  onClick={() => handleInspect(selected)} // 👈 sadece modal
-                  className="flex items-center gap-2 w-full px-3 py-2 text-xs text-yellow-300 hover:bg-gray-800/80 transition-colors"
-                >
-                  <IoSearch size={14} /> {t("menu.inspect")} ({t("release.versionPrefix")}{selected.version ?? "-"})
-                </button>
-                <button
-                  onClick={() => {
-                    setMenuOpenKey(null);
-                    setSelectedIndicatorId(selected.id);
-                    setShowIndicatorModal(true);
-                  }}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-xs text-blue-300 hover:bg-gray-800/80 transition-colors border-t border-gray-700"
-                >
-                  <FiUpload size={14} /> {t("menu.publish")}
-                </button>
-              </div>
+              <BsThreeDotsVertical size={16} />
+            </button>
+            {isMenuOpen && (
+              <PositionedMenu position={menuState.position} onClose={closeMenu}>
+                <div className="flex flex-col py-1">
+                  <button
+                    onClick={() => handleInspect(selected)}
+                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-xs text-zinc-200 hover:bg-purple-500/10 hover:text-purple-300 transition-colors"
+                  >
+                    <IoSearch size={15} /> {t("menu.inspect")}
+                  </button>
+                  <div className="h-px bg-zinc-800 mx-3 my-1"></div>
+                  <button
+                    onClick={() => {
+                      closeMenu();
+                      setSelectedIndicatorId(selected.id);
+                      setShowIndicatorModal(true);
+                    }}
+                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-xs text-zinc-200 hover:bg-purple-500/10 hover:text-purple-300 transition-colors"
+                  >
+                    <FiUpload size={15} /> {t("menu.publish")}
+                  </button>
+                </div>
+              </PositionedMenu>
             )}
           </div>
         </div>
@@ -480,53 +556,65 @@ export default function StrategyIndicatorCard() {
 
   /* --------------------------- RENDER --------------------------- */
   return (
-    <div className="w-full h-[calc(100vh-94px)] flex gap-3 overflow-hidden">
+    <div className="w-full h-[calc(100vh-120px)] flex gap-4 overflow-hidden">
       {/* Strategies (GROUPED) */}
-      <div className="flex-1 bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl border border-zinc-700 shadow-xl flex flex-col max-h=[calc(100vh-180px)]">
-        <div className="px-4 py-3 border-b border-zinc-700 bg-gradient-to-r from-blue-900/20 to-blue-800/10">
-          <div className="flex items-center gap-3">
-            <div className="w-4 h-4 bg-blue-400 rounded-full"></div>
-            <h3 className="text-sm mt-[6px] font-semibold text-blue-200">{t("headers.strategies")}</h3>
-            <span className="bg-blue-500/20 text-blue-200 text-xs px-2 py-0.5 rounded-full font-medium border border-blue-400/20">
+      <div className="flex-1 bg-zinc-950/90 backdrop-blur-sm rounded-2xl border border-zinc-800 shadow-2xl flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-zinc-800/50 bg-zinc-900/60">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="w-3 h-3 bg-cyan-400 rounded-full shadow-[0_0_12px_#22d3ee]"></div>
+                <div className="absolute inset-0 bg-cyan-400 rounded-full animate-ping opacity-25"></div>
+              </div>
+              <h3 className="text-sm font-bold text-zinc-100 tracking-wide uppercase">{t("headers.strategies")}</h3>
+            </div>
+            <span className="bg-cyan-500/10 text-cyan-300 text-xs px-3 py-1 rounded-full font-semibold border border-cyan-500/20 shadow-[0_0_10px_rgba(34,211,238,0.1)]">
               {strategyGroups.length}
             </span>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
-          <div className="space-y-3">
-            {strategyGroups.length > 0 ? (
-              strategyGroups.map((group, idx) => (
-                <StrategyGroupItem key={group.groupId} group={group} index={idx} />
-              ))
-            ) : (
-              <EmptyState color="blue" text={t("empty.strategies")} />
-            )}
-          </div>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+          {strategyGroups.length > 0 ? (
+            strategyGroups.map((group, idx) => (
+              <StrategyGroupItem key={group.groupId} group={group} index={idx} />
+            ))
+          ) : (
+            <EmptyState color="blue" text={t("empty.strategies")} />
+          )}
         </div>
-      </div>        
+      </div>
+
       {/* Indicators (GROUPED) */}
-      <div className="flex-1 bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl border border-zinc-700 shadow-xl flex flex-col max-h=[calc(100vh-110px)]">
-        <div className="px-4 py-3 border-b border-zinc-700 bg-gradient-to-r from-purple-900/20 to-purple-800/10">
-          <div className="flex items-center gap-3">
-            <div className="w-4 h-4 bg-purple-400 rounded-full"></div>
-            <h3 className="text-sm mt-[6px] font-semibold text-purple-200">{t("headers.indicators")}</h3>
-            <span className="bg-purple-500/20 text-purple-200 text-xs px-2 py-0.5 rounded-full font-medium border border-purple-400/20">
+      <div className="flex-1 bg-zinc-950/90 backdrop-blur-sm rounded-2xl border border-zinc-800 shadow-2xl flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-zinc-800/50 bg-zinc-900/60">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="w-3 h-3 bg-purple-400 rounded-full shadow-[0_0_12px_#a855f7]"></div>
+                <div className="absolute inset-0 bg-purple-400 rounded-full animate-ping opacity-25"></div>
+              </div>
+              <h3 className="text-sm font-bold text-zinc-100 tracking-wide uppercase">{t("headers.indicators")}</h3>
+            </div>
+            <span className="bg-purple-500/10 text-purple-300 text-xs px-3 py-1 rounded-full font-semibold border border-purple-500/20 shadow-[0_0_10px_rgba(168,85,247,0.1)]">
               {indicatorGroups.length}
             </span>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
-          <div className="space-y-3">
-            {indicatorGroups.length > 0 ? (
-              indicatorGroups.map((group, idx) => (
-                <IndicatorGroupItem key={group.groupId} group={group} index={idx} />
-              ))
-            ) : (
-              <EmptyState color="purple" text={t("empty.indicators")} />
-            )}
-          </div>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+          {indicatorGroups.length > 0 ? (
+            indicatorGroups.map((group, idx) => (
+              <IndicatorGroupItem key={group.groupId} group={group} index={idx} />
+            ))
+          ) : (
+            <EmptyState color="purple" text={t("empty.indicators")} />
+          )}
         </div>
-      </div>        
+      </div>
+
       {/* Modals */}
       <PublishStrategyModal
         isOpen={showStrategyModal}
@@ -539,19 +627,33 @@ export default function StrategyIndicatorCard() {
         onPublish={handleIndicatorPublish}
       />
 
-      {/* Inspect → CodeModal (view ping YOK) */}
+      {/* Inspect → CodeModal */}
       <CodeModal
         isOpen={isInspectOpen}
         onClose={() => setIsInspectOpen(false)}
-        indicator={inspectTarget} // CodeModal değiştirilmedi; tek prop kullanıyoruz
+        indicator={inspectTarget}
       />
 
       {/* Toast container */}
-      <Toast toasts={toasts} />        
+      <Toast toasts={toasts} />
+
       <style jsx>{`
         @keyframes fadeInUp {
-          from { opacity: 0; transform: translateX(-40px); }
-          to   { opacity: 1; transform: translateX(0); }
+          from { opacity: 0; transform: translateY(15px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(113, 113, 122, 0.3);
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(113, 113, 122, 0.5);
         }
       `}</style>
     </div>

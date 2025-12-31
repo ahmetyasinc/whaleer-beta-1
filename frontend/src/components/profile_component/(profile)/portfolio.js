@@ -178,41 +178,43 @@ export default function Portfolio() {
     }
   };
 
-//bg-gradient-to-br from-gray-950 to-zinc-900
-  
-return (
+  //bg-gradient-to-br from-gray-950 to-zinc-900
+
+  return (
     // DEĞİŞİKLİK BURADA:
     // min-h-[400px]: İçerik az olsa bile kart en az 400px boyunda olur.
     // max-h-[600px]: İçerik çok olsa bile kart 600px'i geçmez.
     // Bu sınıra ulaşıldığında içerideki overflow-y-auto devreye girer ve scroll oluşur.
-    <div className="bg-gradient-to-br from-zinc-950/90 via-stone-800/40 to-zinc-950/90 rounded-xl shadow-lg border border-zinc-700 overflow-hidden text-white w-full flex flex-col h-[calc(100vh-108px)]">
-      
+    <div className="relative bg-zinc-950/90 backdrop-blur-sm border border-zinc-700 rounded-xl shadow-lg flex flex-col w-full h-[calc(100vh-108px)] overflow-hidden group hover:border-blue-900/80 transition-all duration-300">
+
+      {/* Glow effects */}
+      <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/5 blur-3xl rounded-full pointer-events-none"></div>
+
       {/* Header */}
-      <div className="bg-gradient-to-r from-cyan-800 to-purple-800 px-4 py-3 flex-shrink-0">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold">
+      <div className="pb-3 pt-4 px-5 border-b border-zinc-800/50 relative z-10 flex-shrink-0">
+        <div className="flex justify-between items-center mb-1">
+          <h2 className="text-zinc-100 text-sm font-bold uppercase tracking-wider flex items-center gap-2">
+            <span className="w-1 h-4 bg-cyan-500 rounded-full shadow-[0_0_10px_rgba(6,182,212,0.5)]"></span>
             {activeTab === "portfolio"
               ? t("header.portfolio")
               : t("header.transactions")}
           </h2>
-          <div className="flex bg-black/30 rounded-lg p-1">
+          <div className="flex gap-2">
             <button
               onClick={() => setActiveTab("portfolio")}
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
-                activeTab === "portfolio"
-                  ? "bg-white text-blue-700 shadow-sm"
-                  : "text-white hover:bg-white/10"
-              }`}
+              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all duration-300 ${activeTab === "portfolio"
+                ? "bg-blue-950/30 border-blue-500/50 text-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.2)]"
+                : "bg-zinc-900 border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600"
+                }`}
             >
               {t("tabs.portfolio")}
             </button>
             <button
               onClick={() => setActiveTab("transactions")}
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
-                activeTab === "transactions"
-                  ? "bg-white text-blue-700 shadow-sm"
-                  : "text-white hover:bg-white/10"
-              }`}
+              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all duration-300 ${activeTab === "transactions"
+                ? "bg-purple-950/30 border-purple-500/50 text-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.2)]"
+                : "bg-zinc-900 border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600"
+                }`}
             >
               {t("tabs.transactions")}
             </button>
@@ -223,16 +225,16 @@ return (
       {/* Content - Scroll Alanı */}
       {/* flex-1: Header'dan kalan tüm alanı kaplar. */}
       {/* overflow-hidden: Dışa taşmayı engeller. */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden relative z-10">
         {/* h-full: Ebeveyninin boyunu alır. */}
         {/* overflow-y-auto: İçerik sığmazsa scroll bar çıkarır. */}
-        <div className="h-full overflow-y-auto px-3 py-4 scrollbar-thin scrollbar-thumb-zinc-600 scrollbar-track-transparent">
+        <div className="h-full overflow-y-auto px-4 py-4 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
           {activeTab === "portfolio" ? (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {portfolio.length > 0 ? (
                 <>
                   {/* Sticky Header (Tablo Başlıkları) */}
-                  <div className="grid grid-cols-7 gap-2 text-xs sm:text-sm font-semibold text-gray-400 py-2 sticky top-0 bg-gray-900/95 backdrop-blur z-10 px-2 rounded">
+                  <div className="grid grid-cols-7 gap-2 text-[10px] uppercase tracking-wider font-bold text-zinc-500 py-2 sticky top-0 bg-zinc-900/95 backdrop-blur z-20 px-3 rounded-lg mb-2 border-b border-zinc-800/50">
                     <div className="text-left">
                       {t("portfolio.columns.crypto")}
                     </div>
@@ -264,54 +266,53 @@ return (
                     return (
                       <div
                         key={`${item.symbol}-${index}`}
-                        className="grid grid-cols-7 gap-2 items-center py-3 rounded-lg px-2 bg-gradient-to-r from-slate-800/50 to-slate-900/50 hover:bg-zinc-900 hover:border-blue-500/70 transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/10"
+                        className="grid grid-cols-7 gap-2 items-center py-3 px-3 rounded-lg bg-zinc-900/30 border border-zinc-800/50 hover:bg-zinc-800/50 hover:border-blue-500/30 transition-all duration-300 hover:shadow-[0_0_15px_-5px_rgba(59,130,246,0.15)] group/item"
                         style={{
-                          animationDelay: `${index * 200}ms`,
-                          animation: "fadeInUp 1s ease-out forwards",
+                          animationDelay: `${index * 50}ms`,
+                          animation: "fadeInUp 0.5s ease-out forwards",
                         }}
                       >
-                        <div className="flex items-center space-x-2 min-w-0">
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-orange-500 to-yellow-600 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0">
+                        <div className="flex items-center space-x-3 min-w-0">
+                          <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-300 text-xs font-bold border border-zinc-700 group-hover/item:border-blue-500/50 group-hover/item:text-blue-400 params-transition">
                             {item.symbol.substring(0, 2).toUpperCase()}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="font-semibold text-white text-sm sm:text-base truncate">
+                            <div className="font-bold text-zinc-200 text-sm truncate group-hover/item:text-blue-300 transition-colors">
                               {item.symbol.toUpperCase()}
                             </div>
-                            <div className="text-xs text-gray-400 truncate hidden sm:block">
+                            <div className="text-[10px] text-zinc-500 truncate hidden sm:block uppercase tracking-wide">
                               {item.name}
                             </div>
                           </div>
                         </div>
 
-                        <div className="text-right">
-                          {item.leverage ? `${item.leverage}x` : "-"}
+                        <div className="text-right text-xs font-medium text-zinc-400">
+                          {item.leverage ? <span className="text-orange-400">{item.leverage}x</span> : "-"}
                         </div>
-                        <div className="text-right">
+                        <div className="text-right text-xs font-medium">
                           {item.position_side
-                            ? item.position_side.toUpperCase()
+                            ? <span className={item.position_side.toLowerCase() === 'long' ? 'text-green-400' : 'text-red-400'}>{item.position_side.toUpperCase()}</span>
                             : "-"}
                         </div>
 
                         <div className="text-right">
-                          <div className="font-semibold text-white text-sm sm:text-base">
+                          <div className="font-mono text-zinc-300 text-xs">
                             {Number(item.cost || 0).toFixed(2)}
                           </div>
                         </div>
 
                         <div className="text-right">
-                          <div className="font-semibold text-white text-sm sm:text-base">
+                          <div className="font-mono text-zinc-300 text-xs">
                             {Number(item.amount || 0).toFixed(8)}
                           </div>
                         </div>
 
                         <div className="text-right">
                           <span
-                            className={`font-semibold text-sm sm:text-base ${
-                              (item.profitLoss || 0) >= 0
-                                ? "text-green-400"
-                                : "text-red-400"
-                            }`}
+                            className={`font-mono font-bold text-xs ${(item.profitLoss || 0) >= 0
+                              ? "text-emerald-400"
+                              : "text-red-400"
+                              }`}
                           >
                             {formatCurrency(item.profitLoss)}
                           </span>
@@ -319,11 +320,10 @@ return (
 
                         <div className="text-right">
                           <span
-                            className={`font-semibold text-sm sm:text-base ${
-                              profitLossPercent >= 0
-                                ? "text-green-400"
-                                : "text-red-400"
-                            }`}
+                            className={`font-mono font-bold text-xs ${profitLossPercent >= 0
+                              ? "text-emerald-400"
+                              : "text-red-400"
+                              }`}
                           >
                             {profitLossPercent >= 0 ? "+" : ""}
                             {profitLossPercent.toFixed(2)}%
@@ -334,24 +334,26 @@ return (
                   })}
                 </>
               ) : (
-                <div className="text-center py-12 text-gray-500 flex flex-col items-center gap-2">
-                  <GiTwoCoins className="text-[70px] text-gray-500 my-2" />
-                  <p>{t("portfolio.empty")}</p>
+                <div className="text-center py-20 text-zinc-600 flex flex-col items-center gap-4">
+                  <div className="w-20 h-20 rounded-full bg-zinc-900/50 border border-zinc-800 flex items-center justify-center">
+                    <GiTwoCoins className="text-4xl text-zinc-700" />
+                  </div>
+                  <p className="text-sm uppercase tracking-wider font-medium">{t("portfolio.empty")}</p>
                   <button
                     onClick={handleNavigate}
-                    className="py-2 mt-10 px-3 bg-gradient-to-r from-violet-600 to-cyan-600 text-zinc-300 rounded-xl shadow-lg shadow-blue-600/30 hover:from-blue-500/70 hover:to-purple-500/70 hover:shadow-blue-500/30 transition-all hover:scale-[1.005] duration-100 flex items-center gap-2"
+                    className="group flex items-center gap-2 px-6 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg transition-all duration-300 hover:shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)]"
                   >
-                    <FaLongArrowAltRight className="text-lg" />
-                    {t('portfolio.addApi')}
+                    <span className="text-xs font-bold uppercase tracking-wide">{t('portfolio.addApi')}</span>
+                    <FaLongArrowAltRight className="transition-transform group-hover:translate-x-1" />
                   </button>
                 </div>
               )}
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {transactions.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-6 gap-3 text-xs sm:text-sm font-semibold text-gray-300 py-2 sticky top-0 bg-slate-900/95 backdrop-blur z-10 px-2 rounded">
+                  <div className="grid grid-cols-6 gap-3 text-[10px] uppercase tracking-wider font-bold text-zinc-500 py-2 sticky top-0 bg-zinc-900/95 backdrop-blur z-20 px-3 rounded-lg mb-2 border-b border-zinc-800/50">
                     <div>{t("transactions.columns.crypto")}</div>
                     <div className="text-center">
                       {t("transactions.columns.type")}
@@ -373,33 +375,36 @@ return (
                   {orderedTransactions.map((transaction, index) => (
                     <div
                       key={`${transaction.symbol}-${transaction.date}-${index}`}
-                      className="grid grid-cols-6 gap-3 items-center py-3 bg-gradient-to-r from-slate-800/50 to-slate-900/50 hover:bg-zinc-900 rounded-lg px-2 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10"
+                      className="grid grid-cols-6 gap-3 items-center py-3 px-3 rounded-lg bg-zinc-900/30 border border-zinc-800/50 hover:bg-zinc-800/50 hover:border-purple-500/30 transition-all duration-300 hover:shadow-[0_0_15px_-5px_rgba(168,85,247,0.15)] group/item"
                       style={{
-                        animationDelay: `${index * 200}ms`,
-                        animation: "fadeInUp 1s ease-out forwards",
+                        animationDelay: `${index * 50}ms`,
+                        animation: "fadeInUp 0.5s ease-out forwards",
                       }}
                     >
-                      <div className="flex items-center space-x-2 min-w-0">
-                        <div className="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-r from-sky-700 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                      <div className="flex items-center space-x-3 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-300 text-xs font-bold border border-zinc-700 group-hover/item:border-purple-500/50 group-hover/item:text-purple-400 params-transition">
                           {transaction.symbol.substring(0, 2).toUpperCase()}
                         </div>
-                        <span className="font-semibold text-white text-sm sm:text-base truncate">
+                        <span className="font-bold text-zinc-200 text-sm truncate group-hover/item:text-purple-300 transition-colors">
                           {transaction.symbol.toUpperCase()}
                         </span>
                       </div>
 
                       <div className="text-center">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${getTransactionTypeColor(
-                            transaction.type
-                          )}`}
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border ${String(transaction.type).toLowerCase() === 'long'
+                            ? 'bg-green-500/10 text-green-400 border-green-500/20'
+                            : String(transaction.type).toLowerCase() === 'short'
+                              ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                              : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
+                            }`}
                         >
                           {String(transaction.type).toUpperCase()}
                         </span>
                       </div>
 
                       <div className="text-center">
-                        <span className="text-sm sm:text-base font-medium text-white">
+                        <span className="text-xs font-medium text-zinc-300">
                           {getTransactionLabel(
                             transaction.direction,
                             String(transaction.type).toUpperCase()
@@ -409,17 +414,17 @@ return (
 
                       <div className="text-center">
                         <div className="flex flex-col items-center justify-center">
-                          <span className="text-xs sm:text-sm text-gray-400">
+                          <span className="text-[10px] text-zinc-400 font-mono">
                             {formatDate(transaction.date)}
                           </span>
-                          <span className="text-xs sm:text-sm text-gray-400">
+                          <span className="text-[10px] text-zinc-500 font-mono">
                             {formatTime(transaction.date)}
                           </span>
                         </div>
                       </div>
 
                       <div className="text-center">
-                        <span className="font-semibold text-white text-sm sm:text-base">
+                        <span className="font-mono text-zinc-300 text-xs">
                           {formatCurrency(
                             Number(transaction.price || 0).toFixed(4)
                           )}
@@ -427,7 +432,7 @@ return (
                       </div>
 
                       <div className="text-right">
-                        <span className="font-semibold text-white text-sm sm:text-base">
+                        <span className="font-mono text-zinc-300 text-xs">
                           {Number(transaction.amount || 0).toFixed(8)}
                         </span>
                       </div>
@@ -435,9 +440,11 @@ return (
                   ))}
                 </>
               ) : (
-                <div className="text-center py-12 text-gray-500 flex flex-col items-center gap-2">
-                  <TbAlignBoxLeftStretch className="text-[70px] text-gray-500 my-2" />
-                  <p>{t("transactions.empty")}</p>
+                <div className="text-center py-20 text-zinc-600 flex flex-col items-center gap-4">
+                  <div className="w-20 h-20 rounded-full bg-zinc-900/50 border border-zinc-800 flex items-center justify-center">
+                    <TbAlignBoxLeftStretch className="text-4xl text-zinc-700" />
+                  </div>
+                  <p className="text-sm uppercase tracking-wider font-medium">{t("transactions.empty")}</p>
                 </div>
               )}
             </div>
@@ -449,11 +456,11 @@ return (
         @keyframes fadeInUp {
           from {
             opacity: 0;
-            transform: translateX(-40px);
+            transform: translateY(10px);
           }
           to {
             opacity: 1;
-            transform: translateX(0);
+            transform: translateY(0);
           }
         }
       `}</style>

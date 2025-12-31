@@ -7,7 +7,9 @@
     "reset": "Reset",
     "cancel": "Cancel",
     "save": "Save",
-    "close": "Close"
+    "close": "Close",
+    "resetToDefault": "Reset to Default",
+    "default": "Default"
   },
   "labels": {
     "chart": "Chart",
@@ -19,7 +21,8 @@
     "histogramOptions": "Histogram Options",
     "seriesOptions": "{{type}} Options",
     "priceSettings": "Price Settings",
-    "watermark": "Watermark Settings"
+    "watermark": "Watermark Settings",
+    "crosshair": "Crosshair Settings"
   },
   "fields": {
     "background": "Background",
@@ -54,7 +57,8 @@
     "opacityFor": "Opacity for {{target}}",
     "visible": "Visible",
     "wmColor": "Watermark Color",
-    "wmSize": "Watermark Size"
+    "wmSize": "Watermark Size",
+    "style": "Style"
   },
   "series": {
     "candlestick": "Candlestick",
@@ -81,7 +85,10 @@
     "gray": "Gray",
     "yellow": "Yellow",
     "red": "Red",
-    "green": "Green"
+    "green": "Green",
+    "solid": "Solid",
+    "dotted": "Dotted",
+    "dashed": "Dashed"
   },
   "a11y": {
     "backdrop": "Close modal by clicking on backdrop"

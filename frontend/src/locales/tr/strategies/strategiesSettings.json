@@ -7,7 +7,9 @@
     "reset": "Sıfırla",
     "cancel": "İptal",
     "save": "Kaydet",
-    "close": "Kapat"
+    "close": "Kapat",
+    "resetToDefault": "Varsayılana Sıfırla",
+    "default": "Varsayılan"
   },
   "labels": {
     "chart": "Grafik",
@@ -19,7 +21,8 @@
     "histogramOptions": "Histogram Seçenekleri",
     "seriesOptions": "{{type}} Seçenekleri",
     "watermark": "Su İzi Ayarları",
-    "priceSettings": "Fiyat Ayarları"
+    "priceSettings": "Fiyat Ayarları",
+    "crosshair": "İmleç Ayarları"
   },
   "fields": {
     "background": "Arka Plan",
@@ -54,7 +57,8 @@
     "opacityFor": "{{target}} için opaklık",
     "visible": "Görünür",
     "wmColor": "Su İzi Rengi",
-    "wmSize": "Su İzi Boyutu"
+    "wmSize": "Su İzi Boyutu",
+    "style": "Stil"
   },
   "series": {
     "candlestick": "Mum",
@@ -81,7 +85,10 @@
     "gray": "Gri",
     "yellow": "Sarı",
     "red": "Kırmızı",
-    "green": "Yeşil"
+    "green": "Yeşil",
+    "solid": "Düz",
+    "dotted": "Noktalı",
+    "dashed": "Kesikli"
   },
   "a11y": {
     "backdrop": "Arka plana tıklayarak kapat"

@@ -192,73 +192,76 @@ export default function BotPieChart({ bots = [] }) {
   }, [list]);
 
   return (
-    <div className="bg-gradient-to-br from-gray-950 to-zinc-900 rounded-xl shadow-lg border border-zinc-700 p-6 text-white w-full h-full flex flex-col">
-      <div className="pb-3 mb-4 border-b border-zinc-700">
+    <div className="relative bg-zinc-950/90 backdrop-blur-sm border border-zinc-700 rounded-xl p-8 shadow-lg flex flex-col w-full h-full overflow-hidden group hover:border-blue-900/80 transition-all duration-300">
+
+      {/* Glow effects */}
+      <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/5 blur-3xl rounded-full pointer-events-none"></div>
+
+      <div className="pb-3 mb-6 border-b border-zinc-800/50 relative z-10">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold">
+          <h3 className="text-zinc-100 text-sm font-bold uppercase tracking-wider flex items-center gap-2">
+            <span className="w-1 h-4 bg-cyan-500 rounded-full shadow-[0_0_10px_rgba(6,182,212,0.5)]"></span>
             {activeChart === "amount"
               ? t("titles.valueDistribution")
               : t("titles.pnlDistribution")}
           </h3>
-          <div className="flex bg-slate-800 rounded-lg p-1">
+          <div className="flex gap-2">
             <button
               onClick={() => setActiveChart("amount")}
-              className={`px-3 py-1 rounded text-sm font-medium transition-all duration-300 ${
-                activeChart === "amount"
-                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105"
-                  : "text-gray-400 hover:text-white hover:bg-slate-700"
-              }`}
+              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all duration-300 ${activeChart === "amount"
+                ? "bg-blue-950/30 border-blue-500/50 text-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.2)]"
+                : "bg-zinc-900 border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600"
+                }`}
             >
               {t("buttons.value")}
             </button>
             <button
               onClick={() => setActiveChart("pnl")}
-              className={`px-3 py-1 rounded text-sm font-medium transition-all duration-300 ${
-                activeChart === "pnl"
-                  ? "bg-gradient-to-r from-emerald-400 to-teal-700 text-white shadow-lg scale-105"
-                  : "text-gray-400 hover:text-white hover:bg-slate-700"
-              }`}
+              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all duration-300 ${activeChart === "pnl"
+                ? "bg-emerald-950/30 border-emerald-500/50 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.2)]"
+                : "bg-zinc-900 border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600"
+                }`}
             >
               {t("buttons.pnl")}
             </button>
           </div>
         </div>
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-zinc-500 font-medium">
           {activeChart === "amount" ? t("descriptions.value") : t("descriptions.pnl")}
         </p>
       </div>
 
-      <div className="flex-1 flex items-center justify-center min-h-0">
+      <div className="flex-1 flex items-center justify-center min-h-0 overflow-y-auto relative z-10">
         {list.length > 0 ? (
-          <div className="w-full h-full max-h[400px]">
+          <div className="w-full h-[250px]">
             <Doughnut
               data={activeChart === "amount" ? amountData : pnlData}
               options={activeChart === "amount" ? amountOptions : pnlOptions}
             />
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center text-gray-400">
-            <div className="w-16 h-16 border-4 border-gray-600 border-dashed rounded-full mb-4"></div>
-            <p className="text-sm">{t("empty.noData")}</p>
+          <div className="flex flex-col items-center justify-center text-zinc-500">
+            <div className="w-16 h-16 border-4 border-zinc-700 border-dashed rounded-full mb-4 animate-[spin_10s_linear_infinite]"></div>
+            <p className="text-xs font-medium uppercase tracking-wide">{t("empty.noData")}</p>
           </div>
         )}
       </div>
 
+
       {list.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-zinc-700">
+        <div className="mt-4 pt-4 border-t border-zinc-800/50 relative z-10">
           <div className="grid grid-cols-2 gap-4 text-center">
-            <div>
-              <p className="text-xs text-gray-400 mb-1">{t("footer.totalValue")}</p>
-              <p className="text-sm font-bold text-blue-400">
+            <div className="p-2 rounded-lg bg-zinc-900/30 border border-zinc-800/50">
+              <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1 font-bold">{t("footer.totalValue")}</p>
+              <p className="text-sm font-bold text-blue-400 shadow-blue-500/10 drop-shadow-sm">
                 {formatUsd(totals.totalValue)}
               </p>
             </div>
-            <div>
-              <p className="text-xs text-gray-400 mb-1">{t("footer.totalPnl")}</p>
+            <div className="p-2 rounded-lg bg-zinc-900/30 border border-zinc-800/50">
+              <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1 font-bold">{t("footer.totalPnl")}</p>
               <p
-                className={`text-sm font-bold ${
-                  totals.totalPnl >= 0 ? "text-emerald-400" : "text-red-400"
-                }`}
+                className={`text-sm font-bold drop-shadow-sm ${totals.totalPnl >= 0 ? "text-emerald-400" : "text-red-400"
+                  }`}
               >
                 {`${totals.totalPnl >= 0 ? "+" : ""}${formatUsd(
                   Math.abs(totals.totalPnl)

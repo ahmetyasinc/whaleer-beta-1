@@ -180,6 +180,18 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       rightPriceScale: { minimumWidth: 70, autoScale: true },
       crosshair: {
         mode: CrosshairMode.Normal,
+        vertLine: {
+          color: settings?.crosshair?.color || "#758696",
+          width: settings?.crosshair?.width ?? 1,
+          style: settings?.crosshair?.style ?? 1,
+          labelBackgroundColor: settings?.crosshair?.color || "#758696",
+        },
+        horzLine: {
+          color: settings?.crosshair?.color || "#758696",
+          width: settings?.crosshair?.width ?? 1,
+          style: settings?.crosshair?.style ?? 1,
+          labelBackgroundColor: settings?.crosshair?.color || "#758696",
+        },
       },
     });
 
@@ -478,6 +490,20 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       grid: { vertLines: { color: gridColor }, horzLines: { color: gridColor } },
       localization: { timeFormatter: makeZonedFormatter(selectedPeriod, tzOffsetMin) },
       timeScale: { tickMarkFormatter: makeZonedFormatter(selectedPeriod, tzOffsetMin) },
+      crosshair: {
+        vertLine: {
+          color: settings?.crosshair?.color || "#758696",
+          width: settings?.crosshair?.width ?? 1,
+          style: settings?.crosshair?.style ?? 1,
+          labelBackgroundColor: settings?.crosshair?.color || "#758696",
+        },
+        horzLine: {
+          color: settings?.crosshair?.color || "#758696",
+          width: settings?.crosshair?.width ?? 1,
+          style: settings?.crosshair?.style ?? 1,
+          labelBackgroundColor: settings?.crosshair?.color || "#758696",
+        },
+      },
     });
   }, [settings, selectedPeriod, tzOffsetMin]);
 

@@ -6,16 +6,20 @@
     "purchaseHistory": "Alışveriş Geçmişim"
   },
   "stats": {
-    "numberOfIndicators": "Gösterge Sayısı",
-    "numberOfStrategies": "Strateji Sayısı",
-    "numberOfTotalBots": "Toplam Bot Sayısı",
-    "totalActiveBots": "Aktif Bot Sayısı"
+    "numberOfIndicators": "Göstergeler",
+    "numberOfStrategies": "Stratejiler",
+    "numberOfTotalBots": "Toplam Bot",
+    "totalActiveBots": "Aktif Bot"
+  },
+  "sections": {
+    "statistics": "İstatistikler",
+    "performance": "Performans"
   },
   "performance": {
     "labels": {
-      "daily": "Günlük API Performansı",
-      "weekly": "Haftalık API Performansı",
-      "monthly": "Aylık API Performansı"
+      "daily": "Günlük",
+      "weekly": "Haftalık",
+      "monthly": "Aylık"
     },
     "trades": "{{count}} işlem"
   }

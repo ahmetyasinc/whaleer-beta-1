@@ -12,7 +12,7 @@ const RunBotToggle = ({
   title,
 }) => {
   // disabled iken controlled input kuralı için no-op onChange
-  const handleChange = disabled ? () => {} : (onChange || (() => {}));
+  const handleChange = disabled ? () => { } : (onChange || (() => { }));
 
   return (
     <StyledWrapper
@@ -56,7 +56,7 @@ const StyledWrapper = styled.div`
   .switch.is-disabled {
     opacity: 0.4;
     cursor: not-allowed;
-    pointer-events: none; /* label tıklanmasın */
+    pointer-events: none;
   }
 
   .checkbox,
@@ -76,60 +76,51 @@ const StyledWrapper = styled.div`
 
   .checkbox {
     z-index: 1;
-    background-color: hsl(3, 90%, 40%);
+    /* Closed State: Metallic Grey */
+    background: linear-gradient(145deg, #4a4a4a, #2b2b2b);
     border-radius: 50%;
-    border: 2px solid hsl(227,82%,2%); /* dış ring */
+    border: 2px solid #1a1a1a;
     box-shadow:
-      0 0 0 0.1em hsl(3, 90%, 25%) inset,
-      0 0 0 0.2em hsl(3, 90%, 65%) inset,
-      -0.3em 0.5em 0 hsl(3, 90%, 40%) inset,
-      0 0.15em 0 hsla(0, 0%, 0%, 0.2),
-      0 0 0 4px hsl(227,82%,2%);
+      inset 2px 2px 5px rgba(0,0,0,0.5),
+      inset -1px -1px 2px rgba(255,255,255,0.2),
+      0 0 0 4px #0f0f15; /* Outer ring spacing */
     filter: brightness(1);
     transition:
-      background-color 0.15s linear,
-      box-shadow 0.15s linear,
+      background 0.3s ease,
+      box-shadow 0.3s ease,
       filter 0.15s linear,
-      transform 0.15s linear;
+      transform 0.15s linear,
+      border-color 0.3s ease;
     appearance: none;
     -webkit-appearance: none;
     outline: none;
     cursor: pointer;
   }
 
-  /* disabled iken input’un cursor’u da not-allowed olsun */
   [data-disabled="true"] .checkbox {
     cursor: not-allowed;
   }
 
   .checkbox:active {
-    box-shadow:
-      0 0 0 0.1em hsl(3, 90%, 25%) inset,
-      0 0 0 0.2em hsl(3, 90%, 65%) inset,
-      -0.3em 0.5em 0 hsl(3, 90%, 50%) inset,
-      0 0.05em 0 hsla(0, 0%, 0%, 0.2);
+    transform: scale(0.95);
   }
 
-  .checkbox:active,
   .checkbox:active + .svg {
     transform: scale(0.95);
   }
 
+  /* Open State: Metallic Neon Green */
   .checkbox:checked {
-    background-color: hsl(123, 90%, 30%);
+    background: radial-gradient(circle at 30% 30%, #39ff14, #008f11);
+    border-color: #8aff8a;
     box-shadow:
-      0 0 0 0.1em hsl(123, 90%, 15%) inset,
-      0 0 0 0.2em hsl(123, 90%, 55%) inset,
-      -0.3em 0.5em 0 hsl(123, 90%, 30%) inset,
-      0 0.15em 0 hsla(0, 0%, 0%, 0.2);
+      inset 0 0 10px rgba(57, 255, 20, 0.5),
+      0 0 15px rgba(57, 255, 20, 0.4),
+      0 0 0 4px #0f0f15;
   }
 
   .checkbox:checked:active {
-    box-shadow:
-      0 0 0 0.1em hsl(123, 90%, 15%) inset,
-      0 0 0 0.2em hsl(123, 90%, 15%) inset,
-      -0.3em 0.5em 0 hsl(123, 90%, 40%) inset,
-      0 0.05em 0 hsla(0, 0%, 0%, 0.2);
+    /* Slightly dimmer or smaller when active-clicked if needed */
   }
 
   .checkbox:focus,
@@ -137,19 +128,36 @@ const StyledWrapper = styled.div`
     filter: brightness(1.1);
   }
 
-  /* disabled durumda hover/focus parlamasını iptal */
   [data-disabled="true"] .checkbox:focus,
   [data-disabled="true"] .checkbox:hover {
     filter: none;
   }
 
+  /* Spinning Border Effect (using .slider class) */
   .slider {
-    clip: rect(1px, 1px, 1px, 1px);
-    overflow: hidden;
-    width: 1px;
-    height: 1px;
+    z-index: 0; /* Behind checkbox */
+    top: -3px; left: -3px; right: -3px; bottom: -3px; /* Thinner border (was -8px) */
+    width: auto;
+    height: auto;
+    border-radius: 50%;
+    background: conic-gradient(transparent 20%, #39ff14, transparent 90%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
   }
 
+  /* Activate spin when checked */
+  .checkbox:checked ~ .slider {
+    opacity: 1;
+    animation: spin 1.5s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* SVG Styles */
   .svg {
     z-index: 2;
     pointer-events: none;
@@ -158,7 +166,8 @@ const StyledWrapper = styled.div`
 
   .svg-ring,
   .svg-line {
-    stroke: hsl(223, 90%, 100%);
+    stroke: #ffffff;
+    stroke-width: 1.5px; /* Thinner lines */
     transition: stroke 0.15s ease-in-out;
   }
 
@@ -172,6 +181,7 @@ const StyledWrapper = styled.div`
   .checkbox:checked + .svg .svg-ring {
     stroke-dasharray: 0 0 0 37.7;
     transition-delay: 0s;
+    /* Stroke remains white as requested */
   }
 
   .svg-line {
@@ -199,3 +209,4 @@ const StyledWrapper = styled.div`
 `;
 
 export default RunBotToggle;
+

@@ -5,7 +5,7 @@ import { readJsonCookie, writeJsonCookie, deleteCookie, readJsonCookie as readJS
 const COOKIE_KEY = "wh_chart_settings_v1";
 const WH_SETTINGS = "wh_settings"; // { language, theme, timezone, emailReports }
 
-const DEFAULTS = {
+export const DEFAULTS = {
   theme: "dark",
   bgColor: "#000007",              // yeni
   textColor: "white",              // yeni ("white" | "black")
@@ -19,8 +19,13 @@ const DEFAULTS = {
   // volume kaldırıldı ama geriye dönük kalsın
   volumeVisible: true,
 
-  // crosshair kaldırıldı ama geriye dönük kalsın
-  crosshair: "magnet",
+  // crosshair settings
+  crosshair: {
+    mode: "magnet",
+    style: 1, // 0=Solid, 1=Dotted, 2=Dashed
+    width: 1,
+    color: "#758696",
+  },
 
   // grid görünürlük yerine renk (geri uyum için eski alanlar korunuyor)
   grid: { show: true, xLines: 4, yLines: 4, color: "#111111" }, // color: yeni
@@ -52,6 +57,7 @@ const DEFAULTS = {
 const mergeWithDefaults = (partial) => ({
   ...DEFAULTS,
   ...partial,
+  crosshair: { ...DEFAULTS.crosshair, ...(partial?.crosshair || {}) },
   grid: { ...DEFAULTS.grid, ...(partial?.grid || {}) },
   series: { ...DEFAULTS.series, ...(partial?.series || {}) },
   candle: { ...DEFAULTS.candle, ...(partial?.candle || {}) },

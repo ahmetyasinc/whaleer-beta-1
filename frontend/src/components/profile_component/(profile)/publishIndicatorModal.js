@@ -133,11 +133,11 @@ export const PublishIndicatorModal = ({ isOpen, onClose, onPublish }) => {
                   {/* Toggle Button */}
                   <button
                     onClick={(e) => { e.stopPropagation(); handleToggle(key); }}
-                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-950 focus:ring-blue-600 ${permissions[key] ? 'bg-blue-600' : 'bg-zinc-700'
+                    className={`relative w-11 h-6 rounded-full transition-colors duration-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-950 focus:ring-blue-600 ${permissions[key] ? 'bg-blue-600' : 'bg-zinc-700'
                       }`}
                   >
                     <span
-                      className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 transform ${permissions[key] ? 'translate-x-5' : 'translate-x-0'
+                      className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-100 transform ${permissions[key] ? 'translate-x-5' : 'translate-x-0'
                         }`}
                     />
                   </button>

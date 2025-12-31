@@ -192,7 +192,7 @@ export default function BotPieChart({ bots = [] }) {
   }, [list]);
 
   return (
-    <div className="relative bg-zinc-950/90 backdrop-blur-sm border border-zinc-700 rounded-xl p-8 shadow-lg flex flex-col w-full h-full overflow-hidden group hover:border-blue-900/80 transition-all duration-300">
+    <div className="relative bg-zinc-950/90 backdrop-blur-sm border border-zinc-700 rounded-xl p-4 shadow-lg flex flex-col w-full h-full overflow-hidden group hover:border-blue-900/80 transition-all duration-200">
 
       {/* Glow effects */}
       <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/5 blur-3xl rounded-full pointer-events-none"></div>
@@ -208,7 +208,7 @@ export default function BotPieChart({ bots = [] }) {
           <div className="flex gap-2">
             <button
               onClick={() => setActiveChart("amount")}
-              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all duration-300 ${activeChart === "amount"
+              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all duration-100 ${activeChart === "amount"
                 ? "bg-blue-950/30 border-blue-500/50 text-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.2)]"
                 : "bg-zinc-900 border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600"
                 }`}
@@ -217,7 +217,7 @@ export default function BotPieChart({ bots = [] }) {
             </button>
             <button
               onClick={() => setActiveChart("pnl")}
-              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all duration-300 ${activeChart === "pnl"
+              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all duration-100 ${activeChart === "pnl"
                 ? "bg-emerald-950/30 border-emerald-500/50 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.2)]"
                 : "bg-zinc-900 border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600"
                 }`}

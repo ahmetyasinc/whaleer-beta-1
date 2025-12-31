@@ -64,7 +64,7 @@ export default function ModernBotList({ bots = [] }) {
     `${Number(v || 0) >= 0 ? "" : "-"}${Math.abs(Number(v || 0)).toFixed(2)}%`;
 
   return (
-    <div className="relative bg-zinc-950/90 backdrop-blur-sm border border-zinc-700 rounded-xl p-5 shadow-lg flex flex-col w-full h-full overflow-hidden group/container hover:border-blue-900/80 transition-all duration-300">
+    <div className="relative bg-zinc-950/90 backdrop-blur-sm border border-zinc-700 rounded-xl p-5 shadow-lg flex flex-col w-full h-full overflow-hidden group/container hover:border-blue-900/80 transition-all duration-200">
 
       {/* Glow effects */}
       <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/5 blur-3xl rounded-full pointer-events-none"></div>
@@ -92,7 +92,7 @@ export default function ModernBotList({ bots = [] }) {
                 return (
                   <div
                     key={bot.id}
-                    className={`group relative bg-zinc-900/30 backdrop-blur-sm rounded-lg py-3 px-4 border border-zinc-800/50 hover:bg-zinc-800/50 hover:border-blue-500/30 transition-all duration-300 hover:shadow-[0_0_15px_-5px_rgba(59,130,246,0.15)] hover:-translate-y-0.5
+                    className={`group relative bg-zinc-900/30 backdrop-blur-sm rounded-lg py-3 px-4 border border-zinc-800/50 hover:bg-zinc-800/50 hover:border-blue-500/30 transition-all duration-100 hover:shadow-[0_0_15px_-5px_rgba(59,130,246,0.15)] hover:-translate-y-0.5
                     ${isOpen ? "z-50 border-blue-500/40 bg-zinc-800" : ""}`}
                     style={{ animationDelay: `${index * 100}ms`, animation: "fadeInUp 0.5s ease-out forwards" }}
                   >
@@ -109,7 +109,7 @@ export default function ModernBotList({ bots = [] }) {
                         </div>
 
                         <div>
-                          <h3 className="text-sm font-bold text-zinc-200 truncate max-w-[150px] group-hover:text-blue-300 transition-colors duration-300">
+                          <h3 className="text-sm font-bold text-zinc-200 truncate max-w-[150px] group-hover:text-blue-300 transition-colors duration-100">
                             {bot.name}
                           </h3>
                           <div className={`text-[10px] uppercase tracking-wide font-bold ${isActive ? "text-emerald-500" : "text-red-500"}`}>
@@ -157,7 +157,7 @@ export default function ModernBotList({ bots = [] }) {
                         <div className="relative inline-block text-left menu-container" ref={menuOpen === bot.id ? menuRef : null}>
                           <button
                             onClick={() => setMenuOpen(menuOpen === bot.id ? null : bot.id)}
-                            className="p-1.5 rounded-lg hover:bg-zinc-700/50 text-zinc-400 hover:text-zinc-200 transition-colors duration-200"
+                            className="p-1.5 rounded-lg hover:bg-zinc-700/50 text-zinc-400 hover:text-zinc-200 transition-colors duration-75"
                           >
                             <BsThreeDotsVertical size={16} />
                           </button>
@@ -166,7 +166,7 @@ export default function ModernBotList({ bots = [] }) {
                             <div className="absolute top-8 right-0 w-32 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-50 overflow-hidden">
                               <button
                                 onClick={() => handleExamineBot(bot.id)}
-                                className="flex items-center gap-2 w-full px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-amber-500 hover:bg-zinc-800 transition-colors duration-200 disabled:opacity-60"
+                                className="flex items-center gap-2 w-full px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-amber-500 hover:bg-zinc-800 transition-colors duration-75 disabled:opacity-60"
                                 disabled={examineLoadingId === bot.id}
                               >
                                 <IoSearch size={14} />

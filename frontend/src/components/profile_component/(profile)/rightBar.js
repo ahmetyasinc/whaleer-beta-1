@@ -295,14 +295,14 @@ export default function RightBar() {
               return (
                 <div
                   key={stat.title}
-                  className={`group relative bg-zinc-900/60 backdrop-blur-sm rounded-lg border ${colors.border} hover:${colors.bg} transition-all duration-300 p-3 cursor-default ${colors.glow}`}
+                  className={`group relative bg-zinc-900/60 backdrop-blur-sm rounded-lg border ${colors.border} hover:${colors.bg} transition-all duration-100 p-3 cursor-default ${colors.glow}`}
                   style={{
                     animationDelay: `${index * 100}ms`,
                     animation: "fadeInUpRightBar 0.6s ease-out forwards",
                   }}
                 >
                   {/* Glow effect on hover */}
-                  <div className={`absolute inset-0 rounded-lg ${colors.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
+                  <div className={`absolute inset-0 rounded-lg ${colors.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-100`}></div>
 
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-2">
@@ -344,14 +344,14 @@ export default function RightBar() {
               return (
                 <div
                   key={period}
-                  className="group relative bg-zinc-900/60 backdrop-blur-sm rounded-lg border border-zinc-800/50 hover:border-cyan-500/30 transition-all duration-300 p-3"
+                  className="group relative bg-zinc-900/60 backdrop-blur-sm rounded-lg border border-zinc-800/50 hover:border-cyan-500/30 transition-all duration-100 p-3"
                   style={{
                     animationDelay: `${(index + 4) * 100}ms`,
                     animation: "fadeInUpRightBar 0.6s ease-out forwards",
                   }}
                 >
                   {/* Subtle glow on hover */}
-                  <div className="absolute inset-0 rounded-lg bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 rounded-lg bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-100"></div>
 
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-2">

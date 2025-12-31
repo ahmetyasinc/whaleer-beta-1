@@ -185,7 +185,7 @@ export default function Portfolio() {
     // min-h-[400px]: İçerik az olsa bile kart en az 400px boyunda olur.
     // max-h-[600px]: İçerik çok olsa bile kart 600px'i geçmez.
     // Bu sınıra ulaşıldığında içerideki overflow-y-auto devreye girer ve scroll oluşur.
-    <div className="relative bg-zinc-950/90 backdrop-blur-sm border border-zinc-700 rounded-xl shadow-lg flex flex-col w-full h-[calc(100vh-108px)] overflow-hidden group hover:border-blue-900/80 transition-all duration-300">
+    <div className="relative bg-zinc-950/90 backdrop-blur-sm border border-zinc-700 rounded-xl shadow-lg flex flex-col w-full h-[calc(100vh-108px)] overflow-hidden group hover:border-blue-900/80 transition-all duration-200">
 
       {/* Glow effects */}
       <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/5 blur-3xl rounded-full pointer-events-none"></div>
@@ -202,7 +202,7 @@ export default function Portfolio() {
           <div className="flex gap-2">
             <button
               onClick={() => setActiveTab("portfolio")}
-              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all duration-300 ${activeTab === "portfolio"
+              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all duration-100 ${activeTab === "portfolio"
                 ? "bg-blue-950/30 border-blue-500/50 text-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.2)]"
                 : "bg-zinc-900 border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600"
                 }`}
@@ -211,7 +211,7 @@ export default function Portfolio() {
             </button>
             <button
               onClick={() => setActiveTab("transactions")}
-              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all duration-300 ${activeTab === "transactions"
+              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all duration-100 ${activeTab === "transactions"
                 ? "bg-purple-950/30 border-purple-500/50 text-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.2)]"
                 : "bg-zinc-900 border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600"
                 }`}
@@ -266,7 +266,7 @@ export default function Portfolio() {
                     return (
                       <div
                         key={`${item.symbol}-${index}`}
-                        className="grid grid-cols-7 gap-2 items-center py-3 px-3 rounded-lg bg-zinc-900/30 border border-zinc-800/50 hover:bg-zinc-800/50 hover:border-blue-500/30 transition-all duration-300 hover:shadow-[0_0_15px_-5px_rgba(59,130,246,0.15)] group/item"
+                        className="grid grid-cols-7 gap-2 items-center py-3 px-3 rounded-lg bg-zinc-900/30 border border-zinc-800/50 hover:bg-zinc-800/50 hover:border-blue-500/30 transition-all duration-100 hover:shadow-[0_0_15px_-5px_rgba(59,130,246,0.15)] group/item"
                         style={{
                           animationDelay: `${index * 50}ms`,
                           animation: "fadeInUp 0.5s ease-out forwards",
@@ -341,7 +341,7 @@ export default function Portfolio() {
                   <p className="text-sm uppercase tracking-wider font-medium">{t("portfolio.empty")}</p>
                   <button
                     onClick={handleNavigate}
-                    className="group flex items-center gap-2 px-6 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg transition-all duration-300 hover:shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)]"
+                    className="group flex items-center gap-2 px-6 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg transition-all duration-100 hover:shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)]"
                   >
                     <span className="text-xs font-bold uppercase tracking-wide">{t('portfolio.addApi')}</span>
                     <FaLongArrowAltRight className="transition-transform group-hover:translate-x-1" />
@@ -375,7 +375,7 @@ export default function Portfolio() {
                   {orderedTransactions.map((transaction, index) => (
                     <div
                       key={`${transaction.symbol}-${transaction.date}-${index}`}
-                      className="grid grid-cols-6 gap-3 items-center py-3 px-3 rounded-lg bg-zinc-900/30 border border-zinc-800/50 hover:bg-zinc-800/50 hover:border-purple-500/30 transition-all duration-300 hover:shadow-[0_0_15px_-5px_rgba(168,85,247,0.15)] group/item"
+                      className="grid grid-cols-6 gap-3 items-center py-3 px-3 rounded-lg bg-zinc-900/30 border border-zinc-800/50 hover:bg-zinc-800/50 hover:border-purple-500/30 transition-all duration-100 hover:shadow-[0_0_15px_-5px_rgba(168,85,247,0.15)] group/item"
                       style={{
                         animationDelay: `${index * 50}ms`,
                         animation: "fadeInUp 0.5s ease-out forwards",

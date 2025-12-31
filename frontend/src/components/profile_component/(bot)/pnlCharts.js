@@ -78,24 +78,24 @@ export default function PnLChart({ data }) {
 
   // Saatlik ve daha uzun periyotlarda iki haneli yıl (yy) gösterir
   function makeZonedFormatter(period, offsetMinutes) {
-    const isMins  = ['1m','3m','5m','15m','30m'].includes(period);
-    const isHours = ['1h','2h','4h'].includes(period);
-    const isDays  = period === '1d';
+    const isMins = ['1m', '3m', '5m', '15m', '30m'].includes(period);
+    const isHours = ['1h', '2h', '4h'].includes(period);
+    const isDays = period === '1d';
     const isWeeks = period === '1w';
     const twoDigitYear = (Y) => String(Y).slice(2);
 
     return (t) => {
-      const d  = timeToZonedDate(t, offsetMinutes);
-      const Y  = d.getUTCFullYear();
+      const d = timeToZonedDate(t, offsetMinutes);
+      const Y = d.getUTCFullYear();
       const yy = twoDigitYear(Y);
-      const M  = pad(d.getUTCMonth() + 1);
-      const D  = pad(d.getUTCDate());
-      const h  = pad(d.getUTCHours());
-      const m  = pad(d.getUTCMinutes());
+      const M = pad(d.getUTCMonth() + 1);
+      const D = pad(d.getUTCDate());
+      const h = pad(d.getUTCHours());
+      const m = pad(d.getUTCMinutes());
 
-      if (isMins)  return `${D}.${M} ${h}:${m}`;     // 1–30m → yıl yok
+      if (isMins) return `${D}.${M} ${h}:${m}`;     // 1–30m → yıl yok
       if (isHours) return `${D}.${M}.${yy} ${h}:00`; // 1h–4h → DD.MM.yy HH:00
-      if (isDays)  return `${D}.${M}.${yy}`;         // 1d     → DD.MM.yy
+      if (isDays) return `${D}.${M}.${yy}`;         // 1d     → DD.MM.yy
       if (isWeeks) return `${D}.${M}.${yy}`;         // 1w     → DD.MM.yy
       return `${D}.${M}.${yy} ${h}:${m}`;
     };
@@ -120,15 +120,15 @@ export default function PnLChart({ data }) {
       width: el.clientWidth,
       height: 250,
       layout: {
-        background: { color: "#18181b" },
-        textColor: "#cbd5e1",
+        background: { color: "#09090b" },
+        textColor: "#98a1ab",
       },
       grid: {
-        vertLines: { color: "#18181b" },
-        horzLines: { color: "#18181b" },
+        vertLines: { color: "#09090b" },
+        horzLines: { color: "#09090b" },
       },
       crosshair: {
-        mode: 0, // Normal
+        mode: 1, // Normal
         vertLine: { color: "#6b7280", width: 1, style: 0 },
         horzLine: { color: "#6b7280", width: 1, style: 0 },
       },
@@ -175,13 +175,13 @@ export default function PnLChart({ data }) {
     const ro = new ResizeObserver(() => {
       try {
         chart.applyOptions({ width: el.clientWidth });
-      } catch {}
+      } catch { }
     });
     ro.observe(el);
 
     return () => {
-      try { ro.disconnect(); } catch {}
-      try { chart.remove(); } catch {}
+      try { ro.disconnect(); } catch { }
+      try { chart.remove(); } catch { }
       chartRef.current = null;
       seriesRef.current = null;
     };
@@ -208,7 +208,7 @@ export default function PnLChart({ data }) {
   }, [data, tzOffsetMin]);
 
   function isMinutes(p) {
-    return ['1m','3m','5m','15m','30m'].includes(p);
+    return ['1m', '3m', '5m', '15m', '30m'].includes(p);
   }
 
   return <div ref={chartContainerRef} className="w-full" />;

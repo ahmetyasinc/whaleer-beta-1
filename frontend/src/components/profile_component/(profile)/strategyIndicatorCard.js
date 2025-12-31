@@ -354,7 +354,7 @@ export default function StrategyIndicatorCard() {
 
     return (
       <div
-        className="group bg-zinc-900/40 backdrop-blur-sm rounded-xl p-4 hover:bg-zinc-800/50 transition-all duration-300 border border-zinc-800/50 hover:border-cyan-500/30 relative hover:shadow-[0_0_20px_rgba(34,211,238,0.08)]"
+        className="group bg-zinc-900/40 backdrop-blur-sm rounded-xl p-4 hover:bg-zinc-800/50 transition-all duration-100 border border-zinc-800/50 hover:border-cyan-500/30 relative hover:shadow-[0_0_20px_rgba(34,211,238,0.08)]"
         style={initialLoad ? { animationDelay: `${index * 100}ms`, animation: "fadeInUp 0.6s ease-out forwards" } : {}}
       >
         <div className="flex justify-between items-start gap-3">
@@ -412,7 +412,7 @@ export default function StrategyIndicatorCard() {
                   });
                 }
               }}
-              className={`p-2 rounded-lg transition-all duration-200 ${isMenuOpen ? "bg-cyan-500/20 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.2)]" : "hover:bg-zinc-800 text-zinc-400 hover:text-cyan-300"}`}
+              className={`p-2 rounded-lg transition-all duration-100 ${isMenuOpen ? "bg-cyan-500/20 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.2)]" : "hover:bg-zinc-800 text-zinc-400 hover:text-cyan-300"}`}
               title={t("menu.actions")}
             >
               <BsThreeDotsVertical size={16} />
@@ -462,7 +462,7 @@ export default function StrategyIndicatorCard() {
 
     return (
       <div
-        className="group bg-zinc-900/40 backdrop-blur-sm rounded-xl p-4 hover:bg-zinc-800/50 transition-all duration-300 border border-zinc-800/50 hover:border-purple-500/30 relative hover:shadow-[0_0_20px_rgba(168,85,247,0.08)]"
+        className="group bg-zinc-900/40 backdrop-blur-sm rounded-xl p-4 hover:bg-zinc-800/50 transition-all duration-100 border border-zinc-800/50 hover:border-purple-500/30 relative hover:shadow-[0_0_20px_rgba(168,85,247,0.08)]"
         style={initialLoad ? { animationDelay: `${index * 100}ms`, animation: "fadeInUp 0.6s ease-out forwards" } : {}}
       >
         <div className="flex justify-between items-start gap-3">
@@ -520,7 +520,7 @@ export default function StrategyIndicatorCard() {
                   });
                 }
               }}
-              className={`p-2 rounded-lg transition-all duration-200 ${isMenuOpen ? "bg-purple-500/20 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.2)]" : "hover:bg-zinc-800 text-zinc-400 hover:text-purple-300"}`}
+              className={`p-2 rounded-lg transition-all duration-100 ${isMenuOpen ? "bg-purple-500/20 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.2)]" : "hover:bg-zinc-800 text-zinc-400 hover:text-purple-300"}`}
               title={t("menu.actions")}
             >
               <BsThreeDotsVertical size={16} />

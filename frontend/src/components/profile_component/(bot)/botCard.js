@@ -883,7 +883,7 @@ export const BotCard = ({ bot, column }) => {
         )}
         {isExamineOpen && (
           <ExamineBot
-            isOpen={isOpen}
+            isOpen={isExamineOpen}
             onClose={() => setIsExamineOpen(false)}
             botId={bot.id}
           />

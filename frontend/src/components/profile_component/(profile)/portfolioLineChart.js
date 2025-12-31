@@ -122,7 +122,7 @@ export default function PortfolioLineChart() {
   }, [lineData, hasData]);
 
   return (
-    <div className="relative bg-zinc-950/90 backdrop-blur-sm border border-zinc-700 rounded-xl shadow-lg pl-2 pt-5 text-white w-full h-full flex flex-col group hover:border-blue-900/80 transition-all duration-300">
+    <div className="relative bg-zinc-950/90 backdrop-blur-sm border border-zinc-700 rounded-xl shadow-lg pl-2 pt-5 text-white w-full h-full flex flex-col group hover:border-blue-900/80 transition-all duration-200">
 
       {/* Glow effects */}
       <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/5 blur-3xl rounded-full pointer-events-none"></div>

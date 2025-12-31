@@ -13,7 +13,7 @@ export const runBacktestApi = async ({ strategy, period, crypto, initial_balance
     }
 
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/run-backtest/`,
+      `${process.env.NEXT_PUBLIC_API_URL}/run-backtest/`,
       payload
     );
     return response.data;
@@ -26,7 +26,7 @@ export const runBacktestApi = async ({ strategy, period, crypto, initial_balance
 export const saveArchivedBacktest = async (backtestData) => {
   try {
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/archive-backtest/`,
+      `${process.env.NEXT_PUBLIC_API_URL}/archive-backtest/`,
       {
         commission: backtestData.commission,
         data: backtestData
@@ -42,7 +42,7 @@ export const saveArchivedBacktest = async (backtestData) => {
 export const fetchArchivedBacktests = async () => {
   try {
     const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/archived-backtests/`
+      `${process.env.NEXT_PUBLIC_API_URL}/archived-backtests/`
     );
     return response.data;
   } catch (error) {
@@ -54,7 +54,7 @@ export const fetchArchivedBacktests = async () => {
 export const deleteArchivedBacktestApi = async (id) => {
   try {
     const response = await axios.delete(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/delete-backtest/${id}`
+      `${process.env.NEXT_PUBLIC_API_URL}/delete-backtest/${id}`
     );
     return response.data;
   } catch (error) {

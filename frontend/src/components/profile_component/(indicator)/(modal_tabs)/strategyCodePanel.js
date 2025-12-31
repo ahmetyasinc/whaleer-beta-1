@@ -84,7 +84,7 @@ const CodePanel = () => {
         setStrategyCode(codeToSave);
 
         const updateRequest = axios.put(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/edit-strategy/`,
+          `${process.env.NEXT_PUBLIC_API_URL}/edit-strategy/`,
           { id: selected.id, name: nameToSave, code: codeToSave },
           { withCredentials: true, headers: { "Content-Type": "application/json" } }
         );
@@ -99,7 +99,7 @@ const CodePanel = () => {
         setStrategyEditing({ ...selected, name: nameToSave, code: codeToSave });
       } else {
         const postRequest = axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/add-strategy/`,
+          `${process.env.NEXT_PUBLIC_API_URL}/add-strategy/`,
           {
             name: nameToSave,
             code: codeToSave,

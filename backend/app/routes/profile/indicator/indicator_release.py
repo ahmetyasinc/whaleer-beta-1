@@ -42,7 +42,7 @@ async def _next_release_no(db: AsyncSession, indicator_id: int) -> int:
 
 
 # ---------- Endpoint: Publish ----------
-@protected_router.post("/api/indicators/publish", response_model=PublishIndicatorResponse)
+@protected_router.post("/indicators/publish", response_model=PublishIndicatorResponse)
 async def publish_indicator(
     payload: PublishIndicatorPayload,
     db: AsyncSession = Depends(get_db),
@@ -99,7 +99,7 @@ async def publish_indicator(
 
 
 # ---------- Endpoint: View Counter ----------
-@protected_router.post("/api/indicator-releases/{release_id}/view")
+@protected_router.post("/indicator-releases/{release_id}/view")
 async def add_indicator_view(
     release_id: int,
     db: AsyncSession = Depends(get_db),

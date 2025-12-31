@@ -11,7 +11,7 @@ from app.database import get_db
 from app.models.user import User
 from app.core.get_user import get_user
 
-router = APIRouter(prefix="/api/profile", tags=["profile"])
+router = APIRouter(prefix="/profile", tags=["profile"])
 
 
 class SettingsIn(BaseModel):

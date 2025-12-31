@@ -122,7 +122,8 @@ from app.models import User
 from app.models.profile.strategy.strategy import Strategy
 from app.models.profile.bots.bots import Bots
 
-@app.get("/api/api/hero-infos/")
+
+@app.get("/api/hero-infos/")
 async def get_hero_infos(db: AsyncSession = Depends(get_db)):
     # toplam kullanıcı
     user_count_result = await db.execute(select(func.count()).select_from(User))

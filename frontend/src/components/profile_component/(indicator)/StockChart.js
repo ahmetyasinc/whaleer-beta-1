@@ -263,7 +263,7 @@ export default function ChartComponent() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/get-binance-data/?symbol=${selectedCrypto.binance_symbol}&interval=${selectedPeriod}`, { method: "GET", headers: { "Content-Type": "application/json" }, credentials: "include" });
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/get-binance-data/?symbol=${selectedCrypto.binance_symbol}&interval=${selectedPeriod}`, { method: "GET", headers: { "Content-Type": "application/json" }, credentials: "include" });
         if (response.status === 401) {
           const errorData = await response.json();
           if (["Token expired", "Invalid token"].includes(errorData.detail)) { alert("Oturum süresi doldu veya geçersiz token! Lütfen tekrar giriş yapın."); handleLogout(); return; }

@@ -62,7 +62,7 @@ def verify_password(password: str, hashed: str) -> bool:
 # --------------------------
 # Login
 # --------------------------
-@router.post("/api/login/")
+@router.post("/login/")
 async def login(response: Response, data: LoginRequest, db: AsyncSession = Depends(get_db)):
     username = data.username
     password = data.password
@@ -106,7 +106,7 @@ async def login(response: Response, data: LoginRequest, db: AsyncSession = Depen
 # --------------------------
 # Register
 # --------------------------
-@router.post("/api/register/")
+@router.post("/register/")
 async def add_user(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
     # Şifre doğrulama
     if data.password != data.confirmPassword:
@@ -138,7 +138,7 @@ async def add_user(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
 # --------------------------
 # Refresh token
 # --------------------------
-@router.post("/api/refresh-token/")
+@router.post("/refresh-token/")
 async def refresh_token(request: RefreshTokenRequest, response: Response, db: AsyncSession = Depends(get_db)):
     try:
         payload = jwt.decode(request.refresh_token, SECRET_KEY, algorithms=[ALGORITHM])

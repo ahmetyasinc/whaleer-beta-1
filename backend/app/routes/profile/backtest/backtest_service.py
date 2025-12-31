@@ -72,7 +72,7 @@ def _scale_candles_to_initial(
     return scaled, initial_balance_used
 
 
-@router.post("/api/run-backtest/")
+@router.post("/run-backtest/")
 async def run_backtest(body: RunBacktestPayload, db: AsyncSession = Depends(get_db)):
     """
     Frontend'in beklediği tek parça JSON döner.

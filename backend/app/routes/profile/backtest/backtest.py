@@ -21,7 +21,7 @@ class SaveBacktestRequest(BaseModel):
     commission: float
     data: dict
 
-@protected_router.post("/api/archive-backtest/")
+@protected_router.post("/archive-backtest/")
 async def save_backtest(
     payload: SaveBacktestRequest,
     db: AsyncSession = Depends(get_db),
@@ -39,7 +39,7 @@ async def save_backtest(
 
 
 # 🧩 2. Arşiv Silme
-@protected_router.delete("/api/delete-backtest/{backtest_id}")
+@protected_router.delete("/delete-backtest/{backtest_id}")
 async def delete_backtest(
     backtest_id: int,
     db: AsyncSession = Depends(get_db),
@@ -59,7 +59,7 @@ async def delete_backtest(
 
 
 # 🧩 3. Kullanıcının Tüm Arşivleri
-@protected_router.get("/api/archived-backtests/", response_model=List[dict])
+@protected_router.get("/archived-backtests/", response_model=List[dict])
 async def list_backtests(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token)

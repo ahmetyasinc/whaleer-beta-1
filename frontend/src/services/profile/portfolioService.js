@@ -6,7 +6,7 @@ axios.defaults.withCredentials = true;
 
 export async function fetchPortfolioAndTransactions() {
   const response = await axios.get(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/profile_analysis`
+    `${process.env.NEXT_PUBLIC_API_URL}/profile_analysis`
   );
   return response.data;
 }

@@ -6,7 +6,7 @@ axios.defaults.withCredentials = true;
 
 export const getBots = async () => {
   try {
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/get-bots`);
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/get-bots`);
     console.log("getBots response:", response.data);
     const { apiList } = useApiStore.getState();
     const { all_strategies } = useStrategyStore.getState();
@@ -92,7 +92,7 @@ export const createBot = async (botData) => {
     };
 
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/create-bots`,
+      `${process.env.NEXT_PUBLIC_API_URL}/create-bots`,
       payload
     );
     return response.data;
@@ -106,7 +106,7 @@ export const createBot = async (botData) => {
 export const updateBotDepositBalance = async (id, deposit_balance) => {
   try {
     const res = await axios.patch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/bots/${id}/deposit-balance`,
+      `${process.env.NEXT_PUBLIC_API_URL}/bots/${id}/deposit-balance`,
       { deposit_balance }
     );
     return res.data; // { id, deposit_balance }
@@ -170,7 +170,7 @@ export const updateBot = async (id, botData) => {
     };
 
     const response = await axios.put(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/update-bot/${id}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/update-bot/${id}`,
       payload
     );
     console.log("updateBot response:", response.data); // DEBUG
@@ -185,7 +185,7 @@ export const updateBot = async (id, botData) => {
 
 export const deleteBot = async (id) => {// GELİŞTİRİCİ MODU
   try {
-    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/bots/delete/${id}`); //const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/bots/${id}`);
+    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/bots/delete/${id}`); //const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/bots/${id}`);
     return response.data;
   } catch (error) {
     console.error("Error occured while deleting:", error);
@@ -196,7 +196,7 @@ export const deleteBot = async (id) => {// GELİŞTİRİCİ MODU
 export const shutdownBots = async ({ scope = "bot", id }) => {
   // scope: "bot" | "api" | "user"
   if (!id) throw new Error("shutdownBots: id gerekli.");
-  const url = `${process.env.NEXT_PUBLIC_API_URL}/api/shutdown/bots`;
+  const url = `${process.env.NEXT_PUBLIC_API_URL}/shutdown/bots`;
   const { data } = await axios.post(url, { scope, id });
   // beklenen response örn: { affected_bot_ids: [..], closed_positions: 5 }
   return data;
@@ -205,7 +205,7 @@ export const shutdownBots = async ({ scope = "bot", id }) => {
 export const toggleBotActiveApi = async (id, isActive) => {
   try {
     const endpoint = isActive ? "deactivate" : "activate";
-    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/bots/${id}/${endpoint}`);
+    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/bots/${id}/${endpoint}`);
     return response.data;
   } catch (error) {
     console.error("Bot durumu değiştirilirken hata:", error);
@@ -216,7 +216,7 @@ export const toggleBotActiveApi = async (id, isActive) => {
 export async function patchBotListing(botId, payload) {
   console.log("patchBotListing called:", botId, payload); // DEBUG
   const { data } = await axios.patch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/bots/${botId}/listing`,
+    `${process.env.NEXT_PUBLIC_API_URL}/bots/${botId}/listing`,
     payload,
     { withCredentials: true }
   );
@@ -225,7 +225,7 @@ export async function patchBotListing(botId, payload) {
 
 export async function acquireBot(botId, payload /* { action: 'buy'|'rent', price_paid: number, tx: string, rent_duration_days?: number } */) {
   const { data } = await axios.post(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/bots/${botId}/acquire`,
+    `${process.env.NEXT_PUBLIC_API_URL}/bots/${botId}/acquire`,
     payload,
     { withCredentials: true }
   );

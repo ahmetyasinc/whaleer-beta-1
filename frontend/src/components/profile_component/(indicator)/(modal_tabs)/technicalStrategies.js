@@ -37,7 +37,7 @@ const TechnicalStrategies = ({ locale, closeModal }) => {
 
     const fetchStrategies = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/all-strategies/`);
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/all-strategies/`);
         const tecnic_strategies = response.data.tecnic_strategies || [];
         const personal_strategies = response.data.personal_strategies || [];
         const public_strategies = response.data.public_strategies || [];
@@ -59,11 +59,11 @@ const TechnicalStrategies = ({ locale, closeModal }) => {
 
     try {
       if (isAlreadyFavorite) {
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/strategy-remove-favourite/`, {
+        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/strategy-remove-favourite/`, {
           data: { strategy_id: strategy.id }
         });
       } else {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/strategy-add-favorite/`, {
+        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/strategy-add-favorite/`, {
           strategy_id: strategy.id
         });
       }

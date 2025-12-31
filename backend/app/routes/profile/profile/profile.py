@@ -131,7 +131,7 @@ from app.models.profile.indicator.indicator_releases import (
     IndicatorReleaseStatus as IReleaseStatus,
 )
 
-@protected_router.get("/api/profile")
+@protected_router.get("/profile")
 async def get_profile_all_datas(
     db: AsyncSession = Depends(get_db),
     user_id: int = Depends(verify_token)
@@ -532,7 +532,7 @@ async def get_profile_all_datas(
         "indicators": indicators_payload,
     }
 
-@protected_router.get("/api/profile_analysis")
+@protected_router.get("/profile_analysis")
 async def get_profile_analysis(
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(verify_token)  # verify_token string döndürüyor varsayımı
@@ -636,7 +636,7 @@ async def get_profile_analysis(
 class ApiSnapshotsRequest(BaseModel):
     api_id: int
 
-@protected_router.post("/api/api_snapshots")
+@protected_router.post("/api_snapshots")
 async def get_user_snapshots(
     payload: ApiSnapshotsRequest,
     db: AsyncSession = Depends(get_db),

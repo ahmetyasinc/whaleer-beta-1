@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-    baseURL: "http://127.0.0.1:8000", // FastAPI backend URL
+    baseURL: `${process.env.NEXT_PUBLIC_API_URL}`, // "http://127.0.0.1:8000"
     headers: {
         "Content-Type": "application/json",
     },
@@ -17,7 +17,7 @@ const refreshAccessToken = async () => {
             return null;
         }
 
-        const response = await axios.post("http://127.0.0.1:8000/api/refresh-token/", {
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/refresh-token/`, { //"http://127.0.0.1:8000/api/refresh-token/"
             refresh_token: refreshToken // ✅ JSON body içinde refresh token gönderiliyor
         });
 

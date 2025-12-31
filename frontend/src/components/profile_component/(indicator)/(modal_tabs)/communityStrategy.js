@@ -50,11 +50,11 @@ const CommunityStrategies = ({ closeModal }) => {
     toggleFavorite(strategy); // optimistic
     try {
       if (isAlreadyFavorite) {
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/strategy-remove-favourite/`, {
+        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/strategy-remove-favourite/`, {
           data: { strategy_id: strategy.id },
         });
       } else {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/strategy-add-favorite/`, {
+        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/strategy-add-favorite/`, {
           strategy_id: strategy.id,
         });
       }
@@ -93,7 +93,7 @@ const CommunityStrategies = ({ closeModal }) => {
     if (!releaseId) return;
     try {
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/strategy-releases/${releaseId}/view`
+        `${process.env.NEXT_PUBLIC_API_URL}/strategy-releases/${releaseId}/view`
       );
     } catch (e) {
       // sessiz fail

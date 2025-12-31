@@ -40,7 +40,7 @@ interval_map = {
 
 
 # ✅ Binance'den veri indirme ve kaydetme endpoint'i
-@websocket_router.get("/api/download-binance-data/")
+@websocket_router.get("/download-binance-data/")
 async def get_trades(data: DownloadData, db: AsyncSession = Depends(get_db)):
     """Binance'den belirtilen interval'lerde veri çekip veritabanına kaydeder."""
     results = []
@@ -59,7 +59,7 @@ async def get_trades(data: DownloadData, db: AsyncSession = Depends(get_db)):
 
     return {"symbol": symbol, "results": results}
 
-@websocket_router.post("/api/download-all-binance-data/")
+@websocket_router.post("/download-all-binance-data/")
 async def get_all_binance_data(intervals: List[str], db: AsyncSession = Depends(get_db)):
     """Binance_coins tablosundaki tüm coinler için belirtilen interval'lerde veri çeker ve kaydeder."""
     results = []
@@ -115,7 +115,7 @@ async def get_all_binance_data(intervals: List[str], db: AsyncSession = Depends(
 
     return {"summary": results}
 
-@websocket_router.post("/api/fix-binance-data/")
+@websocket_router.post("/fix-binance-data/")
 async def fix_binance_data(data: DownloadData, db: AsyncSession = Depends(get_db)):
     logs = []
 

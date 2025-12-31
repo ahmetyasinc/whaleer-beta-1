@@ -23,7 +23,7 @@ export async function bootstrapProfile() {
   axios.defaults.withCredentials = true;
 
   const { data } = await axios.get(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/profile`,
+    `${process.env.NEXT_PUBLIC_API_URL}/profile`,
     { withCredentials: true }
   );
 

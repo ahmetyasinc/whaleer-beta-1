@@ -9,7 +9,7 @@ from app.schemas.indicator.indicator_favorite import IndicatorFavoriteCreate
 
 protected_router = APIRouter()
 
-@protected_router.post("/api/indicator-add-favorite/") 
+@protected_router.post("/indicator-add-favorite/") 
 async def add_favorite_indicator(
     favorite_data: IndicatorFavoriteCreate,
     db: AsyncSession = Depends(get_db),
@@ -55,7 +55,7 @@ async def add_favorite_indicator(
 
     return {"message": "Indicator added to favorites successfully"}
 
-@protected_router.delete("/api/indicator-remove-favourite/")
+@protected_router.delete("/indicator-remove-favourite/")
 async def remove_favorite_indicator(
     favorite_data: IndicatorFavoriteCreate,
     db: AsyncSession = Depends(get_db),

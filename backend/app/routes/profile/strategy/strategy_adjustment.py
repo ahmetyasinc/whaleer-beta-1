@@ -9,7 +9,7 @@ from app.schemas.strategy.strategy_favorite import StrategyFavoriteCreate
 
 protected_router = APIRouter()
 
-@protected_router.post("/api/strategy-add-favorite/") 
+@protected_router.post("/strategy-add-favorite/") 
 async def add_favorite_strategy(
     favorite_data: StrategyFavoriteCreate,
     db: AsyncSession = Depends(get_db),
@@ -54,7 +54,7 @@ async def add_favorite_strategy(
 
     return {"message": "Strategy added to favorites successfully"}
 
-@protected_router.delete("/api/strategy-remove-favourite/")
+@protected_router.delete("/strategy-remove-favourite/")
 async def remove_favorite_strategy(
     favorite_data: StrategyFavoriteCreate,
     db: AsyncSession = Depends(get_db),

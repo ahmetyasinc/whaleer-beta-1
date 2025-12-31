@@ -7,7 +7,7 @@ from app.database import get_db
 
 protected_router = APIRouter()
 
-@protected_router.get("/api/get-binance-data/")
+@protected_router.get("/get-binance-data/")
 async def get_binance_data(symbol: str, interval: str, db: AsyncSession = Depends(get_db), user_id: dict = Depends(verify_token)):
     """Veritabanından belirtilen sembol ve zaman aralığındaki son 1000 veriyi JSON olarak getirir."""
     query = text("""

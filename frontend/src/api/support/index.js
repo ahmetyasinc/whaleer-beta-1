@@ -3,14 +3,14 @@ import api from "../axios";
 
 // Kategorileri getir
 export async function getSupportCategories() {
-  const url = "/api/support/categories";
+  const url = "/support/categories";
   const res = await api.get(url);
   return res.data;
 }
 
 // Yeni ticket oluştur
 export async function createTicket(payload) {
-  const url = "/api/support/tickets";
+  const url = "/support/tickets";
 
   // Her zaman multipart gönderelim (dosya olmasa da sorun değil)
   const form = new FormData();
@@ -32,28 +32,28 @@ export async function createTicket(payload) {
 
 // Ticket detaylarını getir
 export async function getTicket(ticketId) {
-  const url = `/api/support/tickets/${ticketId}`;
+  const url = `/support/tickets/${ticketId}`;
   const res = await api.get(url);
   return res.data;
 }
 
 // Ticket'a mesaj ekle
 export async function addMessage(ticketId, message) {
-  const url = `/api/support/tickets/${ticketId}/messages`;
+  const url = `/support/tickets/${ticketId}/messages`;
   const res = await api.post(url, message);
   return res.data;
 }
 
 // Ticket'ı memnuniyet ile kapat
 export async function closeTicket(ticketId, rating, feedback) {
-  const url = `/api/support/tickets/${ticketId}/close`;
+  const url = `/support/tickets/${ticketId}/close`;
   const res = await api.post(url, { rating, feedback });
   return res.data;
 }
 
 // Dosya yükle
 export async function uploadAttachment(file, ticketId = null, messageId = null) {
-  const url = "/api/support/attachments";
+  const url = "/support/attachments";
 
   const form = new FormData();
   form.append("file", file);
@@ -73,14 +73,14 @@ export async function uploadAttachment(file, ticketId = null, messageId = null) 
 
 // Ticket listesini getir
 export async function getTickets(params = {}) {
-  const url = "/api/support/tickets";
+  const url = "/support/tickets";
   const res = await api.get(url, { params });
   return res.data;
 }
 
 // Bir ticket'a ait attachment'ları getir
 export async function getTicketAttachments(ticketId) {
-  const url = `/api/support/tickets/${ticketId}/attachments`;
+  const url = `/support/tickets/${ticketId}/attachments`;
   const res = await api.get(url);
   return res.data;
 }
@@ -93,9 +93,9 @@ const API_BASE =
 const abs = (p) => (API_BASE ? `${API_BASE}${p}` : p);
 
 export function getAttachmentFileUrl(attachmentId) {
-  return abs(`/api/support/attachments/${attachmentId}/file`);
+  return abs(`/support/attachments/${attachmentId}/file`);
 }
 
 export function getAttachmentThumbnailUrl(attachmentId, size = 150) {
-  return abs(`/api/support/attachments/${attachmentId}/thumbnail?size=${size}`);
+  return abs(`/support/attachments/${attachmentId}/thumbnail?size=${size}`);
 }

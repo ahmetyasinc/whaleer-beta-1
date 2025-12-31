@@ -9,7 +9,7 @@ from app.schemas.scan.scan import StrategyScanRequest
 
 protected_router = APIRouter()
 
-@protected_router.post("/api/scan/")
+@protected_router.post("/scan/")
 async def run_scan(
     payload: StrategyScanRequest,
     #user_id: dict = Depends(verify_token)

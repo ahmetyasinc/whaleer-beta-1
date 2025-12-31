@@ -77,7 +77,7 @@ const LeftMenu = ({ locale }) => {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/user-info`, {
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user-info`, {
           withCredentials: true,
         });
         setUser(res.data);

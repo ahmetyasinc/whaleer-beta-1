@@ -23,7 +23,7 @@ export const createApiKey = async (apiData) => {
       futures_balance: Number(apiData.futures_balance || 0),
     };
 
-    const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/create-api/`, payload);
+    const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/create-api/`, payload);
     return res.data; // { id }
   } catch (err) {
     if (err.response && err.response.status === 400) {
@@ -37,7 +37,7 @@ export const createApiKey = async (apiData) => {
 
 export const getApiKeys = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/get-apis/`);  
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/get-apis/`);  
       const formattedData = response.data.map(item => {
         // created_at tarihini istediğin formata çevir
         const createdDate = item.created_at 
@@ -68,7 +68,7 @@ export const getApiKeys = async () => {
 
 export const changeDefaultApi = async (id) => {
   try {
-    const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/change-default-api`, { id });
+    const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/change-default-api`, { id });
     return res.data;
   } catch (error) {
     console.error("Default API değiştirme hatası:", error);
@@ -78,7 +78,7 @@ export const changeDefaultApi = async (id) => {
 
 export const updateApiKey = async (id, name) => {
   try {
-    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/update-api/`, {
+    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update-api/`, {
       id,
       name,
     });
@@ -90,17 +90,17 @@ export const updateApiKey = async (id, name) => {
 };
 
 export const getApiBots = async (apiId) => {
-  const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/api-bots/${apiId}`);
+  const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}-bots/${apiId}`);
   return data; // [{id,name,active,strategy_id}, ...]
 };
 
 export const deleteApiKeyCascade = async (id) => {
-  const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/delete-api/`, { id, cascade: true });
+  const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/delete-api/`, { id, cascade: true });
   return data; // { deleted_bots: [...], default_reassigned_to: 123 | null }
 };
 
 // (mevcut) deleteApiKey istersen kalsın, ama artık cascade'i kullanacağız
 export const deleteApiKey = async (id) => {
-  const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/delete-api/`, { id }); // cascade:false
+  const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/delete-api/`, { id }); // cascade:false
   return data;
 };

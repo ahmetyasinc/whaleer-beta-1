@@ -82,7 +82,7 @@ const TerminalStrategy = ({ id }) => {
 
   const updateBackendIndicators = async (updatedList) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/strategies/update`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/strategies/update`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -118,7 +118,7 @@ const TerminalStrategy = ({ id }) => {
   useEffect(() => {
     async function fetchIndicators() {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/strategies/${id}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/strategies/${id}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
           credentials: "include",

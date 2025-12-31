@@ -23,7 +23,7 @@ const CryptoSelectButton = () => {
     setMounted(true);
     const fetchCoins = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/get-coin-list/`);
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/get-coin-list/`);
 
         if (response.data && response.data.coins) {
           const coins = response.data.coins.map(coin => ({

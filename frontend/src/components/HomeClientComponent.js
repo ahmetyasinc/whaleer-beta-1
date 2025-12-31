@@ -10,7 +10,7 @@ export default function HomeClientComponent() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/hero-infos/`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/hero-infos/`);
         const result = await res.json();
         setData(result);
       } catch (error) {

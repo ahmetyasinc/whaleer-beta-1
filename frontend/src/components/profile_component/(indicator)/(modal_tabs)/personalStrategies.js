@@ -59,12 +59,12 @@ const PersonalStrategies = ({ closeModal }) => {
     try {
       if (isAlreadyFavorite) {
         await axios.delete(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/strategy-remove-favourite/`,
+          `${process.env.NEXT_PUBLIC_API_URL}/strategy-remove-favourite/`,
           { data: { strategy_id: strategy.id } }
         );
       } else {
         await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/strategy-add-favorite/`,
+          `${process.env.NEXT_PUBLIC_API_URL}/strategy-add-favorite/`,
           { strategy_id: strategy.id }
         );
       }
@@ -83,7 +83,7 @@ const PersonalStrategies = ({ closeModal }) => {
     if (!toDelete) return;
     try {
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/delete-strategy/${toDelete.id}/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/delete-strategy/${toDelete.id}/`,
         { withCredentials: true }
       );
       const { strategies: currentList } = useStrategyStore.getState();

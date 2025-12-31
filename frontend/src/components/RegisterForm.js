@@ -77,7 +77,7 @@ export default function RegisterForm() {
 
     try {
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/register/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/register/`,
         payload,
         { headers: { "Content-Type": "application/json" } }
       );

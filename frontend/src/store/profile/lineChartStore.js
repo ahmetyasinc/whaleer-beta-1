@@ -20,7 +20,7 @@ const useLineChartStore = create((set) => ({
       }
 
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/api_snapshots`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api_snapshots`,
         {
           api_id: activeApi.id, // payload içine koyduk
         }

@@ -1,4 +1,32 @@
+# --- İŞLETİM SİSTEMİ (Gereksiz dosyalar) ---
+# Mac kullanıcıları klasörde gezerken oluşur, repoda işi yoktur.
+.DS_Store
+# Windows önizleme dosyaları.
+Thumbs.db
+
+# --- IDE ve EDİTÖR (Kişisel ayarların repoya gitmemeli) ---
+.vscode/
+.idea/
+*.swp
+
+# --- PYTHON (Backend) ---
+# Bytecode dosyaları (Senin yaşadığın sorunun kaynağı)
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
+
+# Sanal Ortamlar (Kütüphanelerin yüklü olduğu devasa klasörler)
+# Bunları repoya atarsan hem boyut şişer hem de sunucuda çalışmaz.
+venv/
+.venv/
+env/
+
+# Çevresel Değişkenler
+.env
+.env.*
+!.env.example
+
+# --- LOG ve VERİTABANI ---
+*.log
+*.sqlite3
+*.db

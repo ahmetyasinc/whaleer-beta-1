@@ -27,7 +27,7 @@ const AddIndicatorButton = ({ indicatorId, closeModal }) => {
       }
 
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/run-indicator/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/run-indicator/`,
         {
           indicator_id: indicatorId,
           binance_symbol: selectedCrypto.binance_symbol,

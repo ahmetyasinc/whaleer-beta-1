@@ -11,7 +11,7 @@ export default function ChartComponent() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/get-binance-data/`, {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/get-binance-data/`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",

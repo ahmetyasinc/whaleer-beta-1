@@ -99,6 +99,7 @@ const TechnicalIndicators = ({ locale, closeModal }) => {
                     .filter((indicator) =>
                         indicator.name.toLowerCase().includes(searchTerm.toLowerCase())
                     )
+                    .sort((a, b) => a.name.localeCompare(b.name))
                     .map((indicator) => (
                         <div
                             key={indicator.id}
@@ -121,11 +122,7 @@ const TechnicalIndicators = ({ locale, closeModal }) => {
 
                             {/* Kartın sağ kısmı */}
                             <div className="flex gap-2">
-                                {/* Göster/Gizle Butonu */}
-                                {/* GÜNCELLEME: closeModal prop'u AddIndicatorButton'a aktarılıyor */}
                                 <AddIndicatorButton indicatorId={indicator.id} closeModal={closeModal} />
-
-                                {/* Kod Butonu */}
                                 <button
                                     className="bg-transparent p-2 rounded-md transition-colors"
                                     onClick={() => openCodeModal(indicator)}
@@ -135,6 +132,7 @@ const TechnicalIndicators = ({ locale, closeModal }) => {
                             </div>
                         </div>
                     ))}
+
             </div>
 
             {/* Kod Modalı */}

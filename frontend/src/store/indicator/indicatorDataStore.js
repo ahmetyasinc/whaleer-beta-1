@@ -1,11 +1,12 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import axios from 'axios';
 import useCryptoStore from "./cryptoPinStore";
 import usePanelStore from "./panelStore";
 
-const useIndicatorDataStore = create((set, get) => ({
+const useIndicatorDataStore = create(persist((set, get) => ({
   indicatorData: {}, // { [indicatorId]: { [subId]: { inputs, result, prints } } }
-  
+
   // Elle veri ekle (input olmadan sadece result/prints ile)
   insertIndicatorData: (indicatorId, indicator_name, result, prints, inputs = {}, addSyncedPanel) => {
     const state = get();
@@ -23,14 +24,16 @@ const useIndicatorDataStore = create((set, get) => ({
             [newSubId]: {
               inputs,
               result,
-              prints
+              result,
+              prints,
+              visible: true
             }
           }
         }
       }
     });
   },
-  
+
   insertOrReplaceLastSubIndicatorData: (indicatorId, indicator_name, result, prints, inputs = {}, addSyncedPanel) => {
     const state = get();
     const currentData = state.indicatorData[indicatorId];
@@ -45,7 +48,7 @@ const useIndicatorDataStore = create((set, get) => ({
           [indicatorId]: {
             name: indicator_name,
             subItems: {
-              1: { inputs, result, prints },
+              1: { inputs, result, prints, visible: true },
             },
           },
         },
@@ -66,7 +69,9 @@ const useIndicatorDataStore = create((set, get) => ({
               [maxSubId]: {
                 inputs,
                 result,
+                result,
                 prints,
+                visible: true,
               },
             },
           },
@@ -79,14 +84,14 @@ const useIndicatorDataStore = create((set, get) => ({
     const state = get();
     const existing = state.indicatorData[indicatorId];
     const subItems = existing?.subItems;
-  
+
     if (!existing || !subItems?.[subId]) return;
-  
+
     const newSubItems = { ...subItems };
     delete newSubItems[subId];
-  
+
     const newIndicatorData = { ...state.indicatorData };
-  
+
     if (Object.keys(newSubItems).length === 0) {
       // Tüm sub'lar silinmişse indikatörü de kaldır
       delete newIndicatorData[indicatorId];
@@ -96,19 +101,19 @@ const useIndicatorDataStore = create((set, get) => ({
         subItems: newSubItems,
       };
     }
-  
+
     set({ indicatorData: newIndicatorData });
-  },  
+  },
 
 
   // Input güncelle ve yeniden hesapla
   updateInputs: async (indicatorId, subId, updatedInputs) => {
     const state = get();
-  
+
     const currentInputs =
       state.indicatorData?.[indicatorId]?.subItems?.[subId]?.inputs?.inputs || [];
 
-    
+
     const mergedInputs = currentInputs.map((input) => {
       const updatedValue = updatedInputs[input.name];
       return {
@@ -119,25 +124,26 @@ const useIndicatorDataStore = create((set, get) => ({
 
     const response = await get().runCalculation(indicatorId, updatedInputs);
     const { result, prints } = response;
-  
+
     const existingSubItems = state.indicatorData[indicatorId].subItems;
-  
+
     set({
-        indicatorData: {
-          ...state.indicatorData,
-          [indicatorId]: {
-            ...state.indicatorData[indicatorId],
-            subItems: {
-              ...existingSubItems,
-              [subId]: {
-                inputs: { inputs: mergedInputs }, // dizi olarak güncellendi
-                result,
-                prints,
-              },
+      indicatorData: {
+        ...state.indicatorData,
+        [indicatorId]: {
+          ...state.indicatorData[indicatorId],
+          subItems: {
+            ...existingSubItems,
+            [subId]: {
+              inputs: { inputs: mergedInputs },
+              result,
+              prints,
+              visible: existingSubItems[subId]?.visible ?? true,
             },
           },
         },
-      });
+      },
+    });
   },
 
   // Hesaplama API'si
@@ -145,12 +151,12 @@ const useIndicatorDataStore = create((set, get) => ({
     try {
       const { selectedCrypto, selectedPeriod } = useCryptoStore.getState();
       const { end } = usePanelStore.getState();
-  
+
       if (!selectedCrypto?.binance_symbol || !selectedPeriod) {
         console.warn("runCalculation için gerekli bilgiler eksik.");
         return { result: [], prints: [] };
       }
-  
+
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/run-updated-indicator/`, {
         indicator_id: indicatorId,
         inputs: inputs,
@@ -169,6 +175,34 @@ const useIndicatorDataStore = create((set, get) => ({
     }
   },
 
+  toggleSubIndicatorVisibility: (indicatorId, subId) => {
+    const state = get();
+    const existingIndicator = state.indicatorData[indicatorId];
+    if (!existingIndicator) return;
+    const existingSub = existingIndicator.subItems?.[subId];
+    if (!existingSub) return;
+
+    set({
+      indicatorData: {
+        ...state.indicatorData,
+        [indicatorId]: {
+          ...existingIndicator,
+          subItems: {
+            ...existingIndicator.subItems,
+            [subId]: {
+              ...existingSub,
+              visible: !existingSub.visible
+            }
+          }
+        }
+      }
+    });
+  }
+
+}), {
+  name: 'wh-indicator-storage',
+  storage: createJSONStorage(() => localStorage),
+  partialize: (state) => ({ indicatorData: state.indicatorData }),
 }));
 
 export default useIndicatorDataStore;

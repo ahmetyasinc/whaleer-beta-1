@@ -7,6 +7,8 @@ import useRulerStore from "@/store/indicator/rulerStore";
 import { createRoot } from "react-dom/client";
 import { RiSettingsLine } from "react-icons/ri";
 import { AiOutlineClose, AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { FaChevronUp } from "react-icons/fa";
+import { FaChevronDown } from "react-icons/fa";
 import { installRulerTool } from "@/utils/rulerTool";
 import { useLogout } from "@/utils/HookLogout";
 import useMagnetStore from "@/store/indicator/magnetStore";
@@ -137,8 +139,9 @@ export default function ChartComponent() {
 
   // Strategy visibility ref
   const hiddenStrategyIdsRef = useRef(new Set());
-  // Indicator visibility ref
-  const hiddenIndicatorIdsRef = useRef(new Set());
+
+  // Indicator visibility handled by store
+  const isIndicatorsCollapsedRef = useRef(false);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -163,7 +166,7 @@ export default function ChartComponent() {
   const { end } = usePanelStore();
   useEffect(() => { rulerModeRef.current = isRulerMode; }, [isRulerMode]);
 
-  const { indicatorData, removeSubIndicator } = useIndicatorDataStore();
+  const { indicatorData, removeSubIndicator, toggleSubIndicatorVisibility } = useIndicatorDataStore();
   const { strategyData, removeSubStrategy } = useStrategyDataStore();
   const { selectedCrypto, setSelectedCrypto, coins, selectedPeriod } = useCryptoStore();
   const { watchlist } = useWatchListStore();
@@ -174,6 +177,10 @@ export default function ChartComponent() {
   const [activeStrategyId, setActiveStrategyId] = useState(null);
   const [activeSubIndicatorId, setActiveSubIndicatorId] = useState(null);
   const [activeSubStrategyId, setActiveSubStrategyId] = useState(null);
+  const [infoPanelData, setInfoPanelData] = useState(null); // { candle, indicators: [], change: { val, percent } }
+  const infoPanelActiveRef = useRef(false);
+  useEffect(() => { infoPanelActiveRef.current = !!infoPanelData; }, [infoPanelData]);
+
   const [tzOffsetMin, setTzOffsetMin] = useState(0);
 
   const { settings } = useChartSettingsStore();
@@ -443,13 +450,69 @@ export default function ChartComponent() {
 
 
     const el = chartContainerRef.current; const cleanupFns = [];
+
+    // Shared logic to update info panel
+    const updateInfoPanelData = (logicalIndex) => {
+      let index = Math.round(logicalIndex);
+      if (index >= chartData.length) index = chartData.length - 1;
+      if (index < 0) index = 0;
+
+      const candle = chartData[index];
+      if (!candle) return;
+
+      const changeVal = candle.close - candle.open;
+      const changePercent = (changeVal / candle.open) * 100;
+
+      const indicatorValues = [];
+      const panelIndicatorValues = [];
+      const indicatorState = useIndicatorDataStore.getState().indicatorData || {};
+
+      Object.entries(indicatorState).forEach(([indId, indObj]) => {
+        Object.entries(indObj.subItems || {}).forEach(([subId, subItem]) => {
+          if (subItem.visible === false) return;
+
+          const results = subItem.result || [];
+          results.forEach((res, rIdx) => {
+            const point = res.data?.find(d => {
+              const t = toUnixSecUTC(d[0]);
+              return Math.abs(t - candle.time) < 1;
+            });
+
+            if (point) {
+              let val = point[1];
+              if (val && typeof val === 'object' && 'value' in val) val = val.value;
+              if (typeof val === 'number') val = val.toFixed(2);
+
+              const itemData = {
+                name: `${indObj.name || indId} (${rIdx + 1})`,
+                value: val,
+                color: res.settings?.color || 'white'
+              };
+
+              if (res.on_graph) {
+                indicatorValues.push(itemData);
+              } else {
+                panelIndicatorValues.push(itemData);
+              }
+            }
+          });
+        });
+      });
+
+      setInfoPanelData({
+        candle,
+        change: { value: changeVal, percent: changePercent },
+        indicators: indicatorValues,
+        panelIndicators: panelIndicatorValues
+      });
+    };
+
     if (el) {
       const onStart = () => markLeader(chartId); const onEnd = () => unmarkLeader(chartId);
       el.addEventListener('mousedown', onStart);
       el.addEventListener('wheel', onStart, { passive: false });
       el.addEventListener('touchstart', onStart, { passive: true });
       window.addEventListener('mouseup', onEnd);
-      el.addEventListener('mouseleave', onEnd);
       window.addEventListener('touchend', onEnd);
       cleanupFns.push(() => {
         el.removeEventListener('mousedown', onStart);
@@ -459,6 +522,22 @@ export default function ChartComponent() {
         el.removeEventListener('mouseleave', onEnd);
         window.removeEventListener('touchend', onEnd);
       });
+
+      // Double Click Handler
+      const onDblClick = (param) => {
+        if (!chartRef.current || chartData.length === 0) return;
+        const rect = chartContainerRef.current.getBoundingClientRect();
+        const x = param.clientX - rect.left;
+        const timeScale = chart.timeScale();
+        const logical = timeScale.coordinateToLogical(x);
+        if (logical === null) return;
+
+        updateInfoPanelData(logical);
+      };
+
+      el.addEventListener('dblclick', onDblClick);
+      cleanupFns.push(() => el.removeEventListener('dblclick', onDblClick));
+
     }
 
     // === MAIN SERIES ===
@@ -585,36 +664,102 @@ export default function ChartComponent() {
 
     const indicatorLabelsContainer = document.getElementById("indicator-labels");
     if (indicatorLabelsContainer) indicatorLabelsContainer.innerHTML = "";
+
+    // -- Containers for grouping --
+    const visibleList = document.createElement("div");
+    visibleList.style.cssText = "display: flex; flex-direction: column; gap: 4px; width: 100%; align-items: flex-start;";
+
+    const hiddenList = document.createElement("div");
+    hiddenList.style.cssText = "display: flex; flex-direction: column; gap: 4px; width: 100%; align-items: flex-start;";
+    // Initial hidden state logic
+    hiddenList.style.display = isIndicatorsCollapsedRef.current ? "none" : "flex";
+
+    const toggleBtn = document.createElement("button");
+    toggleBtn.style.cssText = `
+       pointer-events: auto;
+       background: rgba(30,30,30,0);
+       color: white;
+       font-size: 12px;
+       padding: 4px;
+       border-radius: 4px;
+       border: 1px solid rgba(156,163,175,0.1);
+       cursor: pointer;
+       display: none; 
+       align-items: center;
+       justify-content: center;
+       width: 40px; 
+       align-self: flex-start;
+       margin-left: 2px;
+    `;
+    const toggleRoot = createRoot(toggleBtn);
+
+    // UI Update Helper
+    const updateToggleUI = () => {
+      const hasHidden = hiddenList.children.length > 0;
+      toggleBtn.style.display = hasHidden ? "flex" : "none";
+      const isCollapsed = isIndicatorsCollapsedRef.current;
+      hiddenList.style.display = (hasHidden && !isCollapsed) ? "flex" : "none";
+
+      toggleRoot.render(
+        isCollapsed
+          ? <FaChevronDown size={10} className="hover:text-gray-400" />
+          : <FaChevronUp size={10} className="hover:text-gray-400" />
+      );
+    };
+
+    toggleBtn.onclick = () => {
+      isIndicatorsCollapsedRef.current = !isIndicatorsCollapsedRef.current;
+      updateToggleUI();
+    };
+    toggleBtn.onmouseenter = () => { isHoveringButtons = true; };
+    toggleBtn.onmouseleave = () => { isHoveringButtons = false; };
+
+    if (indicatorLabelsContainer) {
+      indicatorLabelsContainer.appendChild(visibleList);
+      indicatorLabelsContainer.appendChild(toggleBtn);
+      indicatorLabelsContainer.appendChild(hiddenList);
+    }
+
+    // Flatten valid results first to handle counting and collapsible logic
+    const validIndicators = [];
     Object.entries(indicatorData).forEach(([indicatorId, indicator]) => {
-      const indicatorName = indicator.name; const subItems = indicator.subItems || {};
+      const indicatorName = indicator.name;
+      const subItems = indicator.subItems || {};
       Object.entries(subItems).forEach(([subId, indicatorInfo]) => {
-        if (!indicatorInfo?.result) return; if (!Array.isArray(indicatorInfo?.result)) return;
+        if (!indicatorInfo?.result || !Array.isArray(indicatorInfo?.result)) return;
         indicatorInfo.result.filter((item) => item.on_graph === true).forEach((indicatorResult) => {
-          const { type, settings: s, data } = indicatorResult; let series;
-          const key = `${indicatorId}-${subId}`;
-          const isInitiallyVisible = !hiddenIndicatorIdsRef.current.has(key);
+          validIndicators.push({ indicatorId, indicatorName, subId, indicatorResult, visible: indicatorInfo.visible !== false });
+        });
+      });
+    });
 
-          switch (type) {
-            case 'line': series = chart.addLineSeries({ color: s?.color || 'yellow', lineWidth: s?.width || 2, lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible }); break;
-            case 'area': series = chart.addAreaSeries({ topColor: s?.color || 'rgba(33,150,243,0.5)', bottomColor: 'rgba(33,150,243,0.1)', lineColor: s?.color || 'blue', lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible }); break;
-            case 'histogram': { const c = s?.color ?? '0, 128, 0'; const opacity = s?.opacity ?? 0.3; series = chart.addHistogramSeries({ color: `rgba(${c}, ${opacity})`, lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible }); break; }
-            default: series = chart.addLineSeries({ color: 'white', lineWidth: 2, lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible });
-          }
-          const timeValueMap = new Map();
-          data.forEach(([time, value]) => { if (value === undefined) return; const unixTime = toUnixSecUTC(time); if (unixTime !== undefined) timeValueMap.set(unixTime, value); });
-          const formattedData = Array.from(timeValueMap.entries()).sort(([a], [b]) => a - b).map(([time, value]) => ({ time, value }));
-          series.setData(formattedData);
+    validIndicators.forEach(({ indicatorId, indicatorName, subId, indicatorResult, visible }, idx) => {
+      const { type, settings: s, data } = indicatorResult; let series;
+      const key = `${indicatorId}-${subId}`;
+      const isInitiallyVisible = visible;
 
-          // Label UI
-          const labelId = `indicator-label-${indicatorId}-${subId}`;
-          const valueContainerId = `indicator-values-${indicatorId}-${subId}`;
-          let labelDiv = document.getElementById(labelId);
-          let valuesContainer = document.getElementById(valueContainerId);
+      switch (type) {
+        case 'line': series = chart.addLineSeries({ color: s?.color || 'yellow', lineWidth: s?.width || 2, lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible }); break;
+        case 'area': series = chart.addAreaSeries({ topColor: s?.color || 'rgba(33,150,243,0.5)', bottomColor: 'rgba(33,150,243,0.1)', lineColor: s?.color || 'blue', lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible }); break;
+        case 'histogram': { const c = s?.color ?? '0, 128, 0'; const opacity = s?.opacity ?? 0.3; series = chart.addHistogramSeries({ color: `rgba(${c}, ${opacity})`, lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible }); break; }
+        default: series = chart.addLineSeries({ color: 'white', lineWidth: 2, lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible });
+      }
 
-          if (!labelDiv) {
-            labelDiv = document.createElement("div");
-            labelDiv.id = labelId;
-            labelDiv.style.cssText = `
+      const timeValueMap = new Map();
+      data.forEach(([time, value]) => { if (value === undefined) return; const unixTime = toUnixSecUTC(time); if (unixTime !== undefined) timeValueMap.set(unixTime, value); });
+      const formattedData = Array.from(timeValueMap.entries()).sort(([a], [b]) => a - b).map(([time, value]) => ({ time, value }));
+      series.setData(formattedData);
+
+      // Label UI
+      const labelId = `indicator-label-${indicatorId}-${subId}`;
+      const valueContainerId = `indicator-values-${indicatorId}-${subId}`;
+      let labelDiv = document.getElementById(labelId);
+      let valuesContainer = document.getElementById(valueContainerId);
+
+      if (!labelDiv) {
+        labelDiv = document.createElement("div");
+        labelDiv.id = labelId;
+        labelDiv.style.cssText = `
               pointer-events: none;
               background: rgba(30,30,30,0);
               color: white;
@@ -626,94 +771,89 @@ export default function ChartComponent() {
               gap: 6px;
               border: 1px solid rgba(156,163,175,0.1);
             `;
-            const title = document.createElement("span");
-            title.textContent = indicatorName || `${indicatorId} (${subId})`;
+        const title = document.createElement("span");
+        title.textContent = indicatorName || `${indicatorId} (${subId})`;
 
-            valuesContainer = document.createElement("div");
-            valuesContainer.id = valueContainerId;
-            valuesContainer.style.display = "flex";
-            valuesContainer.style.gap = "8px";
+        valuesContainer = document.createElement("div");
+        valuesContainer.id = valueContainerId;
+        valuesContainer.style.display = "flex";
+        valuesContainer.style.gap = "8px";
 
-            const settingsBtn = document.createElement("button");
-            createRoot(settingsBtn).render(<RiSettingsLine size={13} className="hover:text-gray-400" />);
-            settingsBtn.style.cssText = "pointer-events:auto;background:none;border:none;color:white;cursor:pointer;";
-            settingsBtn.onclick = () => { setActiveIndicatorId(indicatorId); setActiveSubIndicatorId(subId); setSettingsIndicatorModalOpen(true); };
-            settingsBtn.onmouseenter = () => { isHoveringButtons = true; }; settingsBtn.onmouseleave = () => { isHoveringButtons = false; };
+        const settingsBtn = document.createElement("button");
+        createRoot(settingsBtn).render(<RiSettingsLine size={13} className="hover:text-gray-400" />);
+        settingsBtn.style.cssText = "pointer-events:auto;background:none;border:none;color:white;cursor:pointer;";
+        settingsBtn.onclick = () => { setActiveIndicatorId(indicatorId); setActiveSubIndicatorId(subId); setSettingsIndicatorModalOpen(true); };
+        settingsBtn.onmouseenter = () => { isHoveringButtons = true; }; settingsBtn.onmouseleave = () => { isHoveringButtons = false; };
 
-            const removeBtn = document.createElement("button");
-            createRoot(removeBtn).render(<AiOutlineClose size={13} className="hover:text-gray-400" />);
-            removeBtn.style.cssText = "pointer-events:auto;background:none;border:none;color:white;cursor:pointer;";
-            removeBtn.onclick = () => { series.setData([]); labelDiv.remove(); removeSubIndicator(indicatorId, subId); };
-            removeBtn.onmouseenter = () => { isHoveringButtons = true; }; removeBtn.onmouseleave = () => { isHoveringButtons = false; };
+        const removeBtn = document.createElement("button");
+        createRoot(removeBtn).render(<AiOutlineClose size={13} className="hover:text-gray-400" />);
+        removeBtn.style.cssText = "pointer-events:auto;background:none;border:none;color:white;cursor:pointer;";
+        removeBtn.onclick = () => { series.setData([]); labelDiv.remove(); removeSubIndicator(indicatorId, subId); };
+        removeBtn.onmouseenter = () => { isHoveringButtons = true; }; removeBtn.onmouseleave = () => { isHoveringButtons = false; };
 
-            labelDiv._seriesList = [];
+        labelDiv._seriesList = [];
 
-            const visibilityBtn = document.createElement("button");
-            visibilityBtn.style.cssText = "pointer-events:auto;background:none;border:none;color:white;cursor:pointer;";
-            const visibilityRoot = createRoot(visibilityBtn);
-            const key = `${indicatorId}-${subId}`;
+        const visibilityBtn = document.createElement("button");
+        visibilityBtn.style.cssText = "pointer-events:auto;background:none;border:none;color:white;cursor:pointer;";
+        const visibilityRoot = createRoot(visibilityBtn);
+        const key = `${indicatorId}-${subId}`;
 
-            // Initial visibility check
-            let isVisible = !hiddenIndicatorIdsRef.current.has(key);
+        // Visibility controlled by store re-render
+        let isVisible = visible;
+        const updateVisibilityIcon = () => {
+          visibilityRoot.render(
+            isVisible ? <AiOutlineEye size={15} className="hover:text-gray-400" /> : <AiOutlineEyeInvisible size={15} className="text-gray-500 hover:text-gray-400" />
+          );
+          labelDiv.style.opacity = isVisible ? "1" : "0.5";
+          if (valuesContainer) valuesContainer.style.display = isVisible ? "flex" : "none";
+        };
+        updateVisibilityIcon();
 
-            const updateVisibilityIcon = () => {
-              visibilityRoot.render(
-                isVisible ? <AiOutlineEye size={15} className="hover:text-gray-400" /> : <AiOutlineEyeInvisible size={15} className="text-gray-500 hover:text-gray-400" />
-              );
-              labelDiv.style.opacity = isVisible ? "1" : "0.5";
-              if (valuesContainer) {
-                valuesContainer.style.display = isVisible ? "flex" : "none";
-              }
-            };
-            updateVisibilityIcon();
+        // Initial placement
+        if (isVisible) {
+          visibleList.appendChild(labelDiv);
+        } else {
+          hiddenList.appendChild(labelDiv);
+        }
 
-            // Apply initial visibility to series (if they exist)
-            if (labelDiv._seriesList) {
-              labelDiv._seriesList.forEach(s => s.applyOptions({ visible: isVisible }));
-            }
+        if (labelDiv._seriesList) labelDiv._seriesList.forEach(s => s.applyOptions({ visible: isVisible }));
 
-            visibilityBtn.onclick = () => {
-              isVisible = !isVisible;
-              if (isVisible) {
-                hiddenIndicatorIdsRef.current.delete(key);
-              } else {
-                hiddenIndicatorIdsRef.current.add(key);
-              }
+        visibilityBtn.onclick = () => {
+          toggleSubIndicatorVisibility(indicatorId, subId);
+          // Store update triggers re-render, forcing effect re-run and rebuild.
+        };
+        visibilityBtn.onmouseenter = () => { isHoveringButtons = true; };
+        visibilityBtn.onmouseleave = () => { isHoveringButtons = false; };
 
-              if (labelDiv._seriesList) {
-                labelDiv._seriesList.forEach(s => s.applyOptions({ visible: isVisible }));
-              }
-              updateVisibilityIcon();
-            };
-            visibilityBtn.onmouseenter = () => { isHoveringButtons = true; };
-            visibilityBtn.onmouseleave = () => { isHoveringButtons = false; };
+        labelDiv.appendChild(title);
+        labelDiv.appendChild(valuesContainer);
+        labelDiv.appendChild(visibilityBtn);
+        labelDiv.appendChild(settingsBtn);
+        labelDiv.appendChild(removeBtn);
 
-            labelDiv.appendChild(title);
-            labelDiv.appendChild(valuesContainer);
-            labelDiv.appendChild(visibilityBtn);
-            labelDiv.appendChild(settingsBtn);
-            labelDiv.appendChild(removeBtn);
-            indicatorLabelsContainer && indicatorLabelsContainer.appendChild(labelDiv);
-          }
+        if (idx > 0 && isIndicatorsCollapsedRef.current) {
+          // No-op for now, visibility handled by lists
+        }
+      }
 
-          if (labelDiv._seriesList) {
-            labelDiv._seriesList.push(series);
-          }
+      if (labelDiv._seriesList) {
+        labelDiv._seriesList.push(series);
+      }
 
-          // Value Span
-          const valueSpan = document.createElement("span");
-          valueSpan.style.cssText = `color: ${series.options ? series.options().color : (s?.color || 'white')}; font-variant-numeric: tabular-nums;`;
-          valueSpan.textContent = "";
+      // Value Span
+      const valueSpan = document.createElement("span");
+      valueSpan.style.cssText = `color: ${series.options ? series.options().color : (s?.color || 'white')}; font-variant-numeric: tabular-nums;`;
+      valueSpan.textContent = "";
 
-          if (valuesContainer) {
-            valuesContainer.appendChild(valueSpan);
-          }
+      if (valuesContainer) {
+        valuesContainer.appendChild(valueSpan);
+      }
 
-          // Map for updates
-          seriesLabelMap.set(series, { span: valueSpan, dataMap: timeValueMap });
-        });
-      });
+      seriesLabelMap.set(series, { span: valueSpan, dataMap: timeValueMap });
     });
+
+    // Check toggle UI state initially after loop
+    updateToggleUI();
 
     // Range sync
     timeScale.subscribeVisibleTimeRangeChange(() => {
@@ -793,6 +933,15 @@ export default function ChartComponent() {
           chart.setCrosshairPosition(data.value, param.time, priceSeriesRef.current);
         }
       }
+
+      // 2) Dynamic Info Panel Update
+      if (infoPanelActiveRef.current && param.point) {
+        const logical = chart.timeScale().coordinateToLogical(param.point.x);
+        if (logical !== null) {
+          updateInfoPanelData(logical);
+        }
+      }
+
       if (!isMountedRef.current || chartInstanceIdRef.current !== myInstanceId) return;
 
       // Update local labels
@@ -946,6 +1095,70 @@ export default function ChartComponent() {
 
       <IndicatorSettingsModal isOpen={settingsIndicatorModalOpen} onClose={() => setSettingsIndicatorModalOpen(false)} indicatorId={activeIndicatorId} subId={activeSubIndicatorId} />
       <StrategySettingsModal isOpen={settingsStrategyModalOpen} onClose={() => setSettingsStrategyModalOpen(false)} strategyId={activeStrategyId} subId={activeSubStrategyId} />
+
+      {/* Info Panel Overlay */}
+      {infoPanelData && (
+        <div className="absolute bottom-10 right-20 z-20 bg-[#1e1e1e] border border-gray-700 rounded p-4 shadow-lg text-xs text-gray-200 min-w-[200px]"
+          onClick={(e) => e.stopPropagation()} // Prevent clicks from bubbling if needed
+        >
+          <div className="flex justify-between items-center mb-2 border-b border-gray-700 pb-1">
+            <span className="font-bold text-sm">Bar Info</span>
+            <button onClick={() => setInfoPanelData(null)} className="hover:text-white">
+              <AiOutlineClose size={14} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-3">
+            <div className="text-gray-400">Time:</div>
+            <div className="text-right">{new Date(infoPanelData.candle.time * 1000).toLocaleDateString()} {new Date(infoPanelData.candle.time * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+
+            <div className="text-gray-400">Open:</div>
+            <div className="text-right text-[#2196F3]">{infoPanelData.candle.open.toFixed(2)}</div>
+
+            <div className="text-gray-400">High:</div>
+            <div className="text-right text-[#4CAF50]">{infoPanelData.candle.high.toFixed(2)}</div>
+
+            <div className="text-gray-400">Low:</div>
+            <div className="text-right text-[#F44336]">{infoPanelData.candle.low.toFixed(2)}</div>
+
+            <div className="text-gray-400">Close:</div>
+            <div className="text-right text-[#FF9800]">{infoPanelData.candle.close.toFixed(2)}</div>
+
+            <div className="text-gray-400">Change:</div>
+            <div className={`text-right ${infoPanelData.change.value >= 0 ? 'text-[#0ECB81]' : 'text-[#F23645]'}`}>
+              {infoPanelData.change.value.toFixed(2)} ({infoPanelData.change.percent.toFixed(2)}%)
+            </div>
+          </div>
+
+          {infoPanelData.indicators.length > 0 && (
+            <>
+              <div className="border-t border-gray-700 pt-1 mb-1 font-semibold text-gray-300">Indicators</div>
+              <div className="flex flex-col gap-1">
+                {infoPanelData.indicators.map((ind, idx) => (
+                  <div key={idx} className="flex justify-between">
+                    <span className="text-gray-400">{ind.name}:</span>
+                    <span style={{ color: ind.color }}>{ind.value}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {infoPanelData.panelIndicators && infoPanelData.panelIndicators.length > 0 && (
+            <>
+              <div className="border-t border-gray-700 pt-1 mt-2 mb-1 font-semibold text-gray-300">Panel Indicators</div>
+              <div className="flex flex-col gap-1">
+                {infoPanelData.panelIndicators.map((ind, idx) => (
+                  <div key={idx} className="flex justify-between">
+                    <span className="text-gray-400">{ind.name}:</span>
+                    <span style={{ color: ind.color }}>{ind.value}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

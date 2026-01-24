@@ -28,25 +28,29 @@ export default function ClientPage() {
     backtestError,
     archivedBacktests,
     isArchiveLoading,
-    archiveError
+    archiveError,
+    isArchiveSidebarOpen
   } = useBacktestStore();
 
   return (
     <div className="min-h-screen bg-zinc-950/60 text-zinc-300 font-sans selection:bg-blue-500/30">
       <BacktestHeader />
 
-      <div className="flex w-full h-[calc(100vh-60px)] p-2 gap-6">
+      <div className="flex w-full h-[calc(100vh-60px)] p-2 gap-4 transition-all duration-500 ease-in-out">
 
         {/* Left Side - Backtest Archive */}
-        <div className="w-[35%] flex flex-col bg-gradient-to-br from-zinc-950/90 via-stone-900/70 to-zinc-950/90 backdrop-blur-md border border-zinc-800/50 rounded-2xl overflow-hidden shadow-2xl shadow-black/40">
-          <div className="px-6 py-4 border-b border-zinc-800/50 bg-gradient-to-r from-zinc-900/80 to-zinc-900/0">
+        <div
+          className={`flex flex-col bg-gradient-to-br from-zinc-950/90 via-stone-900/70 to-zinc-950/90 backdrop-blur-md border border-zinc-800/50 rounded-2xl overflow-hidden shadow-2xl shadow-black/40 transition-all duration-500 ease-in-out ${isArchiveSidebarOpen ? "w-[35%] opacity-100 translate-x-0 ml-2" : "w-0 opacity-0 -translate-x-full ml-0 border-0 pointer-events-none"
+            }`}
+        >
+          <div className="px-6 py-4 border-b border-zinc-800/50 bg-gradient-to-r from-zinc-900/80 to-zinc-900/0 min-w-[300px]">
             <h1 className="text-zinc-100 text-sm uppercase tracking-wider font-bold flex items-center gap-2">
               <span className="w-1 h-4 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></span>
               {t('titles.archive')}
             </h1>
           </div>
 
-          <div className="flex-1 p-3 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+          <div className="flex-1 p-3 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent min-w-[300px]">
             {isArchiveLoading ? (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
@@ -95,7 +99,10 @@ export default function ClientPage() {
         </div>
 
         {/* Right Side - Backtest Results */}
-        <div className="w-[65%] flex flex-col bg-gradient-to-br from-zinc-950/90 via-stone-900/70 to-zinc-950/90 backdrop-blur-md border border-blue-900/10 rounded-2xl overflow-hidden shadow-2xl shadow-black/20 relative">
+        <div
+          className={`flex flex-col bg-gradient-to-br from-zinc-950/90 via-stone-900/70 to-zinc-950/90 backdrop-blur-md border border-blue-900/10 rounded-2xl overflow-hidden shadow-2xl shadow-black/20 relative transition-all duration-500 ease-in-out ${isArchiveSidebarOpen ? "w-[65%]" : "w-full"
+            }`}
+        >
 
           {/* Decorative metal shine */}
           <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-blue-500/5 blur-[100px] rounded-full pointer-events-none"></div>

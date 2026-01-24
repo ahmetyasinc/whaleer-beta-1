@@ -8,11 +8,11 @@ import { bootstrapProfileIfNeeded } from "@/services/profile/bootstrapProfile";
 
 export default function MyIndicatorsPage() {
   useEffect(() => {
-    bootstrapProfileIfNeeded().catch(() => {});
+    bootstrapProfileIfNeeded().catch(() => { });
   }, []);
 
   return (
-    <div className="w-full min-h-[100dvh] flex flex-col bg-zinc-950/60 text-white">
+    <div className="w-full h-[100dvh] overflow-hidden flex flex-col bg-zinc-950/60 text-white">
       {/* Sticky header */}
       <div className="sticky top-0 z-20 bg-black/90 backdrop-blur supports-[backdrop-filter]:bg-black/70">
         <ProfileHeader />

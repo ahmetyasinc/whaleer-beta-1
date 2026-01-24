@@ -21,6 +21,9 @@ const useBacktestStore = create((set, get) => ({
   initialBalanceInput: '',                                 // NEW
   setInitialBalanceInput: (v) => set({ initialBalanceInput: v }), // NEW
 
+  isArchiveSidebarOpen: true,
+  toggleArchiveSidebar: () => set((state) => ({ isArchiveSidebarOpen: !state.isArchiveSidebarOpen })),
+
   backtestResults: null,
   isBacktestLoading: false,
   backtestError: null,

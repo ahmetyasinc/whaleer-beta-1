@@ -13,7 +13,7 @@ export default function ClientProfilePage() {
   }, []);
 
   return (
-    <div className="w-full min-h-[100dvh] flex flex-col bg-zinc-950/20 text-white">
+    <div className="w-full h-[100dvh] overflow-hidden flex flex-col bg-zinc-950/20 text-white">
       {/* Sticky header: mobil için üstte sabit, blur + opaklık */}
       <div className="sticky top-0 z-20 bg-black/90 backdrop-blur supports-[backdrop-filter]:bg-black/70">
         <ProfileHeader />

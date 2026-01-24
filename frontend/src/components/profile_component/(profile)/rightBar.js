@@ -279,11 +279,11 @@ export default function RightBar() {
   return (
     <div className="w-[260px] h-full bg-zinc-950 backdrop-blur-sm text-white shrink-0 flex flex-col overflow-hidden border-l border-zinc-800">
 
-      <div className="flex flex-col h-full p-3 gap-4 overflow-y-auto custom-scrollbar">
+      <div className="flex flex-col h-full p-2 gap-4 overflow-hidden items-stretch">
 
         {/* --- BÖLÜM 1: Genel İstatistikler --- */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 px-1 mb-2">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 px-1 mb-1">
             <IoStatsChart className="text-cyan-400 text-sm" />
             <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest">{t("sections.statistics") || "Statistics"}</span>
           </div>
@@ -295,7 +295,7 @@ export default function RightBar() {
               return (
                 <div
                   key={stat.title}
-                  className={`group relative bg-zinc-900/60 backdrop-blur-sm rounded-lg border ${colors.border} hover:${colors.bg} transition-all duration-100 p-3 cursor-default ${colors.glow}`}
+                  className={`group relative bg-zinc-900/60 backdrop-blur-sm rounded-lg border ${colors.border} hover:${colors.bg} transition-all duration-100 p-2 cursor-default ${colors.glow}`}
                   style={{
                     animationDelay: `${index * 100}ms`,
                     animation: "fadeInUpRightBar 0.6s ease-out forwards",
@@ -305,11 +305,11 @@ export default function RightBar() {
                   <div className={`absolute inset-0 rounded-lg ${colors.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-100`}></div>
 
                   <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-1">
                       <Icon className={`text-lg ${colors.text}`} />
                       <div className={`w-1.5 h-1.5 rounded-full ${colors.indicator} shadow-[0_0_6px_currentColor]`}></div>
                     </div>
-                    <p className="text-xl font-bold text-zinc-100 mb-0.5">
+                    <p className="text-xl font-bold text-zinc-100 mb-0">
                       {stat.value}
                     </p>
                     <h4 className="text-[10px] font-medium text-zinc-500 leading-tight">
@@ -323,16 +323,16 @@ export default function RightBar() {
         </div>
 
         {/* Divider */}
-        <div className="h-px bg-gradient-to-r from-transparent via-zinc-700/50 to-transparent"></div>
+        <div className="h-px mt-2 bg-gradient-to-r from-transparent via-zinc-700/50 to-transparent"></div>
 
         {/* --- BÖLÜM 2: Performans --- */}
         <div className="space-y-2 flex-1">
-          <div className="flex items-center gap-2 px-1 mb-2">
+          <div className="flex items-center gap-2 px-1 mb-1">
             <IoTrendingUp className="text-cyan-400 text-sm" />
             <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest">{t("sections.performance") || "Performance"}</span>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {["daily", "weekly", "monthly"].map((period, index) => {
               const perf = performance[period] || { value: null, trades: 0 };
               const val = perf.value;
@@ -344,7 +344,7 @@ export default function RightBar() {
               return (
                 <div
                   key={period}
-                  className="group relative bg-zinc-900/60 backdrop-blur-sm rounded-lg border border-zinc-800/50 hover:border-cyan-500/30 transition-all duration-100 p-3"
+                  className="group relative bg-zinc-900/60 backdrop-blur-sm rounded-lg border border-zinc-800/50 hover:border-cyan-500/30 transition-all duration-100 p-2"
                   style={{
                     animationDelay: `${(index + 4) * 100}ms`,
                     animation: "fadeInUpRightBar 0.6s ease-out forwards",

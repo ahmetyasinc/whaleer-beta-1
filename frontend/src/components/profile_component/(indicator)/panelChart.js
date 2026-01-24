@@ -123,7 +123,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
   const { selectedPeriod } = useCryptoStore();
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
-  const { indicatorData, removeSubIndicator } = useIndicatorDataStore();
+  const { indicatorData, removeSubIndicator, toggleSubIndicatorVisibility } = useIndicatorDataStore();
 
   const [displayName, setDisplayName] = useState(`${indicatorId} (${subId})`);
   const [tzOffsetMin, setTzOffsetMin] = useState(0);
@@ -153,6 +153,8 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
   useEffect(() => {
     const indicatorInfo = indicatorData?.[indicatorId]?.subItems?.[subId];
     if (!chartContainerRef.current || !indicatorInfo?.result) return;
+
+    const isVisible = indicatorInfo.visible ?? true;
 
     const { result } = indicatorInfo;
     const firstNonGraphItem = result.find((r) => r.on_graph === false);
@@ -231,13 +233,13 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
         let series;
         switch (type) {
           case "line":
-            series = chart.addLineSeries({ color: s?.color || "white", lineWidth: s?.width || 1, priceLineVisible: false, lastValueVisible: false, visible: isVisibleRef.current });
+            series = chart.addLineSeries({ color: s?.color || "white", lineWidth: s?.width || 1, priceLineVisible: false, lastValueVisible: false, visible: isVisible });
             break;
           case "histogram": {
             const defaultColor = s?.color ?? "0, 128, 0";
             const opacity = s?.opacity ?? 1;
             const colorString = defaultColor.includes(",") ? `rgba(${defaultColor}, ${opacity})` : hexToRgba(defaultColor, opacity);
-            series = chart.addHistogramSeries({ color: colorString, priceLineVisible: false, lastValueVisible: false, visible: isVisibleRef.current });
+            series = chart.addHistogramSeries({ color: colorString, priceLineVisible: false, lastValueVisible: false, visible: isVisible });
             break;
           }
           case "area":
@@ -247,11 +249,11 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
               lineColor: s?.color || "blue",
               priceLineVisible: false,
               lastValueVisible: false,
-              visible: isVisibleRef.current,
+              visible: isVisible,
             });
             break;
           default:
-            series = chart.addLineSeries({ color: "white", lineWidth: 2, priceLineVisible: false, lastValueVisible: false, visible: isVisibleRef.current });
+            series = chart.addLineSeries({ color: "white", lineWidth: 2, priceLineVisible: false, lastValueVisible: false, visible: isVisible });
         }
         const timeValueMap = new Map();
         data.forEach(([time, value]) => {
@@ -507,18 +509,11 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     });
   }, [settings, selectedPeriod, tzOffsetMin]);
 
-  const [isVisible, setIsVisible] = useState(true);
-  const isVisibleRef = useRef(true);
+  const indicatorInfo = indicatorData?.[indicatorId]?.subItems?.[subId];
+  const isVisible = indicatorInfo?.visible ?? true;
 
   const toggleVisibility = () => {
-    const nextState = !isVisible;
-    setIsVisible(nextState);
-    isVisibleRef.current = nextState;
-    if (seriesLabelMapRef.current) {
-      seriesLabelMapRef.current.forEach((_, series) => {
-        series.applyOptions({ visible: nextState });
-      });
-    }
+    toggleSubIndicatorVisibility(indicatorId, subId);
   };
 
   return (

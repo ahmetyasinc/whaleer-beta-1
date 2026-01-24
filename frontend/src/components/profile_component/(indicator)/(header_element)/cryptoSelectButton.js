@@ -117,22 +117,22 @@ const CryptoSelectButton = ({ locale }) => {
   ];
 
   // watchlist filtresi
-    const watchSet = new Set(watchlist);
+  const watchSet = new Set(watchlist);
 
-    let baseList = sortedCryptos;
+  let baseList = sortedCryptos;
 
-    if (activeFilter === "watchlist") {
-      baseList = sortedCryptos.filter((c) => watchSet.has(c.id));
-    } else if (activeFilter === "spot") {
-      // TODO: spot coin filter
-      baseList = []; // şimdilik boş
-    } else if (activeFilter === "takas") {
-      // TODO: takas coin filter
-      baseList = []; // şimdilik boş
-    } else {
-      // "all"
-      baseList = sortedCryptos;
-    }
+  if (activeFilter === "watchlist") {
+    baseList = sortedCryptos.filter((c) => watchSet.has(c.id));
+  } else if (activeFilter === "spot") {
+    // TODO: spot coin filter
+    baseList = []; // şimdilik boş
+  } else if (activeFilter === "takas") {
+    // TODO: takas coin filter
+    baseList = []; // şimdilik boş
+  } else {
+    // "all"
+    baseList = sortedCryptos;
+  }
 
 
   // Aramaya göre filtreleme
@@ -195,7 +195,7 @@ const CryptoSelectButton = ({ locale }) => {
               <FiSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xl pointer-events-none" />
             </div>
 
-                  
+
             {/* Çizgi + Filtre Butonları */}
             <div className="w-4/5 ml-16 mb-4 flex items-center">
               {/* Butonlar solda */}
@@ -204,55 +204,51 @@ const CryptoSelectButton = ({ locale }) => {
                 <button
                   type="button"
                   onClick={() => setActiveFilter("all")}
-                  className={`px-3 py-1.5 rounded-full border transition-colors ${
-                    activeFilter === "all"
+                  className={`px-3 py-1.5 rounded-full border transition-colors ${activeFilter === "all"
                       ? "bg-zinc-800 border-zinc-500 text-zinc-100"
                       : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500"
-                  }`}
+                    }`}
                 >
                   {t("all", { defaultValue: "Tümü" })}
                 </button>
-                
+
                 {/* Spot */}
                 <button
                   type="button"
                   onClick={() => setActiveFilter("spot")}
-                  className={`px-3 py-1.5 rounded-full border transition-colors ${
-                    activeFilter === "spot"
+                  className={`px-3 py-1.5 rounded-full border transition-colors ${activeFilter === "spot"
                       ? "bg-zinc-800 border-zinc-500 text-zinc-100"
                       : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500"
-                  }`}
+                    }`}
                 >
                   {t("spot", { defaultValue: "Spot" })}
                 </button>
-                
+
                 {/* Takas */}
                 <button
                   type="button"
                   onClick={() => setActiveFilter("takas")}
-                  className={`px-3 py-1.5 rounded-full border transition-colors ${
-                    activeFilter === "takas"
+                  className={`px-3 py-1.5 rounded-full border transition-colors ${activeFilter === "takas"
                       ? "bg-zinc-800 border-zinc-500 text-zinc-100"
                       : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500"
-                  }`}
+                    }`}
                 >
                   {t("swap", { defaultValue: "Takas" })}
                 </button>
-                
+
                 {/* Watchlist */}
                 <button
                   type="button"
                   onClick={() => setActiveFilter("watchlist")}
-                  className={`px-3 py-1.5 rounded-full border transition-colors ${
-                    activeFilter === "watchlist"
+                  className={`px-3 py-1.5 rounded-full border transition-colors ${activeFilter === "watchlist"
                       ? "bg-zinc-800 border-zinc-500 text-zinc-100"
                       : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500"
-                  }`}
+                    }`}
                 >
                   {t("watchlist", { defaultValue: "Watchlist" })}
                 </button>
               </div>
-                
+
               {/* Çizgi sağda */}
               <div className="flex-1 h-px bg-zinc-800 ml-4" />
             </div>
@@ -285,11 +281,10 @@ const CryptoSelectButton = ({ locale }) => {
                           }}
                         >
                           <IoAddCircleOutline
-                            className={`text-lg transition-colors ${
-                              isInWatchlist(crypto.id)
+                            className={`text-lg transition-colors ${isInWatchlist(crypto.id)
                                 ? "text-emerald-400"
                                 : "text-zinc-500 group-hover:text-zinc-300"
-                            }`}
+                              }`}
                           />
                         </button>
 
@@ -316,8 +311,8 @@ const CryptoSelectButton = ({ locale }) => {
                 <p className="text-center text-zinc-500 mt-8">
                   {activeFilter === "watchlist"
                     ? t("emptyWatchlist", {
-                        defaultValue: "Watchlist is empty.",
-                      })
+                      defaultValue: "İzleme listesi boş.(Klavye yön tuşları ile geçiş yapabilirsiniz.)",
+                    })
                     : t("noMatch", { defaultValue: "Eşleşen öğe yok" })}
                 </p>
               )}

@@ -92,99 +92,98 @@ export default function TradesList({ trades }) {
         </div>
       </div>
 
-      <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent rounded-lg border border-zinc-800/50">
-        <table className="w-full text-xs">
-          <thead className="bg-zinc-900/80">
-            <tr>
-              <th className="text-left text-zinc-500 font-semibold uppercase tracking-wider py-3 px-4 border-b border-zinc-800">{t('table.date')}</th>
-              <th className="text-left text-zinc-500 font-semibold uppercase tracking-wider py-3 px-4 border-b border-zinc-800">{t('table.type')}</th>
-              <th className="text-left text-zinc-500 font-semibold uppercase tracking-wider py-3 px-4 border-b border-zinc-800">{t('table.leverage')}</th>
-              <th className="text-center text-zinc-500 font-semibold uppercase tracking-wider py-3 px-4 border-b border-zinc-800">{t('table.usedPct')}</th>
-              <th className="text-right text-zinc-500 font-semibold uppercase tracking-wider py-3 px-4 border-b border-zinc-800">{t('table.amount')}</th>
-              <th className="text-right text-zinc-500 font-semibold uppercase tracking-wider py-3 px-4 border-b border-zinc-800">{t('table.value')}</th>
-              <th className="text-right text-zinc-500 font-semibold uppercase tracking-wider py-3 px-4 border-b border-zinc-800">{t('table.commission')}</th>
-              <th className="text-right text-zinc-500 font-semibold uppercase tracking-wider py-3 px-4 border-b border-zinc-800">{t('table.plDollar')}</th>
-              <th className="text-right text-zinc-500 font-semibold uppercase tracking-wider py-3 px-4 border-b border-zinc-800">{t('table.plPercent')}</th>
-              <th className="text-right text-zinc-500 font-semibold uppercase tracking-wider py-3 px-4 border-b border-zinc-800">{t('table.priceClose')}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-800/50">
-            {trades.map((trade) => {
-              const isClose = trade.type.endsWith('CLOSE');
-              const investedAmount = trade?.value || trade.amount * trade.price;
-              const commission = trade.commission || 0;
-              const pnlPercentage = trade.pnlPercentage || null;
-              const pnlAmount = trade.pnlAmount || null;
+      <div className="overflow-x-auto max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent rounded-lg border border-zinc-800/50">        <table className="w-full text-xs">
+        <thead className="bg-zinc-900/80">
+          <tr>
+            <th className="text-left text-zinc-500 font-semibold uppercase tracking-wider py-3 px-4 border-b border-zinc-800">{t('table.date')}</th>
+            <th className="text-left text-zinc-500 font-semibold uppercase tracking-wider py-3 px-4 border-b border-zinc-800">{t('table.type')}</th>
+            <th className="text-left text-zinc-500 font-semibold uppercase tracking-wider py-3 px-4 border-b border-zinc-800">{t('table.leverage')}</th>
+            <th className="text-center text-zinc-500 font-semibold uppercase tracking-wider py-3 px-4 border-b border-zinc-800">{t('table.usedPct')}</th>
+            <th className="text-right text-zinc-500 font-semibold uppercase tracking-wider py-3 px-4 border-b border-zinc-800">{t('table.amount')}</th>
+            <th className="text-right text-zinc-500 font-semibold uppercase tracking-wider py-3 px-4 border-b border-zinc-800">{t('table.value')}</th>
+            <th className="text-right text-zinc-500 font-semibold uppercase tracking-wider py-3 px-4 border-b border-zinc-800">{t('table.commission')}</th>
+            <th className="text-right text-zinc-500 font-semibold uppercase tracking-wider py-3 px-4 border-b border-zinc-800">{t('table.plDollar')}</th>
+            <th className="text-right text-zinc-500 font-semibold uppercase tracking-wider py-3 px-4 border-b border-zinc-800">{t('table.plPercent')}</th>
+            <th className="text-right text-zinc-500 font-semibold uppercase tracking-wider py-3 px-4 border-b border-zinc-800">{t('table.priceClose')}</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-zinc-800/50">
+          {trades.map((trade) => {
+            const isClose = trade.type.endsWith('CLOSE');
+            const investedAmount = trade?.value || trade.amount * trade.price;
+            const commission = trade.commission || 0;
+            const pnlPercentage = trade.pnlPercentage || null;
+            const pnlAmount = trade.pnlAmount || null;
 
-              return (
-                <tr key={trade.id} className="hover:bg-zinc-800/30 transition-colors duration-100 group">
-                  <td className="py-3 px-4 text-zinc-400 font-mono whitespace-nowrap">{formatDate(trade.date)}</td>
+            return (
+              <tr key={trade.id} className="hover:bg-zinc-800/30 transition-colors duration-100 group">
+                <td className="py-3 px-4 text-zinc-400 font-mono whitespace-nowrap">{formatDate(trade.date)}</td>
 
-                  <td className="py-3 px-4">
+                <td className="py-3 px-4">
+                  <span
+                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border shadow-sm whitespace-nowrap ${trade.type.includes('OPEN') || trade.type.includes('SCALE_IN')
+                      ? 'bg-emerald-950/30 text-emerald-400 border-emerald-900/50 shadow-emerald-900/10'
+                      : 'bg-rose-950/30 text-rose-400 border-rose-900/50 shadow-rose-900/10'
+                      }`}
+                  >
+                    {formatTypeLabel(trade.type)}
+                  </span>
+                </td>
+
+                <td className="py-3 px-4 text-left text-zinc-300 font-mono font-medium">
+                  {trade.leverage}
+                </td>
+
+                <td className="py-3 px-4 text-center text-zinc-300 font-mono">
+                  {trade.usedPercentage}
+                </td>
+
+                <td className="py-3 px-4 text-right text-zinc-300 font-mono">
+                  {formatAmount(trade.amount)}
+                </td>
+
+                <td className="py-3 px-4 text-right text-zinc-300 font-mono">
+                  {formatCurrency(investedAmount)}
+                </td>
+
+                <td className="py-3 px-4 text-right text-orange-400/90 font-mono">
+                  {formatCurrency(commission)}
+                </td>
+
+                <td className="py-3 px-4 text-right font-medium font-mono">
+                  {isClose ? (
                     <span
-                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border shadow-sm whitespace-nowrap ${trade.type.includes('OPEN') || trade.type.includes('SCALE_IN')
-                        ? 'bg-emerald-950/30 text-emerald-400 border-emerald-900/50 shadow-emerald-900/10'
-                        : 'bg-rose-950/30 text-rose-400 border-rose-900/50 shadow-rose-900/10'
-                        }`}
+                      className={pnlPercentage >= 0 ? 'text-emerald-400' : 'text-rose-400'}
                     >
-                      {formatTypeLabel(trade.type)}
+                      {pnlPercentage >= 0 ? '+' : '-'}
+                      {formatCurrencyAbs(pnlAmount)}
                     </span>
-                  </td>
+                  ) : (
+                    <span className="text-zinc-600">–</span>
+                  )}
+                </td>
 
-                  <td className="py-3 px-4 text-left text-zinc-300 font-mono font-medium">
-                    {trade.leverage}
-                  </td>
+                <td className="py-3 px-4 text-right font-bold font-mono">
+                  {isClose ? (
+                    <span
+                      className={pnlPercentage >= 0 ? 'text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.3)]' : 'text-rose-400 drop-shadow-[0_0_5px_rgba(244,63,94,0.3)]'}
+                    >
+                      {pnlPercentage >= 0 ? '+' : ''}
+                      {formatPercentage(pnlPercentage)}
+                    </span>
+                  ) : (
+                    <span className="text-zinc-600">–</span>
+                  )}
+                </td>
 
-                  <td className="py-3 px-4 text-center text-zinc-300 font-mono">
-                    {trade.usedPercentage}
-                  </td>
-
-                  <td className="py-3 px-4 text-right text-zinc-300 font-mono">
-                    {formatAmount(trade.amount)}
-                  </td>
-
-                  <td className="py-3 px-4 text-right text-zinc-300 font-mono">
-                    {formatCurrency(investedAmount)}
-                  </td>
-
-                  <td className="py-3 px-4 text-right text-orange-400/90 font-mono">
-                    {formatCurrency(commission)}
-                  </td>
-
-                  <td className="py-3 px-4 text-right font-medium font-mono">
-                    {isClose ? (
-                      <span
-                        className={pnlPercentage >= 0 ? 'text-emerald-400' : 'text-rose-400'}
-                      >
-                        {pnlPercentage >= 0 ? '+' : '-'}
-                        {formatCurrencyAbs(pnlAmount)}
-                      </span>
-                    ) : (
-                      <span className="text-zinc-600">–</span>
-                    )}
-                  </td>
-
-                  <td className="py-3 px-4 text-right font-bold font-mono">
-                    {isClose ? (
-                      <span
-                        className={pnlPercentage >= 0 ? 'text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.3)]' : 'text-rose-400 drop-shadow-[0_0_5px_rgba(244,63,94,0.3)]'}
-                      >
-                        {pnlPercentage >= 0 ? '+' : ''}
-                        {formatPercentage(pnlPercentage)}
-                      </span>
-                    ) : (
-                      <span className="text-zinc-600">–</span>
-                    )}
-                  </td>
-
-                  <td className="py-3 px-4 text-right text-zinc-400 font-mono">
-                    {formatCurrency(trade.price)}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                <td className="py-3 px-4 text-right text-zinc-400 font-mono">
+                  {formatCurrency(trade.price)}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
       </div>
     </div>
   );

@@ -11,7 +11,7 @@ import { useAccountDataStore } from "@/store/profile/accountDataStore";
 
 export default function MyBotsPage() {
   useEffect(() => {
-    bootstrapProfileIfNeeded().catch(() => {});
+    bootstrapProfileIfNeeded().catch(() => { });
   }, []);
 
   const activeApiId = useProfileStore((s) => s.activeApiId);
@@ -19,7 +19,7 @@ export default function MyBotsPage() {
   const bots = useMemo(() => botsMap?.[activeApiId] || [], [botsMap, activeApiId]);
 
   return (
-    <div className="w-full min-h-[100dvh] flex flex-col bg-zinc-950/60 text-white">
+    <div className="w-full h-[100dvh] overflow-hidden flex flex-col bg-zinc-950/60 text-white">
       {/* Sticky header */}
       <div className="sticky top-0 z-20 bg-black/90 backdrop-blur supports-[backdrop-filter]:bg-black/70">
         <ProfileHeader />
@@ -30,10 +30,10 @@ export default function MyBotsPage() {
         <div className="flex-1 min-h-0 overflow-hidden p-4 md:p-6">
           {/* XS/SM: tek kolon; LG+: 2/3 + 1/3 grid */}
           <div className="grid h-full grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 items-stretch">
-            <div className="lg:col-span-2 min-h-[320px] h-full min-h-0">
+            <div className="lg:col-span-2 h-full min-h-0">
               <BotCard bots={bots} />
             </div>
-            <div className="lg:col-span-1 min-h-[320px] h-full min-h-0">
+            <div className="lg:col-span-1 h-full min-h-0">
               <BotPieChart bots={bots} />
             </div>
           </div>

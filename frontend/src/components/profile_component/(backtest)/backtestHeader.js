@@ -7,6 +7,10 @@ import useCryptoStore from '@/store/indicator/cryptoPinStore';
 import useBacktestStore from '@/store/backtest/backtestStore';
 import { FaPlus } from "react-icons/fa";
 import { useTranslation } from 'react-i18next';
+import { BsArchive } from "react-icons/bs";
+import { IoChevronForward, IoChevronBack } from "react-icons/io5";
+
+
 
 export default function BacktestHeader() {
   const { t } = useTranslation('backtestHeader');
@@ -22,6 +26,8 @@ export default function BacktestHeader() {
     isBacktestLoading,
     initialBalanceInput,
     setInitialBalanceInput,
+    isArchiveSidebarOpen,
+    toggleArchiveSidebar
   } = useBacktestStore();
 
   const isReady = selectedStrategy && selectedCrypto && selectedPeriod !== '';
@@ -44,10 +50,31 @@ export default function BacktestHeader() {
   return (
     <>
       <header className="w-full bg-black border-b border-zinc-900 text-white px-6 py-3 h-[60px] flex justify-between items-center">
-        <h1></h1>
+        {/* Sol taraf */}
+        <div className="flex items-center gap-3">
+          <button
+            className="border px-3 h-[35px] rounded-lg transition flex items-center gap-2 ml-10
+             bg-black border-gray-800 text-gray-200 hover:border-gray-600 hover:text-white"
+            onClick={toggleArchiveSidebar}
+            aria-label={t('buttons.archive')}
+            title={t('buttons.archive')}
+          >
+            <BsArchive className="text-[14px]" />
+            Arşiv
+            {isArchiveSidebarOpen ? (
+              <IoChevronBack className="text-[16px] ml-1" />
+            ) : (
+              <IoChevronForward className="text-[16px] ml-1" />
+            )}
+          </button>
+
+          <h1></h1>
+        </div>
+
+        {/* Sağ taraf */}
         <div className="flex gap-4">
           <button
-            className="bg-black border border-gray-800 text-white px-4 h-[35px] rounded-lg hover:border-gray-600 transition flex items-center gap-2"
+            className="bg-black border border-gray-800 text-gray-200 px-4 h-[35px] rounded-lg hover:border-gray-600 transition flex items-center gap-2"
             onClick={() => setIsOpen(true)}
             aria-label={t('buttons.runBacktest')}
             title={t('buttons.runBacktest')}
@@ -57,6 +84,7 @@ export default function BacktestHeader() {
           </button>
         </div>
       </header>
+
 
       {isOpen && (
         <div className="absolute right-0 top-[60px] h-[calc(100vh-60px)] w-1/4 max-w-md bg-zinc-950/95 backdrop-blur-xl border-l border-zinc-800 shadow-2xl flex flex-col justify-between p-0 z-50">

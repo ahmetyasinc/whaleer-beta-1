@@ -143,6 +143,9 @@ export default function ChartComponent() {
   // Indicator visibility handled by store
   const isIndicatorsCollapsedRef = useRef(false);
 
+  // Range persistence ref for effect re-runs
+  const lastVisibleRangeRef = useRef(null);
+
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
@@ -389,12 +392,17 @@ export default function ChartComponent() {
     if (chartData.length === 0 || !chartContainerRef.current) return;
 
     // önceki chart'ı ve series'i bırak
+    // Artık cleanup fonksiyonunda handle ediyoruz, burada tekrar remove çağrısı güvenli olsun diye kalsın ama ref zaten null olacak.
     try { chartRef.current?.remove?.(); } catch { }
     chartRef.current = null;
     priceSeriesRef.current = null;
 
     // bu yaratım için benzersiz kimlik
     const myInstanceId = ++chartInstanceIdRef.current;
+
+    // cleanup'ta chartRef.current null'landığı için prevRange'i burdan alamayız,
+    // o yüzden lastVisibleRangeRef kullanacağız. Ref'teki değer bir önceki cleanup'tan geliyor.
+
 
     const fmt = makeZonedFormatter(selectedPeriod, tzOffsetMin);
 
@@ -565,12 +573,16 @@ export default function ChartComponent() {
     // timeScale
     const timeScale = chart.timeScale();
 
-    // Center last bar (initial range)
-    const barsToShow = 200; const rightPad = Math.floor((barsToShow - 1) / 2);
-    const lastIndex = Math.max(0, chartData.length - 1); const to = lastIndex + rightPad; const from = to - (barsToShow - 1);
-    timeScale.applyOptions({ rightOffset: rightPad });
-    timeScale.setVisibleLogicalRange({ from, to });
-    setLastRangeCache({ from, to, rightOffset: rightPad, sourceId: chartId });
+    // Center last bar (initial range) or restore
+    if (lastVisibleRangeRef.current) {
+      timeScale.setVisibleLogicalRange(lastVisibleRangeRef.current);
+    } else {
+      const barsToShow = 200; const rightPad = Math.floor((barsToShow - 1) / 2);
+      const lastIndex = Math.max(0, chartData.length - 1); const to = lastIndex + rightPad; const from = to - (barsToShow - 1);
+      timeScale.applyOptions({ rightOffset: rightPad });
+      timeScale.setVisibleLogicalRange({ from, to });
+      setLastRangeCache({ from, to, rightOffset: rightPad, sourceId: chartId });
+    }
 
     // === STRATEGY MARKERS & VISIBILITY ===
     const strategyMarkersMap = new Map(); // Key: `${strategyId}-${subId}`
@@ -1063,7 +1075,13 @@ export default function ChartComponent() {
       cleanupFns.forEach(fn => { try { fn?.(); } catch { } });
 
       // en sonda chart'ı güvenle sök
-      try { chartRef.current?.remove?.(); } catch { }
+      try {
+        if (chartRef.current) {
+          // Range'i sakla
+          lastVisibleRangeRef.current = chartRef.current.timeScale().getVisibleLogicalRange();
+          chartRef.current.remove();
+        }
+      } catch { }
       chartRef.current = null;
       priceSeriesRef.current = null;
     };

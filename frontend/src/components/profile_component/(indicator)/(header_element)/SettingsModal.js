@@ -10,6 +10,7 @@ const DEFAULTS = {
   theme: "dark",
   bgColor: "#000007",
   textColor: "white",
+  cursorType: "crosshair",
   timezoneMode: "local",
   timezoneFixed: "GMT+03:00",
   autoPrecision: true,
@@ -112,6 +113,7 @@ export default function SettingsModal({ open, onClose, locale }) {
       ["white", "black", "gray", "yellow", "red", "green"],
       "white"
     ),
+    cursorType: ONE_OF(settings?.cursorType, ["crosshair", "arrow", "dot"], "crosshair"),
     grid: { color: settings?.grid?.color || "#111111" },
     series: {
       type: ONE_OF(
@@ -340,6 +342,7 @@ export default function SettingsModal({ open, onClose, locale }) {
                       ...prev,
                       bgColor: DEFAULTS.bgColor,
                       textColor: DEFAULTS.textColor,
+                      cursorType: DEFAULTS.cursorType,
                       grid: { ...prev.grid, color: DEFAULTS.grid.color },
                       series: { ...prev.series, type: DEFAULTS.series.type },
                     }))
@@ -376,6 +379,20 @@ export default function SettingsModal({ open, onClose, locale }) {
                   <option value="yellow">{t("options.yellow")}</option>
                   <option value="red">{t("options.red")}</option>
                   <option value="green">{t("options.green")}</option>
+                </select>
+              </div>
+
+              {/* Cursor Type */}
+              <div className="flex items-center justify-between">
+                <label className="text-gray-300 text-sm">{t("fields.cursorType") || "Cursor"}</label>
+                <select
+                  className="bg-black border border-gray-700 rounded-md px-2 py-1 text-gray-200"
+                  value={localState.cursorType}
+                  onChange={(e) => handleChange("cursorType", e.target.value)}
+                >
+                  <option value="crosshair">{t("options.crosshair") || "Crosshair"}</option>
+                  <option value="arrow">{t("options.arrow") || "Arrow"}</option>
+                  <option value="dot">{t("options.dot") || "Dot"}</option>
                 </select>
               </div>
 

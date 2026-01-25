@@ -58,7 +58,8 @@
     "visible": "Visible",
     "wmColor": "Watermark Color",
     "wmSize": "Watermark Size",
-    "style": "Style"
+    "style": "Style",
+    "cursorType": "Cursor Type"
   },
   "series": {
     "candlestick": "Candlestick",
@@ -88,7 +89,10 @@
     "green": "Green",
     "solid": "Solid",
     "dotted": "Dotted",
-    "dashed": "Dashed"
+    "dashed": "Dashed",
+    "arrow": "Arrow",
+    "crosshair": "Crosshair",
+    "dot": "Dot"
   },
   "a11y": {
     "backdrop": "Close modal by clicking on backdrop"

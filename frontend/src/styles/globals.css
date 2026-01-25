@@ -252,4 +252,8 @@ html, body {
   background-position: center;
 }
 
+.cursor-dot {
+  cursor: url('data:image/svg+xml;charset=utf-8,%3Csvg width="4" height="4" viewBox="0 0 4 4" xmlns="http://www.w3.org/2000/svg"%3E%3Ccircle cx="2" cy="2" r="2" fill="white"/%3E%3C/svg%3E') 2 2, crosshair !important;
+}
+
 

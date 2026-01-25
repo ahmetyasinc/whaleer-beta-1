@@ -58,7 +58,8 @@
     "visible": "Görünür",
     "wmColor": "Su İzi Rengi",
     "wmSize": "Su İzi Boyutu",
-    "style": "Stil"
+    "style": "Stil",
+    "cursorType": "İmleç Tipi"
   },
   "series": {
     "candlestick": "Mum",
@@ -88,7 +89,10 @@
     "green": "Yeşil",
     "solid": "Düz",
     "dotted": "Noktalı",
-    "dashed": "Kesikli"
+    "dashed": "Kesikli",
+    "arrow": "Ok",
+    "crosshair": "Artı",
+    "dot": "Nokta"
   },
   "a11y": {
     "backdrop": "Arka plana tıklayarak kapat"

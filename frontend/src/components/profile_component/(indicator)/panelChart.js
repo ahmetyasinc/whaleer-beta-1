@@ -233,13 +233,13 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
         let series;
         switch (type) {
           case "line":
-            series = chart.addLineSeries({ color: s?.color || "white", lineWidth: s?.width || 1, priceLineVisible: false, lastValueVisible: false, visible: isVisible });
+            series = chart.addLineSeries({ color: s?.color || "white", lineWidth: s?.width || 1, priceLineVisible: false, lastValueVisible: false, visible: isVisible, crosshairMarkerVisible: false });
             break;
           case "histogram": {
             const defaultColor = s?.color ?? "0, 128, 0";
             const opacity = s?.opacity ?? 1;
             const colorString = defaultColor.includes(",") ? `rgba(${defaultColor}, ${opacity})` : hexToRgba(defaultColor, opacity);
-            series = chart.addHistogramSeries({ color: colorString, priceLineVisible: false, lastValueVisible: false, visible: isVisible });
+            series = chart.addHistogramSeries({ color: colorString, priceLineVisible: false, lastValueVisible: false, visible: isVisible, crosshairMarkerVisible: false });
             break;
           }
           case "area":
@@ -250,10 +250,11 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
               priceLineVisible: false,
               lastValueVisible: false,
               visible: isVisible,
+              crosshairMarkerVisible: false,
             });
             break;
           default:
-            series = chart.addLineSeries({ color: "white", lineWidth: 2, priceLineVisible: false, lastValueVisible: false, visible: isVisible });
+            series = chart.addLineSeries({ color: "white", lineWidth: 2, priceLineVisible: false, lastValueVisible: false, visible: isVisible, crosshairMarkerVisible: false });
         }
         const timeValueMap = new Map();
         data.forEach(([time, value]) => {
@@ -538,7 +539,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
           onClick={() => removeSubIndicator(indicatorId, subId)}><AiOutlineClose />
         </button>
       </div>
-      <div ref={chartContainerRef} className="absolute top-0 left-0 w-full h-full"></div>
+      <div ref={chartContainerRef} className={`absolute top-0 left-0 w-full h-full ${settings.cursorType === 'crosshair' ? 'cursor-crosshair' : settings.cursorType === 'dot' ? 'cursor-dot' : ''}`}></div>
       <IndicatorSettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} indicatorId={indicatorId} subId={subId} />
     </div>
   );

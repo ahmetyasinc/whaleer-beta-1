@@ -326,15 +326,26 @@ export default function ChartComponent() {
         series.setData(data);
         break;
       case 'line':
-        series = chart.addLineSeries({ color: s.line.color, lineWidth: s.line.width, lineType: s.line.stepped ? 1 : 0 });
+        series = chart.addLineSeries({ color: s.line.color, lineWidth: s.line.width, lineType: s.line.stepped ? 1 : 0, crosshairMarkerVisible: false });
         series.setData(mapToSingleValue(data, s.series.valueSource));
         break;
+      // YENİ EKLENENLer: Kesikli Çizgi (Dashed) - Noktalı Çizgi (Dotted)
+      case 'dashed':
+        series = chart.addLineSeries({ color: s.line.color, lineWidth: s.line.width, lineStyle: 2, lineType: s.line.stepped ? 1 : 0, crosshairMarkerVisible: false });
+        series.setData(mapToSingleValue(data, s.series.valueSource));
+        break;
+
+      case 'dotted':
+        series = chart.addLineSeries({ color: s.line.color, lineWidth: s.line.width, lineStyle: 1, lineType: s.line.stepped ? 1 : 0, crosshairMarkerVisible: false });
+        series.setData(mapToSingleValue(data, s.series.valueSource));
+        break;
+      //--------------------------------------------------------------------
       case 'area':
-        series = chart.addAreaSeries({ lineColor: s.area.lineColor, topColor: hexToRgba(s.area.topColor, s.area.topAlpha), bottomColor: hexToRgba(s.area.bottomColor, s.area.bottomAlpha) });
+        series = chart.addAreaSeries({ lineColor: s.area.lineColor, topColor: hexToRgba(s.area.topColor, s.area.topAlpha), bottomColor: hexToRgba(s.area.bottomColor, s.area.bottomAlpha), crosshairMarkerVisible: false });
         series.setData(mapToSingleValue(data, s.series.valueSource));
         break;
       case 'baseline':
-        series = chart.addBaselineSeries({ baseValue: { type: 'price', price: s.baseline.baseValue }, topFillColor1: s.baseline.topColor, topFillColor2: s.baseline.topColor, bottomFillColor1: s.baseline.bottomColor, bottomFillColor2: s.baseline.bottomColor });
+        series = chart.addBaselineSeries({ baseValue: { type: 'price', price: s.baseline.baseValue }, topFillColor1: s.baseline.topColor, topFillColor2: s.baseline.topColor, bottomFillColor1: s.baseline.bottomColor, bottomFillColor2: s.baseline.bottomColor, crosshairMarkerVisible: false });
         series.setData(mapToSingleValue(data, s.series.valueSource));
         break;
       case 'histogram':
@@ -739,10 +750,10 @@ export default function ChartComponent() {
       const isInitiallyVisible = visible;
 
       switch (type) {
-        case 'line': series = chart.addLineSeries({ color: s?.color || 'yellow', lineWidth: s?.width || 2, lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible }); break;
-        case 'area': series = chart.addAreaSeries({ topColor: s?.color || 'rgba(33,150,243,0.5)', bottomColor: 'rgba(33,150,243,0.1)', lineColor: s?.color || 'blue', lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible }); break;
+        case 'line': series = chart.addLineSeries({ color: s?.color || 'yellow', lineWidth: s?.width || 2, lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible, crosshairMarkerVisible: false }); break;
+        case 'area': series = chart.addAreaSeries({ topColor: s?.color || 'rgba(33,150,243,0.5)', bottomColor: 'rgba(33,150,243,0.1)', lineColor: s?.color || 'blue', lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible, crosshairMarkerVisible: false }); break;
         case 'histogram': { const c = s?.color ?? '0, 128, 0'; const opacity = s?.opacity ?? 0.3; series = chart.addHistogramSeries({ color: `rgba(${c}, ${opacity})`, lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible }); break; }
-        default: series = chart.addLineSeries({ color: 'white', lineWidth: 2, lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible });
+        default: series = chart.addLineSeries({ color: 'white', lineWidth: 2, lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible, crosshairMarkerVisible: false });
       }
 
       const timeValueMap = new Map();
@@ -1091,7 +1102,7 @@ export default function ChartComponent() {
     <div className="relative w-full h-full">
       <div id="indicator-labels" className="absolute top-2 left-2 z-10 flex flex-col gap-1 pointer-events-none items-start"></div>
       <div id="strategy-labels" style={{ position: 'absolute', top: 10, right: 80, zIndex: 10, display: 'flex', flexDirection: 'column', gap: '6px', pointerEvents: 'none', alignItems: 'flex-end' }}></div>
-      <div ref={chartContainerRef} className="absolute top-0 left-0 w-full h-full"></div>
+      <div ref={chartContainerRef} className={`absolute top-0 left-0 w-full h-full ${settings.cursorType === 'crosshair' ? 'cursor-crosshair' : settings.cursorType === 'dot' ? 'cursor-dot' : ''}`}></div>
 
       <IndicatorSettingsModal isOpen={settingsIndicatorModalOpen} onClose={() => setSettingsIndicatorModalOpen(false)} indicatorId={activeIndicatorId} subId={activeSubIndicatorId} />
       <StrategySettingsModal isOpen={settingsStrategyModalOpen} onClose={() => setSettingsStrategyModalOpen(false)} strategyId={activeStrategyId} subId={activeSubStrategyId} />

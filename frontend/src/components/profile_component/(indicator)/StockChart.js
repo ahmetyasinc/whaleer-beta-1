@@ -140,11 +140,19 @@ export default function ChartComponent() {
   // Strategy visibility ref
   const hiddenStrategyIdsRef = useRef(new Set());
 
+  // Indicator series ref - chart'ı yeniden oluşturmadan indikatörleri güncellemek için
+  const indicatorSeriesMapRef = useRef(new Map()); // key: `${indicatorId}-${subId}-${resultIdx}`, value: {series, labelDiv, valueSpan, dataMap}
+  const seriesLabelMapRef = useRef(new Map()); // crosshair label güncellemesi için
+
   // Indicator visibility handled by store
   const isIndicatorsCollapsedRef = useRef(false);
 
   // Range persistence ref for effect re-runs
   const lastVisibleRangeRef = useRef(null);
+
+  // Hover state ref for button flickering fix
+  const isHoveringButtonsRef = useRef(false);
+  const clearTimerRef = useRef(null);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -406,9 +414,8 @@ export default function ChartComponent() {
 
     const fmt = makeZonedFormatter(selectedPeriod, tzOffsetMin);
 
-    const seriesLabelMap = new Map();
-    let isHoveringButtons = false;
-    let clearTimer = null;
+    // seriesLabelMap artık seriesLabelMapRef olarak ayrı useEffect'te yönetiliyor
+    // isHoveringButtons ve clearTimer artık ref olarak tanımlandı (yanıp sönme düzeltmesi için)
 
     const COLOR_MAP = {
       white: "#FFFFFF",
@@ -685,198 +692,9 @@ export default function ChartComponent() {
       });
     });
 
+    // İndikatör container'ını hazırla (indikatörler ayrı useEffect'te işlenecek)
     const indicatorLabelsContainer = document.getElementById("indicator-labels");
     if (indicatorLabelsContainer) indicatorLabelsContainer.innerHTML = "";
-
-    // -- Containers for grouping --
-    const visibleList = document.createElement("div");
-    visibleList.style.cssText = "display: flex; flex-direction: column; gap: 4px; width: 100%; align-items: flex-start;";
-
-    const hiddenList = document.createElement("div");
-    hiddenList.style.cssText = "display: flex; flex-direction: column; gap: 4px; width: 100%; align-items: flex-start;";
-    // Initial hidden state logic
-    hiddenList.style.display = isIndicatorsCollapsedRef.current ? "none" : "flex";
-
-    const toggleBtn = document.createElement("button");
-    toggleBtn.style.cssText = `
-       pointer-events: auto;
-       background: rgba(30,30,30,0);
-       color: white;
-       font-size: 12px;
-       padding: 4px;
-       border-radius: 4px;
-       border: 1px solid rgba(156,163,175,0.1);
-       cursor: pointer;
-       display: none; 
-       align-items: center;
-       justify-content: center;
-       width: 40px; 
-       align-self: flex-start;
-       margin-left: 2px;
-    `;
-    const toggleRoot = createRoot(toggleBtn);
-
-    // UI Update Helper
-    const updateToggleUI = () => {
-      const hasHidden = hiddenList.children.length > 0;
-      toggleBtn.style.display = hasHidden ? "flex" : "none";
-      const isCollapsed = isIndicatorsCollapsedRef.current;
-      hiddenList.style.display = (hasHidden && !isCollapsed) ? "flex" : "none";
-
-      toggleRoot.render(
-        isCollapsed
-          ? <FaChevronDown size={10} className="hover:text-gray-400" />
-          : <FaChevronUp size={10} className="hover:text-gray-400" />
-      );
-    };
-
-    toggleBtn.onclick = () => {
-      isIndicatorsCollapsedRef.current = !isIndicatorsCollapsedRef.current;
-      updateToggleUI();
-    };
-    toggleBtn.onmouseenter = () => { isHoveringButtons = true; };
-    toggleBtn.onmouseleave = () => { isHoveringButtons = false; };
-
-    if (indicatorLabelsContainer) {
-      indicatorLabelsContainer.appendChild(visibleList);
-      indicatorLabelsContainer.appendChild(toggleBtn);
-      indicatorLabelsContainer.appendChild(hiddenList);
-    }
-
-    // Flatten valid results first to handle counting and collapsible logic
-    const validIndicators = [];
-    Object.entries(indicatorData).forEach(([indicatorId, indicator]) => {
-      const indicatorName = indicator.name;
-      const subItems = indicator.subItems || {};
-      Object.entries(subItems).forEach(([subId, indicatorInfo]) => {
-        if (!indicatorInfo?.result || !Array.isArray(indicatorInfo?.result)) return;
-        indicatorInfo.result.filter((item) => item.on_graph === true).forEach((indicatorResult) => {
-          validIndicators.push({ indicatorId, indicatorName, subId, indicatorResult, visible: indicatorInfo.visible !== false });
-        });
-      });
-    });
-
-    validIndicators.forEach(({ indicatorId, indicatorName, subId, indicatorResult, visible }, idx) => {
-      const { type, settings: s, data } = indicatorResult; let series;
-      const key = `${indicatorId}-${subId}`;
-      const isInitiallyVisible = visible;
-
-      switch (type) {
-        case 'line': series = chart.addLineSeries({ color: s?.color || 'yellow', lineWidth: s?.width || 2, lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible, crosshairMarkerVisible: false }); break;
-        case 'area': series = chart.addAreaSeries({ topColor: s?.color || 'rgba(33,150,243,0.5)', bottomColor: 'rgba(33,150,243,0.1)', lineColor: s?.color || 'blue', lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible, crosshairMarkerVisible: false }); break;
-        case 'histogram': { const c = s?.color ?? '0, 128, 0'; const opacity = s?.opacity ?? 0.3; series = chart.addHistogramSeries({ color: `rgba(${c}, ${opacity})`, lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible }); break; }
-        default: series = chart.addLineSeries({ color: 'white', lineWidth: 2, lastValueVisible: false, priceLineVisible: false, visible: isInitiallyVisible, crosshairMarkerVisible: false });
-      }
-
-      const timeValueMap = new Map();
-      data.forEach(([time, value]) => { if (value === undefined) return; const unixTime = toUnixSecUTC(time); if (unixTime !== undefined) timeValueMap.set(unixTime, value); });
-      const formattedData = Array.from(timeValueMap.entries()).sort(([a], [b]) => a - b).map(([time, value]) => ({ time, value }));
-      series.setData(formattedData);
-
-      // Label UI
-      const labelId = `indicator-label-${indicatorId}-${subId}`;
-      const valueContainerId = `indicator-values-${indicatorId}-${subId}`;
-      let labelDiv = document.getElementById(labelId);
-      let valuesContainer = document.getElementById(valueContainerId);
-
-      if (!labelDiv) {
-        labelDiv = document.createElement("div");
-        labelDiv.id = labelId;
-        labelDiv.style.cssText = `
-              pointer-events: none;
-              background: rgba(30,30,30,0);
-              color: white;
-              font-size: 12px;
-              padding: 4px 8px;
-              border-radius: 4px;
-              display: flex;
-              align-items: center;
-              gap: 6px;
-              border: 1px solid rgba(156,163,175,0.1);
-            `;
-        const title = document.createElement("span");
-        title.textContent = indicatorName || `${indicatorId} (${subId})`;
-
-        valuesContainer = document.createElement("div");
-        valuesContainer.id = valueContainerId;
-        valuesContainer.style.display = "flex";
-        valuesContainer.style.gap = "8px";
-
-        const settingsBtn = document.createElement("button");
-        createRoot(settingsBtn).render(<RiSettingsLine size={13} className="hover:text-gray-400" />);
-        settingsBtn.style.cssText = "pointer-events:auto;background:none;border:none;color:white;cursor:pointer;";
-        settingsBtn.onclick = () => { setActiveIndicatorId(indicatorId); setActiveSubIndicatorId(subId); setSettingsIndicatorModalOpen(true); };
-        settingsBtn.onmouseenter = () => { isHoveringButtons = true; }; settingsBtn.onmouseleave = () => { isHoveringButtons = false; };
-
-        const removeBtn = document.createElement("button");
-        createRoot(removeBtn).render(<AiOutlineClose size={13} className="hover:text-gray-400" />);
-        removeBtn.style.cssText = "pointer-events:auto;background:none;border:none;color:white;cursor:pointer;";
-        removeBtn.onclick = () => { series.setData([]); labelDiv.remove(); removeSubIndicator(indicatorId, subId); };
-        removeBtn.onmouseenter = () => { isHoveringButtons = true; }; removeBtn.onmouseleave = () => { isHoveringButtons = false; };
-
-        labelDiv._seriesList = [];
-
-        const visibilityBtn = document.createElement("button");
-        visibilityBtn.style.cssText = "pointer-events:auto;background:none;border:none;color:white;cursor:pointer;";
-        const visibilityRoot = createRoot(visibilityBtn);
-        const key = `${indicatorId}-${subId}`;
-
-        // Visibility controlled by store re-render
-        let isVisible = visible;
-        const updateVisibilityIcon = () => {
-          visibilityRoot.render(
-            isVisible ? <AiOutlineEye size={15} className="hover:text-gray-400" /> : <AiOutlineEyeInvisible size={15} className="text-gray-500 hover:text-gray-400" />
-          );
-          labelDiv.style.opacity = isVisible ? "1" : "0.5";
-          if (valuesContainer) valuesContainer.style.display = isVisible ? "flex" : "none";
-        };
-        updateVisibilityIcon();
-
-        // Initial placement
-        if (isVisible) {
-          visibleList.appendChild(labelDiv);
-        } else {
-          hiddenList.appendChild(labelDiv);
-        }
-
-        if (labelDiv._seriesList) labelDiv._seriesList.forEach(s => s.applyOptions({ visible: isVisible }));
-
-        visibilityBtn.onclick = () => {
-          toggleSubIndicatorVisibility(indicatorId, subId);
-          // Store update triggers re-render, forcing effect re-run and rebuild.
-        };
-        visibilityBtn.onmouseenter = () => { isHoveringButtons = true; };
-        visibilityBtn.onmouseleave = () => { isHoveringButtons = false; };
-
-        labelDiv.appendChild(title);
-        labelDiv.appendChild(valuesContainer);
-        labelDiv.appendChild(visibilityBtn);
-        labelDiv.appendChild(settingsBtn);
-        labelDiv.appendChild(removeBtn);
-
-        if (idx > 0 && isIndicatorsCollapsedRef.current) {
-          // No-op for now, visibility handled by lists
-        }
-      }
-
-      if (labelDiv._seriesList) {
-        labelDiv._seriesList.push(series);
-      }
-
-      // Value Span
-      const valueSpan = document.createElement("span");
-      valueSpan.style.cssText = `color: ${series.options ? series.options().color : (s?.color || 'white')}; font-variant-numeric: tabular-nums;`;
-      valueSpan.textContent = "";
-
-      if (valuesContainer) {
-        valuesContainer.appendChild(valueSpan);
-      }
-
-      seriesLabelMap.set(series, { span: valueSpan, dataMap: timeValueMap });
-    });
-
-    // Check toggle UI state initially after loop
-    updateToggleUI();
 
     // Range sync
     timeScale.subscribeVisibleTimeRangeChange(() => {
@@ -969,9 +787,9 @@ export default function ChartComponent() {
 
       // Update local labels
       if (param.time) {
-        if (clearTimer) { clearTimeout(clearTimer); clearTimer = null; }
+        if (clearTimerRef.current) { clearTimeout(clearTimerRef.current); clearTimerRef.current = null; }
         param.seriesData.forEach((value, series) => {
-          const entry = seriesLabelMap.get(series);
+          const entry = seriesLabelMapRef.current.get(series);
           if (entry && entry.span) {
             // value obje olabilir {value: ...} falan ? lightweight-charts version?
             // Genelde value directly number or {value, ...} depending on series type
@@ -989,12 +807,12 @@ export default function ChartComponent() {
         });
       } else {
         // Debounce clear to prevent flicker on button hover
-        if (!clearTimer) {
-          clearTimer = setTimeout(() => {
-            if (!isHoveringButtons) {
-              seriesLabelMap.forEach(({ span }) => { if (span) span.textContent = ""; });
+        if (!clearTimerRef.current) {
+          clearTimerRef.current = setTimeout(() => {
+            if (!isHoveringButtonsRef.current) {
+              seriesLabelMapRef.current.forEach(({ span }) => { if (span) span.textContent = ""; });
             }
-            clearTimer = null;
+            clearTimerRef.current = null;
           }, 100);
         }
       }
@@ -1013,7 +831,7 @@ export default function ChartComponent() {
 
       // Sync Labels for external crosshair
       if (time !== null && time !== undefined) {
-        seriesLabelMap.forEach(({ span, dataMap }) => {
+        seriesLabelMapRef.current.forEach(({ span, dataMap }) => {
           if (span && dataMap) {
             const val = dataMap.get(time);
             if (val !== undefined) {
@@ -1024,8 +842,8 @@ export default function ChartComponent() {
           }
         });
       } else {
-        if (!isHoveringButtons) {
-          seriesLabelMap.forEach(({ span }) => { if (span) span.textContent = ""; });
+        if (!isHoveringButtonsRef.current) {
+          seriesLabelMapRef.current.forEach(({ span }) => { if (span) span.textContent = ""; });
         }
       }
 
@@ -1084,8 +902,294 @@ export default function ChartComponent() {
       } catch { }
       chartRef.current = null;
       priceSeriesRef.current = null;
+      // Indikator reflerini temizle
+      indicatorSeriesMapRef.current.clear();
+      seriesLabelMapRef.current.clear();
     };
-  }, [chartData, indicatorData, strategyData, selectedPeriod, settings]);
+  }, [chartData, strategyData, selectedPeriod, settings]);
+
+  // === AYRI useEffect: İndikatörleri chart'ı yeniden oluşturmadan güncelle ===
+  useEffect(() => {
+    if (!chartRef.current || !priceSeriesRef.current) return;
+    const chart = chartRef.current;
+
+    const indicatorLabelsContainer = document.getElementById("indicator-labels");
+    if (!indicatorLabelsContainer) return;
+
+    // Mevcut indikatör setini bul
+    const currentIndicatorKeys = new Set();
+    Object.entries(indicatorData).forEach(([indicatorId, indicator]) => {
+      const subItems = indicator.subItems || {};
+      Object.entries(subItems).forEach(([subId, indicatorInfo]) => {
+        if (!indicatorInfo?.result || !Array.isArray(indicatorInfo?.result)) return;
+        indicatorInfo.result.filter((item) => item.on_graph === true).forEach((_, rIdx) => {
+          currentIndicatorKeys.add(`${indicatorId}-${subId}-${rIdx}`);
+        });
+      });
+    });
+
+    // Silinmesi gereken serileri bul ve kaldır
+    indicatorSeriesMapRef.current.forEach((entry, key) => {
+      if (!currentIndicatorKeys.has(key)) {
+        try {
+          entry.series.setData([]);
+          chart.removeSeries(entry.series);
+        } catch { }
+        if (entry.labelDiv && entry.labelDiv.parentNode) {
+          entry.labelDiv.remove();
+        }
+        indicatorSeriesMapRef.current.delete(key);
+        seriesLabelMapRef.current.delete(entry.series);
+      }
+    });
+
+    // --- Containers for grouping ---
+    let visibleList = indicatorLabelsContainer.querySelector('.indicator-visible-list');
+    let hiddenList = indicatorLabelsContainer.querySelector('.indicator-hidden-list');
+    let toggleBtn = indicatorLabelsContainer.querySelector('.indicator-toggle-btn');
+
+    if (!visibleList) {
+      visibleList = document.createElement("div");
+      visibleList.className = "indicator-visible-list";
+      visibleList.style.cssText = "display: flex; flex-direction: column; gap: 4px; width: 100%; align-items: flex-start;";
+      indicatorLabelsContainer.appendChild(visibleList);
+    }
+
+    if (!toggleBtn) {
+      toggleBtn = document.createElement("button");
+      toggleBtn.className = "indicator-toggle-btn";
+      toggleBtn.style.cssText = `
+         pointer-events: auto;
+         background: rgba(30,30,30,0);
+         color: white;
+         font-size: 12px;
+         padding: 4px;
+         border-radius: 4px;
+         border: 1px solid rgba(156,163,175,0.1);
+         cursor: pointer;
+         display: none; 
+         align-items: center;
+         justify-content: center;
+         width: 40px; 
+         align-self: flex-start;
+         margin-left: 2px;
+      `;
+      const toggleRoot = createRoot(toggleBtn);
+      toggleBtn._toggleRoot = toggleRoot;
+      toggleBtn.onclick = () => {
+        isIndicatorsCollapsedRef.current = !isIndicatorsCollapsedRef.current;
+        updateIndicatorToggleUI();
+      };
+      indicatorLabelsContainer.appendChild(toggleBtn);
+    }
+
+    if (!hiddenList) {
+      hiddenList = document.createElement("div");
+      hiddenList.className = "indicator-hidden-list";
+      hiddenList.style.cssText = "display: flex; flex-direction: column; gap: 4px; width: 100%; align-items: flex-start;";
+      hiddenList.style.display = isIndicatorsCollapsedRef.current ? "none" : "flex";
+      indicatorLabelsContainer.appendChild(hiddenList);
+    }
+
+    const updateIndicatorToggleUI = () => {
+      const hasHidden = hiddenList.children.length > 0;
+      toggleBtn.style.display = hasHidden ? "flex" : "none";
+      const isCollapsed = isIndicatorsCollapsedRef.current;
+      hiddenList.style.display = (hasHidden && !isCollapsed) ? "flex" : "none";
+
+      if (toggleBtn._toggleRoot) {
+        toggleBtn._toggleRoot.render(
+          isCollapsed
+            ? <FaChevronDown size={10} className="hover:text-gray-400" />
+            : <FaChevronUp size={10} className="hover:text-gray-400" />
+        );
+      }
+    };
+
+    // İndikatörleri işle
+    Object.entries(indicatorData).forEach(([indicatorId, indicator]) => {
+      const indicatorName = indicator.name;
+      const subItems = indicator.subItems || {};
+      Object.entries(subItems).forEach(([subId, indicatorInfo]) => {
+        if (!indicatorInfo?.result || !Array.isArray(indicatorInfo?.result)) return;
+        const isVisible = indicatorInfo.visible !== false;
+
+        indicatorInfo.result.filter((item) => item.on_graph === true).forEach((indicatorResult, rIdx) => {
+          const key = `${indicatorId}-${subId}-${rIdx}`;
+          const { type, settings: s, data } = indicatorResult;
+
+          // Data hazırla
+          const timeValueMap = new Map();
+          data.forEach(([time, value]) => {
+            if (value === undefined) return;
+            const unixTime = toUnixSecUTC(time);
+            if (unixTime !== undefined) timeValueMap.set(unixTime, value);
+          });
+          const formattedData = Array.from(timeValueMap.entries())
+            .sort(([a], [b]) => a - b)
+            .map(([time, value]) => ({ time, value }));
+
+          // Mevcut seri var mı kontrol et
+          let entry = indicatorSeriesMapRef.current.get(key);
+
+          if (!entry) {
+            // Yeni seri oluştur
+            let series;
+            switch (type) {
+              case 'line': series = chart.addLineSeries({ color: s?.color || 'yellow', lineWidth: s?.width || 2, lastValueVisible: false, priceLineVisible: false, visible: isVisible, crosshairMarkerVisible: false }); break;
+              case 'area': series = chart.addAreaSeries({ topColor: s?.color || 'rgba(33,150,243,0.5)', bottomColor: 'rgba(33,150,243,0.1)', lineColor: s?.color || 'blue', lastValueVisible: false, priceLineVisible: false, visible: isVisible, crosshairMarkerVisible: false }); break;
+              case 'histogram': { const c = s?.color ?? '0, 128, 0'; const opacity = s?.opacity ?? 0.3; series = chart.addHistogramSeries({ color: `rgba(${c}, ${opacity})`, lastValueVisible: false, priceLineVisible: false, visible: isVisible }); break; }
+              default: series = chart.addLineSeries({ color: 'white', lineWidth: 2, lastValueVisible: false, priceLineVisible: false, visible: isVisible, crosshairMarkerVisible: false });
+            }
+            series.setData(formattedData);
+
+            // Label UI oluştur
+            const labelId = `indicator-label-${indicatorId}-${subId}`;
+            let labelDiv = document.getElementById(labelId);
+            let valuesContainer;
+
+            if (!labelDiv) {
+              labelDiv = document.createElement("div");
+              labelDiv.id = labelId;
+              labelDiv.style.cssText = `
+                pointer-events: none;
+                background: rgba(30,30,30,0);
+                color: white;
+                font-size: 12px;
+                padding: 4px 8px;
+                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                border: 1px solid rgba(156,163,175,0.1);
+              `;
+              const title = document.createElement("span");
+              title.textContent = indicatorName || `${indicatorId} (${subId})`;
+
+              valuesContainer = document.createElement("div");
+              valuesContainer.id = `indicator-values-${indicatorId}-${subId}`;
+              valuesContainer.style.display = "flex";
+              valuesContainer.style.gap = "8px";
+
+              const settingsBtn = document.createElement("button");
+              createRoot(settingsBtn).render(<RiSettingsLine size={13} className="hover:text-gray-400" />);
+              settingsBtn.style.cssText = "pointer-events:auto;background:none;border:none;color:white;cursor:pointer;";
+              settingsBtn.onclick = () => { setActiveIndicatorId(indicatorId); setActiveSubIndicatorId(subId); setSettingsIndicatorModalOpen(true); };
+              settingsBtn.onmouseenter = () => { isHoveringButtonsRef.current = true; };
+              settingsBtn.onmouseleave = () => { isHoveringButtonsRef.current = false; };
+
+              const removeBtn = document.createElement("button");
+              createRoot(removeBtn).render(<AiOutlineClose size={13} className="hover:text-gray-400" />);
+              removeBtn.style.cssText = "pointer-events:auto;background:none;border:none;color:white;cursor:pointer;";
+              removeBtn.onclick = () => {
+                // Bu indikatörün tüm serilerini bul ve kaldır
+                indicatorSeriesMapRef.current.forEach((e, k) => {
+                  if (k.startsWith(`${indicatorId}-${subId}-`)) {
+                    try {
+                      e.series.setData([]);
+                      chart.removeSeries(e.series);
+                    } catch { }
+                    indicatorSeriesMapRef.current.delete(k);
+                    seriesLabelMapRef.current.delete(e.series);
+                  }
+                });
+                labelDiv.remove();
+                removeSubIndicator(indicatorId, subId);
+              };
+              removeBtn.onmouseenter = () => { isHoveringButtonsRef.current = true; };
+              removeBtn.onmouseleave = () => { isHoveringButtonsRef.current = false; };
+
+              labelDiv._seriesList = [];
+
+              const visibilityBtn = document.createElement("button");
+              visibilityBtn.style.cssText = "pointer-events:auto;background:none;border:none;color:white;cursor:pointer;";
+              const visibilityRoot = createRoot(visibilityBtn);
+              labelDiv._visibilityRoot = visibilityRoot;
+
+              const updateVisibilityIcon = (vis) => {
+                visibilityRoot.render(
+                  vis ? <AiOutlineEye size={15} className="hover:text-gray-400" /> : <AiOutlineEyeInvisible size={15} className="text-gray-500 hover:text-gray-400" />
+                );
+                labelDiv.style.opacity = vis ? "1" : "0.5";
+                if (valuesContainer) valuesContainer.style.display = vis ? "flex" : "none";
+              };
+              labelDiv._updateVisibilityIcon = updateVisibilityIcon;
+              updateVisibilityIcon(isVisible);
+
+              visibilityBtn.onclick = () => {
+                toggleSubIndicatorVisibility(indicatorId, subId);
+              };
+              visibilityBtn.onmouseenter = () => { isHoveringButtonsRef.current = true; };
+              visibilityBtn.onmouseleave = () => { isHoveringButtonsRef.current = false; };
+
+              labelDiv.appendChild(title);
+              labelDiv.appendChild(valuesContainer);
+              labelDiv.appendChild(visibilityBtn);
+              labelDiv.appendChild(settingsBtn);
+              labelDiv.appendChild(removeBtn);
+
+              if (isVisible) {
+                visibleList.appendChild(labelDiv);
+              } else {
+                hiddenList.appendChild(labelDiv);
+              }
+            } else {
+              valuesContainer = document.getElementById(`indicator-values-${indicatorId}-${subId}`);
+            }
+
+            if (labelDiv._seriesList) {
+              labelDiv._seriesList.push(series);
+            }
+
+            // Value Span
+            const valueSpan = document.createElement("span");
+            valueSpan.style.cssText = `color: ${s?.color || 'white'}; font-variant-numeric: tabular-nums;`;
+            valueSpan.textContent = "";
+
+            if (valuesContainer) {
+              valuesContainer.appendChild(valueSpan);
+            }
+
+            entry = { series, labelDiv, valueSpan, dataMap: timeValueMap };
+            indicatorSeriesMapRef.current.set(key, entry);
+            seriesLabelMapRef.current.set(series, { span: valueSpan, dataMap: timeValueMap });
+
+          } else {
+            // Mevcut seri var, sadece görünürlüğü ve datayı güncelle
+            entry.series.applyOptions({ visible: isVisible });
+            entry.series.setData(formattedData);
+            entry.dataMap = timeValueMap;
+
+            // Label görünürlüğünü güncelle
+            if (entry.labelDiv) {
+              if (entry.labelDiv._updateVisibilityIcon) {
+                entry.labelDiv._updateVisibilityIcon(isVisible);
+              }
+
+              // Doğru listeye taşı
+              const currentParent = entry.labelDiv.parentNode;
+              if (isVisible && currentParent !== visibleList) {
+                visibleList.appendChild(entry.labelDiv);
+              } else if (!isVisible && currentParent !== hiddenList) {
+                hiddenList.appendChild(entry.labelDiv);
+              }
+            }
+
+            // Label için tüm serilerin görünürlüğünü güncelle
+            if (entry.labelDiv?._seriesList) {
+              entry.labelDiv._seriesList.forEach(s => s.applyOptions({ visible: isVisible }));
+            }
+
+            // seriesLabelMapRef'i güncelle
+            seriesLabelMapRef.current.set(entry.series, { span: entry.valueSpan, dataMap: timeValueMap });
+          }
+        });
+      });
+    });
+
+    updateIndicatorToggleUI();
+
+  }, [indicatorData]);
 
   // 🔽 YENİ: Ruler mode veya settings değişince crosshair güncelle
   useEffect(() => {

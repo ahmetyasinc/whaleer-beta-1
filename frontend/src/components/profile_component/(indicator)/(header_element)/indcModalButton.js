@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import { createPortal } from "react-dom";
 import { FiNavigation } from "react-icons/fi";
 import { AiOutlineStar } from "react-icons/ai"; // Favorilerim ikonu
@@ -13,7 +13,7 @@ import FavoriteIndicators from "../(modal_tabs)/favIndicator";
 import i18n from "@/i18n";
 import { useTranslation } from "react-i18next";
 
-const IndicatorsButton = ({ locale }) => {
+const IndicatorsButton = forwardRef(({ locale, shortcutTitle }, ref) => {
   const { t } = useTranslation("indicator");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(1);
@@ -52,10 +52,16 @@ const IndicatorsButton = ({ locale }) => {
       case 3:
         return <CommunityIndicators locale={locale} closeModal={() => setIsModalOpen(false)} />;
       case 4:
-        return <FavoriteIndicators favorites={favorites} addFavorite={addFavorite} closeModal={() => setIsModalOpen(false)} />; default:
+        return <FavoriteIndicators favorites={favorites} addFavorite={addFavorite} closeModal={() => setIsModalOpen(false)} />;
+      default:
         return <p className="text-zinc-500 p-6">{t("NotFound")}</p>;
     }
   };
+
+  // Expose openModal to parent via ref
+  useImperativeHandle(ref, () => ({
+    openModal: () => setIsModalOpen(true)
+  }));
 
   const modalContent = (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 backdrop-blur-sm">
@@ -104,6 +110,7 @@ const IndicatorsButton = ({ locale }) => {
       <button
         className="flex items-center justify-center w-[130px] h-[40px] rounded-md transition duration-100 bg-transparent border border-gray-700 hover:border-gray-500 text-zinc-200"
         onClick={() => setIsModalOpen(true)}
+        title={shortcutTitle}
       >
         <FiNavigation className="mr-2 text-[19px]" /> {t("indicators")}
       </button>
@@ -111,6 +118,6 @@ const IndicatorsButton = ({ locale }) => {
       {isModalOpen && createPortal(modalContent, document.body)}
     </>
   );
-};
+});
 
 export default IndicatorsButton;

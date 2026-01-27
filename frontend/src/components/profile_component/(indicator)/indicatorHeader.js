@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { IoMdSettings, IoMdRefresh } from "react-icons/io";
 import { LuRuler } from "react-icons/lu";
 import { BiSolidMagnet } from "react-icons/bi";
@@ -34,11 +34,73 @@ const IndicatorHeader = ({ locale }) => {
 
   const [settingsOpen, setSettingsOpen] = useState(false);
 
+  // Refs for keyboard shortcuts
+  const cryptoSelectRef = useRef(null);
+  const indicatorsModalRef = useRef(null);
+  const strategyButtonRef = useRef(null);
+
   useEffect(() => {
     if (locale && i18n.language !== locale) {
       i18n.changeLanguage(locale);
     }
   }, [locale]);
+
+  // Keyboard shortcuts handler
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Skip if user is typing in an input, textarea, or contenteditable element
+      const activeElement = document.activeElement;
+      const isInputFocused =
+        activeElement.tagName === 'INPUT' ||
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.isContentEditable;
+
+      // CryptoSelectButton: * (Shift+8 on most keyboards)
+      if (e.key === '*' && !isInputFocused) {
+        e.preventDefault();
+        cryptoSelectRef.current?.openModal();
+        return;
+      }
+
+      // IndicatorsModalButton: Alt+1
+      if (e.altKey && e.key === '1') {
+        e.preventDefault();
+        indicatorsModalRef.current?.openModal();
+        return;
+      }
+
+      // StrategyButton: Alt+2
+      if (e.altKey && e.key === '2') {
+        e.preventDefault();
+        strategyButtonRef.current?.openModal();
+        return;
+      }
+
+      // BiSolidMagnet: Ctrl+M
+      if (e.ctrlKey && e.key.toLowerCase() === 'm') {
+        e.preventDefault();
+        toggleMagnetMode();
+        return;
+      }
+
+      // LuRuler: /
+      if (e.key === '/' && !isInputFocused) {
+        e.preventDefault();
+        toggleRulerMode();
+        return;
+      }
+
+      // IoMdRefresh: Alt+R
+      if (e.altKey && e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        handleRefresh();
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleMagnetMode, toggleRulerMode, isRefreshing]);
 
   const handleRefresh = () => {
     if (isRefreshing) return;
@@ -53,9 +115,11 @@ const IndicatorHeader = ({ locale }) => {
       <div className="w-full bg-black border-b border-zinc-900 shadow-md flex justify-between items-center py-3 fixed top-0 left-0 right-0 z-50 h-[61px] pl-16">
         <div className="flex gap-2 items-center w-full">
           <CryptoSelectButton
+            ref={cryptoSelectRef}
             locale={locale}
             selectedCrypto={selectedCrypto}
             setSelectedCrypto={setSelectedCrypto}
+            shortcutTitle={t("shortcuts.cryptoSelect")}
           />
           <div className="h-[30px] w-[1px] bg-gray-600 mx-2"></div>
 
@@ -67,7 +131,7 @@ const IndicatorHeader = ({ locale }) => {
           <div className="h-[30px] w-[1px] bg-gray-600 mx-2"></div>
 
           <div className="flex items-center gap-1">
-            <IndicatorsModalButton locale={locale} />
+            <IndicatorsModalButton ref={indicatorsModalRef} locale={locale} shortcutTitle={t("shortcuts.indicators")} />
             <button
               onClick={() => openIndicatorPanel()}
               className="flex items-center justify-center w-[40px] h-[40px] rounded-md bg-black border border-gray-800 hover:border-gray-600 transition duration-100 text-gray-200 text-xl"
@@ -80,7 +144,7 @@ const IndicatorHeader = ({ locale }) => {
           <div className="h-[30px] w-[1px] bg-gray-600 mx-2"></div>
 
           <div className="flex items-center gap-1">
-            <StrategyButton locale={locale} />
+            <StrategyButton ref={strategyButtonRef} locale={locale} shortcutTitle={t("shortcuts.strategies")} />
             <button
               onClick={() => openStrategyPanel()}
               className="flex items-center justify-center w-[40px] h-[40px] rounded-md bg-black border border-gray-800 hover:border-gray-600 transition duration-100 text-gray-200 text-xl"
@@ -97,7 +161,7 @@ const IndicatorHeader = ({ locale }) => {
             className={`mr-[2px] flex items-center justify-center w-[50px] h-[40px] rounded-md transition-all duration-200 text-[22px] 
               ${isMagnetMode ? "scale-95 border bg-black " : "bg-black border border-gray-800 hover:border-gray-600 transition duration-100 text-gray-200"}`}
             aria-label={t("labels.magnetMode")}
-            title={t("labels.magnetMode")}
+            title={t("shortcuts.magnetMode")}
           >
             <BiSolidMagnet
               className={`transition-all duration-150 ${isMagnetMode ? "text-blue-300 text-[20px]" : "text-white"}`}
@@ -110,7 +174,7 @@ const IndicatorHeader = ({ locale }) => {
             className={`flex items-center justify-center w-[50px] h-[40px] rounded-md transition-all duration-200 
               ${isRulerMode ? "bg-gray-950 border-2 border-cyan-700 text-white" : "bg-black border border-gray-800 hover:border-gray-600 transition duration-100 text-gray-200"} text-[23px]`}
             aria-label={t("labels.ruler")}
-            title={t("labels.ruler")}
+            title={t("shortcuts.ruler")}
           >
             <LuRuler />
           </button>
@@ -125,7 +189,7 @@ const IndicatorHeader = ({ locale }) => {
                 ? "bg-black border-gray-700 opacity-80 cursor-not-allowed"
                 : "bg-black border-gray-800 hover:border-gray-600"}`}
             aria-label={t("buttons.refresh")}
-            title={isRefreshing ? t("loading") : t("buttons.refresh")}
+            title={isRefreshing ? t("loading") : t("shortcuts.refresh")}
           >
             <IoMdRefresh className={`text-white ${isRefreshing ? "animate-spin" : ""}`} aria-hidden="true" />
           </button>

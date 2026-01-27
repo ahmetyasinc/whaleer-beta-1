@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { createPortal } from "react-dom";
 import { AiOutlineStar } from "react-icons/ai"; // Favorilerim ikonu
 import { MdOutlinePeopleAlt } from "react-icons/md"; // Topluluk ikonu
@@ -14,7 +14,7 @@ import { FaChessBishop } from "react-icons/fa";
 import i18n from "@/i18n";
 import { useTranslation } from "react-i18next";
 
-const StrategyButton = ({ locale }) => {
+const StrategyButton = forwardRef(({ locale, shortcutTitle }, ref) => {
   const { t } = useTranslation("indicator");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(1);
@@ -61,6 +61,11 @@ const StrategyButton = ({ locale }) => {
         return <p className="text-zinc-500 p-6">Not Found.</p>;
     }
   };
+
+  // Expose openModal to parent via ref
+  useImperativeHandle(ref, () => ({
+    openModal: () => setIsModalOpen(true)
+  }));
 
   const modalContent = (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 backdrop-blur-sm">
@@ -109,6 +114,7 @@ const StrategyButton = ({ locale }) => {
       <button
         className="flex items-center justify-center w-[130px] h-[40px] rounded-md bg-transparent border border-gray-700 hover:border-gray-500 transition duration-100 text-zinc-200"
         onClick={() => setIsModalOpen(true)}
+        title={shortcutTitle}
       >
         <FaChessBishop className="mr-2 text-[19px]" /> {t("strategies")}
       </button>
@@ -116,6 +122,6 @@ const StrategyButton = ({ locale }) => {
       {isModalOpen && createPortal(modalContent, document.body)}
     </>
   );
-};
+});
 
 export default StrategyButton;

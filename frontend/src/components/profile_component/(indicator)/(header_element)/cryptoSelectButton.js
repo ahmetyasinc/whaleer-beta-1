@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import axios from "axios";
 import { IoMdSearch } from "react-icons/io";
 import { BsPinAngle, BsPinAngleFill } from "react-icons/bs";
@@ -14,7 +14,7 @@ import i18n from "@/i18n";
 
 axios.defaults.withCredentials = true;
 
-const CryptoSelectButton = ({ locale }) => {
+const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
   const { t } = useTranslation("indicator");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -149,12 +149,18 @@ const CryptoSelectButton = ({ locale }) => {
 
   const isInWatchlist = (id) => watchSet.has(id);
 
+  // Expose openModal to parent via ref
+  useImperativeHandle(ref, () => ({
+    openModal: () => setIsModalOpen(true)
+  }));
+
   return (
     <>
       {/* Kripto Seçim Butonu */}
       <button
         className="pl-4 ml-2 flex items-center w-[230px] h-[40px] rounded bg-black border border-gray-800 hover:border-gray-600 transition duration-100 text-gray-200 overflow-hidden text-ellipsis whitespace-nowrap"
         onClick={() => setIsModalOpen(true)}
+        title={shortcutTitle}
       >
         <IoMdSearch className="text-[19px] mr-2" />
         <span className="ml-3">
@@ -205,8 +211,8 @@ const CryptoSelectButton = ({ locale }) => {
                   type="button"
                   onClick={() => setActiveFilter("all")}
                   className={`px-3 py-1.5 rounded-full border transition-colors ${activeFilter === "all"
-                      ? "bg-zinc-800 border-zinc-500 text-zinc-100"
-                      : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500"
+                    ? "bg-zinc-800 border-zinc-500 text-zinc-100"
+                    : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500"
                     }`}
                 >
                   {t("all", { defaultValue: "Tümü" })}
@@ -217,8 +223,8 @@ const CryptoSelectButton = ({ locale }) => {
                   type="button"
                   onClick={() => setActiveFilter("spot")}
                   className={`px-3 py-1.5 rounded-full border transition-colors ${activeFilter === "spot"
-                      ? "bg-zinc-800 border-zinc-500 text-zinc-100"
-                      : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500"
+                    ? "bg-zinc-800 border-zinc-500 text-zinc-100"
+                    : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500"
                     }`}
                 >
                   {t("spot", { defaultValue: "Spot" })}
@@ -229,8 +235,8 @@ const CryptoSelectButton = ({ locale }) => {
                   type="button"
                   onClick={() => setActiveFilter("takas")}
                   className={`px-3 py-1.5 rounded-full border transition-colors ${activeFilter === "takas"
-                      ? "bg-zinc-800 border-zinc-500 text-zinc-100"
-                      : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500"
+                    ? "bg-zinc-800 border-zinc-500 text-zinc-100"
+                    : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500"
                     }`}
                 >
                   {t("swap", { defaultValue: "Takas" })}
@@ -241,8 +247,8 @@ const CryptoSelectButton = ({ locale }) => {
                   type="button"
                   onClick={() => setActiveFilter("watchlist")}
                   className={`px-3 py-1.5 rounded-full border transition-colors ${activeFilter === "watchlist"
-                      ? "bg-zinc-800 border-zinc-500 text-zinc-100"
-                      : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500"
+                    ? "bg-zinc-800 border-zinc-500 text-zinc-100"
+                    : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500"
                     }`}
                 >
                   {t("watchlist", { defaultValue: "Watchlist" })}
@@ -282,8 +288,8 @@ const CryptoSelectButton = ({ locale }) => {
                         >
                           <IoAddCircleOutline
                             className={`text-lg transition-colors ${isInWatchlist(crypto.id)
-                                ? "text-emerald-400"
-                                : "text-zinc-500 group-hover:text-zinc-300"
+                              ? "text-emerald-400"
+                              : "text-zinc-500 group-hover:text-zinc-300"
                               }`}
                           />
                         </button>
@@ -323,6 +329,6 @@ const CryptoSelectButton = ({ locale }) => {
       )}
     </>
   );
-};
+});
 
 export default CryptoSelectButton;

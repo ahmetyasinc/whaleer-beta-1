@@ -3,11 +3,22 @@
     "addIndicator": "Add indicator",
     "addStrategy": "Add strategy",
     "refresh": "Refresh",
-    "settings": "Settings"
+    "settings": "Settings",
+    "cryptoSelect": "Select Crypto",
+    "indicators": "Indicators",
+    "strategies": "Strategies"
   },
   "labels": {
     "magnetMode": "Magnet mode",
     "ruler": "Ruler"
+  },
+  "shortcuts": {
+    "cryptoSelect": "Select Crypto (*)",
+    "indicators": "Indicators (Alt+1)",
+    "strategies": "Strategies (Alt+2)",
+    "magnetMode": "Magnet mode (Ctrl+M)",
+    "ruler": "Ruler (/)",
+    "refresh": "Refresh (Alt+R)"
   },
   "loading": "Loading...",
   "period": {

@@ -3,11 +3,22 @@
     "addIndicator": "Yeni indikatör ekle",
     "addStrategy": "Yeni strateji ekle",
     "refresh": "Yenile",
-    "settings": "Ayarlar"
+    "settings": "Ayarlar",
+    "cryptoSelect": "Kripto Seç",
+    "indicators": "Göstergeler",
+    "strategies": "Stratejiler"
   },
   "labels": {
     "magnetMode": "Mıknatıs modu",
     "ruler": "Cetvel"
+  },
+  "shortcuts": {
+    "cryptoSelect": "Kripto Seç (*)",
+    "indicators": "Göstergeler (Alt+1)",
+    "strategies": "Stratejiler (Alt+2)",
+    "magnetMode": "Mıknatıs modu (Ctrl+M)",
+    "ruler": "Cetvel (/)",
+    "refresh": "Yenile (Alt+R)"
   },
   "loading": "Yükleniyor...",
   "period": {

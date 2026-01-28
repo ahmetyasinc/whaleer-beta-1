@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useState, useCallback } from "react";
+import { forwardRef, useState, useCallback, useRef, useEffect } from "react";
 import useStrategyStore from "@/store/indicator/strategyStore";
 import usePanelStore from "@/store/indicator/panelStore";
 import useCryptoStore from "@/store/indicator/cryptoPinStore";
@@ -23,9 +23,16 @@ const RunButtonStr = forwardRef(({ strategyId, onBeforeRun, className }, ref) =>
   const { t } = useTranslation("strategyCodePanel");
 
 
+  // 🔑 ID'yi ref içinde tutarak her zaman en güncel ID'ye erişilmesini sağla (stale closure önlemi)
+  const strategyIdRef = useRef(strategyId);
+  useEffect(() => {
+    strategyIdRef.current = strategyId;
+  }, [strategyId]);
+
   const fetchStrategyData = useCallback(async () => {
+    const currentId = strategyIdRef.current;
     try {
-      if (!selectedCrypto?.binance_symbol || !selectedPeriod || !strategyId) {
+      if (!selectedCrypto?.binance_symbol || !selectedPeriod || !currentId) {
         console.warn("Eksik veri ile API çağrısı engellendi.");
         return;
       }
@@ -33,7 +40,7 @@ const RunButtonStr = forwardRef(({ strategyId, onBeforeRun, className }, ref) =>
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/run-strategy/`,
         {
-          strategy_id: strategyId,
+          strategy_id: currentId,
           binance_symbol: selectedCrypto.binance_symbol,
           interval: selectedPeriod,
           end: end,
@@ -52,7 +59,7 @@ const RunButtonStr = forwardRef(({ strategyId, onBeforeRun, className }, ref) =>
       const message = strategy_result.message || "";
 
       insertOrReplaceLastSubStrategyData(
-        strategyId,
+        currentId,
         strategy_name,
         strategy_result,
         strategy_graph,
@@ -64,7 +71,7 @@ const RunButtonStr = forwardRef(({ strategyId, onBeforeRun, className }, ref) =>
       console.error("Strategy verisi çekilirken hata oluştu:", error);
 
       insertOrReplaceLastSubStrategyData(
-        strategyId,
+        currentId,
         "Hata",
         [],
         [],
@@ -73,7 +80,7 @@ const RunButtonStr = forwardRef(({ strategyId, onBeforeRun, className }, ref) =>
         { status: "error", message: error.message }
       );
     }
-  }, [strategyId, selectedCrypto, selectedPeriod, end, insertOrReplaceLastSubStrategyData]);
+  }, [selectedCrypto, selectedPeriod, end, insertOrReplaceLastSubStrategyData]);
 
   const handleClick = async () => {
     setIsLoading(true);

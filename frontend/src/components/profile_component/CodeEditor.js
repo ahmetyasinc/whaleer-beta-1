@@ -6,6 +6,11 @@ import Editor from "@monaco-editor/react";
 const CodeEditor = ({ code, setCode, onSave }) => {
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
+  const onSaveRef = useRef(onSave);
+
+  useEffect(() => {
+    onSaveRef.current = onSave;
+  }, [onSave]);
 
   const handleEditorWillMount = (monaco) => {
     monacoRef.current = monaco;
@@ -85,6 +90,23 @@ const CodeEditor = ({ code, setCode, onSave }) => {
 
   const handleEditorDidMount = (editor, monaco) => {
     editorRef.current = editor;
+
+    // Add Ctrl+S command
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+      // 1. Local editor action
+      if (onSaveRef.current) {
+        const currentValue = editor.getValue();
+        onSaveRef.current(currentValue);
+      }
+      // 2. Global event for other panels
+      window.dispatchEvent(new Event("whaleer-trigger-save-all"));
+    });
+
+    // Add F5 command
+    editor.addCommand(monaco.KeyCode.F5, () => {
+      // Global event for running
+      window.dispatchEvent(new Event("whaleer-trigger-run-all"));
+    });
   };
 
   // 🔍 Basit hata işaretleme
@@ -123,22 +145,6 @@ const CodeEditor = ({ code, setCode, onSave }) => {
 
     monaco.editor.setModelMarkers(model, "python", markers);
   }, [code]);
-
-  // 🔑 Ctrl+S / Cmd+S yakalama
-  useEffect(() => {
-    const handler = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
-        e.preventDefault(); // tarayıcı save dialogunu engelle
-        if (onSave && editorRef.current) {
-          const currentValue = editorRef.current.getValue();
-          onSave(currentValue);
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onSave]);
 
   return (
     <Editor

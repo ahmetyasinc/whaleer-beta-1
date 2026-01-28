@@ -11,7 +11,7 @@ import useStrategyStore from "@/store/indicator/strategyStore";
 import RunButton from "./run_button_str";
 import TerminalStrategy from "./terminalStrategy";
 import VersionSelect from "./versionSelect";
-import CodeModal from "./fullScreenStrategyCodeModal";
+import CodeModal from "./fullScreenCodeModal";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
 
@@ -45,6 +45,7 @@ const CodePanel = () => {
   const terminalRef = useRef(null);
 
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
+  const [isModalMinimized, setIsModalMinimized] = useState(false); // 🔑 Track minimized state
   const [codeModalStrategy, setCodeModalStrategy] = useState(null);
   const [isTerminalOpen, setIsTerminalOpen] = useState(true);
 
@@ -138,19 +139,63 @@ const CodePanel = () => {
     setIsCodeModalOpen(true);
   };
 
-  // 🔑 F5 → RunButtonStr çalıştır
+  // 🔑 Global Shorts (F5, Ctrl+S)
+  // Handles both window events (when not focused) and custom events (dispatched by CodeEditor)
   useEffect(() => {
-    const handler = (e) => {
-      if (e.key === "F5") {
-        e.preventDefault();
-        if (runButtonRef.current) {
-          runButtonRef.current.click();
-        }
+    const handleRun = () => {
+      // Allow run if modal is closed OR minimized
+      if (isCodeModalOpen && !isModalMinimized) return;
+      if (runButtonRef.current) {
+        runButtonRef.current.click();
       }
     };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, []);
+
+    const handleSave = () => {
+      // Allow save if modal is closed OR minimized
+      if ((isCodeModalOpen && !isModalMinimized) || isLockedActive) return;
+      handleSaveStrategy();
+    };
+
+    // 1. Custom Events (Created by CodeEditor when focused)
+    const onGlobalRun = () => handleRun();
+    const onGlobalSave = () => handleSave();
+
+    // 2. DOM Events (When focus is outside editor)
+    const onKeyDown = (e) => {
+      if (isCodeModalOpen && !isModalMinimized) return;
+
+      // F5
+      if (e.key === "F5") {
+        e.preventDefault();
+        handleRun();
+      }
+      // Ctrl+S
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        handleSave();
+      }
+    };
+
+    window.addEventListener("whaleer-trigger-run-all", onGlobalRun);
+    window.addEventListener("whaleer-trigger-save-all", onGlobalSave);
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      window.removeEventListener("whaleer-trigger-run-all", onGlobalRun);
+      window.removeEventListener("whaleer-trigger-save-all", onGlobalSave);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isCodeModalOpen, isModalMinimized, isLockedActive, localCode, localName]); // Dependencies for handleSaveStrategy closure
+
+  // 🔑 Sync localCode to codeModalStrategy state while IDs match
+  // This ensures that if we switch away, codeModalStrategy holds the latest version
+  useEffect(() => {
+    if (codeModalStrategy && selected?.id === codeModalStrategy.id) {
+      if (codeModalStrategy.code !== localCode) {
+        setCodeModalStrategy(prev => ({ ...prev, code: localCode }));
+      }
+    }
+  }, [localCode, selected?.id, codeModalStrategy /* safe to add object if we check id inside */]);
 
   if (!isOpen) return null;
 
@@ -291,12 +336,49 @@ const CodePanel = () => {
       <CodeModal
         isOpen={isCodeModalOpen}
         onClose={() => setIsCodeModalOpen(false)}
-        strategy={codeModalStrategy}
+        strategy={
+          codeModalStrategy
+            ? {
+              ...codeModalStrategy,
+              code: (selected?.id === codeModalStrategy.id) ? localCode : codeModalStrategy.code
+            }
+            : null
+        }
         onSave={async (codeFromModal) => {
-          await handleSaveStrategy(codeFromModal);
+          // Check if the modal's strategy is the same as the currently selected one in the panel
+          if (codeModalStrategy && selected?.id === codeModalStrategy.id) {
+            await handleSaveStrategy(codeFromModal);
+          } else if (codeModalStrategy) {
+            // Context mismatch: User switched panel content (e.g. to RSI) but is editing previous strategy (e.g. MACD) in modal.
+            // Save directly to API without touching the panel's current 'localCode'.
+            setIsSaving(true);
+            try {
+              const nameToSave = codeModalStrategy.name || "Untitled";
+              await axios.put(
+                `${process.env.NEXT_PUBLIC_API_URL}/edit-strategy/`,
+                { id: codeModalStrategy.id, name: nameToSave, code: codeFromModal },
+                { withCredentials: true, headers: { "Content-Type": "application/json" } }
+              );
+
+              // Update the store so if we switch back to this strategy, it's fresh
+              const updateFn = strategyStore.getState().updateStrategy;
+              if (typeof updateFn === "function") {
+                updateFn(codeModalStrategy.id, { name: nameToSave, code: codeFromModal });
+              }
+
+              // Update local modal state so it keeps the changes
+              setCodeModalStrategy(prev => ({ ...prev, code: codeFromModal }));
+
+            } catch (error) {
+              console.error(t("errors.save"), error);
+            } finally {
+              setIsSaving(false);
+            }
+          }
         }}
-        runStrategyId={selected?.id || null}
+        type="strategy"
         locked={isLockedActive}
+        onMinimizeChange={setIsModalMinimized}
       />
     </div>
   );

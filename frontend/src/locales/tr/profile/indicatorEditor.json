@@ -1,0 +1,14 @@
+{
+    "terminal": {
+        "ready": "Terminal hazır"
+    },
+    "buttons": {
+        "minimize": "Küçült (F)",
+        "maximize": "Kod Editörünü Büyüt (F)",
+        "peek": "Önizleme (Space basılı tut)",
+        "addPanel": "Yeni Panel Ekle (Shift++)",
+        "gridView": "Grid Görünüme Geç",
+        "columnView": "Sütun Görünüme Geç",
+        "close": "Kapat (Shift+Esc)"
+    }
+}

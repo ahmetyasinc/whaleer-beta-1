@@ -1,0 +1,14 @@
+{
+    "terminal": {
+        "ready": "Terminal ready"
+    },
+    "buttons": {
+        "minimize": "Minimize (F)",
+        "maximize": "Maximize Code Editor (F)",
+        "peek": "Preview (Hold Space)",
+        "addPanel": "Add New Panel (Shift++)",
+        "gridView": "Switch to Grid View",
+        "columnView": "Switch to Column View",
+        "close": "Close (Shift+Esc)"
+    }
+}

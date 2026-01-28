@@ -40,6 +40,7 @@ const CodePanel = () => {
   const [localCode, setLocalCode] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
+  const [isModalMinimized, setIsModalMinimized] = useState(false); // 🔑 Track minimized state
   const [codeModalIndicator, setCodeModalIndicator] = useState(null);
   const terminalRef = useRef(null);
   const [isTerminalOpen, setIsTerminalOpen] = useState(true);
@@ -117,19 +118,58 @@ const CodePanel = () => {
     setIsCodeModalOpen(true);
   };
 
-  // 🔑 F5 tuşuna basıldığında RunButton çalıştır
+  // 🔑 Global Shorts (F5, Ctrl+S)
   useEffect(() => {
-    const handler = (e) => {
-      if (e.key === "F5") {
-        e.preventDefault(); // tarayıcı yenilemeyi engelle
-        if (runButtonRef.current) {
-          runButtonRef.current.click();
-        }
+    const handleRun = () => {
+      // Allow run if modal is closed OR minimized
+      if (isCodeModalOpen && !isModalMinimized) return;
+      if (runButtonRef.current) {
+        runButtonRef.current.click();
       }
     };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, []);
+
+    const handleSave = () => {
+      // Allow save if modal is closed OR minimized
+      if (isCodeModalOpen && !isModalMinimized) return;
+      handleSaveIndicator();
+    };
+
+    const onGlobalRun = () => handleRun();
+    const onGlobalSave = () => handleSave();
+
+    const onKeyDown = (e) => {
+      if (isCodeModalOpen && !isModalMinimized) return;
+
+      if (e.key === "F5") {
+        e.preventDefault();
+        handleRun();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        handleSave();
+      }
+    };
+
+    window.addEventListener("whaleer-trigger-run-all", onGlobalRun);
+    window.addEventListener("whaleer-trigger-save-all", onGlobalSave);
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      window.removeEventListener("whaleer-trigger-run-all", onGlobalRun);
+      window.removeEventListener("whaleer-trigger-save-all", onGlobalSave);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isCodeModalOpen, isModalMinimized, localCode, localName]); // Dependencies for closure access
+
+  // 🔑 ID'ler eşleşiyorsa localCode'u codeModalIndicator state'ine aktar
+  // Böylece panel değiştirildiğinde elimizde en güncel kod kalır
+  useEffect(() => {
+    if (codeModalIndicator && selected?.id === codeModalIndicator.id) {
+      if (codeModalIndicator.code !== localCode) {
+        setCodeModalIndicator(prev => ({ ...prev, code: localCode }));
+      }
+    }
+  }, [localCode, selected?.id, codeModalIndicator]);
 
   if (!isOpen) return null;
 
@@ -240,9 +280,48 @@ const CodePanel = () => {
       <CodeModal
         isOpen={isCodeModalOpen}
         onClose={() => setIsCodeModalOpen(false)}
-        indicator={{ ...codeModalIndicator, code: localCode }}
-        onSave={handleSaveIndicator}
+        indicator={
+          codeModalIndicator
+            ? {
+              ...codeModalIndicator,
+              code: (selected?.id === codeModalIndicator.id) ? localCode : codeModalIndicator.code
+            }
+            : null
+        }
+        onSave={async (codeFromModal) => {
+          // Check if the modal's indicator is the same as the currently selected one in the panel
+          if (codeModalIndicator && selected?.id === codeModalIndicator.id) {
+            await handleSaveIndicator(codeFromModal);
+          } else if (codeModalIndicator) {
+            // Context mismatch: Save directly to API
+            setIsSaving(true);
+            try {
+              const nameToSave = codeModalIndicator.name || "Untitled";
+              await axios.put(
+                `${process.env.NEXT_PUBLIC_API_URL}/edit-indicator/`,
+                { id: codeModalIndicator.id, name: nameToSave, code: codeFromModal },
+                { withCredentials: true, headers: { "Content-Type": "application/json" } }
+              );
+
+              // Update the store
+              const updateFn = indicatorStore.getState().updateIndicator;
+              if (typeof updateFn === "function") {
+                updateFn(codeModalIndicator.id, { name: nameToSave, code: codeFromModal });
+              }
+
+              // Update local modal state
+              setCodeModalIndicator(prev => ({ ...prev, code: codeFromModal }));
+
+            } catch (err) {
+              console.error("Save failed", err);
+            } finally {
+              setIsSaving(false);
+            }
+          }
+        }}
         runIndicatorId={selected?.id || null}
+        type="indicator"
+        onMinimizeChange={setIsModalMinimized}
       />
     </div>
   );

@@ -17,6 +17,7 @@ import useStrategyDataStore from "@/store/indicator/strategyDataStore";
 import useCryptoStore from "@/store/indicator/cryptoPinStore";
 import IndicatorSettingsModal from './(modal_tabs)/indicatorSettingsModal';
 import StrategySettingsModal from './(modal_tabs)/strategySettingsModal';
+import CandleLoader from './candleLoader';
 import { installCursorWheelZoom } from "@/utils/cursorCoom";
 import usePanelStore from "@/store/indicator/panelStore";
 import { useChartSettingsStore } from "@/store/indicator/chartSettingsStore";
@@ -24,7 +25,7 @@ import useWatchListStore from "@/store/indicator/watchListStore";
 
 import { RANGE_EVENT, RANGE_REQUEST_EVENT, CROSSHAIR_EVENT, nextSeq, markLeader, unmarkLeader, isLeader, minBarsFor, FUTURE_PADDING_BARS, setLastRangeCache, getLastRangeCache } from "@/utils/chartSync";
 
-export default function ChartComponent() {
+export default function ChartComponent({ onLoadingChange }) {
   const pad = (n) => String(n).padStart(2, '0');
 
   function toUnixSecUTC(t) {
@@ -166,6 +167,15 @@ export default function ChartComponent() {
   }, []);
 
   const [chartData, setChartData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Parent'a loading bilgisini ilet
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
+
   const handleLogout = useLogout();
   const { isMagnetMode } = useMagnetStore();
   const isMagnetModeRef = useRef(isMagnetMode);
@@ -280,6 +290,7 @@ export default function ChartComponent() {
   // ===== Fetch data =====
   useEffect(() => {
     async function fetchData() {
+      setIsLoading(true);
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/get-binance-data/?symbol=${selectedCrypto.binance_symbol}&interval=${selectedPeriod}`, { method: "GET", headers: { "Content-Type": "application/json" }, credentials: "include" });
         if (response.status === 401) {
@@ -288,14 +299,22 @@ export default function ChartComponent() {
         }
         const data = await response.json();
         if (data.status === "success" && data.data) {
-          const formattedData = data.data.map((c) => {
-            const ts = c.timestamp; let ms;
-            if (typeof ts === 'number') ms = ts > 1e12 ? ts : ts * 1000; else { const iso = /Z$|[+-]\d\d:\d\d$/.test(ts) ? ts : ts + 'Z'; ms = Date.parse(iso); }
-            return { time: Math.floor(ms / 1000), open: c.open, high: c.high, low: c.low, close: c.close };
-          });
-          setChartData(formattedData);
+          // Eğer gelen veri boşsa chartData'yı boş set et
+          if (!data.data.length) {
+            setChartData([]);
+          } else {
+            const formattedData = data.data.map((c) => {
+              const ts = c.timestamp; let ms;
+              if (typeof ts === 'number') ms = ts > 1e12 ? ts : ts * 1000; else { const iso = /Z$|[+-]\d\d:\d\d$/.test(ts) ? ts : ts + 'Z'; ms = Date.parse(iso); }
+              return { time: Math.floor(ms / 1000), open: c.open, high: c.high, low: c.low, close: c.close };
+            });
+            setChartData(formattedData);
+          }
         }
       } catch (error) { console.error("Veri çekme hatası:", error); }
+      finally {
+        setIsLoading(false);
+      }
     }
     fetchData();
   }, [selectedCrypto, selectedPeriod, end]);
@@ -397,7 +416,7 @@ export default function ChartComponent() {
 
   // ===== Create / Recreate chart when data OR settings change =====
   useEffect(() => {
-    if (chartData.length === 0 || !chartContainerRef.current) return;
+    if (!chartContainerRef.current) return;
 
     // önceki chart'ı ve series'i bırak
     // Artık cleanup fonksiyonunda handle ediyoruz, burada tekrar remove çağrısı güvenli olsun diye kalsın ama ref zaten null olacak.
@@ -853,7 +872,9 @@ export default function ChartComponent() {
       }
       // Sadece dikey (zaman) crosshair'i güncellemek istiyoruz
       // Fiyat (NaN) verirsek yatay çizgi görünmeyebilir ya da etkisiz olur
-      chart.setCrosshairPosition(NaN, time, mainSeries);
+      if (chartData.length > 0) {
+        chart.setCrosshairPosition(NaN, time, mainSeries);
+      }
     };
     window.addEventListener(CROSSHAIR_EVENT, onCrosshairCode);
 
@@ -910,6 +931,7 @@ export default function ChartComponent() {
 
   // === AYRI useEffect: İndikatörleri chart'ı yeniden oluşturmadan güncelle ===
   useEffect(() => {
+    if (isLoading) return;
     if (!chartRef.current || !priceSeriesRef.current) return;
     const chart = chartRef.current;
 
@@ -1155,8 +1177,31 @@ export default function ChartComponent() {
             seriesLabelMapRef.current.set(series, { span: valueSpan, dataMap: timeValueMap });
 
           } else {
-            // Mevcut seri var, sadece görünürlüğü ve datayı güncelle
-            entry.series.applyOptions({ visible: isVisible });
+            // Mevcut seri var, görünürlüğü, datayı VE stil ayarlarını güncelle
+            let options = { visible: isVisible };
+
+            switch (type) {
+              case 'line':
+                options.color = s?.color || 'yellow';
+                options.lineWidth = s?.width || 2;
+                break;
+              case 'area':
+                options.topColor = s?.color || 'rgba(33,150,243,0.5)';
+                options.lineColor = s?.color || 'blue';
+                // bottomColor sabit kalıyor veya s'de varsa eklenebilir
+                break;
+              case 'histogram': {
+                const c = s?.color ?? '0, 128, 0';
+                const opacity = s?.opacity ?? 0.3;
+                options.color = `rgba(${c}, ${opacity})`;
+                break;
+              }
+              default:
+                // varsayılan line
+                break;
+            }
+
+            entry.series.applyOptions(options);
             entry.series.setData(formattedData);
             entry.dataMap = timeValueMap;
 
@@ -1189,7 +1234,7 @@ export default function ChartComponent() {
 
     updateIndicatorToggleUI();
 
-  }, [indicatorData]);
+  }, [indicatorData, isLoading]);
 
   // 🔽 YENİ: Ruler mode veya settings değişince crosshair güncelle
   useEffect(() => {
@@ -1228,6 +1273,22 @@ export default function ChartComponent() {
 
       <IndicatorSettingsModal isOpen={settingsIndicatorModalOpen} onClose={() => setSettingsIndicatorModalOpen(false)} indicatorId={activeIndicatorId} subId={activeSubIndicatorId} />
       <StrategySettingsModal isOpen={settingsStrategyModalOpen} onClose={() => setSettingsStrategyModalOpen(false)} strategyId={activeStrategyId} subId={activeSubStrategyId} />
+
+      {/* Loading Spinner */}
+      {isLoading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundColor: settings.bgColor || (settings.theme === 'light' ? '#ffffff' : 'rgb(0,0,7)'),
+              opacity: 0.85
+            }}
+          />
+          <div className="relative z-10">
+            <CandleLoader />
+          </div>
+        </div>
+      )}
 
       {/* Info Panel Overlay */}
       {infoPanelData && (

@@ -19,6 +19,7 @@ const FlexibleGridLayout = () => {
   const [windowWidth, setWindowWidth] = useState(0);
   const [initialLoad, setInitialLoad] = useState(true);
   const [activeItemId, setActiveItemId] = useState(null);
+  const [isMainChartLoading, setIsMainChartLoading] = useState(true); // Main chart loading durumu
   const { isOpen: isCodePanelOpen } = useCodePanelStore();
   const { isOpen: isStrategyCodePanelOpen } = useStrategyCodePanelStore();
   const { indicatorData } = useIndicatorDataStore();
@@ -47,6 +48,9 @@ const FlexibleGridLayout = () => {
           indicatorName: indicatorObj.name
         }))
     );
+
+  // Loading bitene kadar panelleri listeye ekleme
+  const finalFilteredSubItems = isMainChartLoading ? [] : filteredSubItems;
 
 
   // Layout değişikliklerinin yönetimi için referans
@@ -140,7 +144,7 @@ const FlexibleGridLayout = () => {
       isDraggable: false,
     });
 
-    filteredSubItems.forEach(({ indicatorId, subId }, index) => {
+    finalFilteredSubItems.forEach(({ indicatorId, subId }, index) => {
       const id = `panel-${indicatorId}-${subId}`;
       const props = getExisting(id, 11 + index * 4, 6);
       newLg.push({
@@ -191,7 +195,7 @@ const FlexibleGridLayout = () => {
   const memoizedLayouts = useMemo(() => {
     const raw = generateLayouts();
     return syncWidths(raw);
-  }, [panelWidth, filteredSubItems, isCodePanelOpen, isStrategyCodePanelOpen, layouts]); // layouts dependency eklendi
+  }, [panelWidth, finalFilteredSubItems, isCodePanelOpen, isStrategyCodePanelOpen, layouts]); // layouts dependency eklendi
 
 
   // Anlık boyutlandırma (Resize sırasında çalışır)
@@ -227,11 +231,11 @@ const FlexibleGridLayout = () => {
         >
           {/* Ana grafik */}
           <div key="chart" className="relative w-full h-full m-0">
-            <StockChart />
+            <StockChart onLoadingChange={setIsMainChartLoading} />
           </div>
 
           {/* Sadece on_graph: false olan indikatör panelleri */}
-          {filteredSubItems.map(({ indicatorName, indicatorId, subId }) => (
+          {finalFilteredSubItems.map(({ indicatorName, indicatorId, subId }) => (
             <div key={`panel-${indicatorId}-${subId}`} className="relative w-full h-full m-0">
               <PanelChart indicatorName={indicatorName} indicatorId={indicatorId} subId={subId} />
             </div>
@@ -253,9 +257,6 @@ const FlexibleGridLayout = () => {
           >
             {isStrategyCodePanelOpen && <StrategyCodePanel />}
           </div>
-
-
-
         </ResponsiveGridLayout>
       )}
     </div>

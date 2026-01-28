@@ -123,7 +123,20 @@ const useIndicatorDataStore = create(persist((set, get) => ({
     });
 
     const response = await get().runCalculation(indicatorId, updatedInputs);
+
+    // Eğer indikatör bulunamadıysa (404), state'den temizle
+    if (response.notFound) {
+      console.warn(`Indicator ${indicatorId} not found (404). Removing from store.`);
+      get().removeSubIndicator(indicatorId, subId);
+      return;
+    }
+
     const { result, prints } = response;
+
+    // Eğer indikatör silinmişse veya state değişmişse kontrol et
+    if (!state.indicatorData[indicatorId] || !state.indicatorData[indicatorId].subItems[subId]) {
+      return;
+    }
 
     const existingSubItems = state.indicatorData[indicatorId].subItems;
 
@@ -157,13 +170,15 @@ const useIndicatorDataStore = create(persist((set, get) => ({
         return { result: [], prints: [] };
       }
 
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/run-updated-indicator/`, {
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/run-updated-indicator/`;
+
+      const response = await axios.post(apiUrl, {
         indicator_id: indicatorId,
         inputs: inputs,
         binance_symbol: selectedCrypto.binance_symbol,
         interval: selectedPeriod,
         end: end,
-      });
+      }, { withCredentials: true });
 
       return {
         result: response.data.indicator_result,
@@ -171,6 +186,11 @@ const useIndicatorDataStore = create(persist((set, get) => ({
       };
     } catch (error) {
       console.error('Indicator hesaplama hatası:', error);
+
+      if (error.response && error.response.status === 404 && error.response.data.detail === "Indicator not found.") {
+        return { result: [], prints: [], notFound: true };
+      }
+
       return { result: [], prints: [] };
     }
   },

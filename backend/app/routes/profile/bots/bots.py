@@ -46,7 +46,7 @@ async def create_bot(
     db: AsyncSession = Depends(get_db),
     user_id: dict = Depends(verify_token),
 ):
-    new_bot = Bots(**bot.dict(), user_id=int(user_id))
+    new_bot = Bots(**bot.dict(exclude={"user_id"}), user_id=int(user_id))
     db.add(new_bot)
     await db.commit()
     await db.refresh(new_bot)

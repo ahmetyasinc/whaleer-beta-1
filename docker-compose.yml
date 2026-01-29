@@ -11,10 +11,10 @@ services:
     volumes:
       - ./backend/uploads:/app/uploads  # Persistence for uploads
     env_file:
-      - ./backend/.env
+    env_file:
+      - ./backend/.env.${APP_ENV:-local}
     environment:
       - DATABASE_URL=${DATABASE_URL:-postgresql+asyncpg://postgres:admin@host.docker.internal/balina_db}
-      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8000
     extra_hosts:
       - "host.docker.internal:host-gateway" # Allow connection to host services (DB etc.)
 
@@ -23,7 +23,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:8000/api
+        APP_ENV: ${APP_ENV:-local}
     container_name: whaleer-frontend
     ports:
       - "3000:3000"

@@ -10,7 +10,6 @@ import { FiEdit3 } from 'react-icons/fi';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { IoSearch } from "react-icons/io5";
 import RunBotToggle from './runBotToggle';
-import SpinningWheel from './spinningWheel';
 import ExamineBot from "./examineBot";
 import { FaBan } from "react-icons/fa6";
 import DeleteBotConfirmModal from "./deleteBotConfirmModal";
@@ -84,7 +83,7 @@ function RentedCountdown({ rent_expires_at }) {
   );
 }
 
-export const BotCard = ({ bot, column }) => {
+export const BotCard = ({ bot }) => {
   const { t } = useTranslation("botCard");
   // === STORE & ACTIONLAR ===
   const removeBot = useBotStore((state) => state.removeBot);
@@ -151,25 +150,13 @@ export const BotCard = ({ bot, column }) => {
       ? t("toggle.expired")
       : undefined;
 
-  // === DEPOZİTO & TOGGLE LOGIC (Cleaned) ===
-  const isProfitShareMode = !!bot?.profit_share_only;
-  // const [showDeposit, setShowDeposit] = useState(false); // Removed
-
+  // === TOGGLE LOGIC ===
   const canToggle = !isBlocked && !!bot.api;
-  // const isDepositTooLow = isProfitShareMode && balance < 10; // Removed deposit check
   const finalToggleDisabled = !canToggle;
 
   const finalDisableTitle = disableTitle;
 
-  const redDisableWrap = finalToggleDisabled
-    ? "ring-1 ring-red-700 rounded-md p-1 bg-red-500/10"
-    : "";
-
-
-
-  // === Depozito işlemleri ===
-
-
+  // === Toggle Confirmation ===
   const handleConfirmToggle = () => {
     if (bot?.id) {
       toggleBotActive(bot.id);
@@ -177,188 +164,119 @@ export const BotCard = ({ bot, column }) => {
     setToggleConfirmOpen(false);
   };
 
-  /* ==== SOL KART ==== */
-  if (column === "left") {
-    return (
-      <>
-        <div className="rounded-r-full px-4 py-4 relative border-2 border-cyan-900 bg-[hsl(227,82%,2%)] text-gray-200">
-          <div className="grid grid-cols-3 divide-x divide-gray-700">
+  /* ==== TEK KART TASARIMI ==== */
+  return (
+    <>
+      <div className="rounded-lg px-4 py-4 relative border-2 border-cyan-900 bg-[hsl(227,82%,2%)] text-gray-200">
+        <div className="grid grid-cols-3 divide-x divide-gray-700">
 
-            {/* SOL: Bot Bilgi Alanı */}
-            <div className="pr-4">
-              {/* Başlık satırı: İsim + Type + Menü */}
-              <div className="flex items-center gap-2 border-b border-gray-600 pb-[10px] mb-2">
-                <h3 className="text-[18px] font-semibold text-white truncate flex-1">{bot.name}</h3>
-                <TypeBadge type={bot.type} />
-                <div className="relative shrink-0" ref={menuRef}>
-                  <button
-                    onClick={() => setMenuOpen(!menuOpen)}
-                    className="p-2 rounded hover:bg-gray-700"
-                    aria-label={t("menu.moreActions")}
-                    title={t("menu.moreActions")}
-                  >
-                    <BsThreeDotsVertical className="text-gray-300" size={18} />
-                  </button>
-                  {menuOpen && (
-                    <div className="absolute right-0 top-8 w-40 bg-gray-900 rounded shadow-md z-50">
-                      <button
-                        onClick={() => { setEditing(true); setMenuOpen(false); }}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-blue-400 hover:bg-gray-800">
-                        <FiEdit3 size={16} /> {t("menu.edit")}
-                      </button>
+          {/* SOL: Bot Bilgi Alanı */}
+          <div className="pr-4">
+            {/* Başlık satırı: İsim + Type + Menü */}
+            <div className="flex items-center gap-2 border-b border-gray-600 pb-[10px] mb-2">
+              <h3 className="text-[18px] font-semibold text-white truncate flex-1">{bot.name}</h3>
+              <TypeBadge type={bot.type} />
+              <div className="relative shrink-0" ref={menuRef}>
+                <button
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="p-2 rounded hover:bg-gray-700"
+                  aria-label={t("menu.moreActions")}
+                  title={t("menu.moreActions")}
+                >
+                  <BsThreeDotsVertical className="text-gray-300" size={18} />
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 top-8 w-40 bg-gray-900 rounded shadow-md z-50">
+                    <button
+                      onClick={() => { setEditing(true); setMenuOpen(false); }}
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-blue-400 hover:bg-gray-800">
+                      <FiEdit3 size={16} /> {t("menu.edit")}
+                    </button>
 
-                      <button
-                        onClick={() => { setSelectedBotId(bot.id); setDeleteModalOpen(true); setMenuOpen(false); }}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-800">
-                        <FaRegTrashAlt size={16} /> {t("menu.deleteDev")}
-                      </button>
+                    <button
+                      onClick={() => { setSelectedBotId(bot.id); setDeleteModalOpen(true); setMenuOpen(false); }}
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-800">
+                      <FaRegTrashAlt size={16} /> {t("menu.deleteDev")}
+                    </button>
 
-                      <button
-                        onClick={() => {
-                          if (isBlocked) return;
-                          setIsExamineOpen(true);
-                          fetchAndStoreBotAnalysis(bot.id);
-                          setMenuOpen(false);
-                        }}
-                        disabled={isBlocked}
-                        aria-disabled={isBlocked}
-                        title={isBlocked ? t("examine.disabledTitle") : t("menu.examine")}
-                        className={[
-                          "flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-700",
-                          isBlocked ? "text-gray-500 cursor-not-allowed pointer-events-none" : "text-yellow-400"
-                        ].join(' ')}
-                      >
-                        <IoSearch size={16} /> {t("menu.examine")}
-                      </button>
-
-                      <button
-                        onClick={() => { setSelectedBotId(bot.id); setShotDownModalOpen(true); setMenuOpen(false); }}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-gray-700"
-                        title={t("menu.shutdownTitle")}>
-                        <FaBan size={16} /> {t("menu.shutdown")}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.api")}</span> {bot.api}</p>
-              <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.strategy")}</span> {bot.strategy}</p>
-              <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.period")}</span> {bot.period}</p>
-              <p className="mb-1 text-[14px]">
-                <span className="text-stone-500">{t("fields.days")}</span> {Array.isArray(bot.days) ? bot.days.join(', ') : t("daysUndefined")}
-              </p>
-              <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.hours")}</span> {bot.startTime} - {bot.endTime}</p>
-              <p className="mb-1 text-[14px]">
-                <span className="text-stone-500">{t("fields.status")}</span>{' '}
-                <span className={bot.isActive ? 'text-green-400' : 'text-[rgb(216,14,14)]'}>
-                  {bot.isActive ? t("status.active") : t("status.inactive")}
-                </span>
-              </p>
-            </div>
-
-            {/* ORTA: Kripto Paralar ve Depozito */}
-            <div className="flex flex-col px-6">
-              {isRented && (
-                <RentedCountdown rent_expires_at={bot?.rent_expires_at} />
-              )}
-
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-semibold bg-gradient-to-r from-violet-900 via-sky-600 to-purple-500 text-transparent bg-clip-text">
-                  {t("fields.cryptocurrencies")}
-                </h4>
-
-
-
-                {/* Coin listesi */}
-                {bot.cryptos?.length > 0 ? (
-                  bot.cryptos.map((coin) => (
-                    <div
-                      key={coin}
-                      className="w-full text-center text-[14px] bg-gradient-to-r from-[rgb(14,20,35)] to-neutral-800 border border-slate-700 px-2 py-1 rounded text-white"
+                    <button
+                      onClick={() => {
+                        if (isBlocked) return;
+                        setIsExamineOpen(true);
+                        fetchAndStoreBotAnalysis(bot.id);
+                        setMenuOpen(false);
+                      }}
+                      disabled={isBlocked}
+                      aria-disabled={isBlocked}
+                      title={isBlocked ? t("examine.disabledTitle") : t("menu.examine")}
+                      className={[
+                        "flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-700",
+                        isBlocked ? "text-gray-500 cursor-not-allowed pointer-events-none" : "text-yellow-400"
+                      ].join(' ')}
                     >
-                      {coin}
-                    </div>
-                  ))
-                ) : (
-                  <span className="text-[13px] text-gray-500">{t("coins.none")}</span>
+                      <IoSearch size={16} /> {t("menu.examine")}
+                    </button>
+
+                    <button
+                      onClick={() => { setSelectedBotId(bot.id); setShotDownModalOpen(true); setMenuOpen(false); }}
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-gray-700"
+                      title={t("menu.shutdownTitle")}>
+                      <FaBan size={16} /> {t("menu.shutdown")}
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
 
-            {/* SAĞ: Toggle + Spinner */}
-            <div className="flex flex-col justify-center items-center relative pl-4">
-              <div className="absolute flex items-center gap-3 mb-[148px] mr-[7px] z-10 pointer-events-none">
-                <SpinningWheel isActive={bot.isActive} />
-              </div>
-              <div
-                className={[
-                  "flex items-center gap-3 z-20 relative",
-                  finalToggleDisabled ? "opacity-50 cursor-not-allowed" : "",
-                  redDisableWrap
-                ].join(' ')}
-                title={finalDisableTitle}
-                aria-disabled={finalToggleDisabled}
-              >
-                <RunBotToggle
-                  checked={bot.isActive}
-                  onChange={
-                    !finalToggleDisabled
-                      ? () => {
-                        setToggleAction(bot.isActive ? 'stop' : 'start');
-                        setToggleConfirmOpen(true);
-                      }
-                      : undefined
-                  }
-                  disabled={finalToggleDisabled}
-                />
-              </div>
+            <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.api")}</span> {bot.api}</p>
+            <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.strategy")}</span> {bot.strategy}</p>
+            <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.period")}</span> {bot.period}</p>
+            <p className="mb-1 text-[14px]">
+              <span className="text-stone-500">{t("fields.days")}</span> {Array.isArray(bot.days) ? bot.days.join(', ') : t("daysUndefined")}
+            </p>
+            <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.hours")}</span> {bot.startTime} - {bot.endTime}</p>
+            <p className="mb-1 text-[14px]">
+              <span className="text-stone-500">{t("fields.status")}</span>{' '}
+              <span className={bot.isActive ? 'text-green-400' : 'text-[rgb(216,14,14)]'}>
+                {bot.isActive ? t("status.active") : t("status.inactive")}
+              </span>
+            </p>
+          </div>
+
+          {/* ORTA: Kripto Paralar */}
+          <div className="flex flex-col px-6">
+            {isRented && (
+              <RentedCountdown rent_expires_at={bot?.rent_expires_at} />
+            )}
+
+            <div className="flex flex-col gap-2 mb-2">
+              <h4 className="text-sm font-semibold bg-gradient-to-r from-violet-900 via-sky-600 to-purple-500 text-transparent bg-clip-text">
+                {t("fields.cryptocurrencies")}
+              </h4>
+
+              {/* Coin listesi */}
+              {bot.cryptos?.length > 0 ? (
+                bot.cryptos.map((coin) => (
+                  <div
+                    key={coin}
+                    className="w-full text-center text-[14px] bg-gradient-to-r from-[rgb(14,20,35)] to-neutral-800 border border-slate-700 px-2 py-1 rounded text-white"
+                  >
+                    {coin}
+                  </div>
+                ))
+              ) : (
+                <span className="text-[13px] text-gray-500">{t("coins.none")}</span>
+              )}
             </div>
           </div>
 
-          {editing && <BotModal mode="edit" bot={bot} onClose={() => setEditing(false)} />}
-          {isExamineOpen && <ExamineBot isOpen={isExamineOpen} onClose={() => setIsExamineOpen(false)} botId={bot.id} />}
-        </div>
-
-        <DeleteBotConfirmModal
-          isOpen={isDeleteModalOpen}
-          onClose={() => setDeleteModalOpen(false)}
-          onConfirm={() => { removeBot(selectedBotId); setSelectedBotId(null); }}
-        />
-        <ShutDownBotModal
-          isOpen={isShotDownModalOpen}
-          onClose={() => setShotDownModalOpen(false)}
-          onConfirm={() => { shutDownBot({ scope: "bot", id: selectedBotId }); setSelectedBotId(null); }}
-        />
-        <BotToggleConfirmModal
-          isOpen={isToggleConfirmOpen}
-          onClose={() => setToggleConfirmOpen(false)}
-          onConfirm={handleConfirmToggle}
-          actionType={toggleAction}
-        />
-
-
-      </>
-    );
-  }
-
-  /* ==== SAĞ KART ==== */
-  return (
-    <>
-      <div className="rounded-l-full px-4 py-4 border-2 border-cyan-900 relative bg-[hsl(227,82%,2%)] text-gray-200">
-        <div className="grid grid-cols-3 divide-x divide-gray-700">
-
-          {/* SOL: Toggle + Spinner */}
-          <div className="flex flex-col justify-center items-center relative pr-4">
-            <div className="absolute flex items-center gap-3 mb-[148px] ml-[7px] z-10 pointer-events-none scale-x-[-1]">
-              <SpinningWheel isActive={bot.isActive} />
-            </div>
+          {/* SAĞ: Toggle */}
+          <div className="flex flex-col justify-center items-center relative pl-4">
             <div
               className={[
                 "flex items-center gap-3 z-20 relative",
-                finalToggleDisabled ? "opacity-50 cursor-not-allowed" : "",
-                redDisableWrap,
-              ].join(" ")}
+                finalToggleDisabled ? "opacity-50 cursor-not-allowed" : ""
+              ].join(' ')}
               title={finalDisableTitle}
               aria-disabled={finalToggleDisabled}
             >
@@ -376,178 +294,21 @@ export const BotCard = ({ bot, column }) => {
               />
             </div>
           </div>
-
-          {/* ORTA: Kripto Paralar + Depozito */}
-          <div className="flex flex-col px-6">
-            {isRented && (
-              <RentedCountdown rent_expires_at={bot?.rent_expires_at} />
-            )}
-
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-semibold bg-gradient-to-r from-violet-900 via-sky-600 to-purple-500 text-transparent bg-clip-text">
-                {t("fields.cryptocurrencies")}
-              </h4>
-
-
-
-              {/* Coin listesi */}
-              {bot.cryptos?.length > 0 ? (
-                bot.cryptos.map((coin) => (
-                  <div
-                    key={coin}
-                    className="w-full text-center text-[14px] bg-gradient-to-r from-[rgb(14,20,35)] to-neutral-800 border border-slate-700 px-2 py-1 rounded text-white"
-                  >
-                    {coin}
-                  </div>
-                ))
-              ) : (
-                <span className="text-[13px] text-gray-500">
-                  {t("coins.none")}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* SAĞ: Bilgiler */}
-          <div className="pl-4">
-            <div className="flex items-center gap-2 border-b border-gray-600 pb-[10px] mb-2">
-              <h3 className="text-[18px] font-semibold text-white truncate flex-1">
-                {bot.name}
-              </h3>
-              <TypeBadge type={bot.type} />
-              <div className="relative shrink-0" ref={menuRef}>
-                <button
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  className="p-2 rounded hover:bg-gray-700"
-                  aria-label={t("menu.moreActions")}
-                  title={t("menu.moreActions")}
-                >
-                  <BsThreeDotsVertical className="text-gray-300" size={18} />
-                </button>
-                {menuOpen && (
-                  <div className="absolute right-0 top-8 w-40 bg-gray-900 rounded shadow-md z-50">
-                    <button
-                      onClick={() => {
-                        setEditing(true);
-                        setMenuOpen(false);
-                      }}
-                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-blue-400 hover:bg-gray-800"
-                    >
-                      <FiEdit3 size={16} /> {t("menu.edit")}
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setSelectedBotId(bot.id);
-                        setDeleteModalOpen(true);
-                        setMenuOpen(false);
-                      }}
-                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-800"
-                    >
-                      <FaRegTrashAlt size={16} /> {t("menu.deleteDev")}
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        if (isBlocked) return;
-                        setIsExamineOpen(true);
-                        fetchAndStoreBotAnalysis(bot.id);
-                        setMenuOpen(false);
-                      }}
-                      disabled={isBlocked}
-                      aria-disabled={isBlocked}
-                      title={
-                        isBlocked ? t("examine.disabledTitle") : t("menu.examine")
-                      }
-                      className={[
-                        "flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-700",
-                        isBlocked
-                          ? "text-gray-500 cursor-not-allowed pointer-events-none"
-                          : "text-yellow-400",
-                      ].join(" ")}
-                    >
-                      <IoSearch size={16} /> {t("menu.examine")}
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setSelectedBotId(bot.id);
-                        setShotDownModalOpen(true);
-                        setMenuOpen(false);
-                      }}
-                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-gray-700"
-                      title={t("menu.shutdownTitle")}
-                    >
-                      <FaBan size={16} /> {t("menu.shutdown")}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <p className="mb-1 text-[14px]">
-              <span className="text-stone-500">{t("fields.api")}</span> {bot.api}
-            </p>
-            <p className="mb-1 text-[14px] flex items-center gap-1 max-w-[180px] overflow-hidden whitespace-nowrap">
-              <span className="text-stone-500 shrink-0">
-                {t("fields.strategy")}
-              </span>
-              <span className="truncate">{bot.strategy}</span>
-            </p>
-            <p className="mb-1 text-[14px]">
-              <span className="text-stone-500">{t("fields.period")}</span>{" "}
-              {bot.period}
-            </p>
-            <p className="mb-1 text-[14px]">
-              <span className="text-stone-500">{t("fields.days")}</span>{" "}
-              {Array.isArray(bot.days)
-                ? bot.days.join(", ")
-                : t("daysUndefined")}
-            </p>
-            <p className="mb-1 text-[14px]">
-              <span className="text-stone-500">{t("fields.hours")}</span>{" "}
-              {bot.startTime} - {bot.endTime}
-            </p>
-            <p className="mb-1 text-[14px]">
-              <span className="text-stone-500">{t("fields.status")}</span>{" "}
-              <span
-                className={
-                  bot.isActive ? "text-green-400" : "text-[rgb(216,14,14)]"
-                }
-              >
-                {bot.isActive ? t("status.active") : t("status.inactive")}
-              </span>
-            </p>
-          </div>
         </div>
 
-        {editing && (
-          <BotModal mode="edit" bot={bot} onClose={() => setEditing(false)} />
-        )}
-        {isExamineOpen && (
-          <ExamineBot
-            isOpen={isExamineOpen}
-            onClose={() => setIsExamineOpen(false)}
-            botId={bot.id}
-          />
-        )}
+        {editing && <BotModal mode="edit" bot={bot} onClose={() => setEditing(false)} />}
+        {isExamineOpen && <ExamineBot isOpen={isExamineOpen} onClose={() => setIsExamineOpen(false)} botId={bot.id} />}
       </div>
 
       <DeleteBotConfirmModal
         isOpen={isDeleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        onConfirm={() => {
-          removeBot(selectedBotId);
-          setSelectedBotId(null);
-        }}
+        onConfirm={() => { removeBot(selectedBotId); setSelectedBotId(null); }}
       />
       <ShutDownBotModal
         isOpen={isShotDownModalOpen}
         onClose={() => setShotDownModalOpen(false)}
-        onConfirm={() => {
-          shutDownBot({ scope: "bot", id: selectedBotId });
-          setSelectedBotId(null);
-        }}
+        onConfirm={() => { shutDownBot({ scope: "bot", id: selectedBotId }); setSelectedBotId(null); }}
       />
       <BotToggleConfirmModal
         isOpen={isToggleConfirmOpen}
@@ -555,8 +316,6 @@ export const BotCard = ({ bot, column }) => {
         onConfirm={handleConfirmToggle}
         actionType={toggleAction}
       />
-
-
     </>
   );
 };

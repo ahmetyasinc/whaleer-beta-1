@@ -81,7 +81,7 @@ export default function ProfileHeader() {
               className={`
                 relative flex items-center gap-3 px-4 py-[8px] rounded-xl font-medium text-sm transition-all duration-300
                 border border-gray-800 bg-black/50 backdrop-blur-sm
-                hover:border-gray-600 hover:bg-white/5
+                hover:border-gray-600
                 ${isOpen ? "border-cyan-500/50 ring-1 ring-cyan-500/50 text-white" : "text-gray-300"}
               `}
             >
@@ -109,7 +109,7 @@ export default function ProfileHeader() {
                           w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-between
                           ${isActive
                             ? "bg-cyan-950/30 text-cyan-400 border border-cyan-500/20 shadow-[0_0_10px_-4px_rgba(34,211,238,0.3)]"
-                            : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                            : "text-gray-400 hover:text-gray-200 hover:bg-white/4 border border-transparent"
                           }
                         `}
                       >
@@ -124,7 +124,7 @@ export default function ProfileHeader() {
           </div>
 
           {/* Navigation Links */}
-          <nav className="flex gap-2 bg-black/40 p-1 rounded-2xl border border-white/5">
+          <nav className="flex gap-2 bg-black/40 p-1 rounded-2xl ring-1 ring-gray-800">
             {navItems.map((item) => {
               const active =
                 item.href === `/${locale}/profile`
@@ -136,19 +136,15 @@ export default function ProfileHeader() {
                   key={item.href}
                   href={item.href}
                   className={`
-                    relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ease-out
+                    relative px-4 py-[8px] rounded-xl text-sm font-medium transition-all duration-300 ease-out
                     flex items-center justify-center
                     ${active
                       ? "text-cyan-400 bg-cyan-950/30 shadow-[0_0_20px_-5px_rgba(34,211,238,0.3)] border border-cyan-500/30"
-                      : "text-gray-400 hover:text-gray-100 hover:bg-white/5 border border-transparent"
+                      : "text-gray-400 hover:text-gray-300 border border-gray-800 hover:border-gray-600"
                     }
                   `}
                 >
-                  {/* Active Indicator Dot */}
-                  {active && (
-                    <span className="absolute w-1 h-1 bg-cyan-400 rounded-full bottom-1.5 shadow-[0_0_5px_#22d3ee]"></span>
-                  )}
-                  <span className={active ? "mb-1" : ""}>{item.name}</span>
+                  <span>{item.name}</span>
                 </Link>
               );
             })}

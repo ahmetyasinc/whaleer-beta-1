@@ -38,7 +38,7 @@ const CandleLoader = () => {
   }, []);
 
   return (
-    <div className="flex items-center justify-center p-4 rounded-xl bg-black w-fit mx-auto">
+    <div className="flex items-center justify-center p-4 rounded-xl bg-transparent w-fit mx-auto">
       {/* Animasyon Keyframes ve Shadow Efekti Tanımı */}
       <style jsx>{`
         @keyframes candle-cycle {

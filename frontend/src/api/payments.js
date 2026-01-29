@@ -12,9 +12,6 @@ export async function createListingIntent(botId, chain = "solana", extra = {}) {
   };
 
   // Stellar için, XDR build edebilmek adına adresi de gönderiyoruz
-  if (chain === "stellar" && extra.stellarAddress) {
-    payload.stellar_address = extra.stellarAddress;
-  }
   console.log("createListingIntent payload:", payload);
   const { data } = await axios.post(
     `${API}/payments/intent/listing`,

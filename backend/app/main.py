@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends, APIRouter
+import os
 from app.routes.user import router as user_router
 from app.routes.auth import router as auth_router
 from app.routes.phantom.auth import router as phantom_auth_router
@@ -97,13 +98,7 @@ app.include_router(api_router)
 # CORS Middleware ekle
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://13.60.185.143:3000",
-        "https://whaleer.com",          
-        "https://www.whaleer.com"       
-    ],
+    allow_origins=os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

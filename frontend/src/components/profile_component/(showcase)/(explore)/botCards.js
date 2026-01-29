@@ -121,7 +121,7 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
 
   const { t } = useTranslation('showcaseBotCard');
 
-  // --- GÜNCELLEME: Hem Solana (walletLinked) hem Stellar (stellarAddress) durumunu çekiyoruz ---
+  // --- GÜNCELLEME: Sadece Solana (walletLinked) durumunu çekiyoruz ---
   const { walletLinked } = useSiwsStore();
 
   // Herhangi biri bağlıysa true döner
@@ -208,8 +208,8 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
               <button
                 onClick={() => onFollow?.(botData)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${isFollowed
-                    ? 'bg-green-600 text-white hover:bg-green-700'
-                    : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
                   }`}
                 type="button"
               >

@@ -20,8 +20,13 @@ import httpx
 websocket_router = APIRouter()
 
 # Veritabanı bağlantısı için global değişken
+# Veritabanı bağlantısı için global değişken
 db_pool = None  
-DATABASE_URL = "postgresql://postgres:admin@localhost:5432/balina_db"
+from app.database import DATABASE_URL
+# asyncpg create_pool "postgresql+asyncpg://" şemasını sevmez, "postgresql://" ister.
+if DATABASE_URL.startswith("postgresql+asyncpg://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
+
 
 # WebSocket ve Startup için kontrol değişkenleri
 startup_lock = threading.Lock()

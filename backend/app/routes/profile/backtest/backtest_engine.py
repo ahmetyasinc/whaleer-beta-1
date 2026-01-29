@@ -106,7 +106,7 @@ class BacktestEngine:
                     # Aynı barda ikisi de vurduysa conflict_rule uygula
                     if tp_hit and sl_hit:
                         if test:
-                            print(f"Timestamp= {row["timestamp"]}, Bar idx={i}: tranche TP ve SL aynı anda vurdu, conflict_rule={self.cfg.conflict_rule}")
+                            print(f"Timestamp= {row['timestamp']}, Bar idx={i}: tranche TP ve SL aynı anda vurdu, conflict_rule={self.cfg.conflict_rule}")
                         rule = self.cfg.conflict_rule
                         if rule == "take_first":
                             hit_type, exec_price = "TP", tp_val
@@ -117,7 +117,7 @@ class BacktestEngine:
                             hit_type, exec_price = "SL", sl_val
                     else:
                         if test:
-                            print(f"Timestamp= {row["timestamp"]}, Bar idx={i}: tranche {'TP' if tp_hit else 'SL'} vurdu.")
+                            print(f"Timestamp= {row['timestamp']}, Bar idx={i}: tranche {'TP' if tp_hit else 'SL'} vurdu.")
                             print(f"Tranche details: {t}")
                         hit_type = "TP" if tp_hit else "SL"
                         exec_price = tp_val if tp_hit else sl_val
@@ -158,7 +158,7 @@ class BacktestEngine:
                         pnl_percentage
                     ))
                     if test:
-                        print(f"Timestamp= {row["timestamp"]}, Bar idx={i}: tranche TP/SL -> type={hit_type}, qty={qty}, price={exec_price}, pnl={pnl}, comm={commission}")
+                        print(f"Timestamp= {row['timestamp']}, Bar idx={i}: tranche TP/SL -> type={hit_type}, qty={qty}, price={exec_price}, pnl={pnl}, comm={commission}")
 
                     # Sadece bu tranche kadar kapat (FIFO/LIFO politikasına göre)
                     pm.close_specific_tranche(t)
@@ -227,7 +227,7 @@ class BacktestEngine:
                         commission=commission_close, pnl_amount=pnl_close, pnl_pct=flip_pnl_pct,
                     ))
                     if test:
-                        print(f"Timestamp= {row["timestamp"]}, Bar idx={i}: FLIP kapatma -> qty={close_qty}, price={close_price}, pnl={pnl_close}, comm={commission_close}")
+                        print(f"Timestamp= {row['timestamp']}, Bar idx={i}: FLIP kapatma -> qty={close_qty}, price={close_price}, pnl={pnl_close}, comm={commission_close}")
                     pm.close_all()
                     cur_used = 0.0
                     cur_dir = 0
@@ -289,7 +289,7 @@ class BacktestEngine:
                 ))
                 if test:
                     print(f"po: {po}")
-                    print(f"Timestamp= {row["timestamp"]}, Bar idx={i}: {evt_type} -> side={po.side}, qty={qty}, price={fr.fill_price}, pnl={pnl}, comm={commission}")
+                    print(f"Timestamp= {row['timestamp']}, Bar idx={i}: {evt_type} -> side={po.side}, qty={qty}, price={fr.fill_price}, pnl={pnl}, comm={commission}")
                 cur_used = next_used
                 cur_dir = 0 if cur_used == 0 else (1 if ("buy" == po.side) else -1)
 

@@ -1,11 +1,12 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSessionStore } from "@/store/profile/sessionStore";
 import { useProfileStore } from "@/store/profile/profileStore";
 import { useTranslation } from "react-i18next";
-import { FaChevronDown } from "react-icons/fa";
+import { FaChevronDown, FaCheck } from "react-icons/fa";
 
 function useCurrentLocale(pathname) {
   // /en/profile/... -> "en"
@@ -23,6 +24,23 @@ export default function ProfileHeader() {
   const activeApiId = useProfileStore((s) => s.activeApiId);
   const setActiveApiById = useProfileStore((s) => s.setActiveApiById);
 
+  // Dropdown state
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const activeApiName = apis?.find(a => a.id === activeApiId)?.api_name || t("api.noApi");
+
   const navItems = [
     { name: t("nav.portfolio"), href: `/${locale}/profile` },
     { name: t("nav.bots"), href: `/${locale}/profile/mybots` },
@@ -31,7 +49,7 @@ export default function ProfileHeader() {
 
   return (
     <div className="relative w-full flex flex-col">
-      <div className="w-full h-[60px] bg-black border-b border-zinc-900 flex items-center justify-between px-6 shadow-lg">
+      <div className="w-full h-[60px] bg-black border-b border-zinc-900 flex items-center justify-between px-6 shadow-lg z-50">
         {/* Left Profile */}
         <div className="flex items-center gap-3 border-l border-gray-700 pl-4 ml-10">
           {!user ? (
@@ -55,59 +73,82 @@ export default function ProfileHeader() {
 
         {/* Right Menu + API Dropdown */}
         <div className="flex items-center gap-4">
-          <div className="relative">
-          <div className="relative w-fit">
-            <select
-              value={activeApiId || ""}
-              onChange={(e) => setActiveApiById(Number(e.target.value))}
-              className="
-                px-4 py-[8px] 
-                rounded-xl 
-                transition 
-                font-medium 
-                border border-gray-800 
-                hover:border-gray-600 
-                text-white
-                bg-black
-                focus:outline-none 
-                focus:ring-cyan-500
-                appearance-none     /* default oku kaldır */
-                pr-10               /* sağ boşluk ver */
-              "
+
+          {/* Custom API Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className={`
+                relative flex items-center gap-3 px-4 py-[8px] rounded-xl font-medium text-sm transition-all duration-300
+                border border-gray-800 bg-black/50 backdrop-blur-sm
+                hover:border-gray-600 hover:bg-white/5
+                ${isOpen ? "border-cyan-500/50 ring-1 ring-cyan-500/50 text-white" : "text-gray-300"}
+              `}
             >
-              {!apis?.length && <option value="">{t("api.noApi")}</option>}
-              {apis?.map((api) => (
-                <option key={api.id} value={api.id}>
-                  {api.api_name}
-                </option>
-              ))}
-            </select>
-            
-            {/* Kendi dropdown oku */}
-            <span className="pointer-events-none absolute right-3 text-sm top-1/2 -translate-y-1/2 text-white">
-              <FaChevronDown />          
-            </span>
-          </div>
+              <span className="truncate max-w-[120px]">{activeApiName}</span>
+              <FaChevronDown className={`text-xs text-gray-400 transition-transform duration-300 ${isOpen ? "rotate-180 text-cyan-400" : ""}`} />
+            </button>
+
+            {/* Dropdown Menu */}
+            {isOpen && (
+              <div className="absolute top-full right-0 mt-2 w-56 rounded-xl bg-[#0a0a0a] border border-gray-800 shadow-2xl shadow-black/80 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
+                <div className="p-1.5 flex flex-col gap-1">
+                  {!apis?.length && (
+                    <div className="px-3 py-2 text-sm text-gray-500">{t("api.noApi")}</div>
+                  )}
+                  {apis?.map((api) => {
+                    const isActive = api.id === activeApiId;
+                    return (
+                      <button
+                        key={api.id}
+                        onClick={() => {
+                          setActiveApiById(api.id);
+                          setIsOpen(false);
+                        }}
+                        className={`
+                          w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-between
+                          ${isActive
+                            ? "bg-cyan-950/30 text-cyan-400 border border-cyan-500/20 shadow-[0_0_10px_-4px_rgba(34,211,238,0.3)]"
+                            : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                          }
+                        `}
+                      >
+                        <span className="truncate">{api.api_name}</span>
+                        {isActive && <FaCheck className="text-xs" />}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
-          <nav className="flex gap-4">
+          {/* Navigation Links */}
+          <nav className="flex gap-2 bg-black/40 p-1 rounded-2xl border border-white/5">
             {navItems.map((item) => {
               const active =
                 item.href === `/${locale}/profile`
                   ? pathname === item.href
                   : pathname.startsWith(item.href);
-            
+
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`px-4 py-[6px] rounded-xl transition font-medium border border-gray-800 hover:border-gray-600 text-gray-200 ${
-                    active
-                      ? "bg-black shadow-xl shadow-[rgba(97,255,242,0.05)]"
-                      : "bg-black"
-                  }`}
+                  className={`
+                    relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ease-out
+                    flex items-center justify-center
+                    ${active
+                      ? "text-cyan-400 bg-cyan-950/30 shadow-[0_0_20px_-5px_rgba(34,211,238,0.3)] border border-cyan-500/30"
+                      : "text-gray-400 hover:text-gray-100 hover:bg-white/5 border border-transparent"
+                    }
+                  `}
                 >
-                  {item.name}
+                  {/* Active Indicator Dot */}
+                  {active && (
+                    <span className="absolute w-1 h-1 bg-cyan-400 rounded-full bottom-1.5 shadow-[0_0_5px_#22d3ee]"></span>
+                  )}
+                  <span className={active ? "mb-1" : ""}>{item.name}</span>
                 </Link>
               );
             })}

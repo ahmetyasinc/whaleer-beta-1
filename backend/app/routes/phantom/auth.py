@@ -24,7 +24,7 @@ class VerifyReq(BaseModel):
 
 class NonceReq(BaseModel):
     public_key: str
-    chain: str = "solana" # Varsayılan solana olsun, frontend stellar gönderebilir
+    chain: str = "solana"
 
 @router.post("/siws/nonce")
 async def siws_nonce(
@@ -38,7 +38,7 @@ async def siws_nonce(
 
     ins = insert(SiwsNonce).values(
         user_id=int(user_id),
-        chain=body.chain, # Burası artık dinamik (solana veya stellar)
+        chain="solana",
         address=body.public_key,
         nonce=nonce,
         status=0,
@@ -186,10 +186,6 @@ async def siws_refresh(
 
 import base64
 import hashlib
-from stellar_sdk import Keypair
-from stellar_sdk.exceptions import BadSignatureError
-
-SIGN_MESSAGE_PREFIX = "Stellar Signed Message:\n"
 
 def verify_freighter_message(public_key: str, signature_b64: str, message: str) -> bool:
     """

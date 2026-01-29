@@ -4,11 +4,8 @@ import React, { useEffect, useRef, useState, useMemo } from "react";
 import axios from "axios";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Connection, VersionedMessage, VersionedTransaction } from "@solana/web3.js";
-// --- STELLAR ---
-import { Horizon } from "@stellar/stellar-sdk";
-import { kit } from "@/lib/stellar-kit";
-import useStellarAuth from "@/hooks/useStellarAuth";
-// ---------------
+// --- STELLAR REMOVED ---
+// -----------------------
 import ModalFrame from "./ModalFrame";
 import ErrorBar from "./ui/ErrorBar";
 import InfoRow from "./ui/InfoRow";
@@ -20,14 +17,12 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useSiwsStore } from "@/store/auth/siwsStore";
 
-import { processStellarPurchase } from "@/services/stellar/stellarPurchaseService";
+
 
 const API = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
 
 // Ağ ayarları
 const SOLANA_RPC_URL = "https://api.mainnet-beta.solana.com";
-const STELLAR_HORIZON_URL = "https://horizon-testnet.stellar.org";
-const STELLAR_NETWORK_PASSPHRASE = "Test SDF Network ; September 2015";
 
 // Base64 → Uint8Array
 function b64ToUint8Array(b64) {
@@ -50,7 +45,7 @@ async function fetchSolUsdtPrice(signal) {
       const p = parseFloat(j.price);
       if (!Number.isNaN(p)) return p;
     }
-  } catch (_) {}
+  } catch (_) { }
   try {
     const r2 = await fetch(
       "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd",
@@ -61,36 +56,11 @@ async function fetchSolUsdtPrice(signal) {
       const p = parseFloat(j?.solana?.usd);
       if (!Number.isNaN(p)) return p;
     }
-  } catch (_) {}
+  } catch (_) { }
   return null;
 }
 
-// XLM/USDT
-async function fetchXlmUsdtPrice(signal) {
-  try {
-    const r1 = await fetch(
-      "https://api.binance.com/api/v3/ticker/price?symbol=XLMUSDT",
-      { credentials: "omit", cache: "no-store", signal }
-    );
-    if (r1.ok) {
-      const j = await r1.json();
-      const p = parseFloat(j.price);
-      if (!Number.isNaN(p)) return p;
-    }
-  } catch (_) {}
-  try {
-    const r2 = await fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=stellar&vs_currencies=usd",
-      { credentials: "omit", cache: "no-store", signal }
-    );
-    if (r2.ok) {
-      const j = await r2.json();
-      const p = parseFloat(j?.stellar?.usd);
-      if (!Number.isNaN(p)) return p;
-    }
-  } catch (_) {}
-  return null;
-}
+
 
 export default function RentModal({ botId, onClose, minDays = 1 }) {
   const { t } = useTranslation("rentModal");
@@ -110,42 +80,17 @@ export default function RentModal({ botId, onClose, minDays = 1 }) {
   // --- CÜZDANLAR ---
   const { walletLinked } = useSiwsStore(); // Solana (Phantom) SIWS bağlı mı?
   const { publicKey, sendTransaction, connected } = useWallet(); // Solana
-  const { stellarAddress } = useStellarAuth(); // Stellar (Freighter)
   // -----------------
 
   // ✅ başarı animasyonu için state
   const [showSuccessAnim, setShowSuccessAnim] = useState(false);
   const router = useRouter();
 
-  // İki ağ da bağlı mı?
-  const isBothConnected = Boolean(walletLinked && publicKey && stellarAddress);
-
-  // Manuel seçim (iki ağ da bağlıysa)
-  const [manualChainChoice, setManualChainChoice] = useState(null);
-
-  // Aktif chain
+  // Sadece Solana
   const activeChain = useMemo(() => {
-    // 1) İkisi bağlı + seçim yapılmış → onu kullan
-    if (isBothConnected && manualChainChoice) return manualChainChoice;
-
-    // 2) İkisi bağlı ama seçim yok → varsayılan Stellar
-    if (isBothConnected) return "stellar";
-
-    // 3) Tek cüzdan bağlıysa → onu kullan
-    if (stellarAddress) return "stellar";
     if (walletLinked && publicKey && connected) return "solana";
-
     return null;
-  }, [isBothConnected, manualChainChoice, stellarAddress, walletLinked, publicKey, connected]);
-
-  // Modal açıldığında seçim reset
-  useEffect(() => {
-    if (!isBothConnected) {
-      setManualChainChoice(null);
-    } else if (!manualChainChoice) {
-      setManualChainChoice("stellar");
-    }
-  }, [isBothConnected, manualChainChoice]);
+  }, [walletLinked, publicKey, connected]);
 
   // Checkout summary (rent)
   useEffect(() => {
@@ -179,13 +124,11 @@ export default function RentModal({ botId, onClose, minDays = 1 }) {
 
     const load = async () => {
       try {
-        const [solPrice, xlmPrice] = await Promise.all([
+        const [solPrice] = await Promise.all([
           fetchSolUsdtPrice(abortRef.current.signal),
-          fetchXlmUsdtPrice(abortRef.current.signal),
         ]);
         setSolUsdt(solPrice);
-        setXlmUsdt(xlmPrice);
-      } catch (_) {}
+      } catch (_) { }
     };
 
     load();
@@ -200,7 +143,6 @@ export default function RentModal({ botId, onClose, minDays = 1 }) {
   const dailyUsd = summary?.price ? Number(summary.price) : null;
   const totalUsd = dailyUsd && days ? dailyUsd * Math.max(minDays, days) : null;
   const totalSol = totalUsd && solUsdt ? totalUsd / solUsdt : null;
-  const totalXlm = totalUsd && xlmUsdt ? totalUsd / xlmUsdt : null;
 
   async function handleContinue() {
     setError(null);
@@ -217,11 +159,6 @@ export default function RentModal({ botId, onClose, minDays = 1 }) {
         setError(t("errors.connectWallet"));
         return;
       }
-    } else if (activeChain === "stellar") {
-      if (!stellarAddress) {
-        setError("Please connect your Stellar wallet (Freighter).");
-        return;
-      }
     }
 
     if (!summary?.revenue_wallet || !(dailyUsd > 0) || !(days >= minDays)) {
@@ -234,52 +171,33 @@ export default function RentModal({ botId, onClose, minDays = 1 }) {
     setSubmitting(true);
 
     try {
-      
-      if (activeChain === "stellar") {
-        // === YENİ STELLAR KİRALAMA AKIŞI ===
-        toast.update(toastId, { render: "Processing Stellar Rental...", isLoading: true });
 
-        if (!totalXlm) throw new Error("XLM Price not calculated");
+      const intent = await createPurchaseIntent({
+        bot_id: botId,
+        seller_wallet: summary.revenue_wallet,
+        price_usd,
+        chain: activeChain,
+      })
+      // SOLANA
+      const msgBytes = b64ToUint8Array(intent.message_b64);
+      const message = VersionedMessage.deserialize(msgBytes);
+      const tx = new VersionedTransaction(message);
 
-        await processStellarPurchase({
-          botId: botId,
-          sellerAddress: summary.revenue_wallet,
-          userAddress: stellarAddress,
-          purchaseType: "RENT",
-          rentDays: Number(days), // Seçilen gün sayısı
-          priceXlm: totalXlm      // Toplam XLM tutarı
-        });
+      toast.update(toastId, { render: t("toasts.signWallet"), isLoading: true });
+      const connection = new Connection(SOLANA_RPC_URL, "confirmed");
+      const signature = await sendTransaction(tx, connection, {
+        skipPreflight: false,
+      });
 
-        toast.update(toastId, { render: t("toasts.paymentConfirmed"), type: "success", isLoading: false, autoClose: 1500 });
-
-      } else {
-        const intent = await createPurchaseIntent({
-          bot_id: botId,
-          seller_wallet: summary.revenue_wallet,
-          price_usd,
-          chain: activeChain,
-        })
-        // SOLANA
-        const msgBytes = b64ToUint8Array(intent.message_b64);
-        const message = VersionedMessage.deserialize(msgBytes);
-        const tx = new VersionedTransaction(message);
-
-        toast.update(toastId, { render: t("toasts.signWallet"), isLoading: true });
-        const connection = new Connection(SOLANA_RPC_URL, "confirmed");
-        const signature = await sendTransaction(tx, connection, {
-          skipPreflight: false,
-        });
-
-        toast.update(toastId, { render: t("toasts.confirmOnchain"), isLoading: true });
-        confirmation = await confirmPayment(intent.intent_id, signature);
-        toast.update(toastId, { render: t("toasts.activatingRental"), isLoading: true });
-        await acquireBot(botId, {
-          action: "rent",
-          price_paid: price_usd,
-          tx: confirmation.tx_hash || confirmation.signature || "ok",
-          rent_duration_days: Number(days),
-        });
-      }
+      toast.update(toastId, { render: t("toasts.confirmOnchain"), isLoading: true });
+      const confirmation = await confirmPayment(intent.intent_id, signature);
+      toast.update(toastId, { render: t("toasts.activatingRental"), isLoading: true });
+      await acquireBot(botId, {
+        action: "rent",
+        price_paid: price_usd,
+        tx: confirmation.tx_hash || confirmation.signature || "ok",
+        rent_duration_days: Number(days),
+      });
 
       if (!confirmation?.ok) throw new Error(t("errors.notConfirmed"));
 
@@ -305,8 +223,8 @@ export default function RentModal({ botId, onClose, minDays = 1 }) {
       });
       setError(
         e?.response?.data?.detail ||
-          e?.message ||
-          t("errors.operationFailed")
+        e?.message ||
+        t("errors.operationFailed")
       );
     } finally {
       setSubmitting(false);
@@ -321,65 +239,15 @@ export default function RentModal({ botId, onClose, minDays = 1 }) {
         <div className="space-y-4 relative">
           {/* Ağ seçimi / rozet */}
           <div className="flex justify-center mb-2">
-            {isBothConnected ? (
-              <div className="flex items-center bg-zinc-950 p-1.5 rounded-xl border border-zinc-800 shadow-inner">
-                <button
-                  type="button"
-                  onClick={() => setManualChainChoice("stellar")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
-                    activeChain === "stellar"
-                      ? "bg-purple-900/50 text-purple-200 shadow-[0_0_10px_rgba(168,85,247,0.3)] border border-purple-500/50"
-                      : "text-gray-500 hover:text-gray-300 hover:bg-zinc-800"
-                  }`}
-                >
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      activeChain === "stellar"
-                        ? "bg-purple-400 animate-pulse"
-                        : "bg-gray-600"
-                    }`}
-                  />
-                  Stellar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setManualChainChoice("solana")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
-                    activeChain === "solana"
-                      ? "bg-green-900/50 text-green-200 shadow-[0_0_10px_rgba(34,197,94,0.3)] border border-green-500/50"
-                      : "text-gray-500 hover:text-gray-300 hover:bg-zinc-800"
-                  }`}
-                >
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      activeChain === "solana"
-                        ? "bg-green-400 animate-pulse"
-                        : "bg-gray-600"
-                    }`}
-                  />
-                  Solana
-                </button>
-              </div>
+            {activeChain === "solana" ? (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-900/30 text-green-200 border border-green-500/40">
+                <span className="w-2 h-2 rounded-full bg-green-400 mr-2" />
+                Solana Network
+              </span>
             ) : (
-              <>
-                {activeChain === "stellar" && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-900/30 text-purple-200 border border-purple-500/40">
-                    <span className="w-2 h-2 rounded-full bg-purple-400 mr-2" />
-                    Stellar Network
-                  </span>
-                )}
-                {activeChain === "solana" && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-900/30 text-green-200 border border-green-500/40">
-                    <span className="w-2 h-2 rounded-full bg-green-400 mr-2" />
-                    Solana Network
-                  </span>
-                )}
-                {!activeChain && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-900/30 text-red-200 border border-red-500/40">
-                    Wallet Not Connected
-                  </span>
-                )}
-              </>
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-900/30 text-red-200 border border-red-500/40">
+                Wallet Not Connected
+              </span>
             )}
           </div>
 
@@ -427,12 +295,7 @@ export default function RentModal({ botId, onClose, minDays = 1 }) {
             />
           )}
 
-          {activeChain === "stellar" && totalXlm !== null && (
-            <InfoRow
-              label={t("rows.totalXlm")}
-              value={`${totalXlm.toFixed(2)} XLM`}
-            />
-          )}
+
 
           <InfoRow
             label={t("rows.revenueWallet")}

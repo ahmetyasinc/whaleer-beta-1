@@ -13,21 +13,14 @@ import { createPurchaseIntent, confirmPayment } from "@/api/payments";
 import { acquireBot } from "@/api/bots";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { processStellarPurchase } from "@/services/stellar/stellarPurchaseService";
-
 // --- EKLENENLER ---
 import { useSiwsStore } from "@/store/auth/siwsStore";
-import useStellarAuth from "@/hooks/useStellarAuth";
-import { Horizon } from "@stellar/stellar-sdk";
-import { kit } from "@/lib/stellar-kit";
 // -------------------
 
 const API = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
 const RPC_URL = "https://api.mainnet-beta.solana.com";
 
-// Stellar ağ sabitleri (SellRentModal ile aynı tutuyoruz)
-const STELLAR_HORIZON_URL = "https://horizon-testnet.stellar.org";
-const STELLAR_NETWORK_PASSPHRASE = "Test SDF Network ; September 2015";
+
 
 // Base64 → Uint8Array
 function b64ToUint8Array(b64) {
@@ -47,7 +40,7 @@ async function fetchSolUsdtPrice(signal) {
     );
     const p1 = parseFloat(r1?.data?.price);
     if (!Number.isNaN(p1)) return p1;
-  } catch (_) {}
+  } catch (_) { }
   try {
     const r2 = await axios.get(
       "https://api.coingecko.com/api/v3/simple/price",
@@ -55,31 +48,11 @@ async function fetchSolUsdtPrice(signal) {
     );
     const p2 = parseFloat(r2?.data?.solana?.usd);
     if (!Number.isNaN(p2)) return p2;
-  } catch (_) {}
+  } catch (_) { }
   return null;
 }
 
-async function fetchXlmUsdtPrice(signal) {
-  try {
-    const r1 = await axios.get(
-      "https://api.binance.com/api/v3/ticker/price?symbol=XLMUSDT",
-      { withCredentials: false, signal }
-    );
-    const p1 = parseFloat(r1?.data?.price);
-    if (!Number.isNaN(p1)) return p1;
-  } catch (_) {}
 
-  try {
-    const r2 = await axios.get(
-      "https://api.coingecko.com/api/v3/simple/price",
-      { params: { ids: "stellar", vs_currencies: "usd" }, withCredentials: false, signal }
-    );
-    const p2 = parseFloat(r2?.data?.stellar?.usd);
-    if (!Number.isNaN(p2)) return p2;
-  } catch (_) {}
-
-  return null;
-}
 
 
 export default function BuyModal({ botId, onClose }) {
@@ -98,7 +71,6 @@ export default function BuyModal({ botId, onClose }) {
   // --- CÜZDANLAR ---
   const { publicKey, sendTransaction, connected } = useWallet();          // Solana
   const { walletLinked } = useSiwsStore();                                 // Phantom SIWS bağlı mı?
-  const { stellarAddress } = useStellarAuth();                             // Stellar (Freighter)
   // -----------------
 
   const router = useRouter();
@@ -106,33 +78,11 @@ export default function BuyModal({ botId, onClose }) {
   // ✅ animasyon için state
   const [showSuccessAnim, setShowSuccessAnim] = useState(false);
 
-  // --- AKTİF ZİNCİR SEÇİM MANTIĞI (SellRentModal ile uyumlu) ---
-  const isBothConnected = Boolean(walletLinked && publicKey && stellarAddress);
-
-  const [manualChainChoice, setManualChainChoice] = useState(null);
-
+  // Sadece Solana
   const activeChain = useMemo(() => {
-    // 1) İki cüzdan da bağlı ve kullanıcı seçim yaptıysa onu kullan
-    if (isBothConnected && manualChainChoice) return manualChainChoice;
-
-    // 2) İki cüzdan bağlı, seçim yoksa (ilk açılış) default Stellar
-    if (isBothConnected) return "stellar";
-
-    // 3) Tek cüzdan bağlıysa onu kullan
-    if (stellarAddress) return "stellar";
     if (walletLinked && publicKey && connected) return "solana";
-
     return null;
-  }, [isBothConnected, manualChainChoice, stellarAddress, walletLinked, publicKey, connected]);
-
-  // Modal her açıldığında seçim reset olsun
-  useEffect(() => {
-    if (!isBothConnected) {
-      setManualChainChoice(null);
-    } else if (!manualChainChoice) {
-      setManualChainChoice("stellar");
-    }
-  }, [isBothConnected, manualChainChoice]);
+  }, [walletLinked, publicKey, connected]);
   // -------------------------------------------------------------
 
   // Checkout summary (buy)
@@ -165,13 +115,11 @@ export default function BuyModal({ botId, onClose }) {
 
     const load = async () => {
       try {
-        const [solPrice, xlmPrice] = await Promise.all([
+        const [solPrice] = await Promise.all([
           fetchSolUsdtPrice(abortRef.current.signal),
-          fetchXlmUsdtPrice(abortRef.current.signal),
         ]);
         setSolUsdt(solPrice);
-        setXlmUsdt(xlmPrice);
-      } catch (_) {}
+      } catch (_) { }
     };
 
     load();
@@ -185,7 +133,6 @@ export default function BuyModal({ botId, onClose }) {
 
   const usd = summary?.price ? Number(summary.price) : null;
   const sol = usd && solUsdt ? usd / solUsdt : null;
-  const xlm = usd && xlmUsdt ? usd / xlmUsdt : null;
 
 
   async function handleContinue() {
@@ -203,11 +150,6 @@ export default function BuyModal({ botId, onClose }) {
         setError(t("errors.connectWallet"));
         return;
       }
-    } else if (activeChain === "stellar") {
-      if (!stellarAddress) {
-        setError("Please connect your Stellar wallet (Freighter).");
-        return;
-      }
     }
 
     if (!summary?.revenue_wallet || !(usd > 0)) {
@@ -218,73 +160,47 @@ export default function BuyModal({ botId, onClose }) {
     const toastId = toast.loading(t("toasts.preparing"));
     setSubmitting(true);
     try {
-        // --- BURAYI DEĞİŞTİRİYORUZ ---
+      // === MEVCUT SOLANA AKIŞI ===
+      const intent = await createPurchaseIntent({
+        bot_id: botId,
+        seller_wallet: summary.revenue_wallet,
+        price_usd: Number(usd),
+        chain: activeChain
+      });
 
-        if (activeChain === "stellar") {
-          // === YENİ STELLAR AKIŞI (SOROBAN) ===
-          toast.update(toastId, { render: "Processing Stellar/Soroban transaction...", isLoading: true });
-        
-          // xlm değişkeni component içinde zaten hesaplanmıştı (fiyat)
-          if (!xlm) throw new Error("XLM Price not calculated");
-        
-          await processStellarPurchase({
-            botId: botId,
-            sellerAddress: summary.revenue_wallet,
-            userAddress: stellarAddress,
-            purchaseType: "BUY",
-            rentDays: 0,
-            priceXlm: xlm // Hesaplanan anlık XLM tutarı
-          });
-        
-          // Backend onayı zaten servis içinde yapıldı
-          toast.update(toastId, { render: t("toasts.paymentConfirmed"), type: "success", isLoading: false, autoClose: 1500 });
-        
-        } else {
-          // === MEVCUT SOLANA AKIŞI (AYNEN KALIYOR) ===
-          const intent = await createPurchaseIntent({
-            bot_id: botId,
-            seller_wallet: summary.revenue_wallet,
-            price_usd: Number(usd),
-            chain: activeChain
-          });
-        
-          if (!intent?.intent_id) throw new Error(t("errors.invalidIntent"));
-          if (!intent.message_b64) throw new Error(t("errors.invalidIntent"));
-        
-          const msgBytes = b64ToUint8Array(intent.message_b64);
-          const message = VersionedMessage.deserialize(msgBytes);
-          const tx = new VersionedTransaction(message);
-        
-          toast.update(toastId, { render: t("toasts.signWallet"), isLoading: true });
-          const connection = new Connection(RPC_URL, "confirmed");
-          const signature = await sendTransaction(tx, connection, { skipPreflight: false });
-        
-          toast.update(toastId, { render: t("toasts.confirmOnchain"), isLoading: true });
-          const confirmation = await confirmPayment(intent.intent_id, signature);
+      if (!intent?.intent_id) throw new Error(t("errors.invalidIntent"));
+      if (!intent.message_b64) throw new Error(t("errors.invalidIntent"));
 
-          if (!confirmation?.ok) throw new Error(t("errors.notConfirmed"));
+      const msgBytes = b64ToUint8Array(intent.message_b64);
+      const message = VersionedMessage.deserialize(msgBytes);
+      const tx = new VersionedTransaction(message);
 
-          // Solana için acquireBot çağrısı burada kalabilir veya backend zaten hallediyor mu kontrol et.
-          // Senin yeni backend yapında confirm-order zaten botu veriyor. 
-          // Ancak Solana tarafı eski API kullanıyorsa bu satır kalmalı:
-          await acquireBot(botId, {
-             action: "buy",
-             price_paid: Number(usd),
-             tx: confirmation.tx_hash || confirmation.signature || "ok"
-          });
-        }
-      
-        // ------------------------------------
-      
-        // ✅ Başarılı → animasyonu aç (Ortak)
-        setShowSuccessAnim(true);
-        toast.dismiss(toastId);
-      
-        setTimeout(() => {
-          setShowSuccessAnim(false);
-          onClose?.();
-          router.push("/profile/bot");
-        }, 1200);
+      toast.update(toastId, { render: t("toasts.signWallet"), isLoading: true });
+      const connection = new Connection(RPC_URL, "confirmed");
+      const signature = await sendTransaction(tx, connection, { skipPreflight: false });
+
+      toast.update(toastId, { render: t("toasts.confirmOnchain"), isLoading: true });
+      const confirmation = await confirmPayment(intent.intent_id, signature);
+
+      if (!confirmation?.ok) throw new Error(t("errors.notConfirmed"));
+
+      await acquireBot(botId, {
+        action: "buy",
+        price_paid: Number(usd),
+        tx: confirmation.tx_hash || confirmation.signature || "ok"
+      });
+
+      // ------------------------------------
+
+      // ✅ Başarılı → animasyonu aç (Ortak)
+      setShowSuccessAnim(true);
+      toast.dismiss(toastId);
+
+      setTimeout(() => {
+        setShowSuccessAnim(false);
+        onClose?.();
+        router.push("/profile/bot");
+      }, 1200);
     } catch (e) {
       console.error(e);
       toast.update(toastId, {
@@ -305,63 +221,16 @@ export default function BuyModal({ botId, onClose }) {
       {!loading && error && <ErrorBar message={error} />}
       {!loading && !error && summary && (
         <div className="space-y-4 relative">
-          {/* --- AĞ SEÇİMİ / GÖSTERİMİ (SellRentModal tarzı) --- */}
           <div className="flex justify-center mb-2">
-            {isBothConnected ? (
-              <div className="flex items-center bg-zinc-950 p-1.5 rounded-xl border border-zinc-800 shadow-inner">
-                <button
-                  type="button"
-                  onClick={() => setManualChainChoice("stellar")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
-                    activeChain === "stellar"
-                      ? "bg-purple-900/50 text-purple-200 shadow-[0_0_10px_rgba(168,85,247,0.3)] border border-purple-500/50"
-                      : "text-gray-500 hover:text-gray-300 hover:bg-zinc-800"
-                  }`}
-                >
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      activeChain === "stellar" ? "bg-purple-400 animate-pulse" : "bg-gray-600"
-                    }`}
-                  />
-                  Stellar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setManualChainChoice("solana")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
-                    activeChain === "solana"
-                      ? "bg-green-900/50 text-green-200 shadow-[0_0_10px_rgba(34,197,94,0.3)] border border-green-500/50"
-                      : "text-gray-500 hover:text-gray-300 hover:bg-zinc-800"
-                  }`}
-                >
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      activeChain === "solana" ? "bg-green-400 animate-pulse" : "bg-gray-600"
-                    }`}
-                  />
-                  Solana
-                </button>
-              </div>
+            {activeChain === "solana" ? (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-900/30 text-green-200 border border-green-500/40">
+                <span className="w-2 h-2 rounded-full bg-green-400 mr-2" />
+                Solana Network
+              </span>
             ) : (
-              <>
-                {activeChain === "stellar" && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-900/30 text-purple-200 border border-purple-500/40">
-                    <span className="w-2 h-2 rounded-full bg-purple-400 mr-2" />
-                    Stellar Network
-                  </span>
-                )}
-                {activeChain === "solana" && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-900/30 text-green-200 border border-green-500/40">
-                    <span className="w-2 h-2 rounded-full bg-green-400 mr-2" />
-                    Solana Network
-                  </span>
-                )}
-                {!activeChain && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-900/30 text-red-200 border border-red-500/40">
-                    Wallet Not Connected
-                  </span>
-                )}
-              </>
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-900/30 text-red-200 border border-red-500/40">
+                Wallet Not Connected
+              </span>
             )}
           </div>
           {/* --------------------------------------------------- */}
@@ -369,10 +238,9 @@ export default function BuyModal({ botId, onClose }) {
           <InfoRow label={t("rows.action")} value={t("actionNames.buy")} />
           <InfoRow label={t("rows.botName")} value={summary.bot_name} />
           <InfoRow label={t("rows.sellerName")} value={summary.owner_username} />
-          <InfoRow label={t("rows.priceUsd")} value={usd !== null ? `${usd.toFixed(2)} $` : "-"}/>
-          {activeChain === "solana" && sol !== null && (<InfoRow label={t("rows.approxSol")} value={`${sol.toFixed(4)} SOL`}/>)}
-          {activeChain === "stellar" && xlm !== null && (<InfoRow label={t("rows.approxXlm")} value={`${xlm.toFixed(2)} XLM`} /> )}
-          <InfoRow  label={t("rows.revenueWallet")}  value={summary.revenue_wallet}  mono/>
+          <InfoRow label={t("rows.priceUsd")} value={usd !== null ? `${usd.toFixed(2)} $` : "-"} />
+          {activeChain === "solana" && sol !== null && (<InfoRow label={t("rows.approxSol")} value={`${sol.toFixed(4)} SOL`} />)}
+          <InfoRow label={t("rows.revenueWallet")} value={summary.revenue_wallet} mono />
 
           <div className="mt-6 flex gap-2">
             <button

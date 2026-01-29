@@ -1,8 +1,0 @@
-{
-    "170": [
-        {
-            "status": "error",
-            "error": "'NoneType' object is not iterable\nTraceback (most recent call last):\n  File \"C:\\dev\\whaleer\\backend\\trade_engine\\process\\run_bot.py\", line 143, in run_bot\n    both_zero_positions = all(v == 0 for v in last_positions)\n                                              ^^^^^^^^^^^^^^\nTypeError: 'NoneType' object is not iterable\n"
-        }
-    ]
-}

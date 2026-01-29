@@ -120,12 +120,12 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
   if (!botData) return null;
 
   const { t } = useTranslation('showcaseBotCard');
-  
+
   // --- GÜNCELLEME: Hem Solana (walletLinked) hem Stellar (stellarAddress) durumunu çekiyoruz ---
-  const { walletLinked, stellarAddress } = useSiwsStore();
+  const { walletLinked } = useSiwsStore();
 
   // Herhangi biri bağlıysa true döner
-  const isAnyWalletConnected = walletLinked || !!stellarAddress;
+  const isAnyWalletConnected = walletLinked;
 
   const [buyOpen, setBuyOpen] = useState(false);
   const [rentOpen, setRentOpen] = useState(false);
@@ -199,20 +199,18 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
 
             <div className="flex items-center gap-2 mt-3">
               <span
-                className={`px-3 py-2 rounded-full text-sm font-medium ${
-                  totalMarginNum > 0 ? 'bg-green-800 text-green-200' : 'bg-red-900 text-red-300'
-                }`}
+                className={`px-3 py-2 rounded-full text-sm font-medium ${totalMarginNum > 0 ? 'bg-green-800 text-green-200' : 'bg-red-900 text-red-300'
+                  }`}
               >
                 {totalMarginNum > 0 ? '+' : ''}{botData.totalMargin}%
               </span>
 
               <button
                 onClick={() => onFollow?.(botData)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${
-                  isFollowed
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${isFollowed
                     ? 'bg-green-600 text-white hover:bg-green-700'
                     : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
-                }`}
+                  }`}
                 type="button"
               >
                 {isFollowed ? (
@@ -256,31 +254,7 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
             />
           </div>
 
-          {/* Kardan Komisyon Uyarıları */}
-          <div className="w-full py-4 space-y-3">
 
-            {/* Satın Alma İçin Kardan Komisyon*/}
-            {botData.has_profit_commission_buy  && (
-              <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-900/50 border border-amber-500/70 text-amber-200 text-xs sm:text-sm">
-                <span className="font-extralight">
-                  ⚠ Bu botta SATIN alımlarda günlük 
-                  <span className="font-bold text-lg text-orange-600"> %{botData.profit_commission_rate_buy} </span> 
-                  oranında kârdan komisyon alınmaktadır.
-                </span>
-              </div>
-            )}
-            
-            {/* Kiralama İçin Kardan Komisyon*/}
-            { botData.has_profit_commission_rent && (
-              <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-900/50 border border-amber-500/70 text-amber-200 text-xs sm:text-sm">
-                <span className="font-extralight">
-                  ⚠ Bu botta KİRALAMA işlemlerinde günlük 
-                  <span className="font-bold text-lg text-orange-600"> %{botData.profit_commission_rate_rent} </span> 
-                  oranında kârdan komisyon alınmaktadır.
-                </span>
-              </div>
-            )}
-          </div>
 
 
 
@@ -368,8 +342,8 @@ const PurchaseButton = ({
   const buttonClass = !isAvailable
     ? "bg-gray-700 text-gray-400 cursor-not-allowed"
     : (isConnected
-        ? `${bg} ${hover} text-white`
-        : `${bg} text-white opacity-50 cursor-not-allowed`);
+      ? `${bg} ${hover} text-white`
+      : `${bg} text-white opacity-50 cursor-not-allowed`);
 
   const showPrice = isAvailable;
   const priceClass = isConnected ? "text-lg font-bold" : "text-lg font-bold opacity-60";

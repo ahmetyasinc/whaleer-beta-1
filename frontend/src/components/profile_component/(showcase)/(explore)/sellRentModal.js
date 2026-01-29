@@ -3,11 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Connection, VersionedMessage, VersionedTransaction } from "@solana/web3.js";
-// --- STELLAR ---
-import { Horizon, TransactionBuilder } from "@stellar/stellar-sdk";
-import { kit } from "@/lib/stellar-kit";
-import useStellarAuth from "@/hooks/useStellarAuth";
-// ---------------
 
 import { toast } from "react-toastify";
 import ChooseBotModal from "./chooseBotModal";
@@ -19,8 +14,6 @@ import { FiCheckCircle, FiCpu, FiPercent } from "react-icons/fi";
 
 // Ağ Ayarları
 const SOLANA_RPC_URL = "https://api.mainnet-beta.solana.com";
-const STELLAR_HORIZON_URL = "https://horizon-testnet.stellar.org";
-const STELLAR_NETWORK_PASSPHRASE = "Test SDF Network ; September 2015";
 
 const DEFAULT_PAYOUT_SOL = "AkmufZViBgt9mwuLPhFM8qyS1SjWNbMRBK8FySHajvUA";
 
@@ -46,29 +39,15 @@ export default function SellRentModal({ open, onClose }) {
   // --- CÜZDAN DURUMLARI ---
   const { walletLinked } = useSiwsStore(); 
   const { publicKey, sendTransaction } = useWallet(); 
-  const { stellarAddress } = useStellarAuth(); 
 
-  // İkisi birden bağlı mı kontrolü
-  const isBothConnected = Boolean(walletLinked && publicKey && stellarAddress);
-
-  // Manuel seçim için state
-  const [manualChainChoice, setManualChainChoice] = useState(null);
-
-  // Aktif Zinciri Belirle
+  // Sadece Solana aktif
   const activeChain = useMemo(() => {
-    if (isBothConnected && manualChainChoice) return manualChainChoice;
-    if (isBothConnected) return 'stellar';
-    if (stellarAddress) return 'stellar';
     if (walletLinked && publicKey) return 'solana';
     return null;
-  }, [stellarAddress, walletLinked, publicKey, isBothConnected, manualChainChoice]);
+  }, [walletLinked, publicKey]);
 
   // Modal her açıldığında seçim resetleme
-  useEffect(() => {
-    if (open && isBothConnected && !manualChainChoice) {
-      setManualChainChoice('stellar');
-    }
-  }, [open, isBothConnected]);
+
 
   // --- FORM STATE'LERİ ---
   const [sellChecked, setSellChecked] = useState(false);
@@ -139,9 +118,7 @@ export default function SellRentModal({ open, onClose }) {
       setRentProfitShareRate("");
 
       // Akıllı Cüzdan Doldurma
-      if (activeChain === 'stellar' && stellarAddress) {
-        setWalletAddress(stellarAddress);
-      } else if (activeChain === 'solana' && publicKey) {
+      if (activeChain === 'solana' && publicKey) {
         setWalletAddress(publicKey.toBase58());
       } else {
         setWalletAddress("");
@@ -149,7 +126,7 @@ export default function SellRentModal({ open, onClose }) {
 
       setDescription((selectedBot?.listing_description ?? selectedBot?.description ?? "").toString());
     }
-  }, [selectedBot, activeChain, stellarAddress, publicKey]);
+  }, [selectedBot, activeChain, publicKey]);
 
   const isNewListing = useMemo(() => {
     if (!selectedBot) return true;
@@ -169,11 +146,8 @@ export default function SellRentModal({ open, onClose }) {
 
   const walletValid = useMemo(() => {
     if (!walletAddress || walletAddress.length < 20) return false;
-    if (activeChain === 'stellar') {
-      return walletAddress.startsWith('G') && walletAddress.length === 56;
-    }
     return true; 
-  }, [walletAddress, activeChain]);
+  }, [walletAddress]);
 
   // Payload Hazırlama
   const { diffPayload, hasDiff } = useMemo(() => {
@@ -276,7 +250,7 @@ export default function SellRentModal({ open, onClose }) {
     setRentProfitShareRate("");
 
     setDescription("");
-    setManualChainChoice(null);
+    // setManualChainChoice(null); // Removed
     setChooseBotModalOpen(false);
     setSelectedBot(null);
     setLoading(false);
@@ -300,41 +274,14 @@ export default function SellRentModal({ open, onClose }) {
   
     try {
       const extra = {};
-      if (activeChain === "stellar" && stellarAddress) {
-        extra.stellarAddress = stellarAddress;
-      }
-    
+      
+      // SADECE SOLANA AKIŞI
       const intent = await createListingIntent(selectedBot.id, activeChain, extra);
     
       if (!intent?.intent_id) throw new Error(t("errors.invalidIntent"));
     
       let confirmationResult;
     
-      // STELLAR
-      if (activeChain === "stellar") {
-        const xdr = intent.xdr || intent.message_b64;
-        if (!xdr) throw new Error("Invalid Stellar XDR from backend");
-      
-        toast.update(toastId, { render: "Signing with Freighter...", isLoading: true });
-      
-        const { signedTxXdr } = await kit.signTransaction(xdr, {
-          networkPassphrase: STELLAR_NETWORK_PASSPHRASE,
-          address: stellarAddress,
-        });
-      
-        toast.update(toastId, { render: "Submitting to Stellar...", isLoading: true });
-      
-        const server = new Horizon.Server(STELLAR_HORIZON_URL);
-        const tx = TransactionBuilder.fromXDR(signedTxXdr, STELLAR_NETWORK_PASSPHRASE);
-      
-        const submitResult = await server.submitTransaction(tx);
-        const txHash = submitResult.hash;
-      
-        toast.update(toastId, { render: t("toasts.confirmOnchain"), isLoading: true });
-        confirmationResult = await confirmPayment(intent.intent_id, txHash, "stellar");
-      }
-      // SOLANA
-      else {
         const msgBytes = b64ToUint8Array(intent.message_b64);
         const message = VersionedMessage.deserialize(msgBytes);
         const tx = new VersionedTransaction(message);
@@ -345,7 +292,7 @@ export default function SellRentModal({ open, onClose }) {
       
         toast.update(toastId, { render: t("toasts.confirmOnchain"), isLoading: true });
         confirmationResult = await confirmPayment(intent.intent_id, signature, "solana");
-      }
+      
     
       if (!confirmationResult?.ok) throw new Error(t("errors.paymentNotConfirmed"));
     
@@ -358,9 +305,6 @@ export default function SellRentModal({ open, onClose }) {
     } catch (e) {
       console.error(e);
       let errMsg = e?.message || t("toasts.operationFailed");
-      if (e.response?.data?.extras?.result_codes) {
-        errMsg = `Stellar Error: ${JSON.stringify(e.response.data.extras.result_codes)}`;
-      }
       throw new Error(errMsg);
     } finally {
       setPayLoading(false);
@@ -430,38 +374,6 @@ export default function SellRentModal({ open, onClose }) {
 
           {/* Ağ Seçimi */}
           <div className="flex justify-center mb-6">
-            {isBothConnected ? (
-              <div className="flex items-center bg-zinc-950 p-1.5 rounded-xl border border-zinc-800 shadow-inner">
-                <button
-                  onClick={() => setManualChainChoice('stellar')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    activeChain === 'stellar'
-                      ? "bg-purple-900/50 text-purple-200 shadow-[0_0_10px_rgba(168,85,247,0.3)] border border-purple-500/50"
-                      : "text-gray-500 hover:text-gray-300 hover:bg-zinc-800"
-                  }`}
-                >
-                  <div className={`w-2 h-2 rounded-full ${activeChain === 'stellar' ? 'bg-purple-400 animate-pulse' : 'bg-gray-600'}`} />
-                  Stellar
-                </button>
-                <button
-                  onClick={() => setManualChainChoice('solana')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    activeChain === 'solana'
-                      ? "bg-green-900/50 text-green-200 shadow-[0_0_10px_rgba(34,197,94,0.3)] border border-green-500/50"
-                      : "text-gray-500 hover:text-gray-300 hover:bg-zinc-800"
-                  }`}
-                >
-                  <div className={`w-2 h-2 rounded-full ${activeChain === 'solana' ? 'bg-green-400 animate-pulse' : 'bg-gray-600'}`} />
-                  Solana
-                </button>
-              </div>
-            ) : (
-              <>
-                {activeChain === 'stellar' && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-900/30 text-purple-200 border border-purple-500/40">
-                    <span className="w-2 h-2 rounded-full bg-purple-400 mr-2"></span> Stellar Network
-                  </span>
-                )}
                 {activeChain === 'solana' && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-900/30 text-green-200 border border-green-500/40">
                     <span className="w-2 h-2 rounded-full bg-green-400 mr-2"></span> Solana Network
@@ -472,8 +384,6 @@ export default function SellRentModal({ open, onClose }) {
                     Wallet Not Connected
                   </span>
                 )}
-              </>
-            )}
           </div>
 
           {error && <div className="mb-4 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">{error}</div>}
@@ -580,30 +490,23 @@ export default function SellRentModal({ open, onClose }) {
           <div className="mb-6 mt-3">
             <label className="block text-base font-medium mb-2 text-gray-300">
               {t("labels.revenueWallet")}
-              {activeChain === 'stellar' && <span className="text-purple-400 text-xs ml-2 font-normal">(Auto-filled Stellar)</span>}
               {activeChain === 'solana' && <span className="text-green-400 text-xs ml-2 font-normal">(Auto-filled Solana)</span>}
               <span className="text-red-400 ml-1">*</span>
             </label>
             <div className="relative">
               <input
                 type="text"
-                placeholder={activeChain === 'stellar' ? "G... (Stellar Address)" : "Solana Address"}
-                className={`w-full p-2.5 pl-10 rounded-lg bg-zinc-800/50 border transition-all duration-200 text-sm focus:outline-none ${
-                   activeChain === 'stellar' 
-                   ? "border-gray-700 hover:border-purple-400 focus:border-purple-400 font-mono" 
-                   : "border-gray-700 hover:border-cyan-400 focus:border-cyan-400 font-mono"
-                }`}
+                placeholder="Solana Address"
+                className={`w-full p-2.5 pl-10 rounded-lg bg-zinc-800/50 border transition-all duration-200 text-sm focus:outline-none border-gray-700 hover:border-cyan-400 focus:border-cyan-400 font-mono`}
                 value={walletAddress}
                 onChange={(e) => setWalletAddress(e.target.value)}
               />
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                {activeChain === 'stellar' ? <FiCpu /> : <FiCheckCircle />}
+                <FiCheckCircle />
               </div>
             </div>
             <p className="text-xs text-gray-400 mt-1.5 ml-1">
-              {activeChain === 'stellar' 
-               ? "Listing fee will be paid via Freighter. Revenue will be sent to this Stellar address."
-               : "Listing fee will be paid via Phantom. Revenue will be sent to this Solana address."}
+               Listing fee will be paid via Phantom. Revenue will be sent to this Solana address.
             </p>
           </div>
 
@@ -614,15 +517,13 @@ export default function SellRentModal({ open, onClose }) {
           </div>
 
           {isNewListing && (
-            <div className={`mb-6 rounded-lg border p-3 text-sm transition-colors ${
-                activeChain === 'stellar' ? "border-purple-500/30 bg-purple-500/10" : "border-cyan-500/30 bg-cyan-500/10"
-            }`}>
-              <div className={`font-semibold ${activeChain === 'stellar' ? "text-purple-300" : "text-cyan-300"}`}>
+            <div className={`mb-6 rounded-lg border p-3 text-sm transition-colors border-cyan-500/30 bg-cyan-500/10`}>
+              <div className={`font-semibold text-cyan-300`}>
                   {t("banners.feeTitle")}
               </div>
               <div className="text-gray-300 text-xs mt-1">
                 You will pay <span className="font-bold text-white">1 USD</span> equivalent in 
-                {activeChain === 'stellar' ? " XLM/USDC (Stellar)" : " SOL/USDC (Solana)"}.
+                 SOL/USDC (Solana).
               </div>
               <label className="mt-3 flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={disclaimerAccepted} onChange={() => setDisclaimerAccepted(v => !v)} className="rounded bg-zinc-800 border-gray-600" />
@@ -633,16 +534,16 @@ export default function SellRentModal({ open, onClose }) {
 
           <div className="flex flex-col md:flex-row gap-3">
             <button
-              className={`flex-1 font-semibold py-3 rounded-xl text-base transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.01] active:scale-[0.99] ${
-                 activeChain === 'stellar'
-                 ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:shadow-purple-500/25"
-                 : "bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:shadow-cyan-500/25"
-              }`}
+              className="flex-1 font-semibold py-3 rounded-xl text-base transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.01] active:scale-[0.99] bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:shadow-cyan-500/25"
               disabled={!canSubmit}
               onClick={handleSubmit}
             >
               <span className="flex items-center justify-center gap-2">
-                {(loading || payLoading) ? <span className="animate-pulse">Processing...</span> : (isNewListing ? t("buttons.create") : t("buttons.update"))}
+                {(loading || payLoading) ? (
+                  <span className="animate-pulse">Processing...</span>
+                ) : (
+                  isNewListing ? t("buttons.create") : t("buttons.update")
+                )}
               </span>
             </button>
             {isCurrentlyListed && (

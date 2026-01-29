@@ -9,8 +9,6 @@ import SellRentModal from "@/components/profile_component/(showcase)/(explore)/s
 import useBotDropdownSearchStore from '@/store/showcase/botDropdownSearchStore';
 import { useSiwsStore } from "@/store/auth/siwsStore";
 import useSiwsAuth from "@/hooks/useSiwsAuth";
-// --- GÜNCELLEME: Stellar Hook importu ---
-import useStellarAuth from "@/hooks/useStellarAuth";
 import useBotDataStore from '@/store/showcase/botDataStore';
 import { useTranslation } from "react-i18next";
 
@@ -25,16 +23,15 @@ export default function Header() {
   const { wallet, walletLinked, signOutWallet, authLoading, hydrateSession } = useSiwsStore();
   const { connectWalletAndSignIn, isPhantomInstalled, readyState } = useSiwsAuth();
 
-  // --- GÜNCELLEME: Stellar Hook kullanımı ---
-  const { connectStellar, disconnectStellar, stellarAddress, isStellarLoading } = useStellarAuth();
+
 
   useEffect(() => { hydrateSession(); }, [hydrateSession]);
 
   // --- GÜNCELLEME: Herhangi bir cüzdan bağlı mı kontrolü ---
-  const isAnyWalletConnected = walletLinked || !!stellarAddress;
+  const isAnyWalletConnected = walletLinked;
 
   const isFeatured = pathname?.includes("/profile/showcase/featured");
-  
+
   const navItems = [
     //{ name: t("nav.explore"), href: "/profile/showcase" },
     //{ name: t("nav.featured"), href: "/profile/showcase/featured" }
@@ -45,22 +42,21 @@ export default function Header() {
   const initializeBots = useBotDataStore(s => s.initializeBots);
 
   const onChangeMode = async (mode) => {
-    if (isFeatured) return; 
+    if (isFeatured) return;
     setViewMode(mode);
-    await initializeBots(); 
+    await initializeBots();
   };
 
   return (
     <>
       <header className="fixed top-0 left-0 w-full bg-black text-gray-200 h-[60px] shadow-md z-50 px-6">
         <div className="relative h-full flex items-center justify-between">
-          
+
           {/* ... SOL TARAFTAKİ BUTONLAR ... */}
           <div className="absolute left-[45px] top-1/2 -translate-y-1/2 flex items-center gap-3 z-50">
             <button
-              className={`bg-black transition px-6 py-[6px] rounded-xl font-semibold shadow-lg text-gray-200 border border-stone-600 disabled:opacity-50 hover:border-stone-500 ${
-                isFeatured ? "cursor-not-allowed" : ""
-              }`}
+              className={`bg-black transition px-6 py-[6px] rounded-xl font-semibold shadow-lg text-gray-200 border border-stone-600 disabled:opacity-50 hover:border-stone-500 ${isFeatured ? "cursor-not-allowed" : ""
+                }`}
               onClick={() => {
                 if (isFeatured) return;
                 setModalOpen(true);
@@ -74,23 +70,20 @@ export default function Header() {
             </button>
 
             <div
-              className={`flex items-center rounded-xl border border-stone-600 hover:border-stone-500 overflow-hidden transition duration-100 ${
-                isFeatured ? "opacity-50 pointer-events-none select-none" : ""
-              }`}
+              className={`flex items-center rounded-xl border border-stone-600 hover:border-stone-500 overflow-hidden transition duration-100 ${isFeatured ? "opacity-50 pointer-events-none select-none" : ""
+                }`}
             >
               <button
-                className={`px-3 py-[8px] text-sm border-r border-stone-600 bg-black hover:bg-stone-900 ${
-                  viewMode === "all" ? "bg-stone-800" : ""
-                }`}
+                className={`px-3 py-[8px] text-sm border-r border-stone-600 bg-black hover:bg-stone-900 ${viewMode === "all" ? "bg-stone-800" : ""
+                  }`}
                 onClick={() => onChangeMode("all")}
                 type="button"
               >
                 {t("buttons.allListings")}
               </button>
               <button
-                className={`px-3 py-[8px] text-sm border-l border-stone-600 bg-black hover:bg-stone-900 ${
-                  viewMode === "mine" ? "bg-stone-800" : ""
-                }`}
+                className={`px-3 py-[8px] text-sm border-l border-stone-600 bg-black hover:bg-stone-900 ${viewMode === "mine" ? "bg-stone-800" : ""
+                  }`}
                 onClick={() => onChangeMode("mine")}
                 type="button"
               >
@@ -111,39 +104,15 @@ export default function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`px-4 py-[6px] rounded-xl transition font-medium border border-stone-600 bg-black hover:border-stone-500 text-white ${
-                    pathname === item.href ? " shadow-xl shadow-[rgba(97,255,242,0.16)]" : ""
-                  }`}
+                  className={`px-4 py-[6px] rounded-xl transition font-medium border border-stone-600 bg-black hover:border-stone-500 text-white ${pathname === item.href ? " shadow-xl shadow-[rgba(97,255,242,0.16)]" : ""
+                    }`}
                 >
                   {item.name}
                 </Link>
               ))}
             </nav>
 
-            {/* --- GÜNCELLEME: STELLAR CÜZDAN BAĞLANTISI --- */}
-            {!stellarAddress ? (
-              <button
-                onClick={connectStellar}
-                disabled={isStellarLoading}
-                className="px-4 py-[6px] rounded-xl border border-purple-900 bg-purple-900/20 text-purple-200 hover:border-purple-500 hover:bg-purple-900/40 transition-colors"
-              >
-                {isStellarLoading ? "..." : "Connect Stellar"}
-              </button>
-            ) : (
-              <div className="flex items-center gap-2 border border-purple-800 rounded-xl px-2 py-1 bg-purple-900/10">
-                <span className="text-sm text-purple-200 font-mono">
-                  {/* G...ABCD -> G...D şeklinde kısaltma */}
-                  {`${stellarAddress.slice(0, 4)}...${stellarAddress.slice(-4)}`}
-                </span>
-                <button
-                  onClick={disconnectStellar}
-                  className="text-xs text-purple-400 hover:text-white px-2"
-                  title="Disconnect Stellar"
-                >
-                  X
-                </button>
-              </div>
-            )}
+
 
             {/* --- MEVCUT SOLANA/PHANTOM BAĞLANTISI --- */}
             {!walletLinked ? (
@@ -168,7 +137,7 @@ export default function Header() {
             ) : (
               <div className="flex items-center gap-2">
                 <span className="text-sm opacity-80">
-                  {wallet?.address ? `${wallet.address.slice(0,4)}...${wallet.address.slice(-4)}` : t("labels.connected")}
+                  {wallet?.address ? `${wallet.address.slice(0, 4)}...${wallet.address.slice(-4)}` : t("labels.connected")}
                 </span>
                 <button
                   onClick={signOutWallet}

@@ -1,9 +1,5 @@
 'use client';
-import { depositToVault } from "@/services/contract/deposit";
-import { toast } from "react-toastify";
 
-import { getVault } from "@/services/contract/get_vault";
-import { withdrawFromVault } from "@/services/contract/withdraw";
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import useBotExamineStore from "@/store/bot/botExamineStore";
@@ -21,7 +17,7 @@ import DeleteBotConfirmModal from "./deleteBotConfirmModal";
 import ShutDownBotModal from "./shutDownBotModal";
 import BotToggleConfirmModal from "./botToggleConfirmModal";
 import { useTranslation } from "react-i18next";
-import useStellarAuth from "@/hooks/useStellarAuth";
+import { toast } from "react-toastify";
 
 /* ---- Type rozet stili ---- */
 function getTypeBadgeClasses(type) {
@@ -90,11 +86,9 @@ function RentedCountdown({ rent_expires_at }) {
 
 export const BotCard = ({ bot, column }) => {
   const { t } = useTranslation("botCard");
-  const { stellarAddress } = useStellarAuth();
   // === STORE & ACTIONLAR ===
   const removeBot = useBotStore((state) => state.removeBot);
   const shutDownBot = useBotStore((state) => state.shutDownBot);
-  const setBotDepositBalance = useBotStore((state) => state.setBotDepositBalance);
   const toggleBotActive = useBotStore((state) => state.toggleBotActive);
   const { fetchAndStoreBotAnalysis } = useBotExamineStore.getState();
 
@@ -110,45 +104,7 @@ export const BotCard = ({ bot, column }) => {
   const [isExamineOpen, setIsExamineOpen] = useState(false);
   const menuRef = useRef(null);
 
-  // Depozito modalları
-  const [isDepositModalOpen, setDepositModalOpen] = useState(false);
-  const [isWithdrawModalOpen, setWithdrawModalOpen] = useState(false);
 
-  // Depozito miktar state'leri
-  const [depositAmount, setDepositAmount] = useState("");
-  const [withdrawAmount, setWithdrawAmount] = useState("");
-
-  // Depozito işlemi loading
-  const [depositLoading, setDepositLoading] = useState(false);
-  const [withdrawLoading, setWithdrawLoading] = useState(false); // şimdilik kullanılmıyor
-
-  // === ON-CHAIN VAULT ===
-  const [vaultLoading, setVaultLoading] = useState(false);
-
-  const refreshVaultBalance = async () => {
-    if (!bot?.id || !bot?.user_id) return;
-    if (!stellarAddress) return;
-
-    try {
-      setVaultLoading(true);
-      console.log("Refreshing vault balance for bot:", bot.id, "and user:", bot.user_id, "with publicKey:", stellarAddress);
-      const vault = await getVault({
-        botId: bot.id,
-        userId: bot.user_id,
-        publicKey: stellarAddress,
-      });
-
-      // i128 -> number (7 decimal varsayıyoruz)
-      const rawBalance = Number(vault.balance_usdc);
-      console.log("getVault fetched balance:", rawBalance);
-      await useBotStore.getState().setBotDepositBalance(bot.id, rawBalance);
-    } catch (err) {
-      console.error("getVault / refreshVaultBalance error:", err);
-      toast.error("Depozito bakiyesi getirilemedi.");
-    } finally {
-      setVaultLoading(false);
-    }
-  };
 
   // === RENTED KONTROL & SAYAÇ ===
   const isRented = bot?.acquisition_type === "RENTED";
@@ -195,127 +151,24 @@ export const BotCard = ({ bot, column }) => {
       ? t("toggle.expired")
       : undefined;
 
-  // === DEPOZİTO & TOGGLE LOGIC ===
+  // === DEPOZİTO & TOGGLE LOGIC (Cleaned) ===
   const isProfitShareMode = !!bot?.profit_share_only;
-  const [showDeposit, setShowDeposit] = useState(false);
-
-  const balance = bot?.deposit_balance ?? 0;
+  // const [showDeposit, setShowDeposit] = useState(false); // Removed
 
   const canToggle = !isBlocked && !!bot.api;
-  const isDepositTooLow = isProfitShareMode && balance < 10;
-  const finalToggleDisabled = !canToggle || isDepositTooLow;
+  // const isDepositTooLow = isProfitShareMode && balance < 10; // Removed deposit check
+  const finalToggleDisabled = !canToggle;
 
-  const finalDisableTitle = isDepositTooLow
-    ? "Depozito bakiyesi 10$ altında olduğu için bot çalıştırılamaz."
-    : disableTitle;
+  const finalDisableTitle = disableTitle;
 
   const redDisableWrap = finalToggleDisabled
     ? "ring-1 ring-red-700 rounded-md p-1 bg-red-500/10"
     : "";
 
-  // === DEPOZITO PANELI AÇILDIĞINDA ON-CHAIN BAKIYE ÇEK ===
-  useEffect(() => {
-    if (!showDeposit) return;
-    if (!isProfitShareMode) return;
-    if (!stellarAddress) return;
 
-    refreshVaultBalance();
-  }, [isProfitShareMode, stellarAddress, bot.id, bot.user_id]); //showDeposit
 
   // === Depozito işlemleri ===
-  const handleDepositLoad = () => {
-    setDepositModalOpen(true);
-  };
 
-  const handleDepositWithdraw = () => {
-    setWithdrawModalOpen(true);
-  };
-
-  const handleConfirmWithdraw = async () => {
-    const amount = Number(withdrawAmount);
-    if (!amount || isNaN(amount) || amount <= 0) {
-      toast.error("Lütfen geçerli bir miktar girin.");
-      return;
-    }
-
-    if (!bot?.id || !bot?.user_id) {
-      toast.error("Bot bilgileri eksik (id / user_id).");
-      return;
-    }
-
-    if (!stellarAddress) {
-      toast.error("Lütfen önce Stellar cüzdanınızı bağlayın.");
-      return;
-    }
-
-    try {
-      setWithdrawLoading(true);
-
-      await withdrawFromVault({
-        botId: bot.id,
-        userId: bot.user_id,
-        amountUsdc: amount,
-        publicKey: stellarAddress,
-      });
-
-      setTimeout(() => {
-        refreshVaultBalance();   // DB + store güncellemesi
-      }, 5000);
-
-      //toast.success("Depozito çekme işlemi gönderildi.");
-
-      setWithdrawModalOpen(false);
-      setWithdrawAmount("");
-    } catch (err) {
-      console.error("withdrawFromVault error:", err);
-      toast.error(err?.message || "Depozito çekilirken hata oluştu.");
-    } finally {
-      setWithdrawLoading(false);
-    }
-  };
-
-  const handleConfirmDeposit = async () => {
-    const amount = Number(depositAmount);
-
-    if (!amount || isNaN(amount) || amount <= 0) {
-      toast.error("Lütfen geçerli bir miktar girin.");
-      return;
-    }
-
-    if (!bot?.id || !bot?.user_id) {
-      toast.error("Bot bilgileri eksik (id / user_id).");
-      return;
-    }
-
-    if (!stellarAddress) {
-      toast.error("Lütfen önce Stellar cüzdanınızı bağlayın.");
-      return;
-    }
-
-    try {
-      setDepositLoading(true);
-
-      await depositToVault({
-        botId: bot.id,
-        userId: bot.user_id,
-        amountUsdc: amount,
-        publicKey: stellarAddress,
-      });
-
-      setTimeout(() => {
-        refreshVaultBalance();
-      }, 5000);
-
-      //toast.success("Process initiated: Deposit to vault.");
-      setDepositModalOpen(false);
-      setDepositAmount("");
-    } catch (err) {
-      console.error("depositToVault error:", err);
-      toast.error(err?.message || "Depozito yatırılırken hata oluştu.");
-    } finally {
-      setDepositLoading(false);
-    }
-  };
 
   const handleConfirmToggle = () => {
     if (bot?.id) {
@@ -415,64 +268,7 @@ export const BotCard = ({ bot, column }) => {
                   {t("fields.cryptocurrencies")}
                 </h4>
 
-                {isProfitShareMode && (
-                  <button
-                    type="button"
-                    onClick={() => setShowDeposit((v) => !v)}
-                    className="text-[11px] px-3 py-1 rounded-full border border-cyan-700 bg-[rgb(5,20,35)] hover:bg-[rgb(10,32,52)] text-cyan-200 font-medium transition"
-                  >
-                    Depozito
-                  </button>
-                )}
-              </div>
 
-              <div className="h-44 overflow-y-auto scrollbar-hide space-y-2">
-                {showDeposit && (
-                  <div className="rounded-xl border border-cyan-900 bg-gradient-to-r from-[rgb(10,18,35)] via-[rgb(8,29,54)] to-[rgb(18,24,48)] px-3 py-3 shadow-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[11px] uppercase tracking-wide text-cyan-300">
-                        Deposit
-                      </span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-900/60 text-cyan-200 border border-cyan-700/60">
-                        Commission
-                      </span>
-                    </div>
-
-                    {/* Bakiye kutusu */}
-                    <div className="mb-3 rounded-lg border border-slate-700 bg-black/40 px-3 py-2 flex items-baseline justify-between">
-                      <span className="text-[11px] text-slate-400">
-                        Balanace
-                        {vaultLoading && (
-                          <span className="ml-2 text-[10px] text-cyan-400">
-                            (updating…)
-                          </span>
-                        )}
-                      </span>
-                      <span className="text-[18px] font-semibold text-white">
-                        ${balance.toFixed(2)}
-                      </span>
-                    </div>
-
-                    {/* Yükle / Çek butonları */}
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={handleDepositLoad}
-                        className="flex-1 text-[13px] font-medium px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 hover:from-violet-600 hover:to-sky-500 border border-cyan-400/40 shadow-md shadow-cyan-900/40 transition"
-                      >
-                        Load
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={handleDepositWithdraw}
-                        className="flex-1 text-[13px] font-medium px-3 py-1.5 rounded-lg bg-transparent border border-slate-600 hover:border-sky-500 text-slate-200 hover:text-white transition"
-                      >
-                        Withdraw
-                      </button>
-                    </div>
-                  </div>
-                )}
 
                 {/* Coin listesi */}
                 {bot.cryptos?.length > 0 ? (
@@ -541,103 +337,7 @@ export const BotCard = ({ bot, column }) => {
           actionType={toggleAction}
         />
 
-        {/* === DEPOSIT MODAL === */}
-        {isDepositModalOpen && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-full max-w-md shadow-xl animate-fadeIn">
-              <h2 className="text-xl font-semibold text-white mb-4">Deposit Load</h2>
 
-              <div className="mb-4">
-                <label className="text-sm text-zinc-400 block mb-1">
-                  Load Amount (USDC)
-                </label>
-
-                <input
-                  type="number"
-                  value={depositAmount}
-                  onChange={(e) => setDepositAmount(e.target.value)}
-                  placeholder="Örn: 100"
-                  className="w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
-                />
-              </div>
-
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setDepositModalOpen(false)}
-                  className="px-4 py-2 rounded-lg bg-zinc-700 text-white hover:bg-zinc-600 transition"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  onClick={handleConfirmDeposit}
-                  disabled={depositLoading}
-                  className={`px-4 py-2 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 border border-cyan-400/40 text-white shadow-md hover:from-violet-600 hover:to-sky-500 transition ${depositLoading ? "opacity-60 cursor-not-allowed" : ""
-                    }`}
-                >
-                  {depositLoading ? "Gönderiliyor..." : "Yükle"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* === WITHDRAW MODAL === */}
-        {isWithdrawModalOpen && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-full max-w-md shadow-xl animate-fadeIn">
-              <h2 className="text-xl font-semibold text-white mb-4">
-                Withdraw Deposit
-              </h2>
-
-              <div className="mb-4">
-                <label className="text-sm text-zinc-400 block mb-1">
-                  Withdraw Amount (Max: {balance})
-                </label>
-
-                <input
-                  type="number"
-                  value={withdrawAmount}
-                  onChange={(e) => {
-                    let val = e.target.value;
-                    if (Number(val) > Number(balance)) {
-                      val = balance.toString();
-                    }
-                    setWithdrawAmount(val);
-                  }}
-                  placeholder="Örn: 50"
-                  className={`w-full rounded-lg px-3 py-2 bg-zinc-800 border 
-                    ${Number(withdrawAmount) > balance ? "border-red-500" : "border-zinc-700"}
-                    text-white focus:outline-none focus:border-cyan-500`}
-                />
-
-                {Number(withdrawAmount) > balance && (
-                  <p className="text-sm text-red-400 mt-1">
-                    Withdraw amount cannot exceed available balance.
-                  </p>
-                )}
-              </div>
-
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setWithdrawModalOpen(false)}
-                  className="px-4 py-2 rounded-lg bg-zinc-700 text-white hover:bg-zinc-600 transition"
-                >
-                  İptal
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleConfirmWithdraw}
-                  disabled={!withdrawAmount || Number(withdrawAmount) <= 0 || withdrawLoading}
-                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 border border-cyan-400/40 text-white shadow-md hover:from-violet-600 hover:to-sky-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {withdrawLoading ? "Sending..." : "Withdraw"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </>
     );
   }
@@ -688,64 +388,7 @@ export const BotCard = ({ bot, column }) => {
                 {t("fields.cryptocurrencies")}
               </h4>
 
-              {isProfitShareMode && (
-                <button
-                  type="button"
-                  onClick={() => setShowDeposit((v) => !v)}
-                  className="text-[11px] px-3 py-1 rounded-full border border-cyan-700 bg-[rgb(5,20,35)] hover:bg-[rgb(10,32,52)] text-cyan-200 font-medium transition"
-                >
-                  Deposit
-                </button>
-              )}
-            </div>
 
-            <div className="h-44 overflow-y-auto mr-2 scrollbar-hide space-y-2">
-              {showDeposit && (
-                <div className="rounded-xl border border-cyan-900 bg-gradient-to-r from-[rgb(10,18,35)] via-[rgb(8,29,54)] to-[rgb(18,24,48)] px-3 py-3 shadow-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[11px] uppercase tracking-wide text-cyan-300">
-                      Deposit
-                    </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-900/60 text-cyan-200 border border-cyan-700/60">
-                      Commission
-                    </span>
-                  </div>
-
-                  {/* Bakiye kutusu */}
-                  <div className="mb-3 rounded-lg border border-slate-700 bg-black/40 px-3 py-2 flex items-baseline justify-between">
-                    <span className="text-[11px] text-slate-400">
-                      Balance
-                      {vaultLoading && (
-                        <span className="ml-2 text-[10px] text-cyan-400">
-                          (updating…)
-                        </span>
-                      )}
-                    </span>
-                    <span className="text-[18px] font-semibold text-white">
-                      ${balance.toFixed(2)}
-                    </span>
-                  </div>
-
-                  {/* Yükle / Çek butonları */}
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={handleDepositLoad}
-                      className="flex-1 text-[13px] font-medium px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 hover:from-violet-600 hover:to-sky-500 border border-cyan-400/40 shadow-md shadow-cyan-900/40 transition"
-                    >
-                      Load
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleDepositWithdraw}
-                      className="flex-1 text-[13px] font-medium px-3 py-1.5 rounded-lg bg-transparent border border-slate-600 hover:border-sky-500 text-slate-200 hover:text-white transition"
-                    >
-                      Withdraw
-                    </button>
-                  </div>
-                </div>
-              )}
 
               {/* Coin listesi */}
               {bot.cryptos?.length > 0 ? (
@@ -913,104 +556,7 @@ export const BotCard = ({ bot, column }) => {
         actionType={toggleAction}
       />
 
-      {/* Depozito modalları (sağ kart için de aynı state kullanılıyor) */}
-      {isDepositModalOpen && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-full max-w-md shadow-xl animate-fadeIn">
-            <h2 className="text-xl font-semibold text-white mb-4">
-              Load Deposit
-            </h2>
 
-            <div className="mb-4">
-              <label className="text-sm text-zinc-400 block mb-1">
-                The Load Amount (USDC)
-              </label>
-
-              <input
-                type="number"
-                value={depositAmount}
-                onChange={(e) => setDepositAmount(e.target.value)}
-                placeholder="Örn: 100"
-                className="w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
-              />
-            </div>
-
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setDepositModalOpen(false)}
-                className="px-4 py-2 rounded-lg bg-zinc-700 text-white hover:bg-zinc-600 transition"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleConfirmDeposit}
-                disabled={depositLoading}
-                className={`px-4 py-2 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 border border-cyan-400/40 text-white shadow-md hover:from-violet-600 hover:to-sky-500 transition ${depositLoading ? "opacity-60 cursor-not-allowed" : ""
-                  }`}
-              >
-                {depositLoading ? "Gönderiliyor..." : "Yükle"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isWithdrawModalOpen && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-full max-w-md shadow-xl animate-fadeIn">
-            <h2 className="text-xl font-semibold text-white mb-4">
-              Withdraw Deposit
-            </h2>
-
-            <div className="mb-4">
-              <label className="text-sm text-zinc-400 block mb-1">
-                Withdraw Amount (Max: {balance})
-              </label>
-
-              <input
-                type="number"
-                value={withdrawAmount}
-                onChange={(e) => {
-                  let val = e.target.value;
-                  if (Number(val) > Number(balance)) {
-                    val = balance.toString();
-                  }
-                  setWithdrawAmount(val);
-                }}
-                placeholder="Örn: 50"
-                className={`w-full rounded-lg px-3 py-2 bg-zinc-800 border ${Number(withdrawAmount) > balance
-                  ? "border-red-500"
-                  : "border-zinc-700"
-                  } text-white focus:outline-none focus:border-cyan-500`}
-              />
-
-              {Number(withdrawAmount) > balance && (
-                <p className="text-sm text-red-400 mt-1">
-                  Withdraw amount cannot exceed available balance.
-                </p>
-              )}
-            </div>
-
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setWithdrawModalOpen(false)}
-                className="px-4 py-2 rounded-lg bg-zinc-700 text-white hover:bg-zinc-600 transition"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={() => { handleConfirmWithdraw }}
-                disabled={!withdrawAmount || Number(withdrawAmount) <= 0 || withdrawLoading}
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-700 to-sky-600 border border-cyan-400/40 text-white shadow-md hover:from-violet-600 hover:to-sky-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {withdrawLoading ? "Sending..." : "Withdraw"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };

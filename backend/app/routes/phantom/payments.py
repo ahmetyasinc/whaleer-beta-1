@@ -12,7 +12,7 @@ import json, secrets, math, base64
 from app.database import get_db
 from app.core.auth import verify_token
 from app.models.payments import PaymentIntent
-from app.services.pricing import get_usd_per_sol, get_usd_per_xlm
+from app.services.pricing import get_usd_per_sol
 
 # ---- Solana / Solders ----
 from solders.pubkey import Pubkey
@@ -21,14 +21,10 @@ from solders.message import MessageV0
 from solana.rpc.async_api import AsyncClient
 from solders.signature import Signature as SolSignature
 
-from stellar_sdk import Server as StellarServer, TransactionBuilder, Network, Asset
 from app.core.cookies import extract_siws_payload_or_401
+from app.routes.profile.telegram.telegram_service import notify_user_by_telegram
 
-from app.routes.profile.telegram.telegram_service import notify_user_by_telegram  
 
-STELLAR_PLATFORM_WALLET = "GBLV5VOXKN5SYHOPC7FSOOTNH3YVW33LQZAKZYRFR7EZII7VLST2DTCB"
-STELLAR_HORIZON_URL = "https://horizon-testnet.stellar.org"
-STELLAR_NETWORK_PASSPHRASE = "Test SDF Network ; September 2015"
 
 PLATFORM_WALLET = Pubkey.from_string("AkmufZViBgt9mwuLPhFM8qyS1SjWNbMRBK8FySHajvUA")
 RPC_URL = "https://api.mainnet-beta.solana.com"
@@ -40,8 +36,7 @@ PLATFORM_FEE_BPS = 1000
 # ---------- Schemas ----------
 class CreateListingIntentReq(BaseModel):
     bot_id: int
-    chain: str = "solana"          # "solana" | "stellar"
-    stellar_address: Optional[str] = None  # Stellar için kaynak adres
+    chain: str = "solana"
 
 class CreatePurchaseIntentReq(BaseModel):
     bot_id: int
@@ -54,20 +49,13 @@ class CreateIntentResp(BaseModel):
     reference: str
     chain: str
 
-    # Solana alanları (opsiyonel)
     amount_sol: Optional[float] = None
     amount_lamports: Optional[int] = None
-
-    # Stellar alanları (opsiyonel – şimdilik 1 XLM gibi basit tutabiliriz)
-    amount_xlm: Optional[str] = None
 
     expires_at: str
 
     # Solana: unsigned v0 Message
     message_b64: Optional[str] = None
-
-    # Stellar: unsigned transaction XDR
-    xdr: Optional[str] = None
 
 
 class ConfirmReq(BaseModel):
@@ -173,94 +161,6 @@ async def create_listing_intent(
             "amount_lamports": lamports,
             "expires_at": expires_at.isoformat(),
             "message_b64": message_b64,
-            "xdr": None,
-            "amount_xlm": None,
-        }
-
-    # ---------- STELLAR ----------
-    if chain == "stellar":
-        if not body.stellar_address:
-            raise HTTPException(400, "stellar_address is required for Stellar listing intent")
-
-        server = StellarServer(STELLAR_HORIZON_URL)
-
-        # 🔹 1 USD'yi XLM'e çevir
-        # get_usd_per_xlm = 1 XLM kaç USD eder?
-        usd_per_xlm = get_usd_per_xlm()  # örn: 0.12 USD / XLM
-        if not usd_per_xlm or usd_per_xlm <= 0:
-            raise HTTPException(500, "Failed to get XLM price")
-
-        # 1 USD'nin XLM karşılığı
-        # amount_usd = 1.00 (dosyanın üst kısmında tanımlı)
-        xlm_raw = amount_usd / usd_per_xlm  # örn: 1 / 0.12 ≈ 8.3333 XLM
-
-        # İstersen Solana tarafındaki gibi küçük bir buffer ekleyebilirsin (%1)
-        buffer_bps = 100  # 100 = %1
-        xlm_raw *= (1 + buffer_bps / 10_000)
-
-        # Stellar SDK string beklediği için normal string'e formatlıyoruz
-        amount_xlm = f"{xlm_raw:.7f}".rstrip("0").rstrip(".")  # "8.3333" gibi
-
-        try:
-            source_account = server.load_account(body.stellar_address)
-            base_fee = server.fetch_base_fee()
-
-            tx = (
-                TransactionBuilder(
-                    source_account=source_account,
-                    network_passphrase=STELLAR_NETWORK_PASSPHRASE,
-                    base_fee=base_fee,
-                )
-                .add_text_memo(reference)
-                .append_payment_op(
-                    destination=STELLAR_PLATFORM_WALLET,
-                    amount=amount_xlm,
-                    asset=Asset.native(),  # XLM
-                )
-                .set_timeout(300)
-                .build()
-            )
-
-            xdr = tx.to_xdr()
-        except Exception as e:
-            raise HTTPException(400, f"Failed to build Stellar transaction: {e}")
-
-        # PaymentIntent kaydı – Solana alanlarını 0 geçiyoruz
-        recipients = [
-            {"to": STELLAR_PLATFORM_WALLET, "amount_xlm": amount_xlm, "label": "platform"}
-        ]
-
-        pi = PaymentIntent(
-            user_id=int(user_id),
-            purpose="listing_fee",
-            bot_id=body.bot_id,
-            seller_wallet=None,
-            platform_fee_usd=0,
-            buyer_pays_usd=amount_usd,
-            quote_sol=0,
-            quote_lamports=0,
-            quote_rate_usd_per_sol=0,
-            recipient_json=json.dumps(recipients),
-            reference=reference,
-            status=0,
-            expires_at=expires_at,
-            **extra_fields,
-        )
-        db.add(pi)
-        await db.flush()
-        intent_id = int(pi.id)
-        await db.commit()
-        print("Here 4")
-        return {
-            "intent_id": intent_id,
-            "reference": reference,
-            "chain": "stellar",
-            "amount_sol": None,
-            "amount_lamports": None,
-            "amount_xlm": amount_xlm,
-            "expires_at": expires_at.isoformat(),
-            "message_b64": None,
-            "xdr": xdr,
         }
 
     # Desteklenmeyen chain
@@ -368,40 +268,8 @@ async def confirm_payment(
         await db.commit()
         raise HTTPException(400, "Intent expired")
 
-    # ---------- STELLAR DOĞRULAMA ----------
-    if chain == "stellar":
-        server = StellarServer(STELLAR_HORIZON_URL)
-        try:
-            tx = server.transactions().transaction(body.signature).call()
-        except Exception:
-            await db.execute(
-                update(PaymentIntent)
-                .where(PaymentIntent.id == body.intent_id)
-                .values(status=-1, tx_sig=body.signature)
-            )
-            await db.commit()
-            raise HTTPException(400, "Stellar transaction not found")
-
-        if not tx.get("successful"):
-            await db.execute(
-                update(PaymentIntent)
-                .where(PaymentIntent.id == body.intent_id)
-                .values(status=-1, tx_sig=body.signature)
-            )
-            await db.commit()
-            raise HTTPException(400, "Stellar transaction not successful")
-
-        # (İstersen burada operations ile gelen XLM miktarını da kontrol edebilirsin.)
-
-        await db.execute(
-            update(PaymentIntent)
-            .where(PaymentIntent.id == body.intent_id)
-            .values(status=1, tx_sig=body.signature)
-        )
-        await db.commit()
-
     # ---------- SOLANA DOĞRULAMA ----------
-    else:
+    if chain == "solana":
         async with AsyncClient(RPC_URL) as client:
             sig = SolSignature.from_string(body.signature)
 
@@ -471,6 +339,8 @@ async def confirm_payment(
             .values(status=1, tx_sig=body.signature)
         )
         await db.commit()
+    else:
+        raise HTTPException(400, "Unsupported chain for confirmation")
 
     # ====== TELEGRAM BİLDİRİMİ (ortak) ======
     try:

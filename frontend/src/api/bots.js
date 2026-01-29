@@ -37,7 +37,7 @@ export const getBots = async () => {
         for_rent: item.for_rent,
         sell_price: item.sell_price,
         rent_price: item.rent_price,
-        revenue_wallet : item.revenue_wallet,
+        revenue_wallet: item.revenue_wallet,
         acquisition_type: item.acquisition_type,
         rent_expires_at: item.rent_expires_at,
         enterOnCurrentSignal: item.enter_on_start,
@@ -103,18 +103,7 @@ export const createBot = async (botData) => {
   }
 };
 
-export const updateBotDepositBalance = async (id, deposit_balance) => {
-  try {
-    const res = await axios.patch(
-      `${process.env.NEXT_PUBLIC_API_URL}/bots/${id}/deposit-balance`,
-      { deposit_balance }
-    );
-    return res.data; // { id, deposit_balance }
-  } catch (error) {
-    console.error("Deposit balance güncellenirken hata:", error);
-    throw error;
-  }
-};
+
 
 export const updateBot = async (id, botData) => {
   try {

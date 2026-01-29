@@ -7,10 +7,9 @@ services:
       dockerfile: Dockerfile
     container_name: whaleer-backend
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - ./backend/uploads:/app/uploads  # Persistence for uploads
-    env_file:
     env_file:
       - ./backend/.env.${APP_ENV:-local}
     environment:
@@ -24,12 +23,14 @@ services:
       dockerfile: Dockerfile
       args:
         APP_ENV: ${APP_ENV:-local}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
+        NEXT_PUBLIC_APP_ORIGIN: ${NEXT_PUBLIC_APP_ORIGIN:-http://localhost:3000}
     container_name: whaleer-frontend
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     env_file:
-      - ./frontend/.env.local
+      - ./frontend/.env.${APP_ENV:-local}
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
     depends_on:
       - backend

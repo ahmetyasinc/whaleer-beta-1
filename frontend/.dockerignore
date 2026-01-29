@@ -2,9 +2,7 @@ node_modules
 .next
 .git
 .gitignore
-.env
-.env.local
-.env.production
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

@@ -9,9 +9,12 @@ import json
 from backend.trade_engine import config
 
 # ListenKey servisi import'ları
+import traceback
 try:
     from .listenkey_service import refresh_or_create_all, BINANCE_CONFIG
 except ImportError:
+    print("❌ listenkey_service import hatası:")
+    traceback.print_exc()
     refresh_or_create_all = None
     BINANCE_CONFIG = None
 
@@ -23,6 +26,8 @@ try:
         get_api_keys_from_db
     )
 except ImportError:
+    print("❌ balance_update_manager import hatası:")
+    traceback.print_exc()
     balance_manager_main = None
     process_user = None
     get_api_keys_from_db = None
@@ -31,17 +36,17 @@ except ImportError:
 try:
     from backend.trade_engine.balance.models.spot_ws_service import main as spot_main
 except ImportError:
+    print("❌ spot_ws_service import hatası:")
+    traceback.print_exc()
     spot_main = None
 try:
     from backend.trade_engine.balance.models.ws_service import main as futures_main
 except ImportError:
+    print("❌ ws_service import hatası:")
+    traceback.print_exc()
     futures_main = None
 
-try:
-    from backend.trade_engine.taha_part.utils.price_cache_new import start_connection_pool, wait_for_cache_ready
-except ImportError:
-    start_connection_pool = None
-    wait_for_cache_ready = None
+
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -216,16 +221,7 @@ async def shutdown_gracefully(listenkey_task, apikey_task):
 
 async def command_loop():
     loop = asyncio.get_running_loop()
-    if start_connection_pool and wait_for_cache_ready:
-        logger.info("Fiyat Akışı (Price Cache) başlatılıyor...")
-        await start_connection_pool()
-        cache_ready = await wait_for_cache_ready(timeout_seconds=15)
-        if cache_ready:
-            logger.info("✅ Fiyat Akışı (Price Cache) başarıyla başlatıldı ve hazır.")
-        else:
-            logger.error("❌ Fiyat Akışı (Price Cache) başlatılamadı veya zaman aşımına uğradı!")
-    else:
-        logger.warning("Price Cache fonksiyonları import edilemediği için başlatma atlandı.")
+
     if balance_manager_main:
         logger.info("============= BAŞLANGIÇ SENKRONİZASYONU =============")
         logger.info("Servisler başlamadan önce tüm kullanıcı bakiyeleri güncelleniyor...")

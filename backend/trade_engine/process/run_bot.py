@@ -69,7 +69,8 @@ def _get_min_qty(symbol: str, trade_type: str):
 def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
 
     order_fields = {
-        "order_type": "", "stop_loss": 0.0, "take_profit": 0.0, "price": 0.0, "stop_price": 0.0, "stop_limit_price": 0.0,
+        "order_type": "", "stop_loss": 0.0, "take_profit": 0.0, "price": 0.0, "limit_price": 0.0, "trigger_price": 0.0, 
+        "stop_price": 0.0, "stop_limit_price": 0.0,
         "callback_rate": 0.0, "activation_price": 0.0, "time_in_force": ""
     }
 
@@ -95,7 +96,7 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
         return {"bot_id": bot['id'], "status": "no_data", "duration": 0.0}
 
     try:
-        print(f"Bot ID: {bot['id']} çalıştırılıyor...")
+        #print(f"Bot ID: {bot['id']} çalıştırılıyor...")
         results = []
 
         def two_vals_differ(lst, tol=1e-9):
@@ -176,7 +177,7 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
             result_entry.update(order_info)
             results.append(result_entry)
 
-        print("results:", results)
+        #print("results:", results)
         bot_type = (bot.get('bot_type') or '').lower()
         trade_type = 'spot' if bot_type == 'spot' else 'futures'
 

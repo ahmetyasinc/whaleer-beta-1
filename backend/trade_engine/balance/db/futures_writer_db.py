@@ -56,23 +56,28 @@ async def batch_upsert_futures_balances(balance_data: list):
 async def batch_upsert_futures_orders(order_data: list):
     """
     Gelen FUTURES emir listesini (ORDER_TRADE_UPDATE event) bot_trades tablosunda GÜNCeller.
-    Eğer emir sistemde mevcut değilse, hiçbir işlem yapmaz (atlar).
+    Eğer emir sistemde mevcut değilse, kısa bir süre bekleyip (retry) tekrar dener.
+    Bu, 'Race Condition' (Emir oluşmadan güncelleme gelmesi) durumunu çözer.
     """
     if not order_data:
         return
 
-    updated_count = 0
-    skipped_count = 0
-    try:
-        async with asyncpg_connection() as conn:
+    import asyncio 
+
+    async with asyncpg_connection() as conn:
+        for attempt in range(3): # 3 Kez Dene
+            pending_orders = []
+            
             async with conn.transaction():
                 for data in order_data:
+                    # 1. Mevcut mu kontrol et
                     exists = await conn.fetchval(
                         "SELECT 1 FROM public.bot_trades WHERE order_id=$1",
                         str(data['order_id'])
                     )
 
                     if exists:
+                        # Varsa Güncelle
                         await conn.execute("""
                             UPDATE public.bot_trades
                             SET 
@@ -88,14 +93,21 @@ async def batch_upsert_futures_orders(order_data: list):
                         data.get('executed_quantity'),
                         str(data['order_id'])
                         )
-                        updated_count += 1
                     else:
-                        skipped_count += 1
-        
-        if updated_count > 0:
-            logging.info(f"✅ [DB] {updated_count} adet mevcut FUTURES EMRİ başarıyla güncellendi.")
-        if skipped_count > 0:
-            logging.info(f"ℹ️ [DB] {skipped_count} adet sistem dışı futures emri atlandı.")
+                        # Yoksa bir sonraki tur için sakla
+                        pending_orders.append(data)
+            
+            # Eğer bekleyen emir yoksa işlem tamam
+            if not pending_orders:
+                updated_count = len(order_data) - len(pending_orders) # (Basitçe hepsi işlendi varsayımı)
+                logging.info(f"✅ [DB] Futures Emir Güncellemesi Başarılı.")
+                return
 
-    except Exception as e:
-        logging.error(f"❌ [DB] Futures emir güncelleme hatası: {e}", exc_info=True)
+            # Bekleyen varsa ve son deneme değilse bekle
+            if attempt < 2:
+                logging.warning(f"⏳ [DB] {len(pending_orders)} emir henüz DB'de yok. {attempt+1}. deneme için 1sn bekleniyor... (Order ID: {[o['order_id'] for o in pending_orders]})")
+                order_data = pending_orders # Listeyi güncelle
+                await asyncio.sleep(1.0)
+            else:
+                # Son denemede de bulunamadıysa logla ve bırak
+                logging.error(f"❌ [DB] {len(pending_orders)} emir bulunamadı ve güncellenemedi! (Order ID: {[o['order_id'] for o in pending_orders]})")

@@ -8,18 +8,18 @@ from typing import Dict, Any, Optional
 from dataclasses import dataclass
 
 # --- Proje İçi Bağımlılıklar ---
-from config import asyncpg_connection
-from data_access.repos.symbol_filters import SymbolFilterRepo
-from data_access.repos import crud
-from core.price_store import price_store
+from backend.trade_engine.config import asyncpg_connection
+from backend.trade_engine.order_engine.data_access.repos.symbol_filters import SymbolFilterRepo
+from backend.trade_engine.order_engine.data_access.repos import crud
+from backend.trade_engine.order_engine.core.price_store import price_store
 
 # Logic Katmanları
-from core.order_normalizer import OrderNormalizer
-from core.exchange_definitions import ExchangeDefinitionFactory
+from backend.trade_engine.order_engine.core.order_normalizer import OrderNormalizer
+from backend.trade_engine.order_engine.core.exchange_definitions import ExchangeDefinitionFactory
 
 # Network & Exchange
-from core.network.network_binance import BinanceNetworkAdapter
-from exchanges.binance.arregements.futures_arragements import BaseExchange, BinanceFuturesExchange, FuturesGuard
+from backend.trade_engine.order_engine.core.network.network_binance import BinanceNetworkAdapter
+from backend.trade_engine.order_engine.exchanges.binance.arregements.futures_arragements import BaseExchange, BinanceFuturesExchange, FuturesGuard
 
 logger = logging.getLogger("OrderService")
 
@@ -79,6 +79,21 @@ class BinanceSpotExchange(BaseExchange):
     async def set_position_mode(self, dual_side: bool) -> bool: return True
     async def get_account_positions(self) -> list: return []
 
+    async def sync_time(self):
+        """Spot Sunucu zamanı ile senkronize ol"""
+        try:
+            url = f"{self.base_url}/time"
+            resp = await self.network.get(url)
+            if resp.success and resp.data:
+                server_time = int(resp.data.get("serverTime"))
+                local_time = int(time.time() * 1000)
+                self.time_offset = server_time - local_time
+                logger.info(f"⏳ Spot Zaman Senkronizasyonu: Offset {self.time_offset}ms")
+            else:
+                logger.warning("⚠️ Spot Zaman senkronizasyonu başarısız.")
+        except Exception as e:
+            logger.error(f"❌ Spot Zaman senkronizasyonu hatası: {e}")
+
     # --- DÜZELTME BURADA: resp.json() yerine resp.data kullanıldı ---
     async def _post_signed(self, endpoint: str, params: dict) -> tuple[bool, dict]:
         # Key Kontrolü
@@ -87,7 +102,7 @@ class BinanceSpotExchange(BaseExchange):
             return False, {}
 
         try:
-            params["timestamp"] = int(time.time() * 1000)
+            params["timestamp"] = int(time.time() * 1000 + self.time_offset)
             query = "&".join([f"{k}={v}" for k, v in params.items()])
             
             # HMAC SHA256 İmzalama
@@ -318,7 +333,59 @@ class OrderExecutionService:
         # Format: b{bot_id}_{random_hex} -> Örnek: b120_a1b2c3d4e5f6
         client_oid = f"b{req.bot_id}_{uuid.uuid4().hex[:12]}"
 
-        # ADIM 4: Tanımlama
+        # ADIM 4: Güvenlik (Guard) & Mode Fallback (ÖNCE ÇALIŞMALI)
+        if req.trade_type == "futures" and session.guard:
+            try:
+                # 1. Leverage ve Mode Senkronizasyonu
+        async with asyncpg_connection() as conn:
+                    await session.guard.get_leverage_fast(conn, req.symbol, req.leverage)
+
+                # 2. Mode Kontrolü: One-Way Mode Fallback
+                is_hedge_active = session.guard.state_manager.get_api_hedge_mode(session.user_id, session.guard.api_id)
+                
+                if not is_hedge_active:
+                    if req.position_side and req.position_side.upper() != "BOTH":
+                         logger.warning(f"⚠️ Mode Uyuşmazlığı: Emir Hedge ({req.position_side}) -> Hesap One-Way. 'BOTH' olarak düzeltiliyor.")
+                         req.position_side = "BOTH"
+                
+                logger.info(f"🔍 [DEBUG] Bot:{req.bot_id} | Mode:{'HEDGE' if is_hedge_active else 'ONE-WAY'} | Req.Side:{req.position_side}")
+
+                # 3. REDUCE ONLY KONTROLÜ (Pozisyon Var mı?)
+                if req.reduce_only:
+                    logger.info(f"🔍 [DEBUG] ReduceOnly Emir için pozisyon kontrol ediliyor: {req.symbol}")
+                    # API'den güncel pozisyonları çek
+                    positions = await session.exchange.get_account_positions()
+                    
+                    # İlgili sembol ve yöndeki pozisyonu bul
+                    # Hedge Mode: PositionSide Eşleşmeli (LONG/SHORT)
+                    # One-Way Mode: PositionSide 'BOTH' dur.
+                    target_pside = req.position_side.upper() if is_hedge_active else "BOTH"
+                    
+                    found_pos = None
+                    for p in positions:
+                        if p.get("symbol") == req.symbol and p.get("positionSide") == target_pside:
+                            found_pos = p
+                            break
+                    
+                    if not found_pos:
+                         logger.warning(f"⚠️ [SKIP] ReduceOnly emir atlandı: Pozisyon bulunamadı. ({req.symbol} {target_pside})")
+                         return # Pozisyon yoksa çık
+                    
+                    pos_amt = float(found_pos.get("positionAmt", 0))
+                    if pos_amt == 0:
+                         logger.warning(f"⚠️ [SKIP] ReduceOnly emir atlandı: Pozisyon büyüklüğü 0. ({req.symbol})")
+                         return # Miktar 0 ise çık
+                    
+                    # Yön Kontrolü: Eğer satıyorsak pozisyon LONG (+) olmalı, alıyorsak SHORT (-) olmalı
+                    # (Basit mantık: ReduceOnly ile yeni pozisyon açılmaz)
+                    # Ancak burada sadece VARLIĞINI kontrol etmek yeterli, Binance miktarı kendi kesebilir.
+                    logger.info(f"✅ Pozisyon Doğrulandı: {req.symbol} {target_pside} Amt:{pos_amt}")
+
+            except Exception as e:
+                logger.error(f"🛡️ Guard Blokladı: {e}")
+                return
+
+        # ADIM 5: Tanımlama (Payload Hazırlama)
         try:
             definition = ExchangeDefinitionFactory.get_definition(req.exchange_name, req.trade_type)
             
@@ -329,18 +396,10 @@ class OrderExecutionService:
                 formatted_qty, 
                 client_order_id=client_oid
             )
+            logger.info(f"📦 [PAYLOAD] {endpoint} -> pSide:{payload.get('positionSide')} | type:{payload.get('type')}")
         except ValueError as e:
             logger.error(f"⛔ Tanım Hatası: {e}")
             return
-
-        # ADIM 5: Güvenlik (Guard)
-        if req.trade_type == "futures" and session.guard:
-            try:
-                async with asyncpg_connection() as conn:
-                    await session.guard.get_leverage_fast(conn, req.symbol, req.leverage)
-            except Exception as e:
-                logger.error(f"🛡️ Guard Blokladı: {e}")
-                return
 
         # ADIM 6: Ateşleme (Network)
         success, response_data = await session.exchange._post_signed(endpoint, payload)
@@ -446,6 +505,9 @@ class OrderExecutionService:
                 guard = None
 
             if exchange:
+                # 🚀 ZAMAN SENKRONİZASYONU
+                await exchange.sync_time()
+
                 # user_id Context'e eklendi
                 ctx = SessionContext(exchange=exchange, guard=guard, user_id=real_user_id)
                 self._sessions[key] = ctx

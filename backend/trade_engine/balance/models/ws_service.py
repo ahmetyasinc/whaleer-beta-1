@@ -7,7 +7,7 @@ from backend.trade_engine.config import asyncpg_connection
 from backend.trade_engine.balance.db.stream_key_db import attach_listenkeys_to_ws
 from backend.trade_engine.balance.db import ws_db
 from backend.trade_engine.balance.db.futures_writer_db import batch_upsert_futures_balances, batch_upsert_futures_orders
-from backend.trade_engine.taha_part.utils.price_cache_new import get_price
+from backend.trade_engine.order_engine.core.price_store import price_store
 import asyncpg
 import os
 from asyncpg import exceptions as apg_exc
@@ -158,10 +158,12 @@ class WebSocketRedundantManager:
         if commission_asset and commission_asset.upper() != "USDT" and commission_amount > 0:
             try:
                 conversion_symbol = f"{commission_asset.upper()}USDT"
-                price = await get_price(conversion_symbol, "spot")
-                if price and price > 0:
-                    commission_in_usdt = commission_amount * Decimal(str(price))
-                    logging.info(f"💰 [Futures WS] Komisyon dönüştürüldü: {commission_amount} {commission_asset} -> {commission_in_usdt:.6f} USDT")
+                ticker = price_store.get_price("BINANCE_SPOT", conversion_symbol)
+                if ticker:
+                    price = ticker.last
+                    if price > 0:
+                        commission_in_usdt = commission_amount * Decimal(str(price))
+                        logging.info(f"💰 [Futures WS] Komisyon dönüştürüldü: {commission_amount} {commission_asset} -> {commission_in_usdt:.6f} USDT")
                 else:
                     logging.warning(f"⚠️ [Futures WS] {conversion_symbol} için fiyat alınamadı.")
             except Exception as e:

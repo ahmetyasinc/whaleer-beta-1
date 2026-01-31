@@ -179,7 +179,7 @@ async def handle_rent_expiry_closures(_: list) -> list:
 
 
 async def run_all_bots_async(bots, strategies_with_indicators, coin_data_dict, last_time, interval):
-    print("bots:", bots)
+    #print("bots:", bots)
     loop = asyncio.get_running_loop()
 
     max_workers = min(len(bots), max(1, int(cpu_count() / 2)))  # En az 1 worker
@@ -224,8 +224,8 @@ async def run_all_bots_async(bots, strategies_with_indicators, coin_data_dict, l
         result_dict = aggregate_results_by_bot_id(all_results)
 
         # 5) Kaydet
-        if result_dict:
-            print("result_dict: ", result_dict)
-            await save_result_to_json(result_dict, last_time, interval)
+        #if result_dict:
+            #print("result_dict: ", result_dict)
+            #await save_result_to_json(result_dict, last_time, interval)
 
         return all_results

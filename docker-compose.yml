@@ -9,7 +9,7 @@ services:
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
-      - ./backend/uploads:/app/uploads  # Persistence for uploads
+      - ./backend/uploads:/app/uploads # Persistence for uploads
     env_file:
       - ./backend/.env.${APP_ENV:-local}
     environment:
@@ -34,3 +34,21 @@ services:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
     depends_on:
       - backend
+
+  trade_engine:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: whaleer-trade-engine
+    # Run directly as module
+    command: python -m backend.trade_engine.listen_service
+    restart: unless-stopped
+    volumes:
+      - ./backend/uploads:/app/uploads
+    env_file:
+      - ./backend/.env.${APP_ENV:-local}
+    environment:
+      # Adapting for psycopg (standard postgresql:// scheme)
+      - LISTEN_DB_URL=postgresql://postgres:admin@host.docker.internal/balina_db
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

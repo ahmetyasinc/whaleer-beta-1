@@ -36,32 +36,32 @@ const LeftMenu = ({ locale }) => {
     }
   }, [locale]);
 
-      const Clock = () => {
-        const [time, setTime] = useState({ h: "", m: "", s: "", ms: "" });
-      
-        useEffect(() => {
-          const update = () => {
-            const now = new Date();
-            const h = String(now.getHours()).padStart(2, "0");
-            const m = String(now.getMinutes()).padStart(2, "0");
-            const s = String(now.getSeconds()).padStart(2, "0");
-            const ms = String(now.getMilliseconds()).padStart(3, "0");
-            setTime({ h, m, s, ms });
-          };
-          update();
-          const interval = setInterval(update, 50);
-          return () => clearInterval(interval);
-        }, []);
-      
-        return (
-          <span className="text-orange-400 font-mono text-sm tracking-widest">
-            {time.h}:{time.m}:{time.s}
-            <span className="text-[10px] opacity-80 relative top-[1px]">
-              .{String(Math.floor(time.ms / 10)).padStart(2, "0")}
-            </span>
-          </span>
-        );
+  const Clock = () => {
+    const [time, setTime] = useState({ h: "", m: "", s: "", ms: "" });
+
+    useEffect(() => {
+      const update = () => {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2, "0");
+        const m = String(now.getMinutes()).padStart(2, "0");
+        const s = String(now.getSeconds()).padStart(2, "0");
+        const ms = String(now.getMilliseconds()).padStart(3, "0");
+        setTime({ h, m, s, ms });
       };
+      update();
+      const interval = setInterval(update, 50);
+      return () => clearInterval(interval);
+    }, []);
+
+    return (
+      <span className="text-orange-400 font-mono text-sm tracking-widest">
+        {time.h}:{time.m}:{time.s}
+        <span className="text-[10px] opacity-80 relative top-[1px]">
+          .{String(Math.floor(time.ms / 10)).padStart(2, "0")}
+        </span>
+      </span>
+    );
+  };
 
   const menuItems = [
     { href: "/profile", icon: <BiUser />, label: t("profile") },
@@ -94,15 +94,15 @@ const LeftMenu = ({ locale }) => {
       toggleBtn.classList.toggle("move-left", isOpen);
     }
   }, [isOpen]);
-  
-/*
-  if (!user) {
-    return (
-      <div className="sidebar-left bg-black text-white px-6 pt-4">
-        <p className="text-sm animate-pulse">{t("loading")}</p>
-      </div>
-    );
-  }*/
+
+  /*
+    if (!user) {
+      return (
+        <div className="sidebar-left bg-black text-white px-6 pt-4">
+          <p className="text-sm animate-pulse">{t("loading")}</p>
+        </div>
+      );
+    }*/
 
   return (
     <>
@@ -144,7 +144,7 @@ const LeftMenu = ({ locale }) => {
                   href={item.href}
                   onClick={() => setIsOpen(false)}
                   className={[
-                    "flex items-center gap-3 w-full px-4 py-2 text-white transition-colors duration-300",
+                    "flex items-center gap-3 w-full px-4 py-2 text-white transition-colors duration-200",
                     active ? "bg-white/10 rounded-md" : "hover:text-[hsl(209,100%,50%)]",
                   ].join(" ")}
                 >
@@ -161,7 +161,7 @@ const LeftMenu = ({ locale }) => {
           {/* Logout */}
           <li>
             <button
-              className="flex items-center gap-3 w-full px-4 py-2 text-left text-white hover:text-[hsl(209,100%,50%)] transition-colors duration-300"
+              className="flex items-center gap-3 w-full px-4 py-2 text-left text-white hover:text-[hsl(209,100%,50%)] transition-colors duration-200"
               onClick={() => setShowLogoutModal(true)}
             >
               <span className="text-[20px] inline-flex">
@@ -195,7 +195,7 @@ const LeftMenu = ({ locale }) => {
         onClick={() => setIsOpen((v) => !v)}
         className={[
           "fixed top-2 h-10 w-10 bg-[rgb(7,67,95)] text-white rounded-[40%] p-2 z-[1101]",
-          "flex items-center justify-center transition-all duration-300",
+          "flex items-center justify-center transition-all duration-200",
           "hover:scale-[1.07] hover:rotate-6",
           isOpen ? "left-[270px]" : "left-2",
         ].join(" ")}

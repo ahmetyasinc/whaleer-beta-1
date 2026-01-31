@@ -36,5 +36,25 @@
   },
   "examine": {
     "disabledTitle": "Examine disabled: missing values or API undefined"
+  },
+  "performance": {
+    "started": "Started",
+    "elapsed": "Elapsed",
+    "workTime": "Work Time",
+    "sellEligibility": "Sell Eligibility",
+    "suitableForSale": "Suitable for Sale",
+    "now": "Now",
+    "initialBalance": "Initial Balance",
+    "currentBalance": "Current Balance",
+    "changePercent": "Change %",
+    "pnl": "PnL",
+    "balanceInTrade": "Balance In Trade",
+    "long": "LONG",
+    "short": "SHORT",
+    "spotExposure": "SPOT EXPOSURE",
+    "dataSoon": "Performance Data (Soon)",
+    "notAvailable": "Not Available",
+    "sellEligibilityTooltip": "To sell or rent your bot, it must run for at least 700 hours",
+    "powerPointTooltip": "It is a success indicator calculated by us based on your bot's risk profile and the profit it made during its operation."
   }
 }

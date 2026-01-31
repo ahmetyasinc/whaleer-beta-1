@@ -59,7 +59,8 @@
     "wmColor": "Watermark Color",
     "wmSize": "Watermark Size",
     "style": "Style",
-    "cursorType": "Cursor Type"
+    "cursorType": "Cursor Type",
+    "labelColor": "Label Color"
   },
   "series": {
     "candlestick": "Candlestick",

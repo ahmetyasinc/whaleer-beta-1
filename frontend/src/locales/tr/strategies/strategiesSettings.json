@@ -59,7 +59,8 @@
     "wmColor": "Su İzi Rengi",
     "wmSize": "Su İzi Boyutu",
     "style": "Stil",
-    "cursorType": "İmleç Tipi"
+    "cursorType": "İmleç Tipi",
+    "labelColor": "Etiket Rengi"
   },
   "series": {
     "candlestick": "Mum",

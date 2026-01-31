@@ -9,6 +9,7 @@ export const DEFAULTS = {
   theme: "dark",
   bgColor: "#000007",              // yeni
   textColor: "white",              // yeni ("white" | "black")
+  labelColor: "white",             // yeni ("white" | "black")
   timezoneMode: "local",
   timezoneFixed: "GMT+03:00",
 

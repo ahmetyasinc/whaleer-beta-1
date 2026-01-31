@@ -36,5 +36,25 @@
   },
   "examine": {
     "disabledTitle": "İnceleme kapalı: değerler eksik veya API tanımsız"
+  },
+  "performance": {
+    "started": "Başlangıç",
+    "elapsed": "Geçen Süre",
+    "workTime": "Çalışma Süresi",
+    "sellEligibility": "Satış Uygunluğu",
+    "suitableForSale": "Satışa Uygundur",
+    "now": "Şimdi",
+    "initialBalance": "Başlangıç Bakiyesi",
+    "currentBalance": "Mevcut Bakiye",
+    "changePercent": "Değişim %",
+    "pnl": "K/Z",
+    "balanceInTrade": "İşlemdeki Bakiye",
+    "long": "LONG",
+    "short": "SHORT",
+    "spotExposure": "SPOT POZİSYONU",
+    "dataSoon": "Performans Verisi (Yakında)",
+    "notAvailable": "Müsait Değil",
+    "sellEligibilityTooltip": "Botunuzu satabilmek veya kiralayabilmek için en az 700 saat çalışması gerekmektedir",
+    "powerPointTooltip": "Botunuzun risk profili ve çalışma süresince yaptığı para temel alınarak tarafımızca hesaplanmış bir başarı göstergesi verisidir"
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { MdOutlinePeopleAlt } from "react-icons/md";
 import { FaDice } from "react-icons/fa6";
 import { BiBarChartAlt2 } from "react-icons/bi";
@@ -13,20 +14,26 @@ import { useTranslation } from "react-i18next";
 const StrategyButton = () => {
   const { t } = useTranslation("botChooseStrategy");
 
-  const { 
-    selectedStrategy, 
-    isModalOpen, 
+  const {
+    selectedStrategy,
+    isModalOpen,
     activeTab,
     setIsModalOpen,
     setActiveTab,
     selectStrategyAndCloseModal
   } = useBotChooseStrategyStore();
-  
-  useEffect(() => {
-    setActiveTab("Technicals");
-  }, []);
 
-  // İç mantık İngilizce "name" ile çalışmaya devam eder; UI'da çeviri gösteriyoruz.
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    // Ensure we start with a default tab if none set
+    if (!activeTab) {
+      setActiveTab("Technicals");
+    }
+  }, [activeTab, setActiveTab]);
+
+  // Tabs configuration
   const tabs = [
     { name: "Technicals", label: t("tabs.technicals"), icon: <BiBarChartAlt2 className="text-[19px]" /> },
     { name: "My Strategies", label: t("tabs.my"), icon: <FaDice className="text-[19px]" /> },
@@ -34,12 +41,12 @@ const StrategyButton = () => {
   ];
 
   const renderContent = () => {
-    const props = { 
+    const props = {
       onSelect: (strategy) => {
         selectStrategyAndCloseModal(strategy);
       }
     };
-    
+
     switch (activeTab) {
       case "Technicals":
         return <TechnicalStrategies {...props} />;
@@ -48,57 +55,66 @@ const StrategyButton = () => {
       case "Community":
         return <CommunityStrategy {...props} />;
       default:
-        return <p className="text-white">{t("fallback")}</p>;
+        // Fallback for empty state or unknown tab
+        return <p className="text-zinc-500 p-6">{t("fallback")}</p>;
     }
   };
+
+  const modalContent = (
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[60] backdrop-blur-sm">
+      <div className="bg-zinc-950 text-zinc-200 rounded-md w-[800px] h-[584px] shadow-lg flex flex-col relative border border-zinc-800">
+
+        {/* Header */}
+        <div className="flex justify-between items-center px-6 py-4 border-b border-zinc-800 h-16 bg-zinc-900/50">
+          <h2 className="text-lg font-bold text-zinc-100">{t("title")}</h2>
+          <button
+            className="text-zinc-500 hover:text-white text-3xl transition-colors"
+            onClick={() => setIsModalOpen(false)}
+          >
+            &times;
+          </button>
+        </div>
+
+        <div className="flex flex-grow">
+          {/* Sidebar */}
+          <div className="w-[200px] bg-zinc-900 pt-3 flex flex-col gap-2 border-r border-zinc-800">
+            {tabs.map((tab) => (
+              <button
+                key={tab.name}
+                className={`flex items-center gap-2 py-2 px-4 text-left transition-all ${activeTab === tab.name
+                    ? "bg-gradient-to-r from-[#4c2164] to-[#44197e] text-white px-4 rounded-3xl py-2 hover:bg-[rgba(15,19,73,0.76)] shadow-sm"
+                    : "hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200"
+                  }`}
+                onClick={() => setActiveTab(tab.name)}
+              >
+                {tab.icon} {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col bg-zinc-950">
+            <div className="flex-grow scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-zinc-900">
+              {renderContent()}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <>
       <button
-        className="bg-zinc-950 w-[240px] px-4 py-[9px] border border-zinc-800 rounded-md text-sm text-white truncate"
+        type="button" // Prevent form submission if inside a form
+        className="bg-zinc-950 w-full md:w-[240px] px-4 py-[9px] border border-zinc-800 rounded-md text-sm text-zinc-300 hover:text-white hover:border-zinc-700 transition-colors truncate text-left flex justify-between items-center"
         onClick={() => setIsModalOpen(true)}
       >
-        {selectedStrategy ? selectedStrategy.name : t("button.select")}
+        <span>{selectedStrategy ? selectedStrategy.name : t("button.select")}</span>
       </button>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-gray-900 text-white rounded-md w-[800px] h-[584px] shadow-lg flex flex-col relative">
-
-            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-700 h-16">
-              <h2 className="text-lg font-bold">{t("title")}</h2>
-              <button
-                className="text-gray-400 hover:text-white text-3xl"
-                onClick={() => setIsModalOpen(false)}
-              >
-                &times;
-              </button>
-            </div>
-
-            <div className="flex flex-grow">
-              <div className="w-[200px] bg-gray-800 pt-3 flex flex-col gap-2 border-r border-gray-700">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.name}
-                    className={`flex items-center gap-2 py-2 px-4 text-left transition-all ${
-                      activeTab === tab.name
-                        ? "bg-gradient-to-r from-[#4c2164] to-[#44197e] text-white px-4 rounded-3xl py-2 hover:bg-[rgba(15,19,73,0.76)]"
-                        : "hover:bg-gray-700"
-                    }`}
-                    onClick={() => setActiveTab(tab.name)}
-                  >
-                    {tab.icon} {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex-1 flex flex-col">
-                <div className="flex-grow">{renderContent()}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Render Modal via Portal if mounted & open */}
+      {mounted && isModalOpen && createPortal(modalContent, document.body)}
     </>
   );
 };

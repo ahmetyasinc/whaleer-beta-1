@@ -519,21 +519,21 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
 
   return (
     <div className="relative w-full h-full">
-      <div className={`absolute top-2 left-2 z-10 flex items-center gap-2 bg-transparent border border-gray-400/10 text-white text-xs px-2 py-1 rounded shadow-md pointer-events-none transition-opacity duration-200 ${isVisible ? 'opacity-100' : 'opacity-50'}`}>
+      <div className={`absolute top-2 left-2 z-10 flex items-center gap-2 bg-transparent border border-gray-400/10 text-xs px-2 py-1 rounded shadow-md pointer-events-none transition-opacity duration-200 ${isVisible ? 'opacity-100' : 'opacity-50'}`} style={{ color: settings.labelColor || "white" }}>
         <span>{indicatorName}</span>
         <div id={`panel-values-${indicatorId}-${subId}`} className="flex items-center" style={{ display: isVisible ? 'flex' : 'none' }}></div>
-        <button className="hover:text-gray-400 pointer-events-auto"
+        <button className="hover:opacity-60 pointer-events-auto"
           onMouseEnter={() => isHoveringButtonsRef.current = true}
           onMouseLeave={() => isHoveringButtonsRef.current = false}
           onClick={toggleVisibility}>
           {isVisible ? <AiOutlineEye size={15} /> : <AiOutlineEyeInvisible size={15} />}
         </button>
-        <button className="hover:text-gray-400 pointer-events-auto"
+        <button className="hover:opacity-60 pointer-events-auto"
           onMouseEnter={() => isHoveringButtonsRef.current = true}
           onMouseLeave={() => isHoveringButtonsRef.current = false}
           onClick={() => setSettingsOpen(true)}><RiSettingsLine />
         </button>
-        <button className="hover:text-gray-400 pointer-events-auto"
+        <button className="hover:opacity-60 pointer-events-auto"
           onMouseEnter={() => isHoveringButtonsRef.current = true}
           onMouseLeave={() => isHoveringButtonsRef.current = false}
           onClick={() => removeSubIndicator(indicatorId, subId)}><AiOutlineClose />

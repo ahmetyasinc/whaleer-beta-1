@@ -4,7 +4,7 @@ import logging
 from typing import Dict, List, Optional, Any
 
 # Yeni config yapısından connection context manager'ı alıyoruz
-from config import asyncpg_connection
+from backend.trade_engine.config import asyncpg_connection
 
 # Logger ayarları
 logger = logging.getLogger(__name__)
@@ -451,7 +451,7 @@ async def insert_bot_trade(trade_data: dict):
 async def main():
     print("🚀 CRUD Test Başlıyor...")
     # Test kodları buraya gelebilir
-    from config import close_async_pool
+    from backend.trade_engine.config import close_async_pool
     await close_async_pool()
 
 if __name__ == "__main__":

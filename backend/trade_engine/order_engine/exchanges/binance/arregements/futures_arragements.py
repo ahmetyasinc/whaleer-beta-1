@@ -10,8 +10,8 @@ from typing import Dict, Optional, Any, List
 
 # Network Modüllerini Import Et
 try:
-    from core.network.network_binance import BinanceNetworkAdapter
-    from core.network.network_adapter import NetworkResponse
+    from backend.trade_engine.order_engine.core.network.network_binance import BinanceNetworkAdapter
+    from backend.trade_engine.order_engine.core.network.network_adapter import NetworkResponse
 except ImportError:
     logging.warning("Network modülleri bulunamadı. Mock data gerekebilir.")
 
@@ -142,6 +142,10 @@ class BaseExchange(ABC):
         self.private_key = private_key
         self.is_test = is_test
         self.name = "Unknown"
+        self.time_offset = 0  # Server Time - Local Time
+
+    @abstractmethod
+    async def sync_time(self): pass
 
     @abstractmethod
     async def set_leverage(self, symbol: str, leverage: int) -> bool: pass
@@ -151,6 +155,9 @@ class BaseExchange(ABC):
 
     @abstractmethod
     async def set_position_mode(self, dual_side: bool) -> bool: pass
+
+    @abstractmethod
+    async def get_position_mode(self) -> bool: pass
     
     @abstractmethod
     async def get_account_positions(self) -> List[Dict]: pass
@@ -172,6 +179,21 @@ class BinanceFuturesExchange(BaseExchange):
         # Pool size ve concurrent limitleri korundu
         self.network = BinanceNetworkAdapter(timeout=10, pool_size=100, max_concurrent_requests=20)
 
+    async def sync_time(self):
+        """Sunucu zamanı ile senkronize ol"""
+        try:
+            url = f"{self.base_url}/time"
+            resp = await self.network.get(url)
+            if resp.success and resp.data:
+                server_time = int(resp.data.get("serverTime"))
+                local_time = int(time.time() * 1000)
+                self.time_offset = server_time - local_time
+                logger.info(f"⏳ Zaman Senkronizasyonu: Offset {self.time_offset}ms")
+            else:
+                logger.warning("⚠️ Zaman senkronizasyonu başarısız, offset 0 varsayılıyor.")
+        except Exception as e:
+            logger.error(f"❌ Zaman senkronizasyonu hatası: {e}")
+
     async def close(self):
         await self.network.close()
 
@@ -181,7 +203,8 @@ class BinanceFuturesExchange(BaseExchange):
     # --- DÜZELTME BURADA: resp.json_data yerine resp.data ---
     async def _post_signed(self, endpoint: str, params: dict) -> tuple[bool, dict]:
         try:
-            params["timestamp"] = int(time.time() * 1000)
+            # Timestamp Calculation with Offset
+            params["timestamp"] = int(time.time() * 1000 + self.time_offset)
             query = "&".join([f"{k}={v}" for k, v in params.items()])
             params["signature"] = await self._hmac_sign(query)
             
@@ -232,9 +255,34 @@ class BinanceFuturesExchange(BaseExchange):
         val_str = "true" if dual_side else "false"
         return (await self._post_signed("/positionSide/dual", {"dualSidePosition": val_str}))[0]
 
+    async def get_position_mode(self) -> bool:
+        """
+        API'den mevcut modun Hedge (Dual Side) olup olmadığını sorgular.
+        Zaman senkronizasyonu kullanır.
+        """
+        try:
+            params = {"timestamp": int(time.time() * 1000 + self.time_offset)}
+            query = "&".join([f"{k}={v}" for k, v in params.items()])
+            sig = await self._hmac_sign(query)
+            
+            headers = {"X-MBX-APIKEY": self.api_key}
+            url = f"{self.base_url}/positionSide/dual?{query}&signature={sig}"
+            
+            resp: NetworkResponse = await self.network.get(url, headers=headers)
+            
+            # { "dualSidePosition": true/false, ... }
+            if resp.success and resp.data:
+                return resp.data.get("dualSidePosition", False)
+            return False
+            
+        except Exception as e:
+            logger.error(f"Get Position Mode Error: {e}")
+            return False
+
+
     async def get_account_positions(self) -> List[Dict]:
         try:
-            params = {"timestamp": int(time.time() * 1000)}
+            params = {"timestamp": int(time.time() * 1000 + self.time_offset)}
             query = "&".join([f"{k}={v}" for k, v in params.items()])
             sig = await self._hmac_sign(query)
             
@@ -325,18 +373,23 @@ class FuturesGuard:
         is_hedge_verified = cached_hedge
 
         if not is_hedge_verified:
-            # Cache'de False veya Yok. API'yi dene.
-            try:
-                # set_position_mode; "No need" hatası alsa bile True döner (Exchange sınıfında ayarladık).
-                if await self.exchange.set_position_mode(True):
-                    is_hedge_verified = True
-                    # Global ayar olduğu için cache'i hemen güncelle ki diğer semboller beklemesin
-                    self.state_manager.update_hedge_mode(self.user_id, self.api_id, True)
-                else:
-                    # Açık pozisyon varsa hedge mode değişmez.
-                    logger.warning(f"⚠️ Hedge Mode aktif edilemedi (User: {self.user_id}). One-Way devam ediliyor.")
-            except Exception as e:
-                logger.error(f"Position Mode API Error: {e}")
+            # Önce gerçekten ne olduğunu soralım (API'ye güven)
+            actual_mode = await self.exchange.get_position_mode()
+            
+            if actual_mode:
+                 # Zaten Hedge modundaymış!
+                 is_hedge_verified = True
+                 self.state_manager.update_hedge_mode(self.user_id, self.api_id, True)
+            else:
+                # One-Way modunda, değiştirmeyi dene
+                try:
+                    if await self.exchange.set_position_mode(True):
+                        is_hedge_verified = True
+                        self.state_manager.update_hedge_mode(self.user_id, self.api_id, True)
+                    else:
+                        logger.warning(f"⚠️ Hedge Mode aktif edilemedi (User: {self.user_id}). One-Way devam ediliyor.")
+                except Exception as e:
+                    logger.error(f"Position Mode API Error: {e}")
 
         # --- ADIM 2: MARGIN TYPE (ISOLATED) ---
         if not await self.exchange.set_margin_type(symbol, True):

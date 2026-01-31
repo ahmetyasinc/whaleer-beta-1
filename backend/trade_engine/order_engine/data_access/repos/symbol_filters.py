@@ -2,7 +2,7 @@
 import asyncio
 import logging
 from typing import Dict, Any, Optional
-from config import * # Asyncpg bağlantı havuzu
+from backend.trade_engine.config import * # Asyncpg bağlantı havuzu
 
 logger = logging.getLogger(__name__)
 

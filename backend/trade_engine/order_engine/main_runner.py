@@ -7,16 +7,17 @@ if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 # --- Importlar ---
-from core.order_execution_service import OrderExecutionService, OrderRequest
-from exchanges.binance.stream import BinanceStreamer
-from core.price_store import price_store
+from backend.trade_engine.order_engine.core.order_execution_service import OrderExecutionService, OrderRequest
+from backend.trade_engine.order_engine.exchanges.binance.stream import BinanceStreamer
+from backend.trade_engine.order_engine.core.price_store import price_store
+#from data_access.file.order_log_writer import OrderLogWriter
 
-# Config ve DB
+# DB & Config
 # DİKKAT: get_async_pool fonksiyonunun config.py içinde tanımlı olduğundan emin ol
-from config import close_async_pool, get_async_pool
+from backend.trade_engine.config import close_async_pool, get_async_pool
 
-# Futures Cache Yönetimi (Pre-Warming İçin)
-from exchanges.binance.arregements.futures_arragements import FuturesGuard
+# Test amaçlı
+from backend.trade_engine.order_engine.exchanges.binance.arregements.futures_arragements import FuturesGuard
 
 # Log Ayarları
 DEBUG_MODE = False  # <-- Test ederken TRUE yap, normalde FALSE
@@ -168,7 +169,6 @@ async def main():
     # ---------------------------------------------------------
     logger.info("🔄 JSON verisi işleniyor...")
     orders = parse_json_to_orders(multi_bot_data)
-    
     if not orders:
         logger.warning("⚠️ Hiç emir oluşturulmadı! JSON verisini kontrol et.")
     else:

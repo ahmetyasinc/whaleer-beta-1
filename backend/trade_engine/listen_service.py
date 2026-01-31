@@ -2,10 +2,6 @@ import asyncio
 import sys
 import time
 import psycopg
-from backend.trade_engine.taha_part.utils.price_cache_new import (
-    start_connection_pool,
-    wait_for_cache_ready
-)
 import asyncpg
 import os
 from backend.trade_engine.order_engine.core.order_execution_service import OrderExecutionService, OrderRequest
@@ -15,11 +11,7 @@ from backend.trade_engine.process.trade_engine import run_trade_engine
 # listen_service.py (üst importlara ekle)
 from backend.trade_engine.process.process import run_all_bots_async, handle_rent_expiry_closures  # NEW
 from backend.trade_engine.process.save import save_result_to_json, aggregate_results_by_bot_id    # NEW
-# Emir gönderim sistemi (ileride aktif edeceksin)
-from backend.trade_engine.taha_part.utils.order_final_optimized import (
-    prepare_order_data,
-    send_order
-)
+
 if sys.platform.startswith('win'):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
@@ -55,15 +47,28 @@ async def dispatch_orders_to_engine(result_dict):
         
         for trade in iterator:
             # Trade objesi bir dict mi yoksa class mı kontrolü (genelde dict döner)
-            symbol = trade.get("symbol")
-            side = trade.get("signal")  # BUY / SELL
-            amount = trade.get("amount", 0) # USD cinsinden değer
+            # DÜZELTME: Gelen veri formatına göre key'ler güncellendi
+            symbol = trade.get("coin_id") or trade.get("symbol")
+            side = trade.get("side") or trade.get("signal")  # BUY / SELL
+            amount = trade.get("value") or trade.get("amount", 0) # USD cinsinden değer
             
             # Trade tipi (varsayılan futures, bottan geliyorsa onu kullan)
             trade_type = trade.get("trade_type", "futures") 
             
             if not side or side == "NEUTRAL":
                 continue
+
+            # positionside (Binance Futures için önemli)
+            position_side = trade.get("positionside") or trade.get("positionSide")
+            
+            # Order Type ve Price (Limit Emirler için)
+            order_type = trade.get("order_type", "MARKET").upper()
+            price = None
+            if order_type in ["LIMIT", "STOP", "TAKE_PROFIT", "STOP_MARKET", "TAKE_PROFIT_MARKET"]:
+                # Strateji bazen 'limit_price', bazen 'price' dönebilir
+                val = trade.get("price") or trade.get("limit_price")
+                if val:
+                    price = float(val)
 
             # --- YENİ SİSTEME UYGUN ORDER REQUEST OLUŞTURMA ---
             req = OrderRequest(
@@ -74,8 +79,10 @@ async def dispatch_orders_to_engine(result_dict):
                 exchange_name="binance",    # İleride dinamik olabilir
                 trade_type=trade_type,      # spot / futures
                 leverage=int(trade.get("leverage", 1)),
-                order_type="MARKET",        # Strateji market emri üretiyor varsayımı
+                order_type=order_type,       # <-- DÜZELTİLDİ: Dinamik type
+                price=price,                 # <-- EKLENDI: Limit fiyat
                 reduce_only=trade.get("reduce_only", False),
+                position_side=position_side, 
                 # stop_price vs. eklenebilir eğer strateji veriyorsa
             )
 
@@ -153,14 +160,9 @@ async def execute_bot_logic(interval):
             result_dict = aggregate_results_by_bot_id(results)
             if result_dict:
                 # Köprü fonksiyonunu çağırıyoruz. Servis nesnesini (order_service) gönderiyoruz.
-                await dispatch_orders_to_engine(order_service, result_dict)
+                await dispatch_orders_to_engine(result_dict)
             #if result_dict:
             #    await save_result_to_json(result_dict, last_time, interval)
-            
-            # TAHANIN PARTI
-            print("result_dict:", result_dict)
-
-            #result = await send_order(await prepare_order_data(result_dict))
             
             elapsed = time.time() - start_time
             print(f"✅ {last_time}, {interval} tamamlandı. Süre: {elapsed:.2f} sn. (toplam sonuç: {len(results)})")
@@ -168,18 +170,40 @@ async def execute_bot_logic(interval):
         except Exception as e:
             print(f"❌ {interval} için bot çalıştırılırken hata: {e}")
 
+import logging
+from backend.trade_engine.order_engine.exchanges.binance.stream import BinanceStreamer
+
+# Log Ayarları
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+
 async def listen_for_notifications():
-    conn_str = "postgresql://postgres:admin@localhost/balina_db"
-
-
-    # Pool ve cache'i önce başlat
-    await start_connection_pool()
-    await wait_for_cache_ready()
+    conn_str = os.getenv("LISTEN_DB_URL", "postgresql://postgres:admin@localhost/balina_db")
 
     await order_service.start(futures_workers=5, spot_workers=2)
 
-    print("🏁 Dinleyici ve Emir Motoru (V2) Aktif.")
+    # --- PRICE CACHE BAŞLAT (STREAMER) ---
+    # Order Service filtreleri yüklediği için oradan sembolleri alabiliriz
+    spot_symbols = []
+    futures_symbols = []
 
+    # SymbolFilterRepo cache yapısı: { "BTCUSDT": { "spot": {...}, "futures": {...} } }
+    if order_service.filter_repo._cache:
+        for symbol, data in order_service.filter_repo._cache.items():
+            if "spot" in data:
+                spot_symbols.append(symbol)
+            if "futures" in data:
+                futures_symbols.append(symbol)
+    
+    streamer = BinanceStreamer(spot_symbols=spot_symbols, futures_symbols=futures_symbols)
+    # Streamer'ı arka planda başlat
+    asyncio.create_task(streamer.start())
+
+    print("🏁 Dinleyici, Emir Motoru ve Fiyat Akışı (Streamer) Aktif.")
+    
     while True:
         try:
             async with await psycopg.AsyncConnection.connect(conn_str, autocommit=True) as conn:
@@ -193,11 +217,12 @@ async def listen_for_notifications():
 
         except (asyncio.CancelledError, KeyboardInterrupt):
             print("⛔ Dinleyici durduruluyor...")
+            streamer.stop() # Streamer'ı temizle
+            await order_service.stop() # Order Service'i ve açık sessionları kapat
             break
         except Exception as e:
             print(f"❌ Dinleyicide hata: {e}. 5 sn sonra yeniden denenecek...")
             await asyncio.sleep(5)
-
 
 if __name__ == "__main__":
     asyncio.run(listen_for_notifications())

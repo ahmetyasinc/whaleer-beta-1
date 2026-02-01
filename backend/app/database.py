@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 
 # .env dosyasını yükle
 load_dotenv()
+load_dotenv(".env.local")
 
 # Asenkron PostgreSQL bağlantı URL'si
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:admin@localhost/balina_db")

@@ -69,7 +69,8 @@ def _get_min_qty(symbol: str, trade_type: str):
 def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
 
     order_fields = {
-        "order_type": "", "stop_loss": 0.0, "take_profit": 0.0, "price": 0.0, "stop_price": 0.0, "stop_limit_price": 0.0,
+        "order_type": "", "stop_loss": 0.0, "take_profit": 0.0, "price": 0.0, "limit_price": 0.0, "trigger_price": 0.0, 
+        "stop_price": 0.0, "stop_limit_price": 0.0,
         "callback_rate": 0.0, "activation_price": 0.0, "time_in_force": ""
     }
 
@@ -95,7 +96,7 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
         return {"bot_id": bot['id'], "status": "no_data", "duration": 0.0}
 
     try:
-        print(f"Bot ID: {bot['id']} çalıştırılıyor...")
+        #print(f"Bot ID: {bot['id']} çalıştırılıyor...")
         results = []
 
         def two_vals_differ(lst, tol=1e-9):
@@ -138,6 +139,14 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
                 result_df['percentage'].iloc[-2:].tolist()
                 if 'percentage' in result_df.columns and len(result_df) >= 2 else None
             )
+            # --- DEBUG: CHECK CANDLE DATA ---
+            # if 'timestamp' in result_df.columns and len(result_df) >= 2:
+            #      last_times = result_df['timestamp'].iloc[-2:].tolist()
+            #      last_closes = result_df['close'].iloc[-2:].tolist()
+            #      print(f"🔎 [DEBUG] Bot {bot['id']} / {coin_id}:")
+            #      print(f"   Timestamps: {last_times}")
+            #      print(f"   Closes:     {last_closes}")
+            # --------------------------------
             print(f"Bot {bot['id']} / {coin_id}: last_positions={last_positions}, last_percentage={last_percentage}")
             both_same = not two_vals_differ(last_positions) and not two_vals_differ(last_percentage)
             both_zero_positions = all(v == 0 for v in last_positions)
@@ -176,21 +185,21 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
             result_entry.update(order_info)
             results.append(result_entry)
 
-        print("results:", results)
+        #print("results:", results)
         bot_type = (bot.get('bot_type') or '').lower()
         trade_type = 'spot' if bot_type == 'spot' else 'futures'
 
         min_usd_map = {}
         for coin_id in bot['stocks']:
             min_qty = _get_min_qty(coin_id, trade_type)
-            print("coin_id, trade_type, min_qty:", coin_id, trade_type, min_qty)
+            #print("coin_id, trade_type, min_qty:", coin_id, trade_type, min_qty)
             last_px = _get_last_price_1m(coin_id)
             if min_qty is not None and last_px is not None:
                 min_usd_map[coin_id] = float(min_qty) * float(last_px)
 
         effective_min_arg = build_effective_min_arg(min_usd_map, floor=10.0)
 
-        print("effective_min_arg:", effective_min_arg)
+        #print("effective_min_arg:", effective_min_arg)
         results = control_the_results(
             bot.get('user_id'),
             bot['id'],

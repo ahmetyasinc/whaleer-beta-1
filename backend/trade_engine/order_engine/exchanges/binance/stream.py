@@ -2,7 +2,7 @@ import asyncio
 import json
 import websockets
 import time
-from core.price_store import price_store, PriceTicker
+from backend.trade_engine.order_engine.core.price_store import price_store, PriceTicker
 
 class BinanceStreamer:
     def __init__(self, spot_symbols: list = None, futures_symbols: list = None):

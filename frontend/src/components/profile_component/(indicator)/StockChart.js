@@ -446,6 +446,7 @@ export default function ChartComponent({ onLoadingChange }) {
     };
 
     const textColor = COLOR_MAP[settings.textColor] ?? "#8C8C8C";
+    const labelColor = settings.labelColor || "white";
     const gridColor = settings?.grid?.color || "#111111";
 
     const crosshairStyle = {
@@ -662,7 +663,7 @@ export default function ChartComponent({ onLoadingChange }) {
         labelDiv.style.cssText = `
           pointer-events: none;
           background: rgba(30,30,30,0);
-          color: white;
+          color: ${labelColor};
           font-size: 12px;
           padding: 4px 8px;
           border-radius: 4px;
@@ -675,7 +676,7 @@ export default function ChartComponent({ onLoadingChange }) {
 
         // Visibility Button
         const visibilityBtn = document.createElement('button');
-        visibilityBtn.style.cssText = 'pointer-events:auto;background:none;border:none;color:white;cursor:pointer;';
+        visibilityBtn.style.cssText = `pointer-events:auto;background:none;border:none;color:${labelColor};cursor:pointer;`;
         const visibilityRoot = createRoot(visibilityBtn);
         const key = `${strategyId}-${subId}`;
 
@@ -700,10 +701,10 @@ export default function ChartComponent({ onLoadingChange }) {
         visibilityBtn.onmouseenter = () => { isHoveringButtons = true; };
         visibilityBtn.onmouseleave = () => { isHoveringButtons = false; };
 
-        const settingsBtn = document.createElement('button'); settingsBtn.style.cssText = 'pointer-events:auto;background:none;border:none;color:white;cursor:pointer;'; settingsBtn.onclick = () => { setActiveStrategyId(strategyId); setActiveSubStrategyId(subId); setSettingsStrategyModalOpen(true); };
+        const settingsBtn = document.createElement('button'); settingsBtn.style.cssText = `pointer-events:auto;background:none;border:none;color:${labelColor};cursor:pointer;`; settingsBtn.onclick = () => { setActiveStrategyId(strategyId); setActiveSubStrategyId(subId); setSettingsStrategyModalOpen(true); };
         settingsBtn.onmouseenter = () => { isHoveringButtons = true; }; settingsBtn.onmouseleave = () => { isHoveringButtons = false; };
         createRoot(settingsBtn).render(<RiSettingsLine size={13} className="hover:text-gray-400" />);
-        const removeBtn = document.createElement('button'); removeBtn.style.cssText = 'pointer-events:auto;background:none;border:none;color:white;cursor:pointer;'; removeBtn.onclick = () => { labelDiv.remove(); removeSubStrategy(strategyId, subId); };
+        const removeBtn = document.createElement('button'); removeBtn.style.cssText = `pointer-events:auto;background:none;border:none;color:${labelColor};cursor:pointer;`; removeBtn.onclick = () => { labelDiv.remove(); removeSubStrategy(strategyId, subId); };
         removeBtn.onmouseenter = () => { isHoveringButtons = true; }; removeBtn.onmouseleave = () => { isHoveringButtons = false; };
         createRoot(removeBtn).render(<AiOutlineClose size={13} className="hover:text-gray-400" />);
         labelDiv.appendChild(title); labelDiv.appendChild(visibilityBtn); labelDiv.appendChild(settingsBtn); labelDiv.appendChild(removeBtn);
@@ -983,7 +984,7 @@ export default function ChartComponent({ onLoadingChange }) {
       toggleBtn.style.cssText = `
          pointer-events: auto;
          background: rgba(30,30,30,0);
-         color: white;
+         color: ${settings.labelColor || "white"};
          font-size: 12px;
          padding: 4px;
          border-radius: 4px;
@@ -1076,7 +1077,7 @@ export default function ChartComponent({ onLoadingChange }) {
               labelDiv.style.cssText = `
                 pointer-events: none;
                 background: rgba(30,30,30,0);
-                color: white;
+                color: ${settings.labelColor || "white"};
                 font-size: 12px;
                 padding: 4px 8px;
                 border-radius: 4px;
@@ -1095,14 +1096,14 @@ export default function ChartComponent({ onLoadingChange }) {
 
               const settingsBtn = document.createElement("button");
               createRoot(settingsBtn).render(<RiSettingsLine size={13} className="hover:text-gray-400" />);
-              settingsBtn.style.cssText = "pointer-events:auto;background:none;border:none;color:white;cursor:pointer;";
+              settingsBtn.style.cssText = `pointer-events:auto;background:none;border:none;color:${settings.labelColor || "white"};cursor:pointer;`;
               settingsBtn.onclick = () => { setActiveIndicatorId(indicatorId); setActiveSubIndicatorId(subId); setSettingsIndicatorModalOpen(true); };
               settingsBtn.onmouseenter = () => { isHoveringButtonsRef.current = true; };
               settingsBtn.onmouseleave = () => { isHoveringButtonsRef.current = false; };
 
               const removeBtn = document.createElement("button");
               createRoot(removeBtn).render(<AiOutlineClose size={13} className="hover:text-gray-400" />);
-              removeBtn.style.cssText = "pointer-events:auto;background:none;border:none;color:white;cursor:pointer;";
+              removeBtn.style.cssText = `pointer-events:auto;background:none;border:none;color:${settings.labelColor || "white"};cursor:pointer;`;
               removeBtn.onclick = () => {
                 // Bu indikatörün tüm serilerini bul ve kaldır
                 indicatorSeriesMapRef.current.forEach((e, k) => {
@@ -1124,7 +1125,7 @@ export default function ChartComponent({ onLoadingChange }) {
               labelDiv._seriesList = [];
 
               const visibilityBtn = document.createElement("button");
-              visibilityBtn.style.cssText = "pointer-events:auto;background:none;border:none;color:white;cursor:pointer;";
+              visibilityBtn.style.cssText = `pointer-events:auto;background:none;border:none;color:${settings.labelColor || "white"};cursor:pointer;`;
               const visibilityRoot = createRoot(visibilityBtn);
               labelDiv._visibilityRoot = visibilityRoot;
 
@@ -1205,6 +1206,11 @@ export default function ChartComponent({ onLoadingChange }) {
             entry.series.setData(formattedData);
             entry.dataMap = timeValueMap;
 
+            // Update label color dynamically
+            if (entry.valueSpan) {
+              entry.valueSpan.style.color = s?.color || 'white';
+            }
+
             // Label görünürlüğünü güncelle
             if (entry.labelDiv) {
               if (entry.labelDiv._updateVisibilityIcon) {
@@ -1234,7 +1240,7 @@ export default function ChartComponent({ onLoadingChange }) {
 
     updateIndicatorToggleUI();
 
-  }, [indicatorData, isLoading]);
+  }, [indicatorData, isLoading, chartData, strategyData, selectedPeriod, settings]);
 
   // 🔽 YENİ: Ruler mode veya settings değişince crosshair güncelle
   useEffect(() => {

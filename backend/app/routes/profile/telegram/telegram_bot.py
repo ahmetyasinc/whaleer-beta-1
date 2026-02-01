@@ -226,7 +226,8 @@ async def telegram_webhook(
     if text.startswith("/start"):
         parts = text.split(maxsplit=1)
         if len(parts) == 1:
-            # token yok; kullanıcıya rehber bir mesaj göndermek istersen burada gönderebilirsin
+            # Token yok, kullanıcıya bilgi verelim
+            await send_telegram_message(chat_id, "ℹ️ Hesabınızı bağlamak için lütfen Whaleer panelindeki <b>Telegram Bağla</b> butonunu kullanın.")
             return {"ok": True}
 
         token = parts[1].strip()

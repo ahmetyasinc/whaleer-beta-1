@@ -10,6 +10,7 @@ const DEFAULTS = {
   theme: "dark",
   bgColor: "#000007",
   textColor: "white",
+  labelColor: "white",
   cursorType: "crosshair",
   timezoneMode: "local",
   timezoneFixed: "GMT+03:00",
@@ -111,6 +112,11 @@ export default function SettingsModal({ open, onClose, locale }) {
     textColor: ONE_OF(
       settings?.textColor,
       ["white", "black", "gray", "yellow", "red", "green"],
+      "white"
+    ),
+    labelColor: ONE_OF(
+      settings?.labelColor,
+      ["white", "black"],
       "white"
     ),
     cursorType: ONE_OF(settings?.cursorType, ["crosshair", "arrow", "dot"], "crosshair"),
@@ -342,6 +348,7 @@ export default function SettingsModal({ open, onClose, locale }) {
                       ...prev,
                       bgColor: DEFAULTS.bgColor,
                       textColor: DEFAULTS.textColor,
+                      labelColor: DEFAULTS.labelColor,
                       cursorType: DEFAULTS.cursorType,
                       grid: { ...prev.grid, color: DEFAULTS.grid.color },
                       series: { ...prev.series, type: DEFAULTS.series.type },
@@ -379,6 +386,21 @@ export default function SettingsModal({ open, onClose, locale }) {
                   <option value="yellow">{t("options.yellow")}</option>
                   <option value="red">{t("options.red")}</option>
                   <option value="green">{t("options.green")}</option>
+                </select>
+              </div>
+
+              {/* Label Color */}
+              <div className="flex items-center justify-between">
+                <label className="text-gray-300 text-sm">{t("fields.labelColor") || "Label Color"}</label>
+
+                <select
+                  className="bg-black border border-gray-700 rounded-md px-2 py-1 text-gray-200"
+                  value={localState.labelColor}
+                  onChange={(e) => handleChange("labelColor", e.target.value)}
+                  aria-label={t("fields.labelColor") || "Label Color"}
+                >
+                  <option value="white">{t("options.white")}</option>
+                  <option value="black">{t("options.black")}</option>
                 </select>
               </div>
 

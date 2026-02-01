@@ -1,10 +1,13 @@
-# data_access/repos/crud.py
+# backend/trade_engine/order_engine/data_access/repos/crud.py
 import asyncio
 import logging
 from typing import Dict, List, Optional, Any
+import os
+import httpx
+from dotenv import load_dotenv
 
 # Yeni config yapısından connection context manager'ı alıyoruz
-from config import asyncpg_connection
+from backend.trade_engine.config import asyncpg_connection
 
 # Logger ayarları
 logger = logging.getLogger(__name__)
@@ -441,9 +444,92 @@ async def insert_bot_trade(trade_data: dict):
             record_id = await conn.fetchval(sql, *params)
             return record_id
     except Exception as e:
-        # Hata durumunda loga basar ama programı durdurmaz (None döner)
-        logger.error(f"❌ Trade DB Kayıt Hatası: {e}")
         return None
+
+async def get_bot_basic_info(bot_id: int) -> Dict:
+    """
+    Botun temel bigilerini (adını) döndürür.
+    """
+    try:
+        query = "SELECT id, name, user_id FROM public.bots WHERE id = $1"
+        rows = await _fetch(query, bot_id)
+        if rows:
+            return dict(rows[0])
+        return {}
+    except Exception as e:
+        logger.error(f"❌ get_bot_basic_info error: {e}")
+        return {}
+
+
+async def send_telegram_notification_raw(user_id: int, message: str):
+    """
+    ORM kullanmadan, doğrudan SQL ve HTTP isteği ile Telegram bildirimi gönderir.
+    Runner gibi izole ortamlarda ORM/Registry hatalarını önlemek için kullanılır.
+    """
+    try:
+        # 1. Ortam değişkenlerini yükle (Token için)
+        # Dosya konumuna göre backend klasörünü bulalım
+        # crud.py: backend/trade_engine/order_engine/data_access/repos/crud.py
+        # backend/: 5 üst dizin
+        try:
+            current_file_path = os.path.abspath(__file__)
+            backend_dir = os.path.dirname( # repos
+                            os.path.dirname( # data_access
+                                os.path.dirname( # order_engine
+                                    os.path.dirname( # trade_engine
+                                        os.path.dirname(current_file_path) # backend
+                                    )
+                                )
+                            )
+                        )
+            env_path = os.path.join(backend_dir, ".env.local")
+            if os.path.exists(env_path):
+                load_dotenv(env_path)
+            else:
+                # Fallback: CWD veya backend/ altını dene
+                load_dotenv("backend/.env.local")
+                load_dotenv(".env.local")
+        except Exception as e:
+            logger.warning(f"⚠️ Env yükleme hatası: {e}")
+
+        # Ayrıca .env de yükleyelim (yedek)
+        load_dotenv()
+        
+        token = os.getenv("TELEGRAM_BOT_TOKEN")
+        if not token:
+            logger.warning("⚠️ TELEGRAM_BOT_TOKEN bulunamadı. Bildirim gönderilemiyor.")
+            return
+
+        # 2. Chat ID'yi bul (SQL)
+        chat_id = None
+        sql = "SELECT chat_id FROM public.telegram_accounts WHERE user_id = $1 AND is_active = true LIMIT 1"
+        
+        # _fetch yardımcısını kullanıyoruz (asyncpg pool)
+        rows = await _fetch(sql, user_id)
+        if rows:
+            chat_id = rows[0]["chat_id"]
+        
+        if not chat_id:
+            logger.warning(f"⚠️ User {user_id} için aktif Telegram kaydı bulunamadı.")
+            return
+
+        # 3. HTTP İsteği ile Mesaj Gönder (httpx)
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        payload = {
+            "chat_id": chat_id,
+            "text": message,
+            "parse_mode": "HTML"
+        }
+        
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(url, json=payload)
+            if resp.status_code != 200:
+                logger.error(f"❌ Telegram API Hatası: {resp.text}")
+            # else:
+            #    logger.info(f"✅ Telegram bildirimi gönderildi: User {user_id}")
+
+    except Exception as e:
+        logger.error(f"❌ send_telegram_notification_raw hatası: {e}")
 
 # ==========================================
 # TEST BLOKU (OPSİYONEL)
@@ -451,7 +537,7 @@ async def insert_bot_trade(trade_data: dict):
 async def main():
     print("🚀 CRUD Test Başlıyor...")
     # Test kodları buraya gelebilir
-    from config import close_async_pool
+    from backend.trade_engine.config import close_async_pool
     await close_async_pool()
 
 if __name__ == "__main__":

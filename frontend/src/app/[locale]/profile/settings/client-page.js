@@ -53,7 +53,7 @@ function splitLocalePath(pathname, locales = LOCALES) {
 function normalizeTimezoneCookieValue(tzValue) {
   if (!tzValue) return 'GMT+00:00';
   if (/^GMT[+-]\d{2}:\d{2}$/.test(tzValue) || tzValue === 'GMT+00:00') return tzValue;
-  return 'GMT+00:00'; 
+  return 'GMT+00:00';
 }
 
 /* =========================
@@ -107,12 +107,12 @@ export default function SettingsPage() {
   // --- Handlers ---
   const handleLanguageChange = async (lng) => {
     update('language', lng);
-    try { await i18n.changeLanguage(lng); } catch {}
+    try { await i18n.changeLanguage(lng); } catch { }
     mergeSettingsCookie({ language: lng });
     setLangCookie(lng);
 
     const { rest } = splitLocalePath(pathname, LOCALES);
-    const next = `/${lng}/${rest || ''}`.replace(/\/+$/,'');
+    const next = `/${lng}/${rest || ''}`.replace(/\/+$/, '');
     router.replace(next || `/${lng}`);
   };
 
@@ -147,7 +147,7 @@ export default function SettingsPage() {
     setLangCookie(DEFAULTS.language);
     i18n.changeLanguage(DEFAULTS.language).catch(console.error);
     const { rest } = splitLocalePath(pathname, LOCALES);
-    const next = `/${DEFAULTS.language}/${rest || ''}`.replace(/\/+$/,'');
+    const next = `/${DEFAULTS.language}/${rest || ''}`.replace(/\/+$/, '');
     router.replace(next || `/${DEFAULTS.language}`);
     setSavedAt(new Date());
   };
@@ -174,26 +174,26 @@ export default function SettingsPage() {
         return <AccountSecurityCard t={t} />;
       case 'language':
         return (
-          <LanguageCard 
-            t={t} 
-            currentLang={form.language} 
-            onLanguageChange={handleLanguageChange} 
+          <LanguageCard
+            t={t}
+            currentLang={form.language}
+            onLanguageChange={handleLanguageChange}
           />
         );
       case 'theme':
         return (
-          <ThemeCard 
-            t={t} 
-            currentTheme={form.theme} 
-            onThemeChange={handleThemeChange} 
+          <ThemeCard
+            t={t}
+            currentTheme={form.theme}
+            onThemeChange={handleThemeChange}
           />
         );
       case 'timezone':
         return (
-          <TimezoneCard 
-            t={t} 
-            currentTimezone={form.timezone} 
-            onTimezoneChange={handleTimezoneChange} 
+          <TimezoneCard
+            t={t}
+            currentTimezone={form.timezone}
+            onTimezoneChange={handleTimezoneChange}
           />
         );
       case 'telegram':
@@ -205,9 +205,9 @@ export default function SettingsPage() {
 
   return (
     <div className="w-full h-screen flex flex-col bg-black/40 text-white overflow-hidden">
-      
+
       {/* HEADER */}
-      <SettingsHeader 
+      <SettingsHeader
         t={t}
         savedInfo={savedInfo}
         saving={saving}
@@ -219,18 +219,18 @@ export default function SettingsPage() {
 
       {/* ALT KISIM: SOL MENÜ + SAĞ İÇERİK */}
       <div className="flex flex-1 overflow-hidden">
-        
+
         {/* SOL MENÜ */}
-        <LeftMenuSettings 
-          t={t} 
-          activeTab={activeTab} 
-          setActiveTab={setActiveTab} 
+        <LeftMenuSettings
+          t={t}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
         />
 
         {/* SAĞ İÇERİK ALANI */}
         <main className="flex-1 overflow-y-auto bg-transparent relative">
-          <div className="max-w-5xl mx-auto py-8 px-6">
-            
+          <div className="max-w-full mx-auto py-8 px-8">
+
             {error && (
               <div className="mb-6 p-3 rounded-lg bg-rose-900/40 border border-rose-700/60 text-rose-200">
                 {error}

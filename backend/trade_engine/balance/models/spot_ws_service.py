@@ -8,7 +8,7 @@ from backend.trade_engine import config
 from backend.trade_engine.config import asyncpg_connection
 from backend.trade_engine.balance.db import stream_key_db
 from backend.trade_engine.balance.db.balance_writer_db import batch_upsert_balances, batch_insert_orders
-from backend.trade_engine.taha_part.utils.price_cache_new import get_price
+from backend.trade_engine.order_engine.core.price_store import price_store
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -236,8 +236,10 @@ class SpotWsApiManager:
                     commission_in_usdt = commission_amount
                     if commission_asset and commission_asset.upper() != "USDT" and commission_amount > 0:
                         try:
-                            price = await get_price(f"{commission_asset.upper()}USDT", "spot")
-                            if price and price > 0: commission_in_usdt = commission_amount * Decimal(str(price))
+                            ticker = price_store.get_price("BINANCE_SPOT", f"{commission_asset.upper()}USDT")
+                            if ticker:
+                                price = ticker.last
+                                if price > 0: commission_in_usdt = commission_amount * Decimal(str(price))
                         except Exception: pass
                     cummulative_quote_qty = Decimal(event.get("Z", "0"))
                     executed_quantity = Decimal(event.get("z", "0"))

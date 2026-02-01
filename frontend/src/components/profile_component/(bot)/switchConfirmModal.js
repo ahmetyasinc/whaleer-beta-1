@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { FaExclamationTriangle } from "react-icons/fa";
 import { useTranslation, Trans } from "react-i18next";
 
@@ -8,6 +9,12 @@ const CriticalConfirmModal = ({ isOpen, onClose, onConfirm }) => {
   const { t } = useTranslation("criticalConfirmModal");
   const [countdown, setCountdown] = useState(5);
   const [showWhiteFlash, setShowWhiteFlash] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -24,15 +31,15 @@ const CriticalConfirmModal = ({ isOpen, onClose, onConfirm }) => {
     return () => clearInterval(interval);
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!mounted || !isOpen) return null;
 
-  return (
+  return createPortal(
     <>
       {showWhiteFlash && (
         <div className="fixed inset-0 z-[9999] bg-white animate-fadeout pointer-events-none" />
       )}
 
-      <div className="fixed inset-0 z-50">
+      <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm">
         <div className="relative grid min-h-dvh place-items-center p-4">
           <div
             className="bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white rounded-2xl shadow-2xl shadow-red-500/20 border border-zinc-800 ring-1 ring-red-500/20 w-full max-w-md p-8 relative max-h-[calc(100dvh-2rem)] overflow-y-auto animate-fade-in"
@@ -80,11 +87,10 @@ const CriticalConfirmModal = ({ isOpen, onClose, onConfirm }) => {
                 <button
                   disabled={countdown > 0}
                   onClick={onConfirm}
-                  className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 ${
-                    countdown > 0
+                  className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 ${countdown > 0
                       ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
                       : "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/40 transform hover:scale-[1.01]"
-                  }`}
+                    }`}
                   aria-live="polite"
                   aria-label={
                     countdown > 0
@@ -121,7 +127,8 @@ const CriticalConfirmModal = ({ isOpen, onClose, onConfirm }) => {
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 };
 

@@ -2,10 +2,6 @@ import asyncio
 import sys
 import time
 import psycopg
-from backend.trade_engine.taha_part.utils.price_cache_new import (
-    start_connection_pool,
-    wait_for_cache_ready
-)
 import asyncpg
 import os
 from backend.trade_engine.order_engine.core.order_execution_service import OrderExecutionService, OrderRequest
@@ -15,11 +11,11 @@ from backend.trade_engine.process.trade_engine import run_trade_engine
 # listen_service.py (üst importlara ekle)
 from backend.trade_engine.process.process import run_all_bots_async, handle_rent_expiry_closures  # NEW
 from backend.trade_engine.process.save import save_result_to_json, aggregate_results_by_bot_id    # NEW
-# Emir gönderim sistemi (ileride aktif edeceksin)
-from backend.trade_engine.taha_part.utils.order_final_optimized import (
-    prepare_order_data,
-    send_order
-)
+
+# LOGGING DEFINITION
+import logging
+logger = logging.getLogger("StrategyEngine")
+
 if sys.platform.startswith('win'):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
@@ -43,7 +39,7 @@ async def dispatch_orders_to_engine(result_dict):
     if not result_dict:
         return
 
-    print(f"⚡ Emirler Order Engine v2'ye iletiliyor... (Toplam Bot: {len(result_dict)})")
+    logger.info(f"⚡ Emirler Order Engine v2'ye iletiliyor... (Toplam Bot: {len(result_dict)})")
     
     for bot_id, trades in result_dict.items():
         # trades listesi içindeki her bir işlem kararı için:
@@ -55,15 +51,28 @@ async def dispatch_orders_to_engine(result_dict):
         
         for trade in iterator:
             # Trade objesi bir dict mi yoksa class mı kontrolü (genelde dict döner)
-            symbol = trade.get("symbol")
-            side = trade.get("signal")  # BUY / SELL
-            amount = trade.get("amount", 0) # USD cinsinden değer
+            # DÜZELTME: Gelen veri formatına göre key'ler güncellendi
+            symbol = trade.get("coin_id") or trade.get("symbol")
+            side = trade.get("side") or trade.get("signal")  # BUY / SELL
+            amount = trade.get("value") or trade.get("amount", 0) # USD cinsinden değer
             
             # Trade tipi (varsayılan futures, bottan geliyorsa onu kullan)
             trade_type = trade.get("trade_type", "futures") 
             
             if not side or side == "NEUTRAL":
                 continue
+
+            # positionside (Binance Futures için önemli)
+            position_side = trade.get("positionside") or trade.get("positionSide")
+            
+            # Order Type ve Price (Limit Emirler için)
+            order_type = trade.get("order_type", "MARKET").upper()
+            price = None
+            if order_type in ["LIMIT", "STOP", "TAKE_PROFIT", "STOP_MARKET", "TAKE_PROFIT_MARKET"]:
+                # Strateji bazen 'limit_price', bazen 'price' dönebilir
+                val = trade.get("price") or trade.get("limit_price")
+                if val:
+                    price = float(val)
 
             # --- YENİ SİSTEME UYGUN ORDER REQUEST OLUŞTURMA ---
             req = OrderRequest(
@@ -74,8 +83,10 @@ async def dispatch_orders_to_engine(result_dict):
                 exchange_name="binance",    # İleride dinamik olabilir
                 trade_type=trade_type,      # spot / futures
                 leverage=int(trade.get("leverage", 1)),
-                order_type="MARKET",        # Strateji market emri üretiyor varsayımı
+                order_type=order_type,       # <-- DÜZELTİLDİ: Dinamik type
+                price=price,                 # <-- EKLENDI: Limit fiyat
                 reduce_only=trade.get("reduce_only", False),
+                position_side=position_side, 
                 # stop_price vs. eklenebilir eğer strateji veriyorsa
             )
 
@@ -86,12 +97,12 @@ async def handle_new_data(payload):
     interval = payload.strip()
 
     if interval not in interval_locks:
-        print(f"⚠ Bilinmeyen interval: {interval}")
+        logger.warning(f"⚠ Bilinmeyen interval: {interval}")
         return
 
     # Eğer zaten kuyruktaysa tekrar eklenmesin
     if interval in queued_intervals:
-        print(f"🔁 {interval} zaten sırada bekliyor.")
+        logger.debug(f"🔁 {interval} zaten sırada bekliyor.")
         return
 
     queued_intervals.add(interval)
@@ -99,7 +110,7 @@ async def handle_new_data(payload):
     # 1m için öncelikli kilit alınır
     if interval == priority_interval:
         if priority_lock.locked():
-            print(f"❌❌❌ {interval} zaten çalışıyor.")
+            logger.warning(f"❌❌❌ {interval} zaten çalışıyor.")
             queued_intervals.discard(interval)
             return
         async with priority_lock:
@@ -107,7 +118,7 @@ async def handle_new_data(payload):
     else:
         # 1m çalışıyorsa bekle
         while priority_lock.locked():
-            print(f"⏸ {interval} için bekleniyor... (öncelikli {priority_interval} çalışıyor)")
+            logger.debug(f"⏸ {interval} için bekleniyor... (öncelikli {priority_interval} çalışıyor)")
             await asyncio.sleep(1)
         await execute_bot_logic(interval)
 
@@ -119,18 +130,18 @@ async def execute_bot_logic(interval):
     lock = interval_locks[interval]
 
     if lock.locked():
-        print(f"❌❌❌ {interval} zaten çalışıyor.")
+        logger.warning(f"❌❌❌ {interval} zaten çalışıyor.")
         return
 
     async with lock:
         start_time = time.time()
-        print(f"🚀 Yeni veri geldi. {interval} botları çalıştırılıyor...")
+        logger.info(f"🚀 Yeni veri geldi. {interval} botları çalıştırılıyor...")
 
         try:
             last_time = load_last_data(interval)
 
             # 1) Strateji + veri + bot listesi
-            strategies_with_indicators, coin_data_dict, bots = await run_trade_engine(interval)
+            strategies_with_indicators, coin_data_dict, bots = await run_trade_engine(interval, min_timestamp=last_time)
 
             # 2) Önce kiralık kapanışlarını HER KOŞULDA çalıştır (bot olsa da olmasa da)
             #    Boş bir results listesi ile başla, handle_rent_expiry_closures içine merge ettir.
@@ -146,58 +157,73 @@ async def execute_bot_logic(interval):
                 if bot_results:
                     results.extend(bot_results)
             else:
-                print(f"ℹ {interval}: Bot çalıştırma atlandı (eksik veri ya da aktif bot yok).")
+                logger.info(f"ℹ {interval}: Bot çalıştırma atlandı (eksik veri ya da aktif bot yok).")
 
             # 4) Sonuçları grupla + JSON'a kaydet (sadece varsa)
             
             result_dict = aggregate_results_by_bot_id(results)
             if result_dict:
                 # Köprü fonksiyonunu çağırıyoruz. Servis nesnesini (order_service) gönderiyoruz.
-                await dispatch_orders_to_engine(order_service, result_dict)
+                await dispatch_orders_to_engine(result_dict)
             #if result_dict:
             #    await save_result_to_json(result_dict, last_time, interval)
             
-            # TAHANIN PARTI
-            print("result_dict:", result_dict)
-
-            #result = await send_order(await prepare_order_data(result_dict))
-            
             elapsed = time.time() - start_time
-            print(f"✅ {last_time}, {interval} tamamlandı. Süre: {elapsed:.2f} sn. (toplam sonuç: {len(results)})")
+            logger.info(f"✅ {last_time}, {interval} tamamlandı. Süre: {elapsed:.2f} sn. (toplam sonuç: {len(results)})")
 
         except Exception as e:
-            print(f"❌ {interval} için bot çalıştırılırken hata: {e}")
+            logger.error(f"❌ {interval} için bot çalıştırılırken hata: {e}")
+
+import logging
+from backend.trade_engine.order_engine.exchanges.binance.stream import BinanceStreamer
+
+# Log Ayarları
+# logging.basicConfig(...) KALDIRILDI - UnifiedRunner kontrol edecek
+logger = logging.getLogger("StrategyEngine")
 
 async def listen_for_notifications():
-    conn_str = "postgresql://postgres:admin@localhost/balina_db"
-
-
-    # Pool ve cache'i önce başlat
-    await start_connection_pool()
-    await wait_for_cache_ready()
+    conn_str = os.getenv("LISTEN_DB_URL", "postgresql://postgres:admin@localhost/balina_db")
 
     await order_service.start(futures_workers=5, spot_workers=2)
 
-    print("🏁 Dinleyici ve Emir Motoru (V2) Aktif.")
+    # --- PRICE CACHE BAŞLAT (STREAMER) ---
+    # Order Service filtreleri yüklediği için oradan sembolleri alabiliriz
+    spot_symbols = []
+    futures_symbols = []
 
+    # SymbolFilterRepo cache yapısı: { "BTCUSDT": { "spot": {...}, "futures": {...} } }
+    if order_service.filter_repo._cache:
+        for symbol, data in order_service.filter_repo._cache.items():
+            if "spot" in data:
+                spot_symbols.append(symbol)
+            if "futures" in data:
+                futures_symbols.append(symbol)
+    
+    streamer = BinanceStreamer(spot_symbols=spot_symbols, futures_symbols=futures_symbols)
+    # Streamer'ı arka planda başlat
+    asyncio.create_task(streamer.start())
+
+    logger.info("🏁 Dinleyici, Emir Motoru ve Fiyat Akışı (Streamer) Aktif.")
+    
     while True:
         try:
             async with await psycopg.AsyncConnection.connect(conn_str, autocommit=True) as conn:
                 async with conn.cursor() as cur:
                     await cur.execute("LISTEN new_data;")
-                    print("📡 PostgreSQL'den tetikleme bekleniyor...")
+                    logger.info("📡 PostgreSQL'den tetikleme bekleniyor...")
 
                     async for notify in conn.notifies():
-                        print(f"🔔 Tetikleme: {notify.payload}")
+                        logger.info(f"🔔 Tetikleme: {notify.payload}")
                         asyncio.create_task(handle_new_data(notify.payload))
 
         except (asyncio.CancelledError, KeyboardInterrupt):
-            print("⛔ Dinleyici durduruluyor...")
+            logger.info("⛔ Dinleyici durduruluyor...")
+            streamer.stop() # Streamer'ı temizle
+            await order_service.stop() # Order Service'i ve açık sessionları kapat
             break
         except Exception as e:
-            print(f"❌ Dinleyicide hata: {e}. 5 sn sonra yeniden denenecek...")
+            logger.error(f"❌ Dinleyicide hata: {e}. 5 sn sonra yeniden denenecek...")
             await asyncio.sleep(5)
-
 
 if __name__ == "__main__":
     asyncio.run(listen_for_notifications())

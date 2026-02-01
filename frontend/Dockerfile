@@ -4,8 +4,15 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --legacy-peer-deps
 COPY . .
+ARG APP_ENV=local
+# Copy the correct environment file to .env
+COPY .env.$APP_ENV .env
+
 ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_APP_ORIGIN
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_APP_ORIGIN=$NEXT_PUBLIC_APP_ORIGIN
+
 RUN npm run build
 
 # Production Stage

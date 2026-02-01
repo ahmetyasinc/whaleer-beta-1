@@ -1,23 +1,89 @@
 'use client';
 
-
 import { useState, useRef, useEffect, useMemo } from 'react';
+import { createPortal } from "react-dom";
 import useBotExamineStore from "@/store/bot/botExamineStore";
 import { useBotStore } from "@/store/bot/botStore";
-import { BotModal } from './botModal';
+import { BotModal } from './createBotModal';
 import { FaRegTrashAlt } from 'react-icons/fa';
 import { FiEdit3 } from 'react-icons/fi';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { IoSearch } from "react-icons/io5";
 import RunBotToggle from './runBotToggle';
-import SpinningWheel from './spinningWheel';
+import WorkingBotAnimation from './workingBotAnimation';
 import ExamineBot from "./examineBot";
-import { FaBan } from "react-icons/fa6";
+import { FaCheck } from "react-icons/fa";
 import DeleteBotConfirmModal from "./deleteBotConfirmModal";
+
+/* ---- Portal Tooltip Component ---- */
+const PortalTooltip = ({ children, content }) => {
+  const [visible, setVisible] = useState(false);
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
+  const triggerRef = useRef(null);
+
+  const showTooltip = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setCoords({
+        top: rect.top - 10, // Biraz yukarı
+        left: rect.left + rect.width / 2
+      });
+      setVisible(true);
+    }
+  };
+
+  const hideTooltip = () => setVisible(false);
+
+  return (
+    <>
+      <div
+        ref={triggerRef}
+        onMouseEnter={showTooltip}
+        onMouseLeave={hideTooltip}
+        className="inline-block"
+      >
+        {children}
+      </div>
+      {visible && createPortal(
+        <div
+          className="fixed z-[9999] -translate-x-1/2 -translate-y-full w-48 p-2 bg-black border border-zinc-700 rounded-md shadow-xl text-xs text-zinc-300 text-center leading-relaxed pointer-events-none animate-in fade-in zoom-in-95 duration-150"
+          style={{ top: coords.top, left: coords.left }}
+        >
+          {content}
+          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-black border-r border-b border-zinc-700 rotate-45"></div>
+        </div>,
+        document.body
+      )}
+    </>
+  );
+};
+
+const AnimatedDots = () => {
+  const [dots, setDots] = useState("");
+
+  useEffect(() => {
+    let step = 0;
+    const interval = setInterval(() => {
+      step = (step + 1) % 6;
+      if (step === 0) setDots("");
+      else if (step === 1) setDots(".");
+      else if (step === 2) setDots("..");
+      else if (step === 3) setDots("...");
+      else if (step === 4) setDots("..");
+      else if (step === 5) setDots(".");
+    }, 400);
+    return () => clearInterval(interval);
+  }, []);
+
+  return <span className="inline-block w-3 text-left">{dots}</span>;
+};
 import ShutDownBotModal from "./shutDownBotModal";
 import BotToggleConfirmModal from "./botToggleConfirmModal";
 import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
+import { useBotPerformanceStore } from "@/store/bot/botPerformanceStore";
+import { FaBan } from "react-icons/fa";
+import { GrCircleQuestion } from "react-icons/gr";
+import Gauge from './gauge';
 
 /* ---- Type rozet stili ---- */
 function getTypeBadgeClasses(type) {
@@ -84,13 +150,39 @@ function RentedCountdown({ rent_expires_at }) {
   );
 }
 
-export const BotCard = ({ bot, column }) => {
+export const BotCard = ({ bot }) => {
   const { t } = useTranslation("botCard");
   // === STORE & ACTIONLAR ===
   const removeBot = useBotStore((state) => state.removeBot);
   const shutDownBot = useBotStore((state) => state.shutDownBot);
   const toggleBotActive = useBotStore((state) => state.toggleBotActive);
   const { fetchAndStoreBotAnalysis } = useBotExamineStore.getState();
+
+  // === PERFORMANCE STORE ===
+  const generatePerformance = useBotPerformanceStore((state) => state.generatePerformanceData);
+  const perfData = useBotPerformanceStore((state) => state.performanceData[bot.id]);
+
+  useEffect(() => {
+    // Veri yoksa veya bot id/type değiştiyse oluştur
+    if (bot.id && bot.type && !perfData) {
+      // User request: "başlangıç bakiyesini modalden al... oluşturma tarihini de bot oluşturulduğu tarihi al"
+      // bot.initial_usd_value -> Başlangıç bakiyesi
+      // bot.created_at -> Başlangıç tarihi (eğer varsa, yoksa fallback)
+
+      const initialValues = {
+        initialBalance: bot.initial_usd_value || bot.balance || 0,
+        startDate: bot.created_at || new Date().toISOString()
+      };
+
+      generatePerformance(bot.id, bot.type, initialValues);
+    }
+  }, [bot.id, bot.type, bot.initial_usd_value, bot.balance, bot.created_at, generatePerformance, perfData]);
+
+  // Yardımcı format fonksiyonları
+  const fmtMoney = (val) => val?.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) || '$0.00';
+  const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
+  const isFutures = bot.type?.toLowerCase()?.includes('future');
+
 
   // === UI STATE ===
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -104,18 +196,9 @@ export const BotCard = ({ bot, column }) => {
   const [isExamineOpen, setIsExamineOpen] = useState(false);
   const menuRef = useRef(null);
 
-
-
   // === RENTED KONTROL & SAYAÇ ===
   const isRented = bot?.acquisition_type === "RENTED";
-
-  // Kira bitişi (ms cinsinden)
-  const expiryMs =
-    isRented && bot?.rent_expires_at
-      ? new Date(bot.rent_expires_at).getTime()
-      : null;
-
-  // Süresi dolmuş mu?
+  const expiryMs = isRented && bot?.rent_expires_at ? new Date(bot.rent_expires_at).getTime() : null;
   const isExpired = isRented && (expiryMs ? Date.now() >= expiryMs : true);
 
   // Saniyelik tick (countdown için)
@@ -144,32 +227,19 @@ export const BotCard = ({ bot, column }) => {
     bot?.current_usd_value == null ||
     typeof bot?.api === "undefined";
 
-  // Toggle için temel disable title (bakiyeye bakmadan önce)
+  // Toggle için temel disable title
   const disableTitle = isBlocked
     ? t("toggle.blocked")
     : isRented && isExpired
       ? t("toggle.expired")
       : undefined;
 
-  // === DEPOZİTO & TOGGLE LOGIC (Cleaned) ===
-  const isProfitShareMode = !!bot?.profit_share_only;
-  // const [showDeposit, setShowDeposit] = useState(false); // Removed
-
+  // === TOGGLE LOGIC ===
   const canToggle = !isBlocked && !!bot.api;
-  // const isDepositTooLow = isProfitShareMode && balance < 10; // Removed deposit check
   const finalToggleDisabled = !canToggle;
-
   const finalDisableTitle = disableTitle;
 
-  const redDisableWrap = finalToggleDisabled
-    ? "ring-1 ring-red-700 rounded-md p-1 bg-red-500/10"
-    : "";
-
-
-
-  // === Depozito işlemleri ===
-
-
+  // === Toggle Confirmation ===
   const handleConfirmToggle = () => {
     if (bot?.id) {
       toggleBotActive(bot.id);
@@ -177,129 +247,347 @@ export const BotCard = ({ bot, column }) => {
     setToggleConfirmOpen(false);
   };
 
-  /* ==== SOL KART ==== */
-  if (column === "left") {
-    return (
-      <>
-        <div className="rounded-r-full px-4 py-4 relative border-2 border-cyan-900 bg-[hsl(227,82%,2%)] text-gray-200">
-          <div className="grid grid-cols-3 divide-x divide-gray-700">
+  /* ==== KART TASARIMI ==== */
+  return (
+    <>
+      <div className={`group relative rounded-xl overflow-hidden transition-all duration-300 bg-zinc-950 border w-full ${bot.isActive ? 'border-emerald-500/40 shadow-[0_0_15px_-3px_rgba(16,185,129,0.2)]' : 'border-zinc-800/60'}`}>
 
-            {/* SOL: Bot Bilgi Alanı */}
-            <div className="pr-4">
-              {/* Başlık satırı: İsim + Type + Menü */}
-              <div className="flex items-center gap-2 border-b border-gray-600 pb-[10px] mb-2">
-                <h3 className="text-[18px] font-semibold text-white truncate flex-1">{bot.name}</h3>
-                <TypeBadge type={bot.type} />
-                <div className="relative shrink-0" ref={menuRef}>
-                  <button
-                    onClick={() => setMenuOpen(!menuOpen)}
-                    className="p-2 rounded hover:bg-gray-700"
-                    aria-label={t("menu.moreActions")}
-                    title={t("menu.moreActions")}
-                  >
-                    <BsThreeDotsVertical className="text-gray-300" size={18} />
-                  </button>
-                  {menuOpen && (
-                    <div className="absolute right-0 top-8 w-40 bg-gray-900 rounded shadow-md z-50">
-                      <button
-                        onClick={() => { setEditing(true); setMenuOpen(false); }}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-blue-400 hover:bg-gray-800">
-                        <FiEdit3 size={16} /> {t("menu.edit")}
-                      </button>
+        {/* Neon Glow Border Effect */}
+        <div className="absolute inset-0 rounded-xl p-[1px] bg-gradient-to-br from-cyan-500/30 via-zinc-800/0 to-purple-500/30 -z-10 opacity-30 transition-opacity" />
 
-                      <button
-                        onClick={() => { setSelectedBotId(bot.id); setDeleteModalOpen(true); setMenuOpen(false); }}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-800">
-                        <FaRegTrashAlt size={16} /> {t("menu.deleteDev")}
-                      </button>
+        <div className="grid grid-cols-6 h-full bg-zinc-950/80 backdrop-blur-sm p-5 w-full">
 
-                      <button
-                        onClick={() => {
-                          if (isBlocked) return;
-                          setIsExamineOpen(true);
-                          fetchAndStoreBotAnalysis(bot.id);
-                          setMenuOpen(false);
-                        }}
-                        disabled={isBlocked}
-                        aria-disabled={isBlocked}
-                        title={isBlocked ? t("examine.disabledTitle") : t("menu.examine")}
-                        className={[
-                          "flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-700",
-                          isBlocked ? "text-gray-500 cursor-not-allowed pointer-events-none" : "text-yellow-400"
-                        ].join(' ')}
-                      >
-                        <IoSearch size={16} /> {t("menu.examine")}
-                      </button>
-
-                      <button
-                        onClick={() => { setSelectedBotId(bot.id); setShotDownModalOpen(true); setMenuOpen(false); }}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-gray-700"
-                        title={t("menu.shutdownTitle")}>
-                        <FaBan size={16} /> {t("menu.shutdown")}
-                      </button>
-                    </div>
-                  )}
+          {/* SÜTUN 1: Bot Bilgi Alanı */}
+          <div className="flex flex-col gap-3 pr-4 border-r border-zinc-800/50">
+            {/* Başlık satırı */}
+            <div className="flex items-start justify-between">
+              <div className="flex flex-col w-[calc(100%-24px)]">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-100 to-blue-200 truncate leading-tight drop-shadow-[0_0_10px_rgba(34,211,238,0.3)]">
+                    {bot.name}
+                  </h3>
+                  <div className="shrink-0 flex">
+                    <TypeBadge type={bot.type} />
+                  </div>
                 </div>
               </div>
 
-              <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.api")}</span> {bot.api}</p>
-              <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.strategy")}</span> {bot.strategy}</p>
-              <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.period")}</span> {bot.period}</p>
-              <p className="mb-1 text-[14px]">
-                <span className="text-stone-500">{t("fields.days")}</span> {Array.isArray(bot.days) ? bot.days.join(', ') : t("daysUndefined")}
-              </p>
-              <p className="mb-1 text-[14px]"><span className="text-stone-500">{t("fields.hours")}</span> {bot.startTime} - {bot.endTime}</p>
-              <p className="mb-1 text-[14px]">
-                <span className="text-stone-500">{t("fields.status")}</span>{' '}
-                <span className={bot.isActive ? 'text-green-400' : 'text-[rgb(216,14,14)]'}>
-                  {bot.isActive ? t("status.active") : t("status.inactive")}
-                </span>
-              </p>
-            </div>
+              {/* Menu */}
+              <div className="relative shrink-0" ref={menuRef}>
+                <button
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="p-1.5 rounded-md text-zinc-400 hover:text-cyan-400 hover:bg-zinc-800/50 transition-colors"
+                  aria-label={t("menu.moreActions")}
+                >
+                  <BsThreeDotsVertical size={18} />
+                </button>
+                {menuOpen && (
+                  <div className="absolute left-0 top-8 w-48 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl shadow-black/50 z-50 overflow-hidden text-sm animate-in fade-in zoom-in-95 duration-100">
+                    <button
+                      onClick={() => { setEditing(true); setMenuOpen(false); }}
+                      className="flex items-center gap-3 w-full px-4 py-2.5 text-zinc-300 hover:bg-zinc-800 hover:text-cyan-400 transition-colors">
+                      <FiEdit3 size={15} /> {t("menu.edit")}
+                    </button>
 
-            {/* ORTA: Kripto Paralar ve Depozito */}
-            <div className="flex flex-col px-6">
-              {isRented && (
-                <RentedCountdown rent_expires_at={bot?.rent_expires_at} />
-              )}
+                    <button
+                      onClick={() => { setSelectedBotId(bot.id); setDeleteModalOpen(true); setMenuOpen(false); }}
+                      className="flex items-center gap-3 w-full px-4 py-2.5 text-zinc-300 hover:bg-zinc-800 hover:text-rose-400 transition-colors">
+                      <FaRegTrashAlt size={15} /> {t("menu.deleteDev")}
+                    </button>
 
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-semibold bg-gradient-to-r from-violet-900 via-sky-600 to-purple-500 text-transparent bg-clip-text">
-                  {t("fields.cryptocurrencies")}
-                </h4>
-
-
-
-                {/* Coin listesi */}
-                {bot.cryptos?.length > 0 ? (
-                  bot.cryptos.map((coin) => (
-                    <div
-                      key={coin}
-                      className="w-full text-center text-[14px] bg-gradient-to-r from-[rgb(14,20,35)] to-neutral-800 border border-slate-700 px-2 py-1 rounded text-white"
+                    <button
+                      onClick={() => {
+                        if (isBlocked) return;
+                        setIsExamineOpen(true);
+                        fetchAndStoreBotAnalysis(bot.id);
+                        setMenuOpen(false);
+                      }}
+                      disabled={isBlocked}
+                      className={`flex items-center gap-3 w-full px-4 py-2.5 transition-colors ${isBlocked ? "text-zinc-600 cursor-not-allowed" : "text-amber-400 hover:bg-zinc-800 hover:text-amber-300"
+                        }`}
                     >
-                      {coin}
-                    </div>
-                  ))
-                ) : (
-                  <span className="text-[13px] text-gray-500">{t("coins.none")}</span>
+                      <IoSearch size={16} /> {t("menu.examine")}
+                    </button>
+
+                    <div className="h-px bg-zinc-800 my-1" />
+
+                    <button
+                      onClick={() => { setSelectedBotId(bot.id); setShotDownModalOpen(true); setMenuOpen(false); }}
+                      className="flex items-center gap-3 w-full px-4 py-2.5 text-orange-500 hover:bg-orange-500/10 hover:text-orange-400 transition-colors">
+                      <FaBan size={15} /> {t("menu.shutdown")}
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
 
-            {/* SAĞ: Toggle + Spinner */}
-            <div className="flex flex-col justify-center items-center relative pl-4">
-              <div className="absolute flex items-center gap-3 mb-[148px] mr-[7px] z-10 pointer-events-none">
-                <SpinningWheel isActive={bot.isActive} />
+            {/* Bilgi Grid Kutuları */}
+            <div className="grid grid-cols-2 gap-2 mt-1">
+              <div className="bg-zinc-900/50 border border-zinc-700/50 rounded p-2 flex flex-col hover:border-cyan-500/30 transition-colors group/box col-span-2">
+                <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase mb-0.5 group-hover/box:text-cyan-400/70 transition-colors">{t("fields.strategy")}</span>
+                <span className="text-xs font-semibold text-zinc-200 truncate" title={bot.strategy}>{bot.strategy}</span>
               </div>
-              <div
-                className={[
-                  "flex items-center gap-3 z-20 relative",
-                  finalToggleDisabled ? "opacity-50 cursor-not-allowed" : "",
-                  redDisableWrap
-                ].join(' ')}
-                title={finalDisableTitle}
-                aria-disabled={finalToggleDisabled}
-              >
+
+              <div className="bg-zinc-900/50 border border-zinc-700/50 rounded p-2 flex flex-col hover:border-cyan-500/30 transition-colors group/box">
+                <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase mb-0.5 group-hover/box:text-cyan-400/70 transition-colors">{t("fields.api")}</span>
+                <span className="text-xs font-semibold text-zinc-200 truncate" title={bot.api}>{bot.api}</span>
+              </div>
+
+              <div className="bg-zinc-900/50 border border-zinc-700/50 rounded p-2 flex flex-col hover:border-cyan-500/30 transition-colors group/box">
+                <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase mb-0.5 group-hover/box:text-cyan-400/70 transition-colors">{t("fields.period")}</span>
+                <span className="text-xs font-semibold text-zinc-200 truncate">{bot.period}</span>
+              </div>
+
+
+              <div className="bg-zinc-900/50 border border-zinc-700/50 rounded p-2 flex flex-col col-span-2 hover:border-cyan-500/30 transition-colors group/box overflow-hidden">
+                <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase mb-0.5 group-hover/box:text-cyan-400/70 transition-colors">{t("fields.days")}</span>
+                <span className="text-xs text-zinc-300 truncate block" title={Array.isArray(bot.days) ? bot.days.join(', ') : t("daysUndefined")}>
+                  {Array.isArray(bot.days) ? bot.days.join(', ') : t("daysUndefined")}
+                </span>
+              </div>
+
+              <div className="bg-zinc-900/50 border border-zinc-700/50 rounded p-2 flex flex-col col-span-2 hover:border-cyan-500/30 transition-colors group/box">
+                <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase mb-0.5 group-hover/box:text-cyan-400/70 transition-colors">{t("fields.hours")}</span>
+                <span className="text-xs font-mono text-cyan-100">{bot.startTime} - {bot.endTime}</span>
+              </div>
+
+              <div className={`mt-1 col-span-2 rounded p-1.5 flex items-center justify-center gap-2 border ${bot.isActive
+                ? "bg-emerald-950/30 border-emerald-500/20 text-emerald-400 shadow-[0_0_10px_-3px_rgba(52,211,153,0.3)]"
+                : "bg-rose-950/30 border-rose-500/20 text-rose-400"
+                }`}>
+                <span className="relative flex h-2 w-2">
+                  {bot.isActive && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${bot.isActive ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
+                </span>
+                <span className="text-xs font-bold uppercase tracking-wide">
+                  {bot.isActive ? t("status.active") : t("status.inactive")}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* SÜTUN 2: Kripto Paralar */}
+          <div className="flex flex-col px-5 relative border-r border-zinc-800/50">
+            <div className="absolute inset-x-0 top-0 h-2 bg-gradient-to-b from-zinc-950/80 to-transparent z-10 pointer-events-none" />
+
+            {isRented && (
+              <div className="mb-4">
+                <RentedCountdown rent_expires_at={bot?.rent_expires_at} />
+              </div>
+            )}
+
+            <div className="flex flex-col h-full">
+              <div className="flex items-center justify-between mb-3 relative z-20">
+                <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-cyan-500/80">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></span>
+                  {t("fields.cryptocurrencies")}
+                </h4>
+                <span className="text-[10px] font-mono text-cyan-400/60 bg-cyan-950/30 px-1.5 py-0.5 rounded border border-cyan-800/30">
+                  {bot.cryptos?.length || 0}
+                </span>
+              </div>
+
+              {/* Coin listesi */}
+              <div className="flex flex-col gap-2 overflow-y-auto scrollbar-hide max-h-[275px] pb-2 pr-1">
+                {bot.cryptos?.length > 0 ? (
+                  bot.cryptos.map((coin) => (
+                    <div
+                      key={coin}
+                      className="group/coin relative w-full text-center py-1 rounded-md bg-zinc-900 border border-cyan-700/50 transition-all duration-200"
+                    >
+                      <span className="text-xs font-bold text-zinc-300 transition-colors relative z-10">
+                        {coin}
+                      </span>
+                      {/* Hover glow disabled */}
+                      <div className="hidden absolute inset-0 rounded-md bg-cyan-400/5 opacity-0 transition-opacity" />
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center p-4 border border-dashed border-zinc-800 rounded-lg">
+                    <span className="text-[11px] text-zinc-600">{t("coins.none")}</span>
+                  </div>
+                )}
+              </div>
+              <div className="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-zinc-950/80 to-transparent pointer-events-none" />
+            </div>
+          </div>
+
+          {/* SÜTUN 3 & 4 (BİRLEŞİK): Performans Verileri */}
+          <div className="col-span-2 border-r border-zinc-800/50 p-5 flex flex-col gap-4">
+            {perfData ? (
+              <>
+                {/* 1. ROW: Dates & Elapsed (Top Header) */}
+                <div className="flex items-center justify-between text-[10px] text-zinc-500 border-b border-zinc-800 pb-2">
+                  <div className="flex flex-col">
+                    <span className="uppercase tracking-wider font-bold">{t("performance.started")}</span>
+                    <span className="text-zinc-300">{fmtDate(perfData.inputs?.startDate)}</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="uppercase tracking-wider font-bold text-cyan-500/70">{t("performance.elapsed")}</span>
+                    <span className="text-cyan-300 font-mono">{perfData.derived?.elapsedTime}</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="uppercase tracking-wider font-bold text-cyan-500/70">{t("performance.workTime")}</span>
+                    <span className="text-cyan-300 font-mono">{perfData.derived?.formattedWorkTime}</span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="uppercase tracking-wider font-bold">{t("performance.now")}</span>
+                    <span className="text-zinc-300">{fmtDate(perfData.derived?.currentDate)}</span>
+                  </div>
+                </div>
+
+                {/* 2. ROW: Main Balances & Change */}
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3 bg-zinc-900/30 rounded-lg p-3 border border-zinc-800/50">
+                  {/* Initial */}
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">{t("performance.initialBalance")}</span>
+                    <span className="text-sm font-mono text-zinc-300">{fmtMoney(perfData.inputs?.initialBalance)}</span>
+                  </div>
+
+                  {/* Current */}
+                  <div className="flex flex-col gap-1 text-right">
+                    <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">{t("performance.currentBalance")}</span>
+                    <span className={`text-sm font-mono font-bold ${perfData.derived?.changeAmount >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {fmtMoney(perfData.backend?.currentBalance)}
+                    </span>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="col-span-2 h-px bg-zinc-800/50" />
+
+                  {/* Change % */}
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">{t("performance.changePercent")}</span>
+                    <span className={`text-sm font-bold ${perfData.derived?.changePercentage >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {perfData.derived?.changePercentage >= 0 ? '+' : ''}{perfData.derived?.changePercentage?.toFixed(2)}%
+                    </span>
+                  </div>
+
+                  {/* Change Amount */}
+                  <div className="flex flex-col gap-1 text-right">
+                    <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">{t("performance.pnl")}</span>
+                    <span className={`text-sm font-mono ${perfData.derived?.changeAmount >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {perfData.derived?.changeAmount >= 0 ? '+' : ''}{fmtMoney(perfData.derived?.changeAmount)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 3. ROW: Exposure / Trade % */}
+                <div className="mt-auto">
+                  <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold mb-1.5 block">
+                    {t("performance.balanceInTrade")}
+                  </span>
+
+                  {isFutures ? (
+                    <div className="flex gap-2">
+                      {/* Long Box */}
+                      <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded p-2 flex items-center justify-between relative overflow-hidden">
+                        <div className="absolute inset-y-0 left-0 bg-emerald-500/10 z-0" style={{ width: `${perfData.backend?.exposure?.long || 0}%` }} />
+                        <span className="text-[10px] text-emerald-500 font-bold relative z-10">{t("performance.long")}</span>
+                        <span className="text-xs font-mono text-emerald-300 relative z-10">{perfData.backend?.exposure?.long || 0}%</span>
+                      </div>
+                      {/* Short Box */}
+                      <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded p-2 flex items-center justify-between relative overflow-hidden">
+                        <div className="absolute inset-y-0 left-0 bg-rose-500/10 z-0" style={{ width: `${perfData.backend?.exposure?.short || 0}%` }} />
+                        <span className="text-[10px] text-rose-500 font-bold relative z-10">{t("performance.short")}</span>
+                        <span className="text-xs font-mono text-rose-300 relative z-10">{perfData.backend?.exposure?.short || 0}%</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 flex items-center justify-between relative overflow-hidden">
+                      {/* Progress Bar Background */}
+                      <div className="absolute inset-y-0 left-0 bg-cyan-500/10 z-0" style={{ width: `${perfData.backend?.exposure}%` }} />
+                      <span className="text-[10px] text-cyan-500 font-bold relative z-10">{t("performance.spotExposure")}</span>
+                      <span className="text-xs font-mono text-cyan-300 relative z-10">{perfData.backend?.exposure}%</span>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <div className="w-6 h-6 border-2 border-zinc-700 border-t-cyan-500 rounded-full animate-spin"></div>
+              </div>
+            )}
+          </div>
+
+          {/* SÜTUN 5: Satış Uygunluğu (Progress Bar @ 700h) + Performans İbresi */}
+          <div className="border-r border-zinc-800/50 p-4 flex flex-col justify-center gap-4">
+            {/* 1. SEKSİYON: SATIŞ UYGUNLUĞU */}
+            {perfData?.derived?.isEligibleForSale ? (
+              // SATIŞA UYGUN DURUM (Fade effect, Checkmark)
+              <div className="flex flex-col items-center animate-in fade-in zoom-in duration-500 w-full gap-1">
+                <div className="flex flex-col items-center">
+                  <div className="bg-emerald-500/10 p-1.5 rounded-full mb-1 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                    <FaCheck className="text-emerald-400 text-sm" />
+                  </div>
+                  <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest text-center leading-tight">
+                    {t("performance.suitableForSale")}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              // HENÜZ UYGUN DEĞİL (Progress Bar Filling)
+              <div className="flex flex-col gap-1 w-full">
+                <div className="flex justify-between items-end relative">
+                  <div className="flex items-center gap-1.5 z-20">
+                    <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold leading-none">{t("performance.sellEligibility")}</span>
+                    <PortalTooltip content={t("performance.sellEligibilityTooltip")}>
+                      <GrCircleQuestion className="text-zinc-500 hover:text-cyan-400 cursor-pointer text-[15px] mb-1" />
+                    </PortalTooltip>
+                  </div>
+                  <span className="text-[11px] font-mono text-cyan-500/70 leading-none">
+                    {Math.floor(perfData?.derived?.sellEligibilityPercent || 0)}%
+                  </span>
+                </div>
+
+                <div className="relative w-full h-2 bg-zinc-900 rounded-full border border-zinc-800 overflow-hidden">
+                  <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(6,182,212,0.1)_25%,rgba(6,182,212,0.1)_50%,transparent_50%,transparent_75%,rgba(6,182,212,0.1)_75%,transparent)] bg-[length:10px_10px]" />
+                  <div className="h-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)] transition-all duration-1000 ease-out" style={{ width: `${perfData?.derived?.sellEligibilityPercent || 0}%` }} />
+                </div>
+
+                <div className="text-[10px] text-zinc-600 text-right font-mono leading-none">
+                  {perfData?.derived?.remainingForSellString
+                    ? `${perfData.derived.remainingForSellString} left`
+                    : ''}
+                </div>
+              </div>
+            )}
+
+            {/* Divider */}
+            <div className="w-full h-px bg-zinc-800/50" />
+
+            {/* 2. SEKSİYON: PERFORMANS İBRESİ */}
+            <div className="flex flex-col items-center justify-center -mt-2">
+              <div style={{ padding: '30px' }}>
+                <Gauge
+                  value={perfData?.backend?.powerPoint || 0}
+                  label="Güç Puanı"
+                  isEligible={perfData?.derived?.isEligibleForSale}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* SÜTUN 6: Toggle */}
+          <div className="flex flex-col justify-center items-center relative pl-4">
+            {/* Decorative background glow behind toggle */}
+            <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full blur-3xl transition-opacity duration-500 ${bot.isActive ? 'bg-cyan-500/10' : 'bg-transparent'}`} />
+
+            {/* Animation behind toggle */}
+            {bot.isActive && (
+              <div className="absolute top-[145px] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] pointer-events-none z-0 ml-3">
+                <WorkingBotAnimation />
+              </div>
+            )}
+
+            <div
+              className={[
+                "flex flex-col items-center gap-4 z-20 relative p-4 rounded-2xl transition-all duration-300",
+              ].join(' ')}
+              title={finalDisableTitle}
+              aria-disabled={finalToggleDisabled}
+            >
+              <div className="relative">
                 <RunBotToggle
                   checked={bot.isActive}
                   onChange={
@@ -313,241 +601,27 @@ export const BotCard = ({ bot, column }) => {
                   disabled={finalToggleDisabled}
                 />
               </div>
-            </div>
-          </div>
 
-          {editing && <BotModal mode="edit" bot={bot} onClose={() => setEditing(false)} />}
-          {isExamineOpen && <ExamineBot isOpen={isExamineOpen} onClose={() => setIsExamineOpen(false)} botId={bot.id} />}
-        </div>
-
-        <DeleteBotConfirmModal
-          isOpen={isDeleteModalOpen}
-          onClose={() => setDeleteModalOpen(false)}
-          onConfirm={() => { removeBot(selectedBotId); setSelectedBotId(null); }}
-        />
-        <ShutDownBotModal
-          isOpen={isShotDownModalOpen}
-          onClose={() => setShotDownModalOpen(false)}
-          onConfirm={() => { shutDownBot({ scope: "bot", id: selectedBotId }); setSelectedBotId(null); }}
-        />
-        <BotToggleConfirmModal
-          isOpen={isToggleConfirmOpen}
-          onClose={() => setToggleConfirmOpen(false)}
-          onConfirm={handleConfirmToggle}
-          actionType={toggleAction}
-        />
-
-
-      </>
-    );
-  }
-
-  /* ==== SAĞ KART ==== */
-  return (
-    <>
-      <div className="rounded-l-full px-4 py-4 border-2 border-cyan-900 relative bg-[hsl(227,82%,2%)] text-gray-200">
-        <div className="grid grid-cols-3 divide-x divide-gray-700">
-
-          {/* SOL: Toggle + Spinner */}
-          <div className="flex flex-col justify-center items-center relative pr-4">
-            <div className="absolute flex items-center gap-3 mb-[148px] ml-[7px] z-10 pointer-events-none scale-x-[-1]">
-              <SpinningWheel isActive={bot.isActive} />
-            </div>
-            <div
-              className={[
-                "flex items-center gap-3 z-20 relative",
-                finalToggleDisabled ? "opacity-50 cursor-not-allowed" : "",
-                redDisableWrap,
-              ].join(" ")}
-              title={finalDisableTitle}
-              aria-disabled={finalToggleDisabled}
-            >
-              <RunBotToggle
-                checked={bot.isActive}
-                onChange={
-                  !finalToggleDisabled
-                    ? () => {
-                      setToggleAction(bot.isActive ? 'stop' : 'start');
-                      setToggleConfirmOpen(true);
-                    }
-                    : undefined
-                }
-                disabled={finalToggleDisabled}
-              />
-            </div>
-          </div>
-
-          {/* ORTA: Kripto Paralar + Depozito */}
-          <div className="flex flex-col px-6">
-            {isRented && (
-              <RentedCountdown rent_expires_at={bot?.rent_expires_at} />
-            )}
-
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-semibold bg-gradient-to-r from-violet-900 via-sky-600 to-purple-500 text-transparent bg-clip-text">
-                {t("fields.cryptocurrencies")}
-              </h4>
-
-
-
-              {/* Coin listesi */}
-              {bot.cryptos?.length > 0 ? (
-                bot.cryptos.map((coin) => (
-                  <div
-                    key={coin}
-                    className="w-full text-center text-[14px] bg-gradient-to-r from-[rgb(14,20,35)] to-neutral-800 border border-slate-700 px-2 py-1 rounded text-white"
-                  >
-                    {coin}
-                  </div>
-                ))
-              ) : (
-                <span className="text-[13px] text-gray-500">
-                  {t("coins.none")}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* SAĞ: Bilgiler */}
-          <div className="pl-4">
-            <div className="flex items-center gap-2 border-b border-gray-600 pb-[10px] mb-2">
-              <h3 className="text-[18px] font-semibold text-white truncate flex-1">
-                {bot.name}
-              </h3>
-              <TypeBadge type={bot.type} />
-              <div className="relative shrink-0" ref={menuRef}>
-                <button
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  className="p-2 rounded hover:bg-gray-700"
-                  aria-label={t("menu.moreActions")}
-                  title={t("menu.moreActions")}
-                >
-                  <BsThreeDotsVertical className="text-gray-300" size={18} />
-                </button>
-                {menuOpen && (
-                  <div className="absolute right-0 top-8 w-40 bg-gray-900 rounded shadow-md z-50">
-                    <button
-                      onClick={() => {
-                        setEditing(true);
-                        setMenuOpen(false);
-                      }}
-                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-blue-400 hover:bg-gray-800"
-                    >
-                      <FiEdit3 size={16} /> {t("menu.edit")}
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setSelectedBotId(bot.id);
-                        setDeleteModalOpen(true);
-                        setMenuOpen(false);
-                      }}
-                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-800"
-                    >
-                      <FaRegTrashAlt size={16} /> {t("menu.deleteDev")}
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        if (isBlocked) return;
-                        setIsExamineOpen(true);
-                        fetchAndStoreBotAnalysis(bot.id);
-                        setMenuOpen(false);
-                      }}
-                      disabled={isBlocked}
-                      aria-disabled={isBlocked}
-                      title={
-                        isBlocked ? t("examine.disabledTitle") : t("menu.examine")
-                      }
-                      className={[
-                        "flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-700",
-                        isBlocked
-                          ? "text-gray-500 cursor-not-allowed pointer-events-none"
-                          : "text-yellow-400",
-                      ].join(" ")}
-                    >
-                      <IoSearch size={16} /> {t("menu.examine")}
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setSelectedBotId(bot.id);
-                        setShotDownModalOpen(true);
-                        setMenuOpen(false);
-                      }}
-                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-orange-600 hover:bg-gray-700"
-                      title={t("menu.shutdownTitle")}
-                    >
-                      <FaBan size={16} /> {t("menu.shutdown")}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <p className="mb-1 text-[14px]">
-              <span className="text-stone-500">{t("fields.api")}</span> {bot.api}
-            </p>
-            <p className="mb-1 text-[14px] flex items-center gap-1 max-w-[180px] overflow-hidden whitespace-nowrap">
-              <span className="text-stone-500 shrink-0">
-                {t("fields.strategy")}
+              <span className={`text-[10px] font-bold uppercase tracking-widest transition-colors ${bot.isActive ? 'text-green-400 ml-3 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]' : 'text-zinc-600'}`}>
+                {bot.isActive ? <>RUNNING<AnimatedDots /></> : 'STOPPED'}
               </span>
-              <span className="truncate">{bot.strategy}</span>
-            </p>
-            <p className="mb-1 text-[14px]">
-              <span className="text-stone-500">{t("fields.period")}</span>{" "}
-              {bot.period}
-            </p>
-            <p className="mb-1 text-[14px]">
-              <span className="text-stone-500">{t("fields.days")}</span>{" "}
-              {Array.isArray(bot.days)
-                ? bot.days.join(", ")
-                : t("daysUndefined")}
-            </p>
-            <p className="mb-1 text-[14px]">
-              <span className="text-stone-500">{t("fields.hours")}</span>{" "}
-              {bot.startTime} - {bot.endTime}
-            </p>
-            <p className="mb-1 text-[14px]">
-              <span className="text-stone-500">{t("fields.status")}</span>{" "}
-              <span
-                className={
-                  bot.isActive ? "text-green-400" : "text-[rgb(216,14,14)]"
-                }
-              >
-                {bot.isActive ? t("status.active") : t("status.inactive")}
-              </span>
-            </p>
+            </div>
           </div>
         </div>
 
-        {editing && (
-          <BotModal mode="edit" bot={bot} onClose={() => setEditing(false)} />
-        )}
-        {isExamineOpen && (
-          <ExamineBot
-            isOpen={isExamineOpen}
-            onClose={() => setIsExamineOpen(false)}
-            botId={bot.id}
-          />
-        )}
+        {editing && <BotModal mode="edit" bot={bot} onClose={() => setEditing(false)} />}
+        {isExamineOpen && <ExamineBot isOpen={isExamineOpen} onClose={() => setIsExamineOpen(false)} botId={bot.id} />}
       </div>
 
       <DeleteBotConfirmModal
         isOpen={isDeleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        onConfirm={() => {
-          removeBot(selectedBotId);
-          setSelectedBotId(null);
-        }}
+        onConfirm={() => { removeBot(selectedBotId); setSelectedBotId(null); }}
       />
       <ShutDownBotModal
         isOpen={isShotDownModalOpen}
         onClose={() => setShotDownModalOpen(false)}
-        onConfirm={() => {
-          shutDownBot({ scope: "bot", id: selectedBotId });
-          setSelectedBotId(null);
-        }}
+        onConfirm={() => { shutDownBot({ scope: "bot", id: selectedBotId }); setSelectedBotId(null); }}
       />
       <BotToggleConfirmModal
         isOpen={isToggleConfirmOpen}
@@ -555,8 +629,6 @@ export const BotCard = ({ bot, column }) => {
         onConfirm={handleConfirmToggle}
         actionType={toggleAction}
       />
-
-
     </>
   );
 };

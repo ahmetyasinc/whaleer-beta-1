@@ -12,6 +12,10 @@ from backend.trade_engine.process.trade_engine import run_trade_engine
 from backend.trade_engine.process.process import run_all_bots_async, handle_rent_expiry_closures  # NEW
 from backend.trade_engine.process.save import save_result_to_json, aggregate_results_by_bot_id    # NEW
 
+# LOGGING DEFINITION
+import logging
+logger = logging.getLogger("StrategyEngine")
+
 if sys.platform.startswith('win'):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
@@ -35,7 +39,7 @@ async def dispatch_orders_to_engine(result_dict):
     if not result_dict:
         return
 
-    print(f"⚡ Emirler Order Engine v2'ye iletiliyor... (Toplam Bot: {len(result_dict)})")
+    logger.info(f"⚡ Emirler Order Engine v2'ye iletiliyor... (Toplam Bot: {len(result_dict)})")
     
     for bot_id, trades in result_dict.items():
         # trades listesi içindeki her bir işlem kararı için:
@@ -93,12 +97,12 @@ async def handle_new_data(payload):
     interval = payload.strip()
 
     if interval not in interval_locks:
-        print(f"⚠ Bilinmeyen interval: {interval}")
+        logger.warning(f"⚠ Bilinmeyen interval: {interval}")
         return
 
     # Eğer zaten kuyruktaysa tekrar eklenmesin
     if interval in queued_intervals:
-        print(f"🔁 {interval} zaten sırada bekliyor.")
+        logger.debug(f"🔁 {interval} zaten sırada bekliyor.")
         return
 
     queued_intervals.add(interval)
@@ -106,7 +110,7 @@ async def handle_new_data(payload):
     # 1m için öncelikli kilit alınır
     if interval == priority_interval:
         if priority_lock.locked():
-            print(f"❌❌❌ {interval} zaten çalışıyor.")
+            logger.warning(f"❌❌❌ {interval} zaten çalışıyor.")
             queued_intervals.discard(interval)
             return
         async with priority_lock:
@@ -114,7 +118,7 @@ async def handle_new_data(payload):
     else:
         # 1m çalışıyorsa bekle
         while priority_lock.locked():
-            print(f"⏸ {interval} için bekleniyor... (öncelikli {priority_interval} çalışıyor)")
+            logger.debug(f"⏸ {interval} için bekleniyor... (öncelikli {priority_interval} çalışıyor)")
             await asyncio.sleep(1)
         await execute_bot_logic(interval)
 
@@ -126,18 +130,18 @@ async def execute_bot_logic(interval):
     lock = interval_locks[interval]
 
     if lock.locked():
-        print(f"❌❌❌ {interval} zaten çalışıyor.")
+        logger.warning(f"❌❌❌ {interval} zaten çalışıyor.")
         return
 
     async with lock:
         start_time = time.time()
-        print(f"🚀 Yeni veri geldi. {interval} botları çalıştırılıyor...")
+        logger.info(f"🚀 Yeni veri geldi. {interval} botları çalıştırılıyor...")
 
         try:
             last_time = load_last_data(interval)
 
             # 1) Strateji + veri + bot listesi
-            strategies_with_indicators, coin_data_dict, bots = await run_trade_engine(interval)
+            strategies_with_indicators, coin_data_dict, bots = await run_trade_engine(interval, min_timestamp=last_time)
 
             # 2) Önce kiralık kapanışlarını HER KOŞULDA çalıştır (bot olsa da olmasa da)
             #    Boş bir results listesi ile başla, handle_rent_expiry_closures içine merge ettir.
@@ -153,7 +157,7 @@ async def execute_bot_logic(interval):
                 if bot_results:
                     results.extend(bot_results)
             else:
-                print(f"ℹ {interval}: Bot çalıştırma atlandı (eksik veri ya da aktif bot yok).")
+                logger.info(f"ℹ {interval}: Bot çalıştırma atlandı (eksik veri ya da aktif bot yok).")
 
             # 4) Sonuçları grupla + JSON'a kaydet (sadece varsa)
             
@@ -165,20 +169,17 @@ async def execute_bot_logic(interval):
             #    await save_result_to_json(result_dict, last_time, interval)
             
             elapsed = time.time() - start_time
-            print(f"✅ {last_time}, {interval} tamamlandı. Süre: {elapsed:.2f} sn. (toplam sonuç: {len(results)})")
+            logger.info(f"✅ {last_time}, {interval} tamamlandı. Süre: {elapsed:.2f} sn. (toplam sonuç: {len(results)})")
 
         except Exception as e:
-            print(f"❌ {interval} için bot çalıştırılırken hata: {e}")
+            logger.error(f"❌ {interval} için bot çalıştırılırken hata: {e}")
 
 import logging
 from backend.trade_engine.order_engine.exchanges.binance.stream import BinanceStreamer
 
 # Log Ayarları
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)]
-)
+# logging.basicConfig(...) KALDIRILDI - UnifiedRunner kontrol edecek
+logger = logging.getLogger("StrategyEngine")
 
 async def listen_for_notifications():
     conn_str = os.getenv("LISTEN_DB_URL", "postgresql://postgres:admin@localhost/balina_db")
@@ -202,26 +203,26 @@ async def listen_for_notifications():
     # Streamer'ı arka planda başlat
     asyncio.create_task(streamer.start())
 
-    print("🏁 Dinleyici, Emir Motoru ve Fiyat Akışı (Streamer) Aktif.")
+    logger.info("🏁 Dinleyici, Emir Motoru ve Fiyat Akışı (Streamer) Aktif.")
     
     while True:
         try:
             async with await psycopg.AsyncConnection.connect(conn_str, autocommit=True) as conn:
                 async with conn.cursor() as cur:
                     await cur.execute("LISTEN new_data;")
-                    print("📡 PostgreSQL'den tetikleme bekleniyor...")
+                    logger.info("📡 PostgreSQL'den tetikleme bekleniyor...")
 
                     async for notify in conn.notifies():
-                        print(f"🔔 Tetikleme: {notify.payload}")
+                        logger.info(f"🔔 Tetikleme: {notify.payload}")
                         asyncio.create_task(handle_new_data(notify.payload))
 
         except (asyncio.CancelledError, KeyboardInterrupt):
-            print("⛔ Dinleyici durduruluyor...")
+            logger.info("⛔ Dinleyici durduruluyor...")
             streamer.stop() # Streamer'ı temizle
             await order_service.stop() # Order Service'i ve açık sessionları kapat
             break
         except Exception as e:
-            print(f"❌ Dinleyicide hata: {e}. 5 sn sonra yeniden denenecek...")
+            logger.error(f"❌ Dinleyicide hata: {e}. 5 sn sonra yeniden denenecek...")
             await asyncio.sleep(5)
 
 if __name__ == "__main__":

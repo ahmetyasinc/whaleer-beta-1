@@ -237,7 +237,15 @@ class BinanceFuturesExchange(BaseExchange):
                 return True, {}
                 
             logger.error(f"Binance Error ({endpoint}): {resp.error_msg} - {resp.text}")
-            return False, {}
+            
+            # Hata detayını çağıran yere dönüyoruz ki kullanıcıya gösterebilelim
+            final_error_data = {}
+            try:
+                final_error_data = resp.data if resp.data else json.loads(resp.text)
+            except:
+                final_error_data = {"msg": resp.text, "code": "UNKNOWN"}
+                
+            return False, final_error_data
 
         except Exception as e:
             logger.error(f"Binance POST Exception: {e}")

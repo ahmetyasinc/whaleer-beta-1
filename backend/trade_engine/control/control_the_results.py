@@ -91,6 +91,28 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
     holdings = ctx.get("holdings", [])
     positions = ctx.get("positions", [])
 
+    print(f"--- [Bot {bot_id}] Current State ({bot_type.upper()}) ---")
+    if bot_type == "spot":
+        if not holdings:
+            print("   (No Holdings)")
+        else:
+            for h in holdings:
+                val = h.get('amount')
+                pct = h.get('percentage')
+                print(f"   Asset: {h.get('symbol')} | Amt: {val} | Pct: {pct}%")
+    else:
+        if not positions:
+            print("   (No Futures Positions)")
+        else:
+            for p in positions:
+                sym = p.get('symbol')
+                side = p.get('position_side')
+                amt = p.get('amount')
+                lev = p.get('leverage')
+                pct = p.get('percentage')
+                print(f"   Pos: {sym} ({side}) | Amt: {amt} | Lev: {lev}x | Pct: {pct}%")
+    print("--------------------------------------------------")
+
     # ---------- helpers ----------
     def clamp_pct(p):
         try:
@@ -312,8 +334,7 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
                     f"ℹ️ Bu emir, aracı kurumun minimum eşik değerinin altında kalması nedeniyle gönderilemedi."
                 )
                 _fire_and_forget(notify_user_by_telegram(text=_msg, bot_id=int(bot_id)))
-            #print("Here 6")
-            return False
+            pass
 
         # ✅ eşik geçildi → normal akış
         a = act.copy()
@@ -366,6 +387,7 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
             if cur_pct > 0 and target_pct > 0 and (cur_lev is not None and target_lev is not None) and (abs(cur_lev) != abs(target_lev)):
                 reduce_frac = cur_pct / 100.0
                 act = {**meta, "coin_id": sym, "trade_type": "futures", "positionside": "long", "side": "sell", "reduceOnly": True}
+                if cur_lev is not None: act["leverage"] = abs(cur_lev)
                 #print("action for long close due to lev change:", act, "reduce_frac:", reduce_frac)
                 ok = maybe_append(act, reduce_frac)
                 if ok:
@@ -379,6 +401,7 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
             if delta_long < 0:
                 reduce_frac = -delta_long
                 act = {**meta, "coin_id": sym, "trade_type": "futures", "positionside": "long", "side": "sell", "reduceOnly": True}
+                if cur_lev is not None: act["leverage"] = abs(cur_lev)
                 #print("action for long reduce:", act, "reduce_frac:", reduce_frac)
                 ok = maybe_append(act, reduce_frac)
                 if ok:
@@ -394,6 +417,7 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
             if cur_pct > 0 and target_pct > 0 and (cur_lev is not None and target_lev is not None) and (abs(cur_lev) != abs(target_lev)):
                 reduce_frac = cur_pct / 100.0
                 act = {**meta, "coin_id": sym, "trade_type": "futures", "positionside": "short", "side": "buy", "reduceOnly": True}
+                if cur_lev is not None: act["leverage"] = abs(cur_lev)
                 #print("action for short close due to lev change:", act, "reduce_frac:", reduce_frac)
                 ok = maybe_append(act, reduce_frac)
                 if ok:
@@ -407,6 +431,7 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
             if delta_short < 0:
                 reduce_frac = -delta_short
                 act = {**meta, "coin_id": sym, "trade_type": "futures", "positionside": "short", "side": "buy", "reduceOnly": True}
+                if cur_lev is not None: act["leverage"] = abs(cur_lev)
                 #print("action for short reduce:", act, "reduce_frac:", reduce_frac)
                 ok = maybe_append(act, reduce_frac)
                 if ok:
@@ -448,7 +473,7 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
                     add_frac = min(delta_long, max(0.0, 1.0 - fulness))
                     act = {**meta, "coin_id": sym, "trade_type": "futures", "positionside": "long", "side": "buy"}
                     if target_lev is not None:
-                        act["leverage"] = target_lev
+                        act["leverage"] = abs(target_lev)
                     #print("action for long open:", act, "add_frac:", add_frac)
                     ok = maybe_append(act, add_frac)
                     if ok:
@@ -468,7 +493,7 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
                     add_frac = min(delta_short, max(0.0, 1.0 - fulness))
                     act = {**meta, "coin_id": sym, "trade_type": "futures", "positionside": "short", "side": "sell"}
                     if target_lev is not None:
-                        act["leverage"] = target_lev
+                        act["leverage"] = abs(target_lev)
                     #print("action for short open:", act, "add_frac:", add_frac)
                     ok = maybe_append(act, add_frac)
                     if ok:
@@ -491,6 +516,7 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
             ax["trade_type"] = expected_trade_type
 
     print("control_the_results actions:", actions)
+    print("=====================================")
     return actions
 
 

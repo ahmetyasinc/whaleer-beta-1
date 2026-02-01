@@ -10,6 +10,7 @@ import { FiEdit3 } from 'react-icons/fi';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { IoSearch } from "react-icons/io5";
 import RunBotToggle from './runBotToggle';
+import WorkingBotAnimation from './workingBotAnimation';
 import ExamineBot from "./examineBot";
 import { FaCheck } from "react-icons/fa";
 import DeleteBotConfirmModal from "./deleteBotConfirmModal";
@@ -55,6 +56,26 @@ const PortalTooltip = ({ children, content }) => {
       )}
     </>
   );
+};
+
+const AnimatedDots = () => {
+  const [dots, setDots] = useState("");
+
+  useEffect(() => {
+    let step = 0;
+    const interval = setInterval(() => {
+      step = (step + 1) % 6;
+      if (step === 0) setDots("");
+      else if (step === 1) setDots(".");
+      else if (step === 2) setDots("..");
+      else if (step === 3) setDots("...");
+      else if (step === 4) setDots("..");
+      else if (step === 5) setDots(".");
+    }, 400);
+    return () => clearInterval(interval);
+  }, []);
+
+  return <span className="inline-block w-3 text-left">{dots}</span>;
 };
 import ShutDownBotModal from "./shutDownBotModal";
 import BotToggleConfirmModal from "./botToggleConfirmModal";
@@ -552,6 +573,13 @@ export const BotCard = ({ bot }) => {
             {/* Decorative background glow behind toggle */}
             <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full blur-3xl transition-opacity duration-500 ${bot.isActive ? 'bg-cyan-500/10' : 'bg-transparent'}`} />
 
+            {/* Animation behind toggle */}
+            {bot.isActive && (
+              <div className="absolute top-[145px] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] pointer-events-none z-0 ml-3">
+                <WorkingBotAnimation />
+              </div>
+            )}
+
             <div
               className={[
                 "flex flex-col items-center gap-4 z-20 relative p-4 rounded-2xl transition-all duration-300",
@@ -574,8 +602,8 @@ export const BotCard = ({ bot }) => {
                 />
               </div>
 
-              <span className={`text-[10px] font-bold uppercase tracking-widest transition-colors ${bot.isActive ? 'text-green-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]' : 'text-zinc-600'}`}>
-                {bot.isActive ? 'RUNNING' : 'STOPPED'}
+              <span className={`text-[10px] font-bold uppercase tracking-widest transition-colors ${bot.isActive ? 'text-green-400 ml-3 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]' : 'text-zinc-600'}`}>
+                {bot.isActive ? <>RUNNING<AnimatedDots /></> : 'STOPPED'}
               </span>
             </div>
           </div>

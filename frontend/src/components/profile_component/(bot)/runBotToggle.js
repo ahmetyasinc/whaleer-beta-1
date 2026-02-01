@@ -44,8 +44,8 @@ const StyledWrapper = styled.div`
   /* User requested 80px but I'm reducing to 60px to better fit the card layout while keeping proportions */
   .switch {
     position: relative;
-    width: 75px; 
-    height: 75px;
+    width: 72px; 
+    height: 72px;
     background-color: rgb(99, 99, 99);
     border-radius: 50%;
     z-index: 1;

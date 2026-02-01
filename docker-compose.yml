@@ -41,7 +41,7 @@ services:
       dockerfile: Dockerfile
     container_name: whaleer-trade-engine
     # Run directly as module
-    command: python -m backend.trade_engine.listen_service
+    command: python -m backend.trade_engine.unified_runner
     restart: unless-stopped
     volumes:
       - ./backend/uploads:/app/uploads

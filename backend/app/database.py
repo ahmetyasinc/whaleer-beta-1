@@ -33,3 +33,14 @@ async def test_db():
         print("✅ Veritabanı bağlantısı başarılı!")
 
 # asyncio.run(test_db())
+
+from sqlalchemy import create_engine
+
+def get_sync_engine():
+    """
+    Pandas ve diğer senkron işlemler için sync engine döndürür.
+    """
+    # asyncpg -> psycopg2 dönüşümü
+    sync_url = DATABASE_URL.replace("+asyncpg", "+psycopg2") 
+    return create_engine(sync_url, pool_pre_ping=True)
+

@@ -78,23 +78,25 @@ const BotFilterSidebar = () => {
   };
 
   return (
-    <aside className="fixed top-[60px] left-0 w-[320px] h-[calc(100vh-60px)] bg-black border-t border-gray-600 text-white shadow-2xl z-40 flex flex-col">
-      <div className="p-3">
-        <h2 className="text-lg font-semibold bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
+    <aside className="fixed top-[60px] left-0 w-[260px] h-[calc(100vh-60px)] bg-zinc-950/95 border-r border-zinc-800/60 text-zinc-300 shadow-2xl z-40 flex flex-col backdrop-blur-md">
+      {/* Header Area */}
+      <div className="p-5 border-b border-zinc-900/50">
+        <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-400 mb-1 flex items-center gap-2">
+          <span className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-pulse shadow-[0_0_8px_cyan]"></span>
           {t('title')}
         </h2>
       </div>
 
-      <div className="overflow-y-auto flex-1 space-y-3 px-3 pb-4">
+      <div className="overflow-y-auto flex-1 space-y-3 px-4 py-4 custom-scrollbar">
         {/* Bot Type */}
-        <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
-          <label className="block text-sm font-medium text-gray-100 mb-2">
+        <div className="bg-zinc-900/30 p-3 rounded-xl border border-zinc-800/40 hover:border-zinc-700/50 transition-colors">
+          <label className="block text-xs font-bold text-zinc-500 mb-2 uppercase tracking-wide">
             {t('fields.botType')}
           </label>
           <select
             value={filters.botType}
             onChange={(e) => handleInputChange('botType', e.target.value)}
-            className="w-full px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-sm focus:border-blue-400 focus:outline-none"
+            className="w-full px-3 py-2 bg-zinc-950/50 text-zinc-300 rounded-lg border border-zinc-800 text-xs focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 focus:outline-none appearance-none transition-all"
           >
             <option value="">{t('options.all')}</option>
             <option value="spot">{t('options.spot')}</option>
@@ -103,8 +105,8 @@ const BotFilterSidebar = () => {
         </div>
 
         {/* Price Range - Sale */}
-        <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
-          <label className="block text-sm font-medium text-gray-100 mb-2">
+        <div className="bg-zinc-900/30 p-3 rounded-xl border border-zinc-800/40 hover:border-zinc-700/50 transition-colors">
+          <label className="block text-xs font-bold text-zinc-500 mb-2 uppercase tracking-wide">
             {t('fields.priceRangeSale')}
           </label>
           <div className="flex gap-2">
@@ -113,21 +115,21 @@ const BotFilterSidebar = () => {
               placeholder={t('placeholders.min')}
               value={filters.priceMin}
               onChange={(e) => handleInputChange('priceMin', e.target.value)}
-              className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none"
+              className="w-1/2 px-3 py-2 bg-zinc-950/50 text-zinc-300 rounded-lg border border-zinc-800 text-xs focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 focus:outline-none transition-all placeholder:text-zinc-700"
             />
             <input
               type="number"
               placeholder={t('placeholders.max')}
               value={filters.priceMax}
               onChange={(e) => handleInputChange('priceMax', e.target.value)}
-              className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none"
+              className="w-1/2 px-3 py-2 bg-zinc-950/50 text-zinc-300 rounded-lg border border-zinc-800 text-xs focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 focus:outline-none transition-all placeholder:text-zinc-700"
             />
           </div>
         </div>
 
         {/* Price Range - Rent */}
-        <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
-          <label className="block text-sm font-medium text-gray-100 mb-2">
+        <div className="bg-zinc-900/30 p-3 rounded-xl border border-zinc-800/40 hover:border-zinc-700/50 transition-colors">
+          <label className="block text-xs font-bold text-zinc-500 mb-2 uppercase tracking-wide">
             {t('fields.priceRangeRent')}
           </label>
           <div className="flex gap-2">
@@ -136,99 +138,21 @@ const BotFilterSidebar = () => {
               placeholder={t('placeholders.min')}
               value={filters.rentMin}
               onChange={(e) => handleInputChange('rentMin', e.target.value)}
-              className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none"
+              className="w-1/2 px-3 py-2 bg-zinc-950/50 text-zinc-300 rounded-lg border border-zinc-800 text-xs focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 focus:outline-none transition-all placeholder:text-zinc-700"
             />
             <input
               type="number"
               placeholder={t('placeholders.max')}
               value={filters.rentMax}
               onChange={(e) => handleInputChange('rentMax', e.target.value)}
-              className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none"
+              className="w-1/2 px-3 py-2 bg-zinc-950/50 text-zinc-300 rounded-lg border border-zinc-800 text-xs focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 focus:outline-none transition-all placeholder:text-zinc-700"
             />
           </div>
         </div>
 
-        {/* Only Active Bots */}
-        {/*<div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md mt-3">
-          <label className="inline-flex items-center space-x-2 text-sm text-gray-100">
-            <input
-              type="checkbox"
-              checked={filters.isActive}
-              onChange={(e) => handleInputChange('isActive', e.target.checked)}
-              className="form-checkbox h-4 w-4 text-blue-600 bg-gray-800 border-gray-600 rounded"
-            />
-            <span>{t('fields.onlyActive')}</span>
-          </label>
-        </div>*/}
-
-        {/* Profit Factor */}
-        {/* <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
-          <label className="block text-sm font-medium text-gray-100 mb-2">
-            {t('fields.profitFactor', { value: filters.profitFactor.toFixed(0) })}
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="10"
-            step="1"
-            value={filters.profitFactor}
-            onChange={(e) => handleInputChange('profitFactor', parseFloat(e.target.value))}
-            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
-          />
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
-            <span>0</span>
-            <span>10</span>
-          </div>
-        </div>*/}
-
-        {/* Risk Factor */}
-        {/*<div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
-          <label className="block text-sm font-medium text-gray-100 mb-2">
-            {t('fields.riskFactor', { value: filters.riskFactor.toFixed(0) })}
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="10"
-            step="1"
-            value={filters.riskFactor}
-            onChange={(e) => handleInputChange('riskFactor', parseFloat(e.target.value))}
-            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
-          />
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
-            <span>0</span>
-            <span>10</span>
-          </div>
-        </div>*/}
-
-        {/* Creation Time */}
-        {/*<div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
-          <label className="block text-sm font-medium text-gray-100 mb-2">
-            {t('fields.creationTime')}
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              placeholder={t('placeholders.value')}
-              value={filters.creationTime}
-              onChange={(e) => handleInputChange('creationTime', e.target.value)}
-              className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none"
-            />
-            <select
-              value={filters.creationUnit}
-              onChange={(e) => handleInputChange('creationUnit', e.target.value)}
-              className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none"
-            >
-              <option value="gün">{t('units.day')}</option>
-              <option value="hafta">{t('units.week')}</option>
-              <option value="ay">{t('units.month')}</option>
-            </select>
-          </div>
-        </div>*/}
-
         {/* Profit Margin */}
-        <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
-          <label className="block text-sm font-medium text-gray-100 mb-2">
+        <div className="bg-zinc-900/30 p-3 rounded-xl border border-zinc-800/40 hover:border-zinc-700/50 transition-colors">
+          <label className="block text-xs font-bold text-zinc-500 mb-2 uppercase tracking-wide">
             {t('fields.profitMargin')}
           </label>
           <div className="flex gap-2">
@@ -237,12 +161,12 @@ const BotFilterSidebar = () => {
               placeholder="%"
               value={filters.profitMargin}
               onChange={(e) => handleInputChange('profitMargin', e.target.value)}
-              className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none"
+              className="w-1/2 px-3 py-2 bg-zinc-950/50 text-zinc-300 rounded-lg border border-zinc-800 text-xs focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 focus:outline-none transition-all placeholder:text-zinc-700"
             />
             <select
               value={filters.profitMarginUnit}
               onChange={(e) => handleInputChange('profitMarginUnit', e.target.value)}
-              className="w-1/2 px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none"
+              className="w-1/2 px-3 py-2 bg-zinc-950/50 text-zinc-300 rounded-lg border border-zinc-800 text-xs focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 focus:outline-none appearance-none transition-all"
             >
               <option value="day">{t('units.day')}</option>
               <option value="week">{t('units.week')}</option>
@@ -252,25 +176,9 @@ const BotFilterSidebar = () => {
           </div>
         </div>
 
-        {/* Transaction Frequency */}
-        {/*<div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
-          <label className="block text-sm font-medium text-gray-100 mb-2">
-            {t('fields.transactionFrequency')}
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              placeholder={t('placeholders.value')}
-              value={filters.transactionFrequency}
-              onChange={(e) => handleInputChange('transactionFrequency', e.target.value)}
-              className="w-full px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none"
-            />
-          </div>
-        </div>*/}
-
         {/* Usage Time */}
-        <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
-          <label className="block text-sm font-medium text-gray-100 mb-2">
+        <div className="bg-zinc-900/30 p-3 rounded-xl border border-zinc-800/40 hover:border-zinc-700/50 transition-colors">
+          <label className="block text-xs font-bold text-zinc-500 mb-2 uppercase tracking-wide">
             {t('fields.usageTime')}
           </label>
           <input
@@ -278,14 +186,15 @@ const BotFilterSidebar = () => {
             placeholder={t('placeholders.exampleHours')}
             value={filters.usageTime}
             onChange={(e) => handleInputChange('usageTime', e.target.value)}
-            className="w-full px-2 py-1 bg-gray-800/50 text-white rounded border border-gray-600 text-xs focus:border-blue-400 focus:outline-none"
+            className="w-full px-3 py-2 bg-zinc-950/50 text-zinc-300 rounded-lg border border-zinc-800 text-xs focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 focus:outline-none transition-all placeholder:text-zinc-700"
           />
         </div>
 
         {/* Demand */}
-        <div className="bg-gradient-to-r from-[rgb(0,4,4)] to-[rgba(30,30,55,0.4)] backdrop-blur-sm p-3 shadow-md shadow-white/10 rounded-md">
-          <label className="block text-sm font-medium text-gray-100 mb-2">
-            {t('fields.demand', { value: filters.demand })}
+        <div className="bg-zinc-900/30 p-3 rounded-xl border border-zinc-800/40 hover:border-zinc-700/50 transition-colors">
+          <label className="text-xs font-bold text-zinc-500 mb-2 uppercase tracking-wide flex justify-between">
+            {t('fields.demand', { value: '' })}
+            <span className="text-cyan-400">{filters.demand}</span>
           </label>
           <input
             type="range"
@@ -294,9 +203,9 @@ const BotFilterSidebar = () => {
             step="1"
             value={filters.demand}
             onChange={(e) => handleInputChange('demand', parseFloat(e.target.value))}
-            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+            className="w-full h-2 bg-zinc-950 rounded-lg appearance-none cursor-pointer slider border border-zinc-800"
           />
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
+          <div className="flex justify-between text-[10px] text-zinc-600 mt-1 font-mono">
             <span>0</span>
             <span>5</span>
           </div>
@@ -307,17 +216,13 @@ const BotFilterSidebar = () => {
           <button
             onClick={applyFilters}
             disabled={!isAnyFilterActive()}
-            className={`w-full backdrop-blur-lg border text-gray-300 py-2 px-6 rounded-2xl font-semibold transition-all duration-200 relative overflow-hidden group ${
-              isAnyFilterActive()
-                ? 'bg-white/20 border-white/20 hover:bg-white/30 hover:border-white/50 hover:shadow-xl shadow-md hover:scale-x-95 cursor-pointer'
-                : 'bg-gray-800 border-gray-600 cursor-not-allowed opacity-50'
-            }`}
+            className={`w-full backdrop-blur-sm border py-3 px-6 rounded-xl font-bold transition-all duration-300 relative overflow-hidden group ${isAnyFilterActive()
+              ? 'bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border-cyan-500/30 text-cyan-50 hover:border-cyan-400/50 hover:shadow-[0_0_20px_-5px_rgba(6,182,212,0.3)] cursor-pointer'
+              : 'bg-zinc-900 text-zinc-600 border-zinc-800 cursor-not-allowed'
+              }`}
           >
-            {isAnyFilterActive() && (
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-400/80 to-purple-400/80 opacity-40 group-hover:opacity-80 transition-opacity duration-200"></div>
-            )}
             <div className="relative flex items-center justify-center gap-2">
-              <FiFilter className="w-5 h-5" />
+              <FiFilter className={`w-4 h-4 ${isAnyFilterActive() ? 'group-hover:animate-pulse' : ''}`} />
               {t('actions.apply')}
             </div>
           </button>
@@ -325,15 +230,13 @@ const BotFilterSidebar = () => {
 
         {/* Clear Filter Button */}
         {isFilterApplied && (
-          <div className="pt-2 text-sm">
+          <div className="pt-1">
             <button
               onClick={clearFilters}
-              className="w-full bg-red-600/20 backdrop-blur-lg border border-red-500/20 text-red-300 py-[6px] rounded-xl font-semibold transition-all duration-200 hover:bg-red-600/30 hover:shadow-xl shadow-md relative overflow-hidden group"
+              className="w-full bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/20 hover:border-rose-500/40 text-rose-400 py-2 rounded-xl text-xs font-semibold transition-all duration-300 flex items-center justify-center gap-2"
             >
-              <div className="relative flex items-center justify-center gap-2">
-                <FiX className="w-5 h-5" />
-                {t('actions.clear')}
-              </div>
+              <FiX className="w-3 h-3" />
+              {t('actions.clear')}
             </button>
           </div>
         )}
@@ -342,21 +245,28 @@ const BotFilterSidebar = () => {
       <style jsx>{`
         .slider::-webkit-slider-thumb {
           appearance: none;
-          height: 20px;
-          width: 20px;
+          height: 16px;
+          width: 16px;
           border-radius: 50%;
-          background: #3b82f6;
+          background: #06b6d4;
           cursor: pointer;
-          box-shadow: 0 0 2px 0 #555;
+          border: 2px solid #09090b;
+          box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+          transition: all 0.2s;
+        }
+        .slider::-webkit-slider-thumb:hover {
+          transform: scale(1.1);
+          box-shadow: 0 0 15px rgba(6, 182, 212, 0.7);
         }
         .slider::-moz-range-thumb {
-          height: 20px;
-          width: 20px;
+          height: 16px;
+          width: 16px;
           border-radius: 50%;
-          background: #3b82f6;
+          background: #06b6d4;
           cursor: pointer;
-          border: none;
-          box-shadow: 0 0 2px 0 #555;
+          border: 2px solid #09090b;
+          box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+          transition: all 0.2s;
         }
       `}</style>
     </aside>

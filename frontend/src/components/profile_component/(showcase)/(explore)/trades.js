@@ -114,7 +114,6 @@ function formatPrice(value) {
 
 const Trades = ({ trades = [], positions = [] }) => {
   const { t } = useTranslation('trades');
-  console.log('Trades component rendered:', trades);
   const [tzOffsetMin, setTzOffsetMin] = useState(0);
 
   useEffect(() => {
@@ -129,71 +128,80 @@ const Trades = ({ trades = [], positions = [] }) => {
   };
 
   return (
-    <div className="mb-6 bg-gray-800 p-6 border border-gray-700 rounded-xl">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div className="mb-6 bg-zinc-950 p-6 border border-zinc-800/60 rounded-xl hover:border-cyan-500/30 hover:shadow-[0_0_15px_-3px_rgba(6,182,212,0.15)] transition-all duration-300 relative group">
+      {/* Neon Glow Border Effect */}
+      <div className="absolute inset-0 rounded-xl p-[1px] bg-gradient-to-br from-cyan-500/20 via-zinc-800/0 to-purple-500/20 -z-10 opacity-30 transition-opacity" />
+
+      <div className="flex flex-col gap-6">
 
         {/* Trade History */}
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <BiTransfer className="w-4 h-4 text-gray-300" />
-            <h3 className="text-sm font-semibold text-white">{t('titles.tradeHistory')}</h3>
-            <span className="text-xs text-gray-400">
+            <BiTransfer className="w-4 h-4 text-zinc-400 group-hover:text-cyan-400 transition-colors" />
+            <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{t('titles.tradeHistory')}</h3>
+            <span className="text-[10px] font-mono text-zinc-600 border border-zinc-800 px-1.5 py-0.5 rounded bg-zinc-900">
               {t('counts.trades', { count: trades.length })}
             </span>
           </div>
-          <div className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-xl p-4">
-            <div className="divide-y divide-gray-700">
-              {trades.map((trade) => {
-                const isBuy = trade.action === 'buy';
-                return (
-                  <div
-                    key={trade.id}
-                    className="
-                      grid items-center py-2
-                      /* Sütun düzeni: [time] [orta alan] [price] */
-                      grid-cols-[8.5rem,1fr,9.5rem]
-                      gap-3
-                    "
-                  >
-                    {/* SOL: Timestamp (baz alınan sabit genişlik) */}
-                    <div className="text-xs text-gray-400 tabular-nums">
-                      {renderTradeTime(trade.time)}
-                    </div>
-                
-                    {/* ORTA: pair + type + action */}
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="text-sm font-medium text-white truncate">
-                        {trade.pair}
-                      </span>
-                
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          isBuy ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'
-                        }`}
-                        title={trade.type}
-                      >
-                        {trade.type}
-                      </span>
-                      
-                      <span className="text-xs text-gray-400 hidden sm:inline truncate">
-                        {trade.action}
-                      </span>
-                    </div>
-                      
-                    {/* SAĞ: Fiyat (sabit genişlik + sağa hizalı + tabular) */}
+          <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-4 min-h-[120px]">
+            <div className="divide-y divide-zinc-800/60">
+              {trades.length === 0 ? (
+                <div className="text-center py-8 text-zinc-600 text-xs italic">
+                  No trades yet
+                </div>
+              ) : (
+                trades.map((trade) => {
+                  const isBuy = trade.action === 'buy';
+                  return (
                     <div
+                      key={trade.id}
                       className="
-                        justify-self-end w-[9.5rem]
-                        text-sm font-medium text-white
-                        text-right tabular-nums
+                        grid items-center py-2.5 hover:bg-zinc-900/80 transition-colors rounded px-1
+                        /* Sütun düzeni: [time] [orta alan] [price] */
+                        grid-cols-[8.5rem,1fr,9.5rem]
+                        gap-3
                       "
-                      title={`${trade.price} USD`}
                     >
-                      {formatPrice(trade.price)}
+                      {/* SOL: Timestamp (baz alınan sabit genişlik) */}
+                      <div className="text-[10px] text-zinc-500 font-mono tabular-nums">
+                        {renderTradeTime(trade.time)}
+                      </div>
+
+                      {/* ORTA: pair + type + action */}
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-xs font-bold text-zinc-300 truncate font-mono">
+                          {trade.pair}
+                        </span>
+
+                        <span
+                          className={`px-1.5 py-0.5 rounded-[4px] text-[9px] font-bold font-mono tracking-wide uppercase ${isBuy ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                            }`}
+                          title={trade.type}
+                        >
+                          {trade.type}
+                        </span>
+
+                        <span className="text-[10px] text-zinc-600 hidden sm:inline truncate uppercase tracking-wider">
+                          {trade.action}
+                        </span>
+                      </div>
+
+                      {/* SAĞ: Fiyat (sabit genişlik + sağa hizalı + tabular) */}
+                      <div
+                        className="
+                          justify-self-end w-[9.5rem]
+                          text-xs font-bold
+                          text-right tabular-nums font-mono
+                          text-zinc-300
+                        "
+                        title={`${trade.price} USD`}
+                      >
+                        {formatPrice(trade.price)}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
         </div>
@@ -201,47 +209,51 @@ const Trades = ({ trades = [], positions = [] }) => {
         {/* Open Positions */}
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <BiTransfer className="w-4 h-4 text-gray-300 rotate-90" />
-            <h3 className="text-sm font-semibold text-white">{t('titles.openPositions')}</h3>
-            <span className="text-xs text-gray-400">
+            <BiTransfer className="w-4 h-4 text-zinc-400 rotate-90 group-hover:text-purple-400 transition-colors" />
+            <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{t('titles.openPositions')}</h3>
+            <span className="text-[10px] font-mono text-zinc-600 border border-zinc-800 px-1.5 py-0.5 rounded bg-zinc-900">
               {t('counts.positions', { count: positions.length })}
             </span>
           </div>
-          <div className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-xl p-4">
-            <div className="space-y-2">
-              {positions.map((pos) => (
-                <div
-                  key={pos.id}
-                  className="flex items-center justify-between py-2 border-b border-gray-600 last:border-b-0"
-                >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <span className="text-sm font-medium text-white">{pos.pair}</span>
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${
-                        pos.type === 'LONG'
-                          ? 'bg-green-900 text-green-300'
+          <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-4 min-h-[120px]">
+            <div className="space-y-1">
+              {positions.length === 0 ? (
+                <div className="text-center py-8 text-zinc-600 text-xs italic">
+                  No open positions
+                </div>
+              ) : (
+                positions.map((pos) => (
+                  <div
+                    key={pos.id}
+                    className="flex items-center justify-between py-2 border-b border-zinc-800/50 last:border-b-0 hover:bg-zinc-900/80 transition-colors rounded px-1"
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <span className="text-xs font-bold text-zinc-300 font-mono">{pos.pair}</span>
+                      <span
+                        className={`px-1.5 py-0.5 rounded-[4px] text-[9px] font-bold font-mono tracking-wide uppercase ${pos.type === 'LONG'
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                           : pos.type === 'SHORT'
-                          ? 'bg-red-900 text-red-300'
-                          : 'bg-gray-800 text-gray-300'
-                      }`}
+                            ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                            : 'bg-zinc-800 text-zinc-400'
+                          }`}
+                      >
+                        {pos.type}
+                      </span>
+                    </div>
+                    <span
+                      className={`text-xs font-bold font-mono ${parseFloat(pos.profit) > 0
+                        ? 'text-emerald-400'
+                        : parseFloat(pos.profit) < 0
+                          ? 'text-rose-400'
+                          : 'text-zinc-500'
+                        }`}
                     >
-                      {pos.type}
+                      {parseFloat(pos.profit) > 0 ? '+' : ''}
+                      {pos.profit}%
                     </span>
                   </div>
-                  <span
-                    className={`text-xs font-medium ${
-                      parseFloat(pos.profit) > 0
-                        ? 'text-green-400'
-                        : parseFloat(pos.profit) < 0
-                        ? 'text-red-400'
-                        : 'text-gray-400'
-                    }`}
-                  >
-                    {parseFloat(pos.profit) > 0 ? '+' : ''}
-                    {pos.profit}%
-                  </span>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>

@@ -5,27 +5,26 @@
   "reset": "Varsayılanlara dön",
   "saved": "Kaydedildi",
   "myprofile": "Profilim",
-
   "language": "Dil",
   "language_hint": "Seçiminiz hemen uygulanır ve çereze kaydedilir.",
-  "languages": { "tr": "Türkçe", "en": "İngilizce" },
-
+  "languages": {
+    "tr": "Türkçe",
+    "en": "İngilizce"
+  },
   "theme": "Tema",
   "theme_system": "Sistem",
   "theme_light": "Açık",
   "theme_dark": "Koyu",
-
   "timezone": "Zaman Dilimi",
   "current_timezone": "Geçerli değer:",
   "timezone_search": "Bölge ara… (örn. Istanbul, Tokyo, New_York)",
   "selected": "Seçili",
   "no_results": "Sonuç bulunamadı.",
   "timezone_hint": "Çereze yalnızca GMT ofseti kaydedilir (örn. GMT+03:00).",
-
   "loading": "Yükleniyor…",
-
   "profile": {
     "title": "Profil Bilgileri",
+    "subtitle": "Profil fotoğrafınızı ve kişisel bilgilerinizi buradan güncelleyebilirsiniz.",
     "name": "Ad",
     "last_name": "Soyad",
     "username": "Kullanıcı Adı",
@@ -35,9 +34,9 @@
     "bio": "Biyografi",
     "bio_ph": "Kendiniz hakkında kısa bir açıklama…"
   },
-
-  "social": { "title": "Sosyal Bağlantılar" },
-
+  "social": {
+    "title": "Sosyal Bağlantılar"
+  },
   "security": {
     "title": "Hesap Güvenliği",
     "current": "Mevcut Şifre",
@@ -48,13 +47,11 @@
     "mismatch": "Yeni şifreler eşleşmiyor.",
     "changed": "Şifre güncellendi."
   },
-
   "validation": {
     "required": "Bu alan zorunludur.",
     "email": "Geçerli bir e-posta girin.",
     "fix_fields": "Lütfen hatalı/eksik alanları düzeltin."
   },
-
   "telegram": {
     "title": "Telegram Bildirimleri",
     "connected": "Bağlı",
@@ -73,7 +70,7 @@
       "unlink": "Telegram bağlantısı kesilemedi."
     }
   },
-    "leftmenu": {
+  "leftmenu": {
     "profile_basics": "Profil Ayarları",
     "security": "Hesap Güvenliği",
     "language": "Dil Tercihleri",
@@ -82,12 +79,10 @@
     "timezone": "Zaman Dilimi",
     "social_links": "Sosyal Bağlantılar"
   },
-
   "errors": {
     "load": "Ayarlar yüklenirken bir sorun oluştu.",
     "loadProfile": "Profil bilgileri alınamadı.",
     "save": "Kaydederken bir hata oluştu."
   },
-
   "notifications": "Bildirimler"
 }

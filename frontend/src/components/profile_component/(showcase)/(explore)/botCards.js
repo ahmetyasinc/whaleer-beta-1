@@ -9,7 +9,7 @@ import {
   FiCheck,
   FiBarChart
 } from 'react-icons/fi';
-import { FaRobot, FaUser } from 'react-icons/fa';
+import { FaRobot, FaUser, FaShoppingCart, FaClock as FaClockSolid } from 'react-icons/fa';
 import { LuChartNoAxesCombined } from "react-icons/lu";
 import { LiaChargingStationSolid } from "react-icons/lia";
 import { useSiwsStore } from "@/store/auth/siwsStore";
@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import BuyModal from "@/components/profile_component/(showcase)/(checkout)/BuyModal";
 import RentModal from "@/components/profile_component/(showcase)/(checkout)/RentModal";
 
+/* ---- Helpers ---- */
 const pad = (n) => String(n).padStart(2, '0');
 
 function getCookie(name) {
@@ -38,7 +39,7 @@ function parseGmtToMinutes(tzStr) {
 function readTimezoneOffsetMinutesFromCookie() {
   try {
     const raw = getCookie('wh_settings');
-    if (!raw) return 0; // GMT+0
+    if (!raw) return 0;
     const obj = JSON.parse(raw);
     return parseGmtToMinutes(obj?.timezone || 'GMT+0');
   } catch {
@@ -49,35 +50,31 @@ function readTimezoneOffsetMinutesFromCookie() {
 // Değer → UTC saniye
 function parseToUtcSeconds(value) {
   if (value == null) return null;
-
   if (typeof value === 'number') {
     if (value > 1e12) return Math.floor(value / 1000); // ms → s
     return Math.floor(value); // s
   }
-
   if (typeof value === 'string') {
     if (/^\d+$/.test(value)) {
       const num = Number(value);
       return num > 1e12 ? Math.floor(num / 1000) : Math.floor(num);
     }
-    // ISO değilse UTC varsayalım
     const hasTz = /[zZ]$|[+-]\d{2}:?\d{2}$/.test(value);
     const iso = hasTz ? value : `${value.replace(' ', 'T')}Z`;
     const ms = Date.parse(iso);
     if (!Number.isNaN(ms)) return Math.floor(ms / 1000);
   }
-
   const ms = new Date(value).getTime();
   return Number.isNaN(ms) ? null : Math.floor(ms / 1000);
 }
 
-// UTC saniye + offset → Date (UTC getter’larıyla okunacak)
+// UTC saniye + offset → Date
 function timeToZonedDate(utcSeconds, offsetMinutes) {
   const msUTC = (utcSeconds || 0) * 1000;
   return new Date(msUTC + (offsetMinutes || 0) * 60 * 1000);
 }
 
-// Sadece tarih (saat yok): DD.MM.YYYY
+// Sadece tarih: DD.MM.YYYY
 function formatDateOnly(value, offsetMinutes) {
   const sec = parseToUtcSeconds(value);
   if (sec == null) return '—';
@@ -91,16 +88,10 @@ function formatDateOnly(value, offsetMinutes) {
 // ---- helpers for TypeBadge ----
 const getTypeBadgeClasses = (type) => {
   const t = String(type || '').toLowerCase();
-  switch (t) {
-    case 'futures':
-    case 'future':
-    case 'perp':
-    case 'perpetual':
-      return 'bg-purple-900/30 text-purple-200 border border-purple-500/40';
-    case 'spot':
-    default:
-      return 'bg-emerald-900/30 text-emerald-200 border border-emerald-500/40';
+  if (t === 'futures' || t.includes('future') || t.includes('perp')) {
+    return 'bg-amber-500/15 text-amber-300 border border-amber-700';
   }
+  return 'bg-emerald-500/15 text-emerald-300 border border-emerald-700';
 };
 
 function TypeBadge({ type }) {
@@ -108,7 +99,7 @@ function TypeBadge({ type }) {
   const label = (type || 'spot').toString().toUpperCase();
   return (
     <span
-      className={`px-5 py-[8px] rounded-full uppercase tracking-wide text-[12px] ${getTypeBadgeClasses(type)} shrink-0`}
+      className={`px-3 py-[4px] rounded-full uppercase tracking-wide text-[10px] ${getTypeBadgeClasses(type)} shrink-0`}
       title={tr ? tr('typeBadgeTitle', { type: label }) : label}
     >
       {label}
@@ -120,11 +111,7 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
   if (!botData) return null;
 
   const { t } = useTranslation('showcaseBotCard');
-
-  // --- GÜNCELLEME: Sadece Solana (walletLinked) durumunu çekiyoruz ---
   const { walletLinked } = useSiwsStore();
-
-  // Herhangi biri bağlıysa true döner
   const isAnyWalletConnected = walletLinked;
 
   const [buyOpen, setBuyOpen] = useState(false);
@@ -168,38 +155,46 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
   return (
     <>
       <motion.div
-        className="relative bg-gray-800 rounded-2xl shadow-2xl border border-gray-700"
+        className="group relative rounded-xl overflow-hidden transition-all duration-300 bg-zinc-950 border w-full border-zinc-800/60 hover:border-cyan-500/30 hover:shadow-[0_0_15px_-3px_rgba(6,182,212,0.15)] flex flex-col h-full"
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: isAnimating ? -20 : 0, opacity: isAnimating ? 0.8 : 1 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
+        {/* Neon Glow Border Effect */}
+        <div className="absolute inset-0 rounded-xl p-[1px] bg-gradient-to-br from-cyan-500/20 via-zinc-800/0 to-purple-500/20 -z-10 opacity-30 transition-opacity" />
+
         <div className="absolute top-3 right-3 z-10">
           <TypeBadge type={botData.bot_type || botData.type || 'spot'} />
         </div>
-        <div className="p-4 sm:p-6">
+
+        <div className="p-4 sm:p-5 flex flex-col h-full bg-zinc-950">
           {/* Header */}
-          <div className="mb-6">
-            <div className="flex items-center gap-3 min-w-0 mb-4">
-              <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex-shrink-0">
-                <FaRobot className="w-5 h-5 text-white" />
+          <div className="mb-4">
+            <div className="flex items-center gap-3 min-w-0 mb-3">
+              <div className="p-2.5 bg-zinc-900 border border-zinc-700/60 rounded-xl flex-shrink-0 text-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.1)]">
+                <FaRobot className="w-5 h-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="text-lg sm:text-xl font-bold text-white">{botData.name}</h2>
-                <div className="flex items-center gap-2 text-gray-300 text-xs">
-                  <FaUser className="w-3 h-3 flex-shrink-0" />
+                <h2 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-100 to-blue-200 truncate leading-tight drop-shadow-[0_0_8px_rgba(34,211,238,0.2)]">
+                  {botData.name}
+                </h2>
+                <div className="flex items-center gap-2 text-zinc-400 text-xs mt-0.5">
+                  <FaUser className="w-3 h-3 flex-shrink-0 text-cyan-500/50" />
                   <span>{t('labels.by', { creator: botData.creator })}</span>
                 </div>
               </div>
             </div>
 
-            <div className="text-xs text-gray-400 space-y-1">
-              <p>{t('meta.purchasedTimes', { count: botData.soldCount })}</p>
-              <p>{t('meta.rentedTimes', { count: botData.rentedCount })}</p>
+            <div className="text-[10px] text-zinc-500 font-mono space-y-0.5 ml-1">
+              <p>Purchased: <span className="text-zinc-300">{botData.soldCount}</span></p>
+              <p>Rented: <span className="text-zinc-300">{botData.rentedCount}</span></p>
             </div>
 
-            <div className="flex items-center gap-2 mt-3">
+            <div className="flex items-center gap-2 mt-4">
               <span
-                className={`px-3 py-2 rounded-full text-sm font-medium ${totalMarginNum > 0 ? 'bg-green-800 text-green-200' : 'bg-red-900 text-red-300'
+                className={`px-3 py-1.5 rounded-md text-xs font-bold font-mono border ${totalMarginNum > 0
+                  ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-400'
+                  : 'bg-rose-950/30 border-rose-500/30 text-rose-400'
                   }`}
               >
                 {totalMarginNum > 0 ? '+' : ''}{botData.totalMargin}%
@@ -207,20 +202,20 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
 
               <button
                 onClick={() => onFollow?.(botData)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${isFollowed
-                  ? 'bg-green-600 text-white hover:bg-green-700'
-                  : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold border transition-all ${isFollowed
+                  ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/20'
+                  : 'bg-zinc-800/50 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-cyan-400 hover:border-cyan-500/30'
                   }`}
                 type="button"
               >
                 {isFollowed ? (
                   <>
-                    <FiCheck className="w-4 h-4" />
+                    <FiCheck className="w-3.5 h-3.5" />
                     {t('actions.following')}
                   </>
                 ) : (
                   <>
-                    <FiUserPlus className="w-4 h-4" />
+                    <FiUserPlus className="w-3.5 h-3.5" />
                     {t('actions.follow')}
                   </>
                 )}
@@ -229,37 +224,29 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
           </div>
 
           {/* Buy / Rent */}
-          <div className="flex w-full gap-2 mb-2">
+          <div className="flex w-full gap-2 mb-4">
             <PurchaseButton
               enabledFlag={Boolean(botData.for_sale)}
-              // --- GÜNCELLEME: combined değişkeni gönderiyoruz ---
               walletLinked={isAnyWalletConnected}
               price={botData.sell_price}
               label={t('purchase.buy')}
-              bg="bg-green-600"
-              hover="hover:bg-green-500"
-              lockedMessage={t('purchase.locked')}
+              actionType="buy"
               onClick={() => setBuyOpen(true)}
+              lockedMessage={t('purchase.locked')}
             />
             <PurchaseButton
               enabledFlag={Boolean(botData.for_rent)}
-              // --- GÜNCELLEME: combined değişkeni gönderiyoruz ---
               walletLinked={isAnyWalletConnected}
               price={botData.rent_price}
               label={t('purchase.rentDaily')}
-              bg="bg-orange-600"
-              hover="hover:bg-orange-500"
-              lockedMessage={t('purchase.locked')}
+              actionType="rent"
               onClick={() => setRentOpen(true)}
+              lockedMessage={t('purchase.locked')}
             />
           </div>
 
-
-
-
-
           {/* Stats */}
-          <div className="flex flex-col space-y-2 mb-6">
+          <div className="flex flex-col gap-2 mb-4">
             <StatBox
               icon={<FiCalendar />}
               title={t('stats.createdOn')}
@@ -276,21 +263,21 @@ const BotCard = ({ botData, isFollowed, onFollow, isAnimating = false }) => {
           </div>
 
           {/* Strategy */}
-          <div className="mb-6">
-            <h3 className="text-sm font-semibold text-white mb-3">{t('strategy.title')}</h3>
-            <span className="px-2 py-1 bg-gradient-to-r from-blue-900 to-green-800 text-blue-200 rounded-lg text-xs font-medium">
+          <div className="mb-4">
+            <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 px-1">{t('strategy.title')}</h3>
+            <span className="inline-block px-3 py-1.5 bg-zinc-900 border border-zinc-700 rounded text-xs font-semibold text-zinc-300 truncate max-w-full hover:border-cyan-500/30 transition-colors">
               {botData.strategy}
             </span>
           </div>
 
           {/* Coins */}
-          <div className="mb-4">
-            <h3 className="text-sm font-semibold text-white mb-3">{t('coins.title')}</h3>
-            <div className="flex flex-wrap gap-2">
+          <div className="mt-auto">
+            <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 px-1">{t('coins.title')}</h3>
+            <div className="flex flex-wrap gap-1.5">
               {coins.map((coin, index) => (
                 <span
                   key={index}
-                  className="px-2 py-1 bg-gradient-to-r from-orange-900 to-red-900 text-orange-300 rounded-lg text-xs font-medium"
+                  className="px-2 py-1 bg-zinc-900 border border-zinc-800 text-zinc-400 rounded text-[10px] font-bold hover:text-cyan-400 hover:border-cyan-500/30 transition-colors cursor-default"
                 >
                   {coin}
                 </span>
@@ -325,72 +312,93 @@ const PurchaseButton = ({
   walletLinked,
   price,
   label,
-  bg,
-  hover,
-  lockedMessage = "You must connect your wallet first",
+  actionType,
+  lockedMessage,
   onClick,
 }) => {
   const { t } = useTranslation('showcaseBotCard');
   const isAvailable = Boolean(enabledFlag);
   const isConnected = Boolean(walletLinked);
   const disabled = !isAvailable || !isConnected;
+  const isBuy = actionType === 'buy';
 
   const wrapperTitle = !isAvailable
     ? t('purchase.notAvailable')
     : (!isConnected ? lockedMessage : undefined);
 
-  const buttonClass = !isAvailable
-    ? "bg-gray-700 text-gray-400 cursor-not-allowed"
-    : (isConnected
-      ? `${bg} ${hover} text-white`
-      : `${bg} text-white opacity-50 cursor-not-allowed`);
+  // Colors based on action
+  const activeBorder = isBuy ? 'border-emerald-500/30 hover:border-emerald-500/60' : 'border-cyan-500/30 hover:border-cyan-500/60';
+  const activeBg = isBuy ? 'bg-emerald-950/20 hover:bg-emerald-950/40' : 'bg-cyan-950/20 hover:bg-cyan-950/40';
+  const activeText = isBuy ? 'text-emerald-400' : 'text-cyan-400';
+  const priceColor = isBuy ? 'text-emerald-300' : 'text-cyan-300';
 
-  const showPrice = isAvailable;
-  const priceClass = isConnected ? "text-lg font-bold" : "text-lg font-bold opacity-60";
+  const finalClass = disabled
+    ? 'bg-zinc-900/30 border-zinc-800 text-zinc-600 cursor-not-allowed'
+    : `${activeBg} ${activeBorder} cursor-pointer group`;
 
   return (
     <div className="w-1/2" title={wrapperTitle}>
       <button
         disabled={disabled}
         type="button"
-        className={`w-full py-2 rounded-lg h-16 ${buttonClass}`}
+        className={`w-full py-2 px-2 rounded-lg h-14 border flex flex-col justify-between items-center transition-all duration-300 relative overflow-hidden ${finalClass}`}
         onClick={() => !disabled && onClick?.()}
       >
-        <div className="flex flex-col justify-between h-full items-center">
-          {showPrice && <span className={priceClass}>{price} $</span>}
-          <span className="text-[10px] text-white/80">{label}</span>
+        {isAvailable && (
+          <span className={`text-base font-bold font-mono ${disabled ? 'text-zinc-600' : priceColor}`}>
+            {price} $
+          </span>
+        )}
+        <div className="flex items-center gap-1.5 mt-auto">
+          {actionType === 'buy'
+            ? <FaShoppingCart className={`text-[10px] ${disabled ? 'text-zinc-700' : 'text-emerald-500/70'}`} />
+            : <FaClockSolid className={`text-[10px] ${disabled ? 'text-zinc-700' : 'text-cyan-500/70'}`} />
+          }
+          <span className={`text-[9px] uppercase tracking-wider font-bold ${disabled ? 'text-zinc-600' : activeText}`}>
+            {label}
+          </span>
         </div>
+
+        {!disabled && (
+          <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-t ${isBuy ? 'from-emerald-500/10' : 'from-cyan-500/10'} to-transparent`} />
+        )}
       </button>
     </div>
   );
 };
 
 const StatBox = ({ icon, title, value }) => (
-  <div className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-xl py-2 px-4 shadow-md h-12">
-    <div className="flex items-center gap-2 h-full">
-      <div className="text-blue-300 flex-shrink-0">{icon}</div>
-      <div className="flex items-center justify-between w-full text-xs text-gray-300 font-medium">
-        <span>{title}</span>
-        <span className="text-white font-semibold">{value}</span>
+  <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-lg py-2 px-3 shadow-sm h-10 hover:border-cyan-500/20 transition-colors group/stat">
+    <div className="flex items-center gap-3 h-full">
+      <div className="text-zinc-500 group-hover/stat:text-cyan-400 transition-colors flex-shrink-0 text-sm">
+        {icon}
+      </div>
+      <div className="flex items-center justify-between w-full text-[11px] font-medium">
+        <span className="text-zinc-500">{title}</span>
+        <span className="text-zinc-200 font-mono">{value}</span>
       </div>
     </div>
   </div>
 );
 
 const StatBoxTrades = ({ icon, title, value }) => {
-  const [day, week, month] = value.split('/').map(v => Number.parseFloat(v));
-  const getColor = (val) => (val < 0 ? 'text-red-400' : 'text-green-400');
+  const [day, week, month] = value.split('/').map(v => Number.parseFloat(v) || 0);
+  const getColor = (val) => (val < 0 ? 'text-rose-400' : 'text-emerald-400');
+  // Use dash for formatting consistency if needed, but current value is correct
+  const fmt = (v) => `${v}%`;
 
   return (
-    <div className="bg-gradient-to-r from-gray-950 to-zinc-900 rounded-xl py-1 px-4 shadow-md h-12">
-      <div className="flex items-center gap-2 h-full">
-        <div className="text-blue-300 flex-shrink-0">{icon}</div>
-        <div className="flex items-center justify-between w-full text-xs text-gray-300 font-medium">
-          <span>{title}</span>
-          <div className="flex items-center gap-1 text-white font-semibold">
-            <span className={getColor(day)}>{day}%</span> /
-            <span className={getColor(week)}>{week}%</span> /
-            <span className={getColor(month)}>{month}%</span>
+    <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-lg py-2 px-3 shadow-sm h-10 hover:border-cyan-500/20 transition-colors group/stat">
+      <div className="flex items-center gap-3 h-full">
+        <div className="text-zinc-500 group-hover/stat:text-cyan-400 transition-colors flex-shrink-0 text-sm">{icon}</div>
+        <div className="flex items-center justify-between w-full text-[11px] font-medium">
+          <span className="text-zinc-500">{title}</span>
+          <div className="flex items-center gap-1.5 font-mono text-[10px]">
+            <span className={getColor(day)}>{fmt(day)}</span>
+            <span className="text-zinc-700">|</span>
+            <span className={getColor(week)}>{fmt(week)}</span>
+            <span className="text-zinc-700">|</span>
+            <span className={getColor(month)}>{fmt(month)}</span>
           </div>
         </div>
       </div>

@@ -30,3 +30,7 @@ env/
 *.log
 *.sqlite3
 *.db
+*.dump
+
+# --- DOCKER DATA ---
+postgres_data/

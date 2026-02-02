@@ -5,27 +5,26 @@
   "reset": "Reset to defaults",
   "saved": "Saved",
   "myprofile": "My Profile",
-
   "language": "Language",
   "language_hint": "Your selection is applied immediately and stored in a cookie.",
-  "languages": { "tr": "Turkish", "en": "English" },
-
+  "languages": {
+    "tr": "Turkish",
+    "en": "English"
+  },
   "theme": "Theme",
   "theme_system": "System",
   "theme_light": "Light",
   "theme_dark": "Dark",
-
   "timezone": "Time Zone",
   "current_timezone": "Current value:",
   "timezone_search": "Search region… (e.g. Istanbul, Tokyo, New_York)",
   "selected": "Selected",
   "no_results": "No results found.",
   "timezone_hint": "Only the GMT offset value is stored in the cookie (e.g. GMT+03:00).",
-
   "loading": "Loading…",
-
   "profile": {
     "title": "Profile Information",
+    "subtitle": "Update your photo and personal details here.",
     "name": "First Name",
     "last_name": "Last Name",
     "username": "Username",
@@ -35,9 +34,9 @@
     "bio": "Bio",
     "bio_ph": "A short description about yourself…"
   },
-
-  "social": { "title": "Social Links" },
-
+  "social": {
+    "title": "Social Links"
+  },
   "security": {
     "title": "Account Security",
     "current": "Current Password",
@@ -48,13 +47,11 @@
     "mismatch": "New passwords do not match.",
     "changed": "Password updated."
   },
-
   "validation": {
     "required": "This field is required.",
     "email": "Please enter a valid email.",
     "fix_fields": "Please fix the highlighted fields."
   },
-
   "telegram": {
     "title": "Telegram Notifications",
     "connected": "Connected",
@@ -73,23 +70,19 @@
       "unlink": "Couldn't disconnect Telegram."
     }
   },
-
   "leftmenu": {
-  "profile_basics": "Profile Settings",
-  "security": "Account Security",
-  "language": "Language Preferences",
-  "telegram": "Telegram Notifications",
-  "theme": "Theme Settings",
-  "timezone": "Time Zone",
-  "social_links": "Social Links"
-},
-
-
+    "profile_basics": "Profile Settings",
+    "security": "Account Security",
+    "language": "Language Preferences",
+    "telegram": "Telegram Notifications",
+    "theme": "Theme Settings",
+    "timezone": "Time Zone",
+    "social_links": "Social Links"
+  },
   "errors": {
     "load": "There was a problem while loading settings.",
     "loadProfile": "Unable to load profile information.",
     "save": "An error occurred while saving."
   },
-
   "notifications": "Notifications"
 }

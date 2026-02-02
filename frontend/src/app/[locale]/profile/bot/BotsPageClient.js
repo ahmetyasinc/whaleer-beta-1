@@ -223,15 +223,13 @@ export default function BotsPageClient() {
         <div className="flex items-center gap-2 ml-6 md:ml-12">
           {TABS.map(tab => {
             const label = tabLabels[tab.key];
-            const disabledTitle = t('tabs.noTabYet', { tab: label });
             return (
               <TabButton
                 key={tab.key}
                 label={label}
-                disabledTitle={disabledTitle}
                 count={counts[tab.key]}
                 active={activeTab === tab.key}
-                disabled={!has[tab.key]}
+                disabled={false}
                 onClick={() => setActiveTab(tab.key)}
               />
             );
@@ -251,7 +249,7 @@ export default function BotsPageClient() {
             <span>{t('actions.panicButton')}</span>
           </button>
 
-          <div className="h-[30px] w-[1px] bg-gray-600 mx-2"></div>
+          {activeTab === 'ORIGINAL' && <div className="h-[30px] w-[1px] bg-gray-600 mx-2"></div>}
 
           <SwitchConfirmModal
             isOpen={confirmModalOpen}
@@ -263,20 +261,22 @@ export default function BotsPageClient() {
           />
 
           {/* Create New Bot */}
-          <button
-            onClick={() => {
-              if (!canCreateBot) return;
-              setModalOpen(true);
-            }}
-            aria-disabled={!canCreateBot}
-            title={createTooltip}
-            className={`flex items-center justify-center h-[40px] px-4 gap-2 rounded-md bg-black border border-gray-800 transition duration-100 text-gray-200 text-sm font-medium
-              ${canCreateBot ? "hover:border-gray-600 cursor-pointer" : "opacity-50 cursor-not-allowed"}
-            `}
-          >
-            <HiPlusSmall className="text-xl" />
-            <span>{canCreateBot ? t('actions.createNewBot') : t('actions.createLocked')}</span>
-          </button>
+          {activeTab === 'ORIGINAL' && (
+            <button
+              onClick={() => {
+                if (!canCreateBot) return;
+                setModalOpen(true);
+              }}
+              aria-disabled={!canCreateBot}
+              title={createTooltip}
+              className={`flex items-center justify-center h-[40px] px-4 gap-2 rounded-md bg-black border border-gray-800 transition duration-100 text-gray-200 text-sm font-medium
+                ${canCreateBot ? "hover:border-gray-600 cursor-pointer" : "opacity-50 cursor-not-allowed"}
+              `}
+            >
+              <HiPlusSmall className="text-xl" />
+              <span>{canCreateBot ? t('actions.createNewBot') : t('actions.createLocked')}</span>
+            </button>
+          )}
         </div>
       </header>
 

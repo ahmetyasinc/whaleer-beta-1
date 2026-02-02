@@ -1,0 +1,20 @@
+{
+    "title": "Geri Dönüşüm Kutusu",
+    "tabs": {
+        "indicators": "İndikatörler",
+        "strategies": "Stratejiler",
+        "backtests": "Backtestler",
+        "bots": "Botlar"
+    },
+    "loading": "Yükleniyor...",
+    "notFound": "Bulunamadı",
+    "noItems": "{{type}} içinde öğe bulunamadı.",
+    "deletion": "Kalıcı silinmeye <1>{{count}} gün</1> kaldı",
+    "restore": "Geri Yükle",
+    "confirmModal": {
+        "title": "Öğeyi Geri Yükle",
+        "message": "<1>{{item}}</1> adlı öğeyi geri yüklemek istediğinize emin misiniz?",
+        "cancel": "İptal",
+        "confirm": "Geri Yükle"
+    }
+}

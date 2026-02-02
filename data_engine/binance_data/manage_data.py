@@ -5,7 +5,7 @@ import asyncio
 import websockets
 import json
 import time
-from app.services.binance_data.interval_maping import interval_to_minutes
+from .interval_maping import interval_to_minutes
 
 import asyncio, json, websockets
 from itertools import islice

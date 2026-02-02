@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 from app.database import get_db
 from app.models.profile.binance_coins import BinanceCoin
-from app.services.binance_data.manage_data import binance_websocket
+from app.services.binance_data.manage_data import binance_websocket, process_db_queue
 from app.services.binance_data.save_data import save_binance_data
 from app.services.binance_data.get_data import get_binance_data
 from sqlalchemy import text
@@ -274,6 +274,9 @@ async def startup():
 
     # WebSocket'i çalıştır ve görevi sakla
     websocket_task = asyncio.create_task(run_websocket_with_reconnect())
+    
+    # ✅ DB Consumer'ı başlat (Kuyruk İşleyici)
+    asyncio.create_task(process_db_queue(db_pool))
 
 # ✅ FastAPI kapandığında temizleme işlemleri
 @websocket_router.on_event("shutdown")

@@ -1,6 +1,6 @@
 # spot_ws_service.py
 from websockets.protocol import State
-import logging, json,time,hmac, hashlib, asyncio, websockets, datetime, os
+import logging, json, time, hmac, hashlib, asyncio, websockets, datetime, os, ssl
 # DEĞİŞİKLİK: asyncpg import edildi.
 import asyncpg
 from decimal import Decimal

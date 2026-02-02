@@ -59,7 +59,7 @@ managed_services = {
 }
 
 async def _api_key_event_callback(conn, pid, channel, payload):
-    logger.info(f"🔥 API Anahtarı değişikliği sinyali alındı! (Kanal: {channel})")
+    logger.info(f"🔥 API Anahtarı değişikliği sinyali alındı! (Kanal: {channel}, Payload: {payload})")
     try:
         data = json.loads(payload)
         stream_key_id = data.get("stream_key_id")
@@ -104,7 +104,7 @@ async def listen_for_api_key_events():
         await asyncio.sleep(5)
 
 async def notification_handler(conn, pid, channel, payload):
-    logger.info(f"🔥 ListenKey yenileme sinyali alındı! (Kanal: {channel})")
+    logger.info(f"🔥 ListenKey yenileme sinyali alındı! (Kanal: {channel}, Payload: {payload})")
     await asyncio.sleep(5)
     await run_refresh_logic()
 

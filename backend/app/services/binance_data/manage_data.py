@@ -4,7 +4,7 @@ import asyncio
 import asyncio
 import websockets
 import json
-
+import time
 from app.services.binance_data.interval_maping import interval_to_minutes
 
 import asyncio, json, websockets
@@ -755,9 +755,9 @@ async def subscribe_chunk(streams, conn_idx, db_pool):
     payload = {"method": "SUBSCRIBE", "params": streams, "id": conn_idx}
     async with websockets.connect(
         WS_URI,
-        ping_interval=20,
-        ping_timeout=20,
-        close_timeout=5,
+        ping_interval=60,
+        ping_timeout=60,
+        close_timeout=10,
         max_size=2**24
     ) as ws:
         await ws.send(json.dumps(payload))
@@ -781,59 +781,98 @@ async def subscribe_chunk(streams, conn_idx, db_pool):
                     close_price = float(kline["c"])
                     volume      = float(kline["v"])
 
-                    async with db_pool.acquire() as conn:
-                        async with conn.transaction():
-                            # 1) Ham veriyi büyük tabloya ekle (idempotent)
-                            await conn.execute(
-                                """
-                                INSERT INTO binance_data
-                                  (coin_id, interval, "timestamp", open, high, low, close, volume)
-                                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                                ON CONFLICT (coin_id, interval, "timestamp") DO NOTHING
-                                """,
-                                coin_id, interval, timestamp,
-                                open_price, high_price, low_price, close_price, volume
-                            )
+                    # 1) Veriyi Kuyruğa At (Non-Blocking)
+                    data_item = (
+                        coin_id, interval, timestamp,
+                        open_price, high_price, low_price, close_price, volume
+                    )
+                    try:
+                        data_queue.put_nowait(data_item)
+                    except asyncio.QueueFull:
+                        print(f"⚠️ Kuyruk dolu! Veri atlandı: {coin_id}")
 
-                            # 2) Son fiyatı güncelle (yarışa dayanıklı UPSERT)
-                            #    Yalnızca gelen mum daha yeni/eşitse güncelle.
-                            
-                            await conn.execute(
+
+# ✅ Global Veri Kuyruğu (Memory Buffer)
+data_queue = asyncio.Queue(maxsize=10000)
+
+async def process_db_queue(db_pool):
+    """
+    Consumer: Kuyruktan verileri alır ve toplu (Batch) halde veritabanına yazar.
+    """
+    print("🚀 DB Writer (Consumer) Başlatıldı...")
+    
+    batch_size = 100  # Tek seferde yazılacak satır sayısı
+    flush_interval = 3.0 # Maksimum bekleme süresi (saniye)
+    
+    batch = []
+    last_flush = time.time()
+    
+    while True:
+        try:
+            # 1. Kuyruktan veri al (Timeout ile bekle ki flush_interval çalışsın)
+            try:
+                item = await asyncio.wait_for(data_queue.get(), timeout=0.1)
+                batch.append(item)
+            except asyncio.TimeoutError:
+                pass # Veri gelmedi, batch kontrolüne devam et
+            
+            current_time = time.time()
+            
+            # 2. Batch dolduysa veya süre dolduysa yaz
+            if len(batch) >= batch_size or (batch and current_time - last_flush >= flush_interval):
+                async with db_pool.acquire() as conn:
+                    async with conn.transaction():
+                        # 1. Binance Data Batch Insert
+                        await conn.executemany(
+                            """
+                            INSERT INTO binance_data
+                              (coin_id, interval, "timestamp", open, high, low, close, volume)
+                            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                            ON CONFLICT (coin_id, interval, "timestamp") DO UPDATE 
+                            SET 
+                                open = EXCLUDED.open,
+                                high = EXCLUDED.high,
+                                low = EXCLUDED.low,
+                                close = EXCLUDED.close,
+                                volume = EXCLUDED.volume
+                            """,
+                            batch
+                        )
+
+                        # 2. Update Last Price (Batch Optimized)
+                        # Her coin/interval için en güncel veriyi bul
+                        latest_map = {}
+                        for item in batch:
+                            # item: (coin_id, interval, timestamp, open, high, low, close, volume)
+                            key = (item[0], item[1])
+                            if key not in latest_map or item[2] > latest_map[key][2]:
+                                latest_map[key] = item
+                        
+                        last_price_batch = [
+                            (item[0], item[1], item[2], item[6]) 
+                            for item in latest_map.values()
+                        ]
+
+                        if last_price_batch:
+                             await conn.executemany(
                                 """
                                 INSERT INTO binance_last_price (coin_id, "interval", "timestamp", close)
                                 VALUES ($1, $2, $3, $4)
                                 ON CONFLICT (coin_id, "interval") DO UPDATE
                                 SET "timestamp" = EXCLUDED."timestamp",
                                     close       = EXCLUDED.close
-                                WHERE EXCLUDED."timestamp" > binance_last_price."timestamp";
+                                WHERE EXCLUDED."timestamp" > binance_last_price."timestamp"
                                 """,
-                                coin_id, interval, timestamp, close_price
-                            )
-
-                            # 3) (İsteğe bağlı) Eski verileri sayıya göre silmek yerine ZAMAN’a göre tutmak daha hızlıdır.
-                            #    Örn: sadece son 7 gün tutulacaksa:
-                            # cutoff = datetime.utcnow() - timedelta(days=7)
-                            # await conn.execute(
-                            #     'DELETE FROM binance_data WHERE coin_id=$1 AND interval=$2 AND "timestamp" < $3',
-                            #     coin_id, interval, cutoff
-                            # )
-                            #
-                            # Eğer sayı bazlı devam edecekseniz alt sorguyu tek COUNT hesapıyla optimize etmeyi düşünün.
-                            await conn.execute(
-                                """
-                                DELETE FROM binance_data 
-                                WHERE id IN (
-                                    SELECT id FROM binance_data 
-                                    WHERE coin_id = $1 AND interval = $2
-                                    ORDER BY "timestamp" DESC
-                                    OFFSET 5000
-                                );
-                                """,
-                                coin_id, interval
-                            )
-
-                    print(f"✅ New Data: {interval} - {coin_id} - {timestamp}")
-            pass
+                                last_price_batch
+                             )
+                
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] 💾 Batch Yazıldı: {len(batch)} kayıt.")
+                batch = []
+                last_flush = current_time
+                
+        except Exception as e:
+            print(f"❌ DB Writer Hatası: {e}")
+            await asyncio.sleep(1) # Hata durumunda döngüyü yavaşlat
 
 async def binance_websocket(db_pool):
     CHUNK_SIZE = 80  # tek WS için ~50–100 arası pratik; gerekirse azalt/artır

@@ -1,10 +1,16 @@
-
-import asyncio
-import logging
-import sys
 import os
+import sys
 import traceback
 from datetime import datetime
+from urllib.parse import urlparse
+from dotenv import load_dotenv
+
+import asyncio
+import asyncpg
+import logging
+
+# .env dosyasını yükle (Local defaultları)
+load_dotenv()
 
 # Windows Fix
 if sys.platform.startswith('win'):
@@ -31,7 +37,7 @@ logging.getLogger("trade_engine.balance.models.run_services").setLevel(logging.W
 logging.getLogger("trade_engine.balance.models.ws_service").setLevel(logging.WARNING)
 logging.getLogger("trade_engine.order_engine.data_access.repos.symbol_filters").setLevel(logging.WARNING)
 logging.getLogger("root").setLevel(logging.WARNING) # root logger'ı sustur
-logging.getLogger("ServiceRunner").setLevel(logging.WARNING)
+logging.getLogger("ServiceRunner").setLevel(logging.INFO)
 logging.getLogger("StrategyEngine").setLevel(logging.WARNING) # Her dk yeni veri log'unu sustur
 
 # ÖNEMLİ: Emirleri görmek istiyoruz (Trade Logs)
@@ -170,11 +176,46 @@ async def supervisor_loop():
         
         await asyncio.sleep(SUPERVISOR_INTERVAL)
 
+async def log_active_bot_count():
+    """Başlangıçta veritabanına bağlanıp aktif bot sayısını yazar."""
+    try:
+        host = os.getenv("PGHOST", "127.0.0.1")
+        port = os.getenv("PGPORT", "5432")
+        db_name = os.getenv("PGDATABASE", "balina_db")
+        
+        logger.info(f"💾 Veritabanı Bağlanıyor: {host}:{port}/{db_name}")
+
+        conn = await asyncpg.connect(
+            user=os.getenv("PGUSER", "postgres"), 
+            password=os.getenv("PGPASSWORD", "admin"),
+            database=db_name, 
+            host=host,
+            port=port,
+        )
+        
+        # Aktif ve Toplam Bot Sayısı
+        active_count = await conn.fetchval("SELECT count(*) FROM bots WHERE active = true")
+        total_count = await conn.fetchval("SELECT count(*) FROM bots")
+        
+        await conn.close()
+        
+        logger.info("---------------------------------------------------")
+        logger.info(f"📊 TOPLAM BOT: {total_count}")
+        logger.info(f"✅ AKTİF BOT : {active_count}")
+        logger.info("---------------------------------------------------")
+        
+    except Exception as e:
+        logger.error(f"❌ Veritabanı bot sayısı kontrol hatası: {e}")
+
+
 async def main():
     logger.info("===================================================")
     logger.info("   WHALEER UNIFIED TRADE ENGINE RUNNER v1.0")
     logger.info("   (Strategy Engine + Tracking Services + Supervisor)")
     logger.info("===================================================")
+
+    # 0. Bot Sayısını Göster (DB Kontrolü)
+    await log_active_bot_count()
 
     # 1. Tracking Servislerini Başlat
     await start_tracking_services()

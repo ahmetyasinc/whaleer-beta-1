@@ -1,6 +1,22 @@
-version: '3.8'
-
 services:
+  db:
+    image: postgres:17-alpine
+    container_name: whaleer-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=balina_db
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: ./backend
@@ -11,11 +27,12 @@ services:
     volumes:
       - ./backend/uploads:/app/uploads # Persistence for uploads
     env_file:
-      - ./backend/.env.${APP_ENV:-local}
+      - ./.env
     environment:
-      - DATABASE_URL=${DATABASE_URL:-postgresql+asyncpg://postgres:admin@host.docker.internal/balina_db}
-    extra_hosts:
-      - "host.docker.internal:host-gateway" # Allow connection to host services (DB etc.)
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      db:
+        condition: service_healthy
 
   frontend:
     build:
@@ -41,14 +58,18 @@ services:
       dockerfile: Dockerfile
     container_name: whaleer-trade-engine
     # Run directly as module
-    command: python -m backend.trade_engine.unified_runner
+    command: python -m trade_engine.unified_runner
     restart: unless-stopped
     volumes:
       - ./backend/uploads:/app/uploads
+      - ./trade_engine:/app/trade_engine
     env_file:
-      - ./backend/.env.${APP_ENV:-local}
+      - ./.env
     environment:
       # Adapting for psycopg (standard postgresql:// scheme)
-      - LISTEN_DB_URL=postgresql://postgres:admin@host.docker.internal/balina_db
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - LISTEN_DB_URL=${DATABASE_URL}
+      - PGSSLMODE=prefer
+      - PG_SSLMODE=prefer
+    depends_on:
+      db:
+        condition: service_healthy

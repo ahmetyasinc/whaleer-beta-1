@@ -698,14 +698,14 @@ export default function ChartComponent({ onLoadingChange }) {
           updateVisIcon();
           updateStrategyMarkers();
         };
-        visibilityBtn.onmouseenter = () => { isHoveringButtons = true; };
-        visibilityBtn.onmouseleave = () => { isHoveringButtons = false; };
+        visibilityBtn.onmouseenter = () => { isHoveringButtonsRef.current = true; };
+        visibilityBtn.onmouseleave = () => { isHoveringButtonsRef.current = false; };
 
         const settingsBtn = document.createElement('button'); settingsBtn.style.cssText = `pointer-events:auto;background:none;border:none;color:${labelColor};cursor:pointer;`; settingsBtn.onclick = () => { setActiveStrategyId(strategyId); setActiveSubStrategyId(subId); setSettingsStrategyModalOpen(true); };
-        settingsBtn.onmouseenter = () => { isHoveringButtons = true; }; settingsBtn.onmouseleave = () => { isHoveringButtons = false; };
+        settingsBtn.onmouseenter = () => { isHoveringButtonsRef.current = true; }; settingsBtn.onmouseleave = () => { isHoveringButtonsRef.current = false; };
         createRoot(settingsBtn).render(<RiSettingsLine size={13} className="hover:text-gray-400" />);
         const removeBtn = document.createElement('button'); removeBtn.style.cssText = `pointer-events:auto;background:none;border:none;color:${labelColor};cursor:pointer;`; removeBtn.onclick = () => { labelDiv.remove(); removeSubStrategy(strategyId, subId); };
-        removeBtn.onmouseenter = () => { isHoveringButtons = true; }; removeBtn.onmouseleave = () => { isHoveringButtons = false; };
+        removeBtn.onmouseenter = () => { isHoveringButtonsRef.current = true; }; removeBtn.onmouseleave = () => { isHoveringButtonsRef.current = false; };
         createRoot(removeBtn).render(<AiOutlineClose size={13} className="hover:text-gray-400" />);
         labelDiv.appendChild(title); labelDiv.appendChild(visibilityBtn); labelDiv.appendChild(settingsBtn); labelDiv.appendChild(removeBtn);
         strategyLabelsContainer && strategyLabelsContainer.appendChild(labelDiv);

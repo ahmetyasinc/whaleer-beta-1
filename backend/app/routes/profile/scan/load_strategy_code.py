@@ -1,6 +1,6 @@
 # backend/trade_engine/data/strategy_code.py (örnek konum)
 from sqlalchemy import text
-from trade_engine.config import get_engine
+from app.database import get_sync_engine as get_engine
 
 def load_strategy_code(strategy_id: int) -> str | None:
     try:

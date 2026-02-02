@@ -53,11 +53,13 @@ async def create_bot(
 
     await notify_user_by_telegram(
         text=(
-            f"""🤖 <b>Yeni botunuz hazır!</b>
-Bot adı: <b>{new_bot.name}</b> ✅
-🔔 Bundan sonra bu botun yaptığı işlemler hakkında Telegram üzerinden anlık bildirimler alacaksınız.  
-🌐 Daha fazla detay ve performans grafikleri için <a href="https://whaleer.com">whaleer.com</a> adresini ziyaret edebilirsiniz.
-İyi kazançlar dileriz 🚀"""
+            f"""🤖 <b>Bot Successfully Created!</b>
+Bot Name: <b>{new_bot.name}</b> ✅
+
+🔔 You will receive real-time notifications via Telegram for all activities performed by this bot.
+🌐 for more details and performance charts, please visit <a href="https://whaleer.com">whaleer.com</a>.
+
+We wish you profitable trades! 🚀"""
         ),
         user_id=int(user_id),  # veya bot_id=new_bot.id
         db=db,                  # mevcut session’ı yeniden kullan

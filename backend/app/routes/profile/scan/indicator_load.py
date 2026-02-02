@@ -1,7 +1,7 @@
 # backend/trade_engine/data/indicators.py (örnek konum)
 from sqlalchemy import text, bindparam, Integer
 from sqlalchemy.dialects.postgresql import ARRAY
-from trade_engine.config import get_engine
+from app.database import get_sync_engine as get_engine
 
 def load_indicators(strategy_id):
     try:

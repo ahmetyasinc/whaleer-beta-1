@@ -3,7 +3,7 @@ import pandas as pd
 from sqlalchemy import text
 
 # Yeni config yapısına uyum
-from trade_engine.config import get_engine
+from app.database import get_sync_engine as get_engine
 
 def get_candles(coin_id, interval, candle_count):
     query = text("""

@@ -1,0 +1,20 @@
+{
+    "title": "Recycle Bin",
+    "tabs": {
+        "indicators": "Indicators",
+        "strategies": "Strategies",
+        "backtests": "Backtests",
+        "bots": "Bots"
+    },
+    "loading": "Loading...",
+    "notFound": "Not Found",
+    "noItems": "No items found in {{type}}.",
+    "deletion": "Permanent deletion in <1>{{count}} days</1>",
+    "restore": "Restore",
+    "confirmModal": {
+        "title": "Restore Item",
+        "message": "Are you sure you want to restore <1>{{item}}</1>?",
+        "cancel": "Cancel",
+        "confirm": "Restore"
+    }
+}

@@ -52,13 +52,13 @@ function timeToZonedDate(t, offsetMinutes) {
 function makeZonedFormatter(offsetMinutes) {
   const twoDigitYear = (Y) => String(Y).slice(2);
   return (t) => {
-    const d  = timeToZonedDate(t, offsetMinutes);
-    const Y  = d.getUTCFullYear();
+    const d = timeToZonedDate(t, offsetMinutes);
+    const Y = d.getUTCFullYear();
     const yy = twoDigitYear(Y);
-    const M  = pad(d.getUTCMonth() + 1);
-    const D  = pad(d.getUTCDate());
-    const h  = pad(d.getUTCHours());
-    const m  = pad(d.getUTCMinutes());
+    const M = pad(d.getUTCMonth() + 1);
+    const D = pad(d.getUTCDate());
+    const h = pad(d.getUTCHours());
+    const m = pad(d.getUTCMinutes());
     return `${D}.${M}.${yy} ${h}:${m}`;
   };
 }
@@ -90,36 +90,36 @@ const BotChart = ({ data = [] }) => {
       width: container.clientWidth,
       height: 240,
       layout: {
-        background: { color: '#1f2937' },
-        textColor: '#6b7280',
+        background: { color: 'transparent' }, // Use transparent for better blending
+        textColor: '#a1a1aa', // zinc-400
       },
       grid: {
-        vertLines: { color: '#1f2937' },
-        horzLines: { color: '#1f2937' },
+        vertLines: { color: '#27272a' }, // zinc-800
+        horzLines: { color: '#27272a' }, // zinc-800
       },
       timeScale: {
-        borderColor: '#475569',
+        borderColor: '#3f3f46', // zinc-700
         timeVisible: true,
         secondsVisible: false,
-        tickMarkFormatter: fmt,             // <- eksen etiketleri
+        tickMarkFormatter: fmt,
       },
       rightPriceScale: {
-        borderColor: '#6b7280',
-        textColor: '#6b7280',
+        borderColor: '#3f3f46', // zinc-700
+        textColor: '#a1a1aa', // zinc-400
       },
       localization: {
-        timeFormatter: fmt,                 // <- crosshair/tooltip zamanı
+        timeFormatter: fmt,
       },
     });
 
     chartRef.current = chart;
 
     const series = chart.addBaselineSeries({
-      baseValue: { type: 'price', price: 0 }, // gerçek base birazdan setData sonrası güncellenecek
-      topLineColor: '#10b981',
+      baseValue: { type: 'price', price: 0 }, // Will be updated
+      topLineColor: '#10b981', // emerald-500
       topFillColor1: 'rgba(16, 185, 129, 0.28)',
       topFillColor2: 'rgba(16, 185, 129, 0.05)',
-      bottomLineColor: '#ef4444',
+      bottomLineColor: '#ef4444', // red-500
       bottomFillColor1: 'rgba(239, 68, 68, 0.28)',
       bottomFillColor2: 'rgba(239, 68, 68, 0.05)',
       lineWidth: 2,
@@ -178,7 +178,7 @@ const BotChart = ({ data = [] }) => {
   return (
     <div
       ref={chartContainerRef}
-      className="w-full rounded-md overflow-hidden bg-gray-900"
+      className="w-full rounded-md overflow-hidden"
     />
   );
 };

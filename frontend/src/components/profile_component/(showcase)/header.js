@@ -68,7 +68,7 @@ export default function Header() {
             >
               {t("buttons.sellRent")}
             </button>
-
+            {/*
             <div
               className={`flex items-center rounded-xl border border-stone-600 hover:border-stone-500 overflow-hidden transition duration-100 ${isFeatured ? "opacity-50 pointer-events-none select-none" : ""
                 }`}
@@ -90,6 +90,7 @@ export default function Header() {
                 {t("buttons.myListings")}
               </button>
             </div>
+            */}
           </div>
 
           <div className="w-[160px]" />

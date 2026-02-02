@@ -13,7 +13,8 @@ from app.routes.profile.indicator.indicator import protected_router as indicator
 from app.routes.profile.indicator.indicator_release import protected_router as indicator_release
 from app.routes.profile.indicator.indicator_run import protected_router as indicator_run_router
 from app.routes.profile.indicator.indicator_adjustment import protected_router as indicator_adjustment_router
-from app.routes.profile.indicator.websocket_binance import websocket_router as websocket_binance_router
+from app.routes.profile.indicator.indicator_adjustment import protected_router as indicator_adjustment_router
+# from app.routes.profile.indicator.websocket_binance import websocket_router as websocket_binance_router (MOVED)
 from app.routes.profile.settings.settings import router as settings_router
 from app.routes.profile.binance_coins.binance_coins import protected_router as binance_coins_router
 from app.routes.profile.strategy.strategy import protected_router as strategy_router
@@ -58,7 +59,8 @@ api_router.include_router(phantom_purchase_router)
 # COINS ROUTES
 api_router.include_router(binance_coins_router)
 # INDICATOR ROUTES
-api_router.include_router(websocket_binance_router)
+# INDICATOR ROUTES
+# websocket_router MOVED TO DATA_ENGINE
 api_router.include_router(indicator_data_router)
 api_router.include_router(indicator_router) 
 api_router.include_router(indicator_release) 

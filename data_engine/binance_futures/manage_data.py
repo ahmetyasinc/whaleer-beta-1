@@ -10,7 +10,7 @@ from .interval_maping import interval_to_minutes
 import asyncio, json, websockets
 from itertools import islice
 
-WS_URI = "wss://stream.binance.com:9443/ws"
+WS_URI = "wss://fstream.binance.com/ws"
 
 def chunked(iterable, size):
     it = iter(iterable)
@@ -19,6 +19,7 @@ def chunked(iterable, size):
         if not chunk:
             break
         return chunk
+
 
 # Örnek: tüm streamleri burada topla (senin büyük listen)
 ALL_STREAMS = [
@@ -837,10 +838,10 @@ async def process_db_queue(db_pool):
             if len(batch) >= batch_size or (batch and current_time - last_flush >= flush_interval):
                 async with db_pool.acquire() as conn:
                     async with conn.transaction():
-                        # 1. Binance Data Batch Insert
+                        # 1. Binance Data Batch Insert (FUTURES)
                         await conn.executemany(
                             """
-                            INSERT INTO binance_data
+                            INSERT INTO binance_futures
                               (coin_id, interval, "timestamp", open, high, low, close, volume)
                             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                             ON CONFLICT (coin_id, interval, "timestamp") DO UPDATE 
@@ -871,12 +872,12 @@ async def process_db_queue(db_pool):
                         if last_price_batch:
                              await conn.executemany(
                                 """
-                                INSERT INTO binance_last_price (coin_id, "interval", "timestamp", close)
+                                INSERT INTO binance_futures_last_price (coin_id, "interval", "timestamp", close)
                                 VALUES ($1, $2, $3, $4)
                                 ON CONFLICT (coin_id, "interval") DO UPDATE
                                 SET "timestamp" = EXCLUDED."timestamp",
                                     close       = EXCLUDED.close
-                                WHERE EXCLUDED."timestamp" > binance_last_price."timestamp"
+                                WHERE EXCLUDED."timestamp" > binance_futures_last_price."timestamp"
                                 """,
                                 last_price_batch
                              )

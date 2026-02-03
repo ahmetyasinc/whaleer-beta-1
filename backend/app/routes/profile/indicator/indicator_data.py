@@ -9,7 +9,7 @@ protected_router = APIRouter()
 
 @protected_router.get("/get-binance-data/")
 async def get_binance_data(symbol: str, interval: str, db: AsyncSession = Depends(get_db), user_id: dict = Depends(verify_token)):
-    """Veritabanından belirtilen sembol ve zaman aralığındaki son 1000 veriyi JSON olarak getirir."""
+    """Veritabanından belirtilen sembol ve zaman aralığındaki son 5000 veriyi JSON olarak getirir."""
     query = text("""
         SELECT jsonb_agg(jsonb_build_object(
             'timestamp', timestamp,
@@ -20,10 +20,14 @@ async def get_binance_data(symbol: str, interval: str, db: AsyncSession = Depend
             'volume', volume
         )) AS data
         FROM (
-            SELECT timestamp, open, high, low, close, volume
-            FROM public.binance_data
-            WHERE coin_id = :symbol 
-              AND interval = :interval
+            SELECT * FROM (
+                SELECT timestamp, open, high, low, close, volume
+                FROM public.binance_data
+                WHERE coin_id = :symbol 
+                  AND interval = :interval
+                ORDER BY timestamp DESC
+                LIMIT 5000
+            ) sub
             ORDER BY timestamp ASC
         ) t;
     """)

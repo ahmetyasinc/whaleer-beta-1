@@ -5,17 +5,18 @@ import os
 import asyncpg
 from dotenv import load_dotenv
 
-# Path ayarı: data_engine modülünü bulabilmesi için
+# Path ayarı: projeyi (whaleer/ kökünü) bulabilmesi için
 current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(current_dir)
-sys.path.append(parent_dir)
+parent_dir = os.path.dirname(current_dir)      # data_engine/
+grandparent_dir = os.path.dirname(parent_dir)  # whaleer/
+sys.path.append(grandparent_dir)
 
 # .env Yükle (Importlardan ÖNCE)
-env_path = os.path.join(parent_dir, '.env')
+env_path = os.path.join(grandparent_dir, '.env')
 if not load_dotenv(env_path):
     load_dotenv() # fallback
 
-# Şimdi import et
+# Importlar (Modül Yapısıyla)
 from data_engine.config import DATABASE_URL
 from data_engine.binance_data.manage_data import binance_websocket, process_db_queue
 

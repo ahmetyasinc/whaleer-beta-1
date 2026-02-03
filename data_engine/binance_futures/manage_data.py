@@ -754,43 +754,58 @@ ALL_STREAMS = [
 
 async def subscribe_chunk(streams, conn_idx, db_pool):
     payload = {"method": "SUBSCRIBE", "params": streams, "id": conn_idx}
-    async with websockets.connect(
-        WS_URI,
-        ping_interval=60,
-        ping_timeout=60,
-        close_timeout=10,
-        max_size=2**24
-    ) as ws:
-        await ws.send(json.dumps(payload))
-        print(f"✅ Conn{conn_idx}: {len(streams)} stream'e abone olundu.")
-
-        while True:
-            msg = await ws.recv()
-            json_data = json.loads(msg)
-
-            if "k" in json_data:
-                kline = json_data["k"]
-                is_closed = kline["x"]
-                interval = kline["i"]
-                coin_id = kline["s"].upper()
-
-                if is_closed:
-                    timestamp   = datetime.utcfromtimestamp(kline["t"] / 1000)
-                    open_price  = float(kline["o"])
-                    high_price  = float(kline["h"])
-                    low_price   = float(kline["l"])
-                    close_price = float(kline["c"])
-                    volume      = float(kline["v"])
-
-                    # 1) Veriyi Kuyruğa At (Non-Blocking)
-                    data_item = (
-                        coin_id, interval, timestamp,
-                        open_price, high_price, low_price, close_price, volume
-                    )
+    
+    while True:
+        try:
+            async with websockets.connect(
+                WS_URI,
+                ping_interval=60,
+                ping_timeout=60,
+                close_timeout=10,
+                max_size=2**24
+            ) as ws:
+                await ws.send(json.dumps(payload))
+                print(f"✅ Conn{conn_idx}: {len(streams)} stream'e abone olundu.")
+    
+                while True:
                     try:
-                        data_queue.put_nowait(data_item)
-                    except asyncio.QueueFull:
-                        print(f"⚠️ Kuyruk dolu! Veri atlandı: {coin_id}")
+                        msg = await ws.recv()
+                        json_data = json.loads(msg)
+    
+                        if "k" in json_data:
+                            kline = json_data["k"]
+                            is_closed = kline["x"]
+                            interval = kline["i"]
+                            coin_id = kline["s"].upper()
+    
+                            if is_closed:
+                                timestamp   = datetime.utcfromtimestamp(kline["t"] / 1000)
+                                open_price  = float(kline["o"])
+                                high_price  = float(kline["h"])
+                                low_price   = float(kline["l"])
+                                close_price = float(kline["c"])
+                                volume      = float(kline["v"])
+    
+                                # 1) Veriyi Kuyruğa At (Non-Blocking)
+                                data_item = (
+                                    coin_id, interval, timestamp,
+                                    open_price, high_price, low_price, close_price, volume
+                                )
+                                try:
+                                    data_queue.put_nowait(data_item)
+                                except asyncio.QueueFull:
+                                    print(f"⚠️ [{conn_idx}] Kuyruk dolu! Veri atlandı: {coin_id}")
+                    
+                    except websockets.exceptions.ConnectionClosed:
+                        print(f"⚠️ Conn{conn_idx}: Bağlantı kapandı, yeniden bağlanılıyor...")
+                        break # İç döngüden çık, dış döngü tekrar bağlansın
+                    except Exception as e:
+                        print(f"❌ Conn{conn_idx}: Okuma hatası: {e}")
+                        break
+        
+        except Exception as e:
+            print(f"❌ Conn{conn_idx}: Bağlantı hatası: {e}. 5sn sonra tekrar denenecek.")
+            await asyncio.sleep(5)
 
 
 # ✅ Global Veri Kuyruğu (Memory Buffer)

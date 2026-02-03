@@ -43,7 +43,8 @@ class ListenKeyManager:
         headers = {"X-MBX-APIKEY": self.api_key}
         data = {}
         for attempt in range(1, retries + 1):
-            async with aiohttp.ClientSession() as session:
+            # SSL Verification Disabled
+            async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as session:
                 async with session.post(url, headers=headers) as resp:
                     data = await resp.json()
                     new_listen_key = data.get("listenKey")
@@ -71,7 +72,8 @@ class ListenKeyManager:
 
         url = f"{self.base_url}{self.listenkey_path}"
         headers = {"X-MBX-APIKEY": self.api_key}
-        async with aiohttp.ClientSession() as session:
+        # SSL Verification Disabled
+        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as session:
             async with session.put(url, headers=headers) as resp:
                 if resp.status == 200:
                     await refresh_stream_key_expiration(self.listen_key)

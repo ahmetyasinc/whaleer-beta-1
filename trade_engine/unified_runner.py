@@ -38,7 +38,7 @@ logging.getLogger("trade_engine.balance.models.ws_service").setLevel(logging.WAR
 logging.getLogger("trade_engine.order_engine.data_access.repos.symbol_filters").setLevel(logging.WARNING)
 logging.getLogger("root").setLevel(logging.WARNING) # root logger'ı sustur
 logging.getLogger("ServiceRunner").setLevel(logging.INFO)
-logging.getLogger("StrategyEngine").setLevel(logging.WARNING) # Her dk yeni veri log'unu sustur
+logging.getLogger("StrategyEngine").setLevel(logging.INFO) # Her dk yeni veri log'unu GÖRELİM
 
 # ÖNEMLİ: Emirleri görmek istiyoruz (Trade Logs)
 logging.getLogger("OrderService").setLevel(logging.INFO)

@@ -88,9 +88,8 @@ class SpotWsApiManager:
             try:
                 logging.info(f"🔌 WebSocket bağlantısı kuruluyor: {self.URL}")
                 # SSL Context ekle
-                ssl_context = ssl.create_default_context()
-                ssl_context.check_hostname = False
-                ssl_context.verify_mode = ssl.CERT_NONE
+                # SSL Context: Güvenliği tamamen devre dışı bırak
+                ssl_context = ssl._create_unverified_context()
                 async with websockets.connect(self.URL, ssl=ssl_context, ping_interval=180, ping_timeout=10) as ws:
                     self.ws = ws
                     logging.info("✅ WebSocket bağlantısı başarılı.")

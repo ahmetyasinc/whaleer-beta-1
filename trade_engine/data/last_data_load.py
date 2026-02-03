@@ -2,15 +2,15 @@
 from psycopg2.extras import RealDictCursor
 from trade_engine.config import psycopg2_connection
 
-def load_last_data(interval: str):
+def load_last_data(interval: str, table_name: str = "binance_data"):
     """
-    binance_data tablosunda BTCUSDT için verilen interval'e ait
+    Belirtilen tabloda (varsayılan: binance_data) BTCUSDT için verilen interval'e ait
     en son (timestamp DESC) kaydın timestamp'ini döndürür.
     Veri yoksa None döner.
     """
-    sql = """
+    sql = f"""
         SELECT timestamp
-        FROM public.binance_data
+        FROM public.{table_name}
         WHERE coin_id = 'BTCUSDT' AND interval = %s
         ORDER BY timestamp DESC
         LIMIT 1;

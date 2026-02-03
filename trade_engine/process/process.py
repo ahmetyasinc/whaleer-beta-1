@@ -14,14 +14,15 @@ from trade_engine.data.bot_features import load_bot_holding, load_bot_positions
 from trade_engine.config import psycopg2_connection
 
 
-def _get_last_price_1m(symbol: str):
+def _get_last_price_1m(symbol: str, trade_type: str = "spot"):
     """
-    public.binance_last_price tablosundan, verilen sembol için
+    public.binance_last_price veya binance_futures_last_price tablosundan, verilen sembol için
     interval='1m' olan en güncel 'close' değerini döndürür.
     """
-    sql = """
+    table = "binance_futures_last_price" if trade_type.lower() == "futures" else "binance_last_price"
+    sql = f"""
         SELECT close
-        FROM public.binance_last_price
+        FROM public.{table}
         WHERE coin_id = %s AND "interval" = '1m'
         ORDER BY "timestamp" DESC
         LIMIT 1
@@ -86,7 +87,7 @@ def _build_close_orders_for_bot(bot_id: int):
         if not symbol or amount <= 0:
             continue
 
-        last_price = _get_last_price_1m(symbol)
+        last_price = _get_last_price_1m(symbol, trade_type="spot")
         if last_price is None:
             print(f"[rent-close][{bot_id}] {symbol} için 1m fiyat bulunamadı, emir atlandı.")
             continue
@@ -113,7 +114,7 @@ def _build_close_orders_for_bot(bot_id: int):
         if not symbol or pos == 0:
             continue
 
-        last_price = _get_last_price_1m(symbol)
+        last_price = _get_last_price_1m(symbol, trade_type="futures")
         if last_price is None:
             print(f"[rent-close][{bot_id}] {symbol} için 1m fiyat bulunamadı, emir atlandı.")
             continue

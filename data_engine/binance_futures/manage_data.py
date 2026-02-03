@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
 import aiohttp
 import asyncio
-import asyncio
 import websockets
 import json
 import time
+from data_engine.queue_manager import data_queue
 from .interval_maping import interval_to_minutes
 
 import asyncio, json, websockets
@@ -788,7 +788,7 @@ async def subscribe_chunk(streams, conn_idx, db_pool):
     
                                 # 1) Veriyi Kuyruğa At (Non-Blocking)
                                 data_item = (
-                                    coin_id, interval, timestamp,
+                                    'futures', coin_id, interval, timestamp,
                                     open_price, high_price, low_price, close_price, volume
                                 )
                                 try:
@@ -808,87 +808,6 @@ async def subscribe_chunk(streams, conn_idx, db_pool):
             await asyncio.sleep(5)
 
 
-# ✅ Global Veri Kuyruğu (Memory Buffer)
-data_queue = asyncio.Queue(maxsize=10000)
-
-async def process_db_queue(db_pool):
-    """
-    Consumer: Kuyruktan verileri alır ve toplu (Batch) halde veritabanına yazar.
-    """
-    print("🚀 DB Writer (Consumer) Başlatıldı...")
-    
-    batch_size = 100  # Tek seferde yazılacak satır sayısı
-    flush_interval = 3.0 # Maksimum bekleme süresi (saniye)
-    
-    batch = []
-    last_flush = time.time()
-    
-    while True:
-        try:
-            # 1. Kuyruktan veri al (Timeout ile bekle ki flush_interval çalışsın)
-            try:
-                item = await asyncio.wait_for(data_queue.get(), timeout=0.1)
-                batch.append(item)
-            except asyncio.TimeoutError:
-                pass # Veri gelmedi, batch kontrolüne devam et
-            
-            current_time = time.time()
-            
-            # 2. Batch dolduysa veya süre dolduysa yaz
-            if len(batch) >= batch_size or (batch and current_time - last_flush >= flush_interval):
-                async with db_pool.acquire() as conn:
-                    async with conn.transaction():
-                        # 1. Binance Data Batch Insert (FUTURES)
-                        await conn.executemany(
-                            """
-                            INSERT INTO binance_futures
-                              (coin_id, interval, "timestamp", open, high, low, close, volume)
-                            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                            ON CONFLICT (coin_id, interval, "timestamp") DO UPDATE 
-                            SET 
-                                open = EXCLUDED.open,
-                                high = EXCLUDED.high,
-                                low = EXCLUDED.low,
-                                close = EXCLUDED.close,
-                                volume = EXCLUDED.volume
-                            """,
-                            batch
-                        )
-
-                        # 2. Update Last Price (Batch Optimized)
-                        # Her coin/interval için en güncel veriyi bul
-                        latest_map = {}
-                        for item in batch:
-                            # item: (coin_id, interval, timestamp, open, high, low, close, volume)
-                            key = (item[0], item[1])
-                            if key not in latest_map or item[2] > latest_map[key][2]:
-                                latest_map[key] = item
-                        
-                        last_price_batch = [
-                            (item[0], item[1], item[2], item[6]) 
-                            for item in latest_map.values()
-                        ]
-
-                        if last_price_batch:
-                             await conn.executemany(
-                                """
-                                INSERT INTO binance_futures_last_price (coin_id, "interval", "timestamp", close)
-                                VALUES ($1, $2, $3, $4)
-                                ON CONFLICT (coin_id, "interval") DO UPDATE
-                                SET "timestamp" = EXCLUDED."timestamp",
-                                    close       = EXCLUDED.close
-                                WHERE EXCLUDED."timestamp" > binance_futures_last_price."timestamp"
-                                """,
-                                last_price_batch
-                             )
-                
-                print(f"[{datetime.now().strftime('%H:%M:%S')}] 💾 Batch Yazıldı: {len(batch)} kayıt.")
-                batch = []
-                last_flush = current_time
-                
-        except Exception as e:
-            print(f"❌ DB Writer Hatası: {e}")
-            await asyncio.sleep(1) # Hata durumunda döngüyü yavaşlat
 
 async def binance_websocket(db_pool):
     CHUNK_SIZE = 80  # tek WS için ~50–100 arası pratik; gerekirse azalt/artır

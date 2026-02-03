@@ -164,8 +164,8 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 animate-in fade-in duration-200">
-          <div className="bg-zinc-900 text-white rounded-xl p-6 w-[700px] h-[calc(100vh-36px)] shadow-2xl border border-zinc-800 flex flex-col relative">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/20 z-50 animate-in fade-in duration-200">
+          <div className="bg-zinc-950 text-white rounded-xl p-6 w-[700px] h-[calc(100vh-36px)] shadow-2xl border border-zinc-800 flex flex-col relative">
             {/* Çarpı Kapat Butonu */}
             <button
               className="absolute top-4 right-5 text-zinc-500 hover:text-white hover:rotate-90 transition-all duration-200 text-3xl font-light"
@@ -183,7 +183,7 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
               <input
                 type="text"
                 placeholder={t("searchCrypto")}
-                className="w-full pr-10 px-4 py-3 rounded-3xl bg-zinc-950 text-white border border-zinc-800 
+                className="w-full pr-10 px-4 py-3 rounded-3xl bg-zinc-900 text-white border border-zinc-800 
                            focus:outline-none focus:border-zinc-600 focus:ring-2 focus:ring-zinc-700/50 
                            transition-all duration-200 placeholder:text-zinc-500"
                 value={searchTerm}
@@ -258,7 +258,7 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
                   {filteredCryptos.map((crypto) => (
                     <li
                       key={crypto.id}
-                      className="py-[10px] pl-5 pr-4 hover:bg-zinc-800 active:bg-zinc-750 cursor-pointer rounded-lg flex items-center justify-between transition-all duration-0 group border border-transparent hover:border-zinc-700"
+                      className="py-[10px] pl-5 pr-4 hover:bg-zinc-900 active:bg-zinc-750 cursor-pointer rounded-lg flex items-center justify-between transition-all duration-0 group border border-transparent hover:border-zinc-700"
                       onClick={() => handleSelectCrypto(crypto)}
                     >
                       <span className="font-medium text-zinc-200 group-hover:text-white transition-colors">

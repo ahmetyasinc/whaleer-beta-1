@@ -77,7 +77,7 @@ export const PublishStrategyModal = ({ isOpen, onClose, onPublish }) => {
   const permissionItems = [
     ['codeView', t('perms.items.codeView.label'), t('perms.items.codeView.desc')],
     ['chartView', t('perms.items.chartView.label'), t('perms.items.chartView.desc')],
-    ['scan', t('perms.items.scan.label'), t('perms.items.scan.desc')],
+    // ['scan', t('perms.items.scan.label'), t('perms.items.scan.desc')],
     ['backtest', t('perms.items.backtest.label'), t('perms.items.backtest.desc')],
     ['botRun', t('perms.items.botRun.label'), t('perms.items.botRun.desc')],
   ];

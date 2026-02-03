@@ -65,10 +65,8 @@ def _asyncpg_ssl_param():
     """asyncpg için ssl parametresi: disable => None, diğerleri => SSL context"""
     if SSLMODE == "disable":
         return None
-    # Basit bir default context yeterli (sertifika doğrulaması gerekiyorsa sslrootcert ekle)
-    ctx = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH)
-    # Gerekiyorsa özel CA:
-    # ctx.load_verify_locations(cafile="/path/to/root.crt")
+    # Güvenliği tamamen devre dışı bırak (Supabase vs. self-signed hataları için)
+    ctx = ssl._create_unverified_context()
     return ctx
 
 # =========================

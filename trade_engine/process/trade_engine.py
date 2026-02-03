@@ -7,8 +7,16 @@ from trade_engine.data.data_load import fetch_all_candles
 
 logger = logging.getLogger(__name__)
 
-async def run_trade_engine(interval, min_timestamp=None):
+async def run_trade_engine(interval, min_timestamp=None, market_type="futures"):
+    # Determine table name based on market type
+    table_name = "binance_futures" if market_type.lower() == "futures" else "binance_data"
+
     bots = load_active_bots(interval)
+    
+    # Filter bots by market_type
+    # Using case-insensitive comparison and default to empty string if bot_type is missing
+    bots = [b for b in bots if str(b.get('bot_type', '')).lower() == market_type.lower()]
+
     if not bots:
         #logger.debug("Aktif bot bulunamadı.")
         return [], {}, []
@@ -39,7 +47,7 @@ async def run_trade_engine(interval, min_timestamp=None):
     coin_data_dict = {}
     
     for attempt in range(max_retries):
-        coin_data_dict = await fetch_all_candles(coin_requirements)
+        coin_data_dict = await fetch_all_candles(coin_requirements, table_name=table_name)
         
         if not min_timestamp:
             break

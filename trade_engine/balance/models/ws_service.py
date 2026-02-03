@@ -105,9 +105,8 @@ class WebSocketRedundantManager:
             name = f"ws_{self.base_ws_id}_redundant-{i}"
             try:
                 # SSL Context ekle
-                ssl_context = ssl.create_default_context()
-                ssl_context.check_hostname = False
-                ssl_context.verify_mode = ssl.CERT_NONE
+                # SSL Context: Güvenliği tamamen devre dışı bırak
+                ssl_context = ssl._create_unverified_context()
                 conn = await websockets.connect(url, ssl=ssl_context, ping_interval=20, ping_timeout=10)
                 task = asyncio.create_task(self._listen(conn, name))
                 self.active_connections[name] = (conn, task)

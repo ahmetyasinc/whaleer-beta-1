@@ -1,6 +1,6 @@
 "use client";
 
-import axios from "axios";
+import api from "@/api/axios";
 import { useMemo, useState, useEffect } from "react";
 import { BsPerson } from "react-icons/bs";
 import { IoIosStarOutline, IoMdStar } from "react-icons/io";
@@ -70,7 +70,7 @@ const FullScreenChooseIndicator = ({ isOpen, onClose, onSelect, existingPanelIds
             // Fetch Indicators if needed
             if (activeTab === "indicator" && (!indicators || indicators.length === 0)) {
                 try {
-                    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/all-indicators/`, { withCredentials: true });
+                    const response = await api.get("/all-indicators/");
                     const personal = response.data.personal_indicators || [];
                     setPersonalIndicators(personal);
                 } catch (err) {
@@ -80,7 +80,7 @@ const FullScreenChooseIndicator = ({ isOpen, onClose, onSelect, existingPanelIds
             // Fetch Strategies if needed
             else if (activeTab === "strategy" && (!strategies || strategies.length === 0)) {
                 try {
-                    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/all-strategies/`, { withCredentials: true });
+                    const response = await api.get("/all-strategies/");
                     const personal = response.data.personal_strategies || [];
                     setPersonalStrategies(personal);
                 } catch (err) {

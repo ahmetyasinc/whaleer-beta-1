@@ -1,6 +1,6 @@
-import axios from 'axios';
+import api from '@/api/axios';
 
-axios.defaults.withCredentials = true;
+// axios.defaults.withCredentials = true;
 
 export const fetch_bot_data = async (limit, filters = {}) => {
   try {
@@ -22,8 +22,8 @@ export const fetch_bot_data = async (limit, filters = {}) => {
       limit: limit || 5,
       ...filters, // gelen filtreleri override et
     };
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/showcase/newdata`,
+    const response = await api.post(
+      "/showcase/newdata",
       payload
     );
     return response.data;

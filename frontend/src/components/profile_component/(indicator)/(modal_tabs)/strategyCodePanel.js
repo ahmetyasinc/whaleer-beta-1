@@ -12,10 +12,10 @@ import RunButton from "./run_button_str";
 import TerminalStrategy from "./terminalStrategy";
 import VersionSelect from "./versionSelect";
 import CodeModal from "./fullScreenCodeModal";
-import axios from "axios";
+import api from "@/api/axios";
 import { useTranslation } from "react-i18next";
 
-axios.defaults.withCredentials = true;
+// axios.defaults.withCredentials = true;
 
 const CodePanel = () => {
   const removeCustomPanel = usePanelStore((s) => s.removeCustomPanel);
@@ -84,10 +84,9 @@ const CodePanel = () => {
         setStrategyName(nameToSave);
         setStrategyCode(codeToSave);
 
-        const updateRequest = axios.put(
-          `${process.env.NEXT_PUBLIC_API_URL}/edit-strategy/`,
-          { id: selected.id, name: nameToSave, code: codeToSave },
-          { withCredentials: true, headers: { "Content-Type": "application/json" } }
+        const updateRequest = api.put(
+          "/edit-strategy/",
+          { id: selected.id, name: nameToSave, code: codeToSave }
         );
 
         await Promise.all([updateRequest, delay]);
@@ -99,14 +98,13 @@ const CodePanel = () => {
 
         setStrategyEditing({ ...selected, name: nameToSave, code: codeToSave });
       } else {
-        const postRequest = axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/add-strategy/`,
+        const postRequest = api.post(
+          "/add-strategy/",
           {
             name: nameToSave,
             code: codeToSave,
             parent_strategy_id,
-          },
-          { withCredentials: true, headers: { "Content-Type": "application/json" } }
+          }
         );
 
         const [response] = await Promise.all([postRequest, delay]);
@@ -354,10 +352,9 @@ const CodePanel = () => {
             setIsSaving(true);
             try {
               const nameToSave = codeModalStrategy.name || "Untitled";
-              await axios.put(
-                `${process.env.NEXT_PUBLIC_API_URL}/edit-strategy/`,
-                { id: codeModalStrategy.id, name: nameToSave, code: codeFromModal },
-                { withCredentials: true, headers: { "Content-Type": "application/json" } }
+              await api.put(
+                "/edit-strategy/",
+                { id: codeModalStrategy.id, name: nameToSave, code: codeFromModal }
               );
 
               // Update the store so if we switch back to this strategy, it's fresh

@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
 import { useLogout } from "@/utils/HookLogout";
-import axios from "axios";
+import api from "@/api/axios";
 import LogoutConfirmModal from "./confirmLogout";
 import {
   BiUser,
@@ -77,9 +77,7 @@ const LeftMenu = ({ locale }) => {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user-info`, {
-          withCredentials: true,
-        });
+        const res = await api.get("/user-info");
         setUser(res.data);
       } catch (err) {
         console.error("Kullanıcı alınamadı", err);

@@ -4,7 +4,6 @@ import { useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import LoginForm from "@/components/LoginForm";
-import { ToastContainer } from "react-toastify";
 
 export default function LoginPage(props) {
   const params = use(props.params);
@@ -21,7 +20,6 @@ export default function LoginPage(props) {
   return (
     <main className="flex justify-center items-center min-h-screen relative">
       <LoginForm locale={locale} />
-      <ToastContainer position="top-right" autoClose={3000} />
     </main>
   );
 }

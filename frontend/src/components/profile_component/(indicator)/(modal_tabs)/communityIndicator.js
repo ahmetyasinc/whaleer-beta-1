@@ -5,11 +5,11 @@ import { IoIosCode, IoIosStarOutline, IoMdSearch, IoMdStar } from "react-icons/i
 import AddIndicatorButton from "./add_indicator_button";
 import useIndicatorStore from "@/store/indicator/indicatorStore";
 import CodeModal from "./CodeModal";
-import axios from "axios";
+import api from "@/api/axios";
 import i18n from "@/i18n";
 import { useTranslation } from "react-i18next";
 
-axios.defaults.withCredentials = true;
+// axios.defaults.withCredentials = true;
 
 /* Basit pill */
 const Pill = ({ children, tone = "neutral" }) => {
@@ -56,11 +56,11 @@ const CommunityIndicators = ({ locale, closeModal }) => {
     toggleFavorite(indicator); // optimistic
     try {
       if (isAlreadyFavorite) {
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/indicator-remove-favourite/`, {
+        await api.delete("/indicator-remove-favourite/", {
           data: { indicator_id: indicator.id },
         });
       } else {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/indicator-add-favorite/`, {
+        await api.post("/indicator-add-favorite/", {
           indicator_id: indicator.id,
         });
       }
@@ -92,8 +92,8 @@ const CommunityIndicators = ({ locale, closeModal }) => {
   const notifyIndicatorView = async (releaseId) => {
     if (!releaseId) return;
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/indicator-releases/${releaseId}/view`
+      await api.post(
+        `/indicator-releases/${releaseId}/view`
       );
     } catch (e) {
       console.debug("indicator view ping error:", e?.message || e);

@@ -1,6 +1,6 @@
 // stores/profile/lineChartStore.js
 import { create } from "zustand";
-import axios from "axios";
+import api from "@/api/axios";
 import { useProfileStore } from "@/store/profile/profileStore";
 
 const useLineChartStore = create((set) => ({
@@ -11,7 +11,7 @@ const useLineChartStore = create((set) => ({
   fetchLineData: async () => {
     set({ loading: true, error: null });
     try {
-      axios.defaults.withCredentials = true;
+      // axios.defaults.withCredentials = true;
 
       // aktif api'yi profileStore'dan al
       const { activeApi } = useProfileStore.getState();
@@ -19,8 +19,8 @@ const useLineChartStore = create((set) => ({
         throw new Error("Aktif API seçili değil.");
       }
 
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api_snapshots`,
+      const res = await api.post(
+        "/api_snapshots",
         {
           api_id: activeApi.id, // payload içine koyduk
         }

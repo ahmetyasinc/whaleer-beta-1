@@ -5,12 +5,12 @@ import useIndicatorStore from "@/store/indicator/indicatorStore";
 import usePanelStore from "@/store/indicator/panelStore";
 import useCryptoStore from "@/store/indicator/cryptoPinStore";
 import useIndicatorDataStore from "@/store/indicator/indicatorDataStore";
-import axios from "axios";
+import api from "@/api/axios";
 import { useTranslation } from "react-i18next";
 import { TbTriangleFilled } from "react-icons/tb";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
-axios.defaults.withCredentials = true;
+// axios.defaults.withCredentials = true;
 
 const RunButton = forwardRef(({ indicatorId, onBeforeRun, className }, ref) => {
   const { toggleIndicator } = useIndicatorStore();
@@ -33,8 +33,8 @@ const RunButton = forwardRef(({ indicatorId, onBeforeRun, className }, ref) => {
         console.warn("Eksik veri ile API çağrısı engellendi.");
         return;
       }
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/run-indicator/`,
+      const response = await api.post(
+        "/run-indicator/",
         {
           indicator_id: currentId,
           binance_symbol: selectedCrypto.binance_symbol,

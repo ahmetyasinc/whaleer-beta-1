@@ -1,11 +1,11 @@
-import axios from 'axios';
+import api from '@/api/axios';
 
-axios.defaults.withCredentials = true;
+// axios.defaults.withCredentials = true;
 
 export const fetch_bot_by_id = async (botId) => {
   try {
-    const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/showcase/bot/${botId}`
+    const response = await api.get(
+      `/showcase/bot/${botId}`
     );
     return response.data;
   } catch (error) {

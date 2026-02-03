@@ -1,12 +1,12 @@
 // services/showcase/post_unfollow_bot.js
-import axios from 'axios';
+import api from '@/api/axios';
 
-axios.defaults.withCredentials = true;
+// axios.defaults.withCredentials = true;
 
 export const post_unfollow_bot = async (bot_id) => {
   try {
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/bot/unfollow`,
+    const response = await api.post(
+      "/bot/unfollow",
       { bot_id }
     );
     return response.data;

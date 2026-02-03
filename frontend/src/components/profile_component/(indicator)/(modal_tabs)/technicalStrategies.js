@@ -5,11 +5,11 @@ import { IoIosCode, IoIosStarOutline, IoMdSearch, IoMdStar } from "react-icons/i
 import AddStrategyButton from "./add_strategy_button";
 import useStrategyStore from "@/store/indicator/strategyStore";
 import CodeModal from "./CodeModal";
-import axios from "axios";
+import api from "@/api/axios";
 import i18n from "@/i18n";
 import { useTranslation } from "react-i18next";
 
-axios.defaults.withCredentials = true;
+// axios.defaults.withCredentials = true;
 
 // GÜNCELLEME: closeModal prop'u eklendi
 const TechnicalStrategies = ({ locale, closeModal }) => {
@@ -37,7 +37,7 @@ const TechnicalStrategies = ({ locale, closeModal }) => {
 
     const fetchStrategies = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/all-strategies/`);
+        const response = await api.get("/all-strategies/");
         const tecnic_strategies = response.data.tecnic_strategies || [];
         const personal_strategies = response.data.personal_strategies || [];
         const public_strategies = response.data.public_strategies || [];
@@ -59,11 +59,11 @@ const TechnicalStrategies = ({ locale, closeModal }) => {
 
     try {
       if (isAlreadyFavorite) {
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/strategy-remove-favourite/`, {
+        await api.delete("/strategy-remove-favourite/", {
           data: { strategy_id: strategy.id }
         });
       } else {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/strategy-add-favorite/`, {
+        await api.post("/strategy-add-favorite/", {
           strategy_id: strategy.id
         });
       }

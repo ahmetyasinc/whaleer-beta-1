@@ -3,10 +3,7 @@
 import { useState } from "react";
 import { IoIosStarOutline, IoMdSearch, IoMdStar } from "react-icons/io";
 import useStrategyStore from "@/store/indicator/strategyStore";
-import axios from "axios";
 import { useTranslation } from "react-i18next";
-
-axios.defaults.withCredentials = true;
 
 const CommunityStrategies = ({ onSelect }) => {
   const { t } = useTranslation("communityStrategies");

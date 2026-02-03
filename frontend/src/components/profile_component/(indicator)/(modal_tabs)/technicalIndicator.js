@@ -5,11 +5,11 @@ import { IoIosCode, IoIosStarOutline, IoMdSearch, IoMdStar } from "react-icons/i
 import AddIndicatorButton from "./add_indicator_button";
 import useIndicatorStore from "@/store/indicator/indicatorStore"; // Zustand Store'u import et
 import CodeModal from "./CodeModal";
-import axios from "axios";
+import api from "@/api/axios";
 import i18n from "@/i18n";
 import { useTranslation } from "react-i18next";
 
-axios.defaults.withCredentials = true; // Tüm axios isteklerinde cookie'yi göndermeyi etkinleştir
+// axios.defaults.withCredentials = true;
 
 // GÜNCELLEME: closeModal prop'u eklendi
 const TechnicalIndicators = ({ locale, closeModal }) => {
@@ -33,7 +33,7 @@ const TechnicalIndicators = ({ locale, closeModal }) => {
 
         const fetchIndicators = async () => {
             try {
-                const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/all-indicators/`);
+                const response = await api.get("/all-indicators/");
 
                 const tecnic_indicators = response.data.tecnic_indicators || [];
                 setTecnicIndicators(tecnic_indicators);
@@ -59,11 +59,11 @@ const TechnicalIndicators = ({ locale, closeModal }) => {
 
         try {
             if (isAlreadyFavorite) {
-                await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/indicator-remove-favourite/`, {
+                await api.delete("/indicator-remove-favourite/", {
                     data: { indicator_id: indicator.id }
                 });
             } else {
-                await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/indicator-add-favorite/`, {
+                await api.post("/indicator-add-favorite/", {
                     indicator_id: indicator.id
                 });
             }

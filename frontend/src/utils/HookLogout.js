@@ -1,6 +1,7 @@
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Cookies from "js-cookie";
+import { supabase } from "@/lib/supabaseClient";
 
 export const useLogout = () => {
     const router = useRouter();
@@ -10,7 +11,14 @@ export const useLogout = () => {
 
     const { setIsAuthenticated } = auth;
 
-    const handleLogout = () => {        
+    const handleLogout = async () => {
+        try {
+            // Supabase session'ı kapat
+            await supabase.auth.signOut();
+        } catch (error) {
+            console.error("Logout error:", error);
+        }
+
         // Çerezleri temizle
         Cookies.remove("access_token");
         Cookies.remove("refresh_token");

@@ -3,12 +3,12 @@ import { useState, useCallback } from "react";
 import usePanelStore from "@/store/indicator/panelStore";
 import useCryptoStore from "@/store/indicator/cryptoPinStore";
 import useIndicatorDataStore from "@/store/indicator/indicatorDataStore";
-import axios from "axios";
+import api from "@/api/axios";
 import { IoDownloadOutline } from "react-icons/io5";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { useTranslation } from "react-i18next";
 
-axios.defaults.withCredentials = true;
+// axios.defaults.withCredentials = true;
 
 // GÜNCELLEME: closeModal prop'u eklendi
 const AddIndicatorButton = ({ indicatorId, closeModal }) => {
@@ -26,8 +26,8 @@ const AddIndicatorButton = ({ indicatorId, closeModal }) => {
         return;
       }
 
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/run-indicator/`,
+      const response = await api.post(
+        "/run-indicator/",
         {
           indicator_id: indicatorId,
           binance_symbol: selectedCrypto.binance_symbol,
@@ -63,7 +63,7 @@ const AddIndicatorButton = ({ indicatorId, closeModal }) => {
       setIsLoading(false);
       // YENİ: Başarılı yüklemeden sonra modalı kapat
       if (closeModal) {
-        closeModal(); 
+        closeModal();
       }
     }, 200);
   };

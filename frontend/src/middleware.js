@@ -64,16 +64,9 @@ export function middleware(request) {
     return withLangCookie(NextResponse.redirect(url), cookieLang);
   }
 
-  // 3) Auth guard
-  const refreshToken = request.cookies.get("refresh_token")?.value;
-  const pathWithoutLocale = `/${rest}`; // başında slash ile
-  const isProtectedRoute = pathWithoutLocale === "/profile" || pathWithoutLocale.startsWith("/profile/");
-  if (refreshToken && (pathWithoutLocale === "/login" || pathWithoutLocale === "/register")) {
-    return NextResponse.redirect(new URL(`/${urlLocale}/profile`, request.url));
-  }
-  if (!refreshToken && isProtectedRoute) {
-    return NextResponse.redirect(new URL(`/${urlLocale}/login`, request.url));
-  }
+  // 3) Auth guard kaldırıldı - Client side AuthContext kullanıyor
+  // const refreshToken = request.cookies.get("refresh_token")?.value;
+  // ... eski kod ...
 
   // 4) Devam: lang cookie yoksa mevcut URL locale’ini lang olarak set et
   if (!cookieLang || !locales.includes(cookieLang)) {

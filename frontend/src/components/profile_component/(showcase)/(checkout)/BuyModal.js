@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useMemo } from "react";
-import axios from "axios";
+import api from "@/api/axios";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Connection, VersionedMessage, VersionedTransaction } from "@solana/web3.js";
 import ModalFrame from "./ModalFrame";
@@ -34,20 +34,26 @@ function b64ToUint8Array(b64) {
 // Harici fiyat (credentials kapalı)
 async function fetchSolUsdtPrice(signal) {
   try {
-    const r1 = await axios.get(
+    const r1 = await fetch(
       "https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT",
-      { withCredentials: false, signal }
+      { signal }
     );
-    const p1 = parseFloat(r1?.data?.price);
-    if (!Number.isNaN(p1)) return p1;
+    if (r1.ok) {
+      const j = await r1.json();
+      const p = parseFloat(j.price);
+      if (!Number.isNaN(p)) return p;
+    }
   } catch (_) { }
   try {
-    const r2 = await axios.get(
-      "https://api.coingecko.com/api/v3/simple/price",
-      { params: { ids: "solana", vs_currencies: "usd" }, withCredentials: false, signal }
+    const r2 = await fetch(
+      "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd",
+      { signal }
     );
-    const p2 = parseFloat(r2?.data?.solana?.usd);
-    if (!Number.isNaN(p2)) return p2;
+    if (r2.ok) {
+      const j = await r2.json();
+      const p = parseFloat(j?.solana?.usd);
+      if (!Number.isNaN(p)) return p;
+    }
   } catch (_) { }
   return null;
 }
@@ -92,9 +98,9 @@ export default function BuyModal({ botId, onClose }) {
       try {
         setLoading(true);
         setError(null);
-        const res = await axios.get(
-          `${API}/api/bots/${botId}/checkout-summary`,
-          { params: { action: "buy" }, withCredentials: true }
+        const res = await api.get(
+          `/api/bots/${botId}/checkout-summary`,
+          { params: { action: "buy" } }
         );
         const data = res?.data;
         if (typeof data === "string") throw new Error(t("errors.nonJson"));

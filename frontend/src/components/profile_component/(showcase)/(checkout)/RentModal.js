@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useMemo } from "react";
-import axios from "axios";
+import api from "@/api/axios";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Connection, VersionedMessage, VersionedTransaction } from "@solana/web3.js";
 // --- STELLAR REMOVED ---
@@ -99,9 +99,9 @@ export default function RentModal({ botId, onClose, minDays = 1 }) {
       try {
         setLoading(true);
         setError(null);
-        const res = await axios.get(
-          `${API}/bots/${botId}/checkout-summary`,
-          { params: { action: "rent" }, withCredentials: true }
+        const res = await api.get(
+          `/bots/${botId}/checkout-summary`,
+          { params: { action: "rent" } }
         );
         const data = res?.data;
         if (typeof data === "string") throw new Error(t("errors.nonJson"));

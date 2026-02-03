@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import axios from "axios";
+import api from "@/api/axios";
 import { IoMdAdd, IoIosStarOutline, IoMdStar } from "react-icons/io";
 import { HiOutlineTrash } from "react-icons/hi";
 import AddStrategyButton from "./add_strategy_button";
@@ -12,7 +12,7 @@ import useStrategyDataStore from "@/store/indicator/strategyDataStore";
 import { RiErrorWarningFill, RiLockFill } from "react-icons/ri";
 import { useTranslation } from "react-i18next";
 
-axios.defaults.withCredentials = true;
+// axios.defaults.withCredentials = true;
 
 // GÜNCELLEME: closeModal prop'u eklendi
 const PersonalStrategies = ({ closeModal }) => {
@@ -58,13 +58,13 @@ const PersonalStrategies = ({ closeModal }) => {
     toggleFavorite(strategy);
     try {
       if (isAlreadyFavorite) {
-        await axios.delete(
-          `${process.env.NEXT_PUBLIC_API_URL}/strategy-remove-favourite/`,
+        await api.delete(
+          "/strategy-remove-favourite/",
           { data: { strategy_id: strategy.id } }
         );
       } else {
-        await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/strategy-add-favorite/`,
+        await api.post(
+          "/strategy-add-favorite/",
           { strategy_id: strategy.id }
         );
       }
@@ -82,9 +82,8 @@ const PersonalStrategies = ({ closeModal }) => {
   const confirmDelete = async () => {
     if (!toDelete) return;
     try {
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/delete-strategy/${toDelete.id}/`,
-        { withCredentials: true }
+      await api.delete(
+        `/delete-strategy/${toDelete.id}/`
       );
       const { strategies: currentList } = useStrategyStore.getState();
       setPersonalStrategies(currentList.filter((s) => s.id !== toDelete.id));

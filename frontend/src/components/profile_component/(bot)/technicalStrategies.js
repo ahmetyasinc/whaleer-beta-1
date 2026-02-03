@@ -3,10 +3,9 @@
 import { useEffect, useState } from "react";
 import { IoIosStarOutline, IoMdSearch, IoMdStar } from "react-icons/io";
 import useStrategyStore from "@/store/indicator/strategyStore";
-import axios from "axios";
+import api from "@/api/axios";
 import { useTranslation } from "react-i18next";
 
-axios.defaults.withCredentials = true;
 
 const TechnicalStrategies = ({ onSelect }) => {
   const { t } = useTranslation("technicalStrategies");
@@ -26,7 +25,7 @@ const TechnicalStrategies = ({ onSelect }) => {
 
     const fetchStrategies = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/all-strategies/`);
+        const response = await api.get("/all-strategies/");
         const tecnic_strategies = response.data.tecnic_strategies || [];
         setTecnicStrategies(tecnic_strategies);
 

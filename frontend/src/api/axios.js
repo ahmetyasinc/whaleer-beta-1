@@ -9,12 +9,15 @@ const api = axios.create({
   withCredentials: true, // çerezleri dahil et
 });
 
+import { supabase } from "@/lib/supabaseClient";
+
 // İsteğe bağlı interceptors: auth header eklemek vs.
 api.interceptors.request.use(
-  (config) => {
-    // örnek: localStorage'den token eklemek istersen
-    // const token = localStorage.getItem("token");
-    // if (token) config.headers.Authorization = `Bearer ${token}`;
+  async (config) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      config.headers.Authorization = `Bearer ${session.access_token}`;
+    }
     return config;
   },
   (err) => Promise.reject(err)

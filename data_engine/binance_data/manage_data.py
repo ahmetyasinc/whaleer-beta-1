@@ -10,7 +10,7 @@ from .interval_maping import interval_to_minutes
 import asyncio, json, websockets
 from itertools import islice
 
-WS_URI = "wss://stream.binance.com:9443/ws"
+WS_URI = "wss://stream.binance.com:443/ws"
 
 def chunked(iterable, size):
     it = iter(iterable)

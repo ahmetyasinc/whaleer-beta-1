@@ -5,14 +5,14 @@ import useStrategyStore from "@/store/indicator/strategyStore";
 import usePanelStore from "@/store/indicator/panelStore";
 import useCryptoStore from "@/store/indicator/cryptoPinStore";
 import useStrategyDataStore from "@/store/indicator/strategyDataStore";
-import axios from "axios";
+import api from "@/api/axios";
 import { useTranslation } from "react-i18next";
 
 
 import { TbTriangleFilled } from "react-icons/tb";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
-axios.defaults.withCredentials = true;
+// axios.defaults.withCredentials = true;
 
 const RunButtonStr = forwardRef(({ strategyId, onBeforeRun, className }, ref) => {
   const { toggleStrategy } = useStrategyStore();
@@ -37,8 +37,8 @@ const RunButtonStr = forwardRef(({ strategyId, onBeforeRun, className }, ref) =>
         return;
       }
 
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/run-strategy/`,
+      const response = await api.post(
+        "/run-strategy/",
         {
           strategy_id: currentId,
           binance_symbol: selectedCrypto.binance_symbol,

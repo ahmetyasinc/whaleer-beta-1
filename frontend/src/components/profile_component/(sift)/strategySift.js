@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useSiftCoinStore } from '@/store/sift/strategySiftCoinStore';
 import useStrategyStore from '@/store/indicator/strategyStore';
 import StrategySiftModal from './strategySiftModal';
-import StrategyButton from "./chooseStrategy";  
-import axios from "axios";
+import StrategyButton from "./chooseStrategy";
+import api from "@/api/axios";
 
 const periods = ['1min', '3min', '5min', '15min', '30min', '1h', '2h', '4h', '6h', '1d', '1w'];
 const candleOffsets = ['Last candle', '2nd candle', '3rd candle', '4th candle', '5th candle'];
@@ -51,7 +51,7 @@ export default function StrategySift() {
 
   const scan = async () => {
     try {
-      axios.defaults.withCredentials = true;
+      // axios.defaults.withCredentials = true;
       const payload = {
         strategy_id: selectedStrategy,
         symbols: selectedCoins.map(c => c.symbol.replace("/", "")),
@@ -60,7 +60,7 @@ export default function StrategySift() {
         target: extractTarget(selectedOffset),
       };
 
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/scan/`, payload);
+      const response = await api.post("/scan/", payload);
       const result = response.data;
 
       const longResults = [];
@@ -105,8 +105,8 @@ export default function StrategySift() {
         </h3>
         <div className="max-h-[220px] overflow-y-auto pr-1">
           {coins.map((coin, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className="flex justify-between items-center p-2 mb-1 bg-zinc-800 rounded border border-zinc-700 hover:bg-zinc-700 cursor-pointer"
             >
               <div className="flex items-center">
@@ -133,7 +133,7 @@ export default function StrategySift() {
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="mb-2">
           <label className="block text-xs mb-1">Strategy</label>
-          <StrategyButton 
+          <StrategyButton
             onStrategySelect={handleStrategySelect}
             selectedStrategy={selectedStrategy}
           />

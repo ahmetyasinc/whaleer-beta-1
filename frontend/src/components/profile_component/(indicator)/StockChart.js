@@ -22,6 +22,7 @@ import { installCursorWheelZoom } from "@/utils/cursorCoom";
 import usePanelStore from "@/store/indicator/panelStore";
 import { useChartSettingsStore } from "@/store/indicator/chartSettingsStore";
 import useWatchListStore from "@/store/indicator/watchListStore";
+import api from "@/api/axios";
 
 import { RANGE_EVENT, RANGE_REQUEST_EVENT, CROSSHAIR_EVENT, nextSeq, markLeader, unmarkLeader, isLeader, minBarsFor, FUTURE_PADDING_BARS, setLastRangeCache, getLastRangeCache } from "@/utils/chartSync";
 
@@ -292,12 +293,11 @@ export default function ChartComponent({ onLoadingChange }) {
     async function fetchData() {
       setIsLoading(true);
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/get-binance-data/?symbol=${selectedCrypto.binance_symbol}&interval=${selectedPeriod}`, { method: "GET", headers: { "Content-Type": "application/json" }, credentials: "include" });
-        if (response.status === 401) {
-          const errorData = await response.json();
-          if (["Token expired", "Invalid token"].includes(errorData.detail)) { alert("Oturum süresi doldu veya geçersiz token! Lütfen tekrar giriş yapın."); handleLogout(); return; }
-        }
-        const data = await response.json();
+        const response = await api.get(`/get-binance-data/?symbol=${selectedCrypto.binance_symbol}&interval=${selectedPeriod}`);
+
+        // api interceptor handles 401, no need for manual check here
+
+        const data = response.data;
         if (data.status === "success" && data.data) {
           // Eğer gelen veri boşsa chartData'yı boş set et
           if (!data.data.length) {

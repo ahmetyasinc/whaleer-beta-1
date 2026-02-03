@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
-import axios from "axios";
+import api from "@/api/axios";
 import { IoMdSearch } from "react-icons/io";
 import { BsPinAngle, BsPinAngleFill } from "react-icons/bs";
 import { FiSearch } from "react-icons/fi";
@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 
 import i18n from "@/i18n";
 
-axios.defaults.withCredentials = true;
+// axios.defaults.withCredentials = true;
 
 const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
   const { t } = useTranslation("indicator");
@@ -40,9 +40,7 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
   useEffect(() => {
     const fetchCoins = async () => {
       try {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/get-coin-list/`
-        );
+        const response = await api.get("/get-coin-list/");
 
         if (response.data && response.data.coins) {
           const coins = response.data.coins.map((coin) => ({
@@ -84,10 +82,7 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
       togglePinned(crypto);
 
       try {
-        await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/pin-binance_coin/`,
-          { coin_id: crypto.id }
-        );
+        await api.post("/pin-binance_coin/", { coin_id: crypto.id });
       } catch (error) {
         console.error("Pinleme işlemi sırasında hata oluştu:", error);
       }
@@ -98,12 +93,9 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
     togglePinned(crypto);
 
     try {
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/unpin-binance-coin/`,
-        {
-          data: { coin_id: crypto.id },
-        }
-      );
+      await api.delete("/unpin-binance-coin/", {
+        data: { coin_id: crypto.id },
+      });
     } catch (error) {
       console.error("Pin kaldırma işlemi sırasında hata oluştu:", error);
     }

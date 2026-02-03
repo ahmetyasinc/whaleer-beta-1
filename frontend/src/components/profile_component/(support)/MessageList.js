@@ -2,10 +2,8 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import {
-  getAttachmentFileUrl,
-  getAttachmentThumbnailUrl,
-} from "@/api/support/index";
+import AuthenticatedImage from "@/components/AuthenticatedImage";
+import api from "@/api/axios";
 
 // Basit, dosya içi Lightbox
 function ImageLightbox({ src, alt = "", onClose }) {
@@ -22,7 +20,7 @@ function ImageLightbox({ src, alt = "", onClose }) {
       role="dialog"
       aria-modal="true"
     >
-      <img
+      <AuthenticatedImage
         src={src}
         alt={alt}
         className="max-h-[90vh] max-w-[95vw] rounded-lg shadow-2xl"
@@ -165,18 +163,17 @@ export default function MessageList({ messages = [], currentUserId }) {
               {!!message.attachments?.length && (
                 <div className="mt-2 space-y-2">
                   {message.attachments.map((att) => {
-                    const fileUrl = getAttachmentFileUrl(att.id);
+                    const fileUrl = `/support/attachments/${att.id}/file`;
+                    const thumbnailUrl = `/support/attachments/${att.id}/thumbnail?size=320`;
+                    const thumbnailLargeUrl = `/support/attachments/${att.id}/thumbnail?size=640`;
 
                     if (isImage(att.mime_type)) {
-                      const t320 = getAttachmentThumbnailUrl(att.id, 320);
-                      const t640 = getAttachmentThumbnailUrl(att.id, 640);
-
                       return (
                         <div key={att.id} className="flex flex-col">
                           <div
                             role="button"
                             tabIndex={0}
-                            onClick={() => openPreview(fileUrl)}
+                            onClick={() => openPreview(fileUrl)} // TODO: Preview için de auth fetch gerekebilir, şimdilik böyle bırakalım veya ImageLightbox'ı güncelleyelim
                             onKeyDown={(e) =>
                               (e.key === "Enter" || e.key === " ") &&
                               openPreview(fileUrl)
@@ -184,21 +181,10 @@ export default function MessageList({ messages = [], currentUserId }) {
                             title="Büyütmek için tıklayın"
                             className="outline-none ring-0 focus-visible:ring-2 focus-visible:ring-white/60 rounded"
                           >
-                            <img
-                              src={t320}
-                              srcSet={`${t320} 1x, ${t640} 2x`}
-                              sizes="(min-width: 1024px) 320px, 80vw"
+                            <AuthenticatedImage
+                              src={thumbnailUrl}
                               alt={att.filename || ""}
-                              loading="lazy"
-                              decoding="async"
                               className="w-full max-h-48 object-cover rounded border border-black/5"
-                              onError={(e) => {
-                                e.currentTarget.onerror = null;
-                                e.currentTarget.src = fileUrl;
-                                e.currentTarget.removeAttribute("srcset");
-                                e.currentTarget.removeAttribute("sizes");
-                              }}
-                              draggable={false}
                             />
                           </div>
                           <div className="mt-1 text-xs text-gray-500">
@@ -236,14 +222,27 @@ export default function MessageList({ messages = [], currentUserId }) {
                             </p>
                           </div>
                         </div>
-                        <a
-                          href={fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-700 text-sm ml-3 flex-shrink-0"
+                        <button
+                          onClick={async () => {
+                            try {
+                              const response = await api.get(fileUrl, { responseType: 'blob' });
+                              const url = window.URL.createObjectURL(new Blob([response.data]));
+                              const link = document.createElement('a');
+                              link.href = url;
+                              link.setAttribute('download', att.filename);
+                              document.body.appendChild(link);
+                              link.click();
+                              link.remove();
+                              window.URL.revokeObjectURL(url);
+                            } catch (err) {
+                              console.error("Download error", err);
+                              alert("İndirme başarısız oldu.");
+                            }
+                          }}
+                          className="text-blue-600 hover:text-blue-700 text-sm ml-3 flex-shrink-0 bg-transparent border-0 cursor-pointer"
                         >
                           İndir
-                        </a>
+                        </button>
                       </div>
                     );
                   })}

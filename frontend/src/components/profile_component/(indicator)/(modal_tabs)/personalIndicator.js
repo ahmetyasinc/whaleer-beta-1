@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import axios from "axios";
+import api from "@/api/axios";
 import { IoMdAdd, IoIosStarOutline, IoMdStar } from "react-icons/io";
 import { HiOutlineTrash } from "react-icons/hi";
 import AddIndicatorButton from "./add_indicator_button";
@@ -12,7 +12,7 @@ import useIndicatorDataStore from "@/store/indicator/indicatorDataStore";
 import { RiErrorWarningFill } from "react-icons/ri";
 import { useTranslation } from "react-i18next";
 
-axios.defaults.withCredentials = true;
+// axios.defaults.withCredentials = true;
 
 // YENİ: closeModal prop'u eklendi
 export default function PersonalIndicators({ closeModal }) {
@@ -54,11 +54,11 @@ export default function PersonalIndicators({ closeModal }) {
     toggleFavorite(indicator);
     try {
       if (isAlreadyFavorite) {
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/indicator-remove-favourite/`, {
+        await api.delete("/indicator-remove-favourite/", {
           data: { indicator_id: indicator.id },
         });
       } else {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/indicator-add-favorite/`, {
+        await api.post("/indicator-add-favorite/", {
           indicator_id: indicator.id,
         });
       }
@@ -76,7 +76,7 @@ export default function PersonalIndicators({ closeModal }) {
     if (!toDelete) return;
     const { indicators, setPersonalIndicators } = useIndicatorStore.getState();
     try {
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/delete-indicator/${toDelete.id}/`, { withCredentials: true });
+      await api.delete(`/delete-indicator/${toDelete.id}/`);
       setPersonalIndicators(indicators.filter((ind) => ind.id !== toDelete.id));
       closePanelIfMatches(toDelete.id);
     } catch (e) {

@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "@/api/axios";
 import { useSessionStore } from "@/store/profile/sessionStore";
 import { useProfileStore } from "@/store/profile/profileStore";
 import { useAccountDataStore } from "@/store/profile/accountDataStore";
@@ -20,12 +20,8 @@ function hasAnyAccountData(state) {
 }
 
 export async function bootstrapProfile() {
-  axios.defaults.withCredentials = true;
-
-  const { data } = await axios.get(
-    `${process.env.NEXT_PUBLIC_API_URL}/profile`,
-    { withCredentials: true }
-  );
+  // api intercepted instance handles URL and auth
+  const { data } = await api.get("/profile");
 
   // 1) user
   useSessionStore.setState({ user: data.user || null });

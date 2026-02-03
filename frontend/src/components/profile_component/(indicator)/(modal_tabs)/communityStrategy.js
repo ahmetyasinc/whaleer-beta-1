@@ -11,9 +11,9 @@ import { IoLockClosed } from "react-icons/io5";
 import AddStrategyButton from "./add_strategy_button";
 import useStrategyStore from "@/store/indicator/strategyStore";
 import CodeModal from "./CodeModal";
-import axios from "axios";
+import api from "@/api/axios";
 
-axios.defaults.withCredentials = true;
+// axios.defaults.withCredentials = true;
 
 const Pill = ({ children, tone = "neutral" }) => {
   const toneClasses =
@@ -50,11 +50,11 @@ const CommunityStrategies = ({ closeModal }) => {
     toggleFavorite(strategy); // optimistic
     try {
       if (isAlreadyFavorite) {
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/strategy-remove-favourite/`, {
+        await api.delete("/strategy-remove-favourite/", {
           data: { strategy_id: strategy.id },
         });
       } else {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/strategy-add-favorite/`, {
+        await api.post("/strategy-add-favorite/", {
           strategy_id: strategy.id,
         });
       }
@@ -92,8 +92,8 @@ const CommunityStrategies = ({ closeModal }) => {
   const notifyStrategyView = async (releaseId) => {
     if (!releaseId) return;
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/strategy-releases/${releaseId}/view`
+      await api.post(
+        `/strategy-releases/${releaseId}/view`
       );
     } catch (e) {
       // sessiz fail

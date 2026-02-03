@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import axios from 'axios';
+import api from "@/api/axios";
 import { BsPinAngle, BsPinAngleFill } from 'react-icons/bs';
 import useBacktestStore from '@/store/backtest/backtestStore';
 import useCryptoStore from '@/store/indicator/cryptoPinStore';
 import { useTranslation } from 'react-i18next';
 
-axios.defaults.withCredentials = true;
+// axios.defaults.withCredentials = true;
 
 const CryptoSelectButton = () => {
   const { t } = useTranslation('backtestCryptoSelectButton');
@@ -23,7 +23,7 @@ const CryptoSelectButton = () => {
     setMounted(true);
     const fetchCoins = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/get-coin-list/`);
+        const response = await api.get("/get-coin-list/");
 
         if (response.data && response.data.coins) {
           const coins = response.data.coins.map(coin => ({

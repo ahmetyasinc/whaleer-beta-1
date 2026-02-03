@@ -3,9 +3,7 @@
 import { useState } from "react";
 import { IoIosStarOutline, IoMdSearch, IoMdStar } from "react-icons/io";
 import useStrategyStore from "@/store/indicator/strategyStore";
-import axios from "axios";
 
-axios.defaults.withCredentials = true;
 
 const CommunityStrategies = ({ onSelect }) => {
   const { favorites, community } = useStrategyStore();

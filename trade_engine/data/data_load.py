@@ -5,7 +5,7 @@ import pandas as pd
 from sqlalchemy import text
 from trade_engine.config import get_engine  # lazy & fork-safe engine
 
-async def fetch_all_candles(coin_requirements: dict[tuple[str, str], int]):
+async def fetch_all_candles(coin_requirements: dict[tuple[str, str], int], table_name: str = "binance_data"):
     """
     coin_requirements: { (coin_id, interval): candle_count }
     Dönüş: { (coin_id, interval): DataFrame }
@@ -16,7 +16,7 @@ async def fetch_all_candles(coin_requirements: dict[tuple[str, str], int]):
         coin_id, interval = key
         async with semaphore:
             # t0 = time.time()
-            df = await get_candles_async(coin_id, interval, candle_count)
+            df = await get_candles_async(coin_id, interval, candle_count, table_name)
             # print(f"⏱️ {coin_id}-{interval}: {time.time() - t0:.2f}s")
             return key, df
 
@@ -34,19 +34,19 @@ async def fetch_all_candles(coin_requirements: dict[tuple[str, str], int]):
     return coin_data_dict
 
 
-async def get_candles_async(coin_id: str, interval: str, candle_count: int) -> pd.DataFrame:
+async def get_candles_async(coin_id: str, interval: str, candle_count: int, table_name: str = "binance_data") -> pd.DataFrame:
     loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(None, get_candles, coin_id, interval, candle_count)
+    return await loop.run_in_executor(None, get_candles, coin_id, interval, candle_count, table_name)
 
 
-def get_candles(coin_id: str, interval: str, candle_count: int) -> pd.DataFrame:
+def get_candles(coin_id: str, interval: str, candle_count: int, table_name: str = "binance_data") -> pd.DataFrame:
     """
-    Postgres'ten mumları çeker (public.binance_data). Sonuç timestamp ASC olarak döner.
+    Postgres'ten mumları çeker (public.{table_name}). Sonuç timestamp ASC olarak döner.
     """
     # Not: LIMIT için parametre kullanımı Postgres'te güvenlidir.
-    sql = text("""
+    sql = text(f"""
         SELECT timestamp, open, high, low, close, volume
-        FROM public.binance_data
+        FROM public.{table_name}
         WHERE coin_id = :coin_id AND interval = :interval
         ORDER BY timestamp DESC
         LIMIT :limit

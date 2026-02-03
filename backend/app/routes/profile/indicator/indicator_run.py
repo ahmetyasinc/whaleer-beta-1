@@ -11,6 +11,7 @@ from app.schemas.indicator.indicator import IndicatorRun
 from app.schemas.indicator.indicator import UpdatedIndicatorRun
 from sqlalchemy import text
 import time
+from datetime import datetime
 
 
 protected_router = APIRouter()
@@ -23,7 +24,8 @@ async def run_indicator(
 ):
     """Gönderilen coin_id, interval ve end değerlerine göre binance_data tablosundan veri çeker, indikatörü doğrular ve çalıştırır."""
 
-    print(indicator_data.end)
+    #print(f"DEBUG: Indicator Request End Time: {indicator_data.end}")
+    #print(f"DEBUG: Converted Request Date: {indicator_data.end}")
     # **1️⃣ BinanceData tablosundan son 5000 veriyi çek**
     query = (
         select(BinanceData)
@@ -61,6 +63,9 @@ async def run_indicator(
     if not rows:
         raise HTTPException(status_code=404, detail="No data found for the given parameters.")
 
+    #print(f"DEBUG: Fetched {len(rows)} rows from DB")
+
+
     # **2️⃣ Indicator tablosundan kullanıcı indikatörünü al**
     indicator_query = (
         select(Indicator)
@@ -92,6 +97,12 @@ async def run_indicator(
 
     # **5️⃣ Kullanıcının indikatör kodunu çalıştır**
     indicator_result, print_outputs, inputs = await run_user_indicator(indicator.code, historical_data)
+
+    if indicator_result and isinstance(indicator_result, list) and len(indicator_result) > 0:
+        first_res = indicator_result[0]
+        last_res = indicator_result[-1]
+        #print(f"DEBUG: Result Start: {first_res.get('time', 'N/A')}")
+        #print(f"DEBUG: Result End: {last_res.get('time', 'N/A')}")
 
     return {"indicator_id": indicator.id, "indicator_name": indicator.name, "indicator_result": indicator_result, "prints": print_outputs, "inputs": inputs}
 
@@ -141,6 +152,8 @@ async def run_updated_indicator(
     if not rows:
         raise HTTPException(status_code=404, detail="No data found for the given parameters.")
 
+    #print(f"DEBUG (Updated): Fetched {len(rows)} rows from DB")
+
     # **2️⃣ Indicator tablosundan kullanıcı indikatörünü al**
     indicator_query = (
         select(Indicator)
@@ -172,6 +185,12 @@ async def run_updated_indicator(
 
     # **5️⃣ Kullanıcının indikatör kodunu çalıştır**
     indicator_result, print_outputs = await run_updated_user_indicator(indicator.code, historical_data, indicator_data.inputs)
+
+    if indicator_result and isinstance(indicator_result, list) and len(indicator_result) > 0:
+        first_res = indicator_result[0]
+        last_res = indicator_result[-1]
+        #print(f"DEBUG (Updated): Result Start: {first_res.get('time', 'N/A')}")
+        #print(f"DEBUG (Updated): Result End: {last_res.get('time', 'N/A')}")
 
     end_time = time.time()  # Fonksiyon bitişindeki zaman damgası
     execution_time = end_time - start_time  # Çalışma süresi hesaplanıyor

@@ -32,10 +32,11 @@ def build_effective_min_arg(min_usd_map: dict | float | int | None, floor: float
     return float(floor) if (not math.isfinite(num) or num < floor) else num
 
 
-def _get_last_price_1m(symbol: str):
-    sql = """
+def _get_last_price_1m(symbol: str, trade_type: str = "spot"):
+    table = "binance_futures_last_price" if trade_type.lower() == "futures" else "binance_last_price"
+    sql = f"""
         SELECT close
-        FROM binance_last_price
+        FROM {table}
         WHERE coin_id = %s AND "interval" = '1m'
         ORDER BY "timestamp" DESC
         LIMIT 1
@@ -175,12 +176,15 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
                 if field in result_df.columns and len(result_df) > 0
             }
 
+            trade_type = 'spot' if str(bot.get('bot_type', '')).lower() == 'spot' else 'futures'
+            
             result_entry = {
                 "bot_id": bot['id'],
                 "coin_id": coin_id,
                 "status": "success",
                 "last_positions": last_positions,
                 "last_percentage": last_percentage,
+                "trade_type": trade_type,
             }
             result_entry.update(order_info)
             results.append(result_entry)
@@ -193,7 +197,7 @@ def run_bot(bot, strategy_code, indicator_list, coin_data_dict):
         for coin_id in bot['stocks']:
             min_qty = _get_min_qty(coin_id, trade_type)
             #print("coin_id, trade_type, min_qty:", coin_id, trade_type, min_qty)
-            last_px = _get_last_price_1m(coin_id)
+            last_px = _get_last_price_1m(coin_id, trade_type)
             if min_qty is not None and last_px is not None:
                 min_usd_map[coin_id] = float(min_qty) * float(last_px)
 

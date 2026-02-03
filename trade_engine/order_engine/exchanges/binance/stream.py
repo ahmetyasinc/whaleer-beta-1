@@ -62,9 +62,7 @@ class BinanceStreamer:
         while self.running:
             try:
                 # SSL Context Configuration
-                ssl_context = ssl.create_default_context()
-                ssl_context.check_hostname = False
-                ssl_context.verify_mode = ssl.CERT_NONE
+                ssl_context = ssl._create_unverified_context()
                 async with websockets.connect(url, ssl=ssl_context) as ws:
                     print(f"✅ Binance {market_type} Bağlandı!")
                     

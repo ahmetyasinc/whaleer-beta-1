@@ -10,7 +10,7 @@ from .interval_maping import interval_to_minutes
 import asyncio, json, websockets
 from itertools import islice
 
-WS_URI = "wss://stream.binance.com:9443/ws"
+WS_URI = "wss://fstream.binance.com/ws"
 
 def chunked(iterable, size):
     it = iter(iterable)
@@ -19,6 +19,7 @@ def chunked(iterable, size):
         if not chunk:
             break
         return chunk
+
 
 # Örnek: tüm streamleri burada topla (senin büyük listen)
 ALL_STREAMS = [
@@ -787,7 +788,7 @@ async def subscribe_chunk(streams, conn_idx, db_pool):
     
                                 # 1) Veriyi Kuyruğa At (Non-Blocking)
                                 data_item = (
-                                    'spot', coin_id, interval, timestamp,
+                                    'futures', coin_id, interval, timestamp,
                                     open_price, high_price, low_price, close_price, volume
                                 )
                                 try:

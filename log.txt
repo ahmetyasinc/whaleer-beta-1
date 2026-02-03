@@ -1,0 +1,75 @@
+
+============================================================
+ LOCAL NETWORK CONNECTIVITY CHECK
+============================================================
+My Public IPv4           : 185.34.128.2
+My Public IPv6           : ⚠️ Detected but looks like IPv4? 185.34.128.2
+ISP / Org                : Poyrazwifi Limited Company / Powernet
+Region                   : Turkey - Şanlıurfa
+
+============================================================
+ DATABASE CONNECTION DIAGNOSTICS
+============================================================
+DATABASE_URL (Masked)    : postgresql://***@db.ndouquvsbcmdodujsvlb.supabase.co:5432/postgres
+DB Hostname              : db.ndouquvsbcmdodujsvlb.supabase.co
+DB Host IP (Resolved)    : Resolution Failed: [Errno 11001] getaddrinfo failed
+
+[Connecting to Database...]
+
+❌ CONNECTION FAILED: [Errno 11001] getaddrinfo failed
+
+Possible Causes:
+1. IP Restrictions: Verify your IP is allowed in Supabase/AWS Security Groups.
+2. Incorrect Password/User: Check .env file.
+3. IPv6 Issues: If using Supabase transaction pooler (port 6543) vs Session (5432).
+4. VPN: If you have a VPN on, it might block the specific port or IPv6.
+
+============================================================
+ LOCAL NETWORK CONNECTIVITY CHECK
+============================================================
+My Public IPv4           : 31.141.86.46
+My Public IPv6           : ⚠️ Detected but looks like IPv4? 31.141.86.46
+ISP / Org                : Turkcell Internet / 
+Region                   : Türkiye - Istanbul
+
+============================================================
+ DATABASE CONNECTION DIAGNOSTICS
+============================================================
+DATABASE_URL (Masked)    : postgresql://***@db.ndouquvsbcmdodujsvlb.supabase.co:5432/postgres
+DB Hostname              : db.ndouquvsbcmdodujsvlb.supabase.co
+DB Host IP (Resolved)    : Resolution Failed: [Errno 11001] getaddrinfo failed
+
+[Connecting to Database...]
+
+❌ CONNECTION FAILED: [Errno 11001] getaddrinfo failed
+
+Possible Causes:
+1. IP Restrictions: Verify your IP is allowed in Supabase/AWS Security Groups.
+2. Incorrect Password/User: Check .env file.
+3. IPv6 Issues: If using Supabase transaction pooler (port 6543) vs Session (5432).
+4. VPN: If you have a VPN on, it might block the specific port or IPv6.
+
+============================================================
+ LOCAL NETWORK CONNECTIVITY CHECK
+============================================================
+My Public IPv4           : 31.141.86.46
+My Public IPv6           : ⚠️ Detected but looks like IPv4? 31.141.86.46
+ISP / Org                : Turkcell Internet / 
+Region                   : Türkiye - Istanbul
+
+============================================================
+ DATABASE CONNECTION DIAGNOSTICS
+============================================================
+DATABASE_URL (Masked)    : postgresql://***@db.ndouquvsbcmdodujsvlb.supabase.co:5432/postgres
+DB Hostname              : db.ndouquvsbcmdodujsvlb.supabase.co
+DB Host IP (Resolved)    : Resolution Failed: [Errno 11001] getaddrinfo failed
+
+[Connecting to Database...]
+
+❌ CONNECTION FAILED: [Errno 11001] getaddrinfo failed
+
+Possible Causes:
+1. IP Restrictions: Verify your IP is allowed in Supabase/AWS Security Groups.
+2. Incorrect Password/User: Check .env file.
+3. IPv6 Issues: If using Supabase transaction pooler (port 6543) vs Session (5432).
+4. VPN: If you have a VPN on, it might block the specific port or IPv6.

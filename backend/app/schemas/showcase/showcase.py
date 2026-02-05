@@ -98,10 +98,7 @@ class BotSummary(BaseModel):
     coins: Optional[str]
     trades: list[Trade]
     positions: list[Position]
-    has_profit_commission_buy: bool
-    profit_commission_rate_buy: int
-    has_profit_commission_rent: bool
-    profit_commission_rate_rent: int
+
 
 class ChartDataPoint(BaseModel):
     timestamp: str

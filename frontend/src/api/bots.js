@@ -44,6 +44,13 @@ export const getBots = async () => {
         description: item.description,
         profit_share_only: item.is_profit_share,   // kardan komisyon modu
         deposit_balance: item.deposit,           // depozito bakiyesi
+
+        // Performance Data
+        power_score: item.power_score,
+        work_time: item.work_time,
+        exposure_long: item.exposure_long,
+        exposure_short: item.exposure_short,
+        exposure_spot: item.exposure_spot,
       };
     });
 

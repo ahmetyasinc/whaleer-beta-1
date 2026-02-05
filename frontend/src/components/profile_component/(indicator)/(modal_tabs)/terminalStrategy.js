@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import useStrategyDataStore from "@/store/indicator/strategyDataStore";
 import { useTranslation } from "react-i18next";
+import api from '@/api/axios';
 
 const TerminalStrategy = ({ id }) => {
   const { t } = useTranslation("strategyTerminal");
@@ -80,35 +81,23 @@ const TerminalStrategy = ({ id }) => {
 
   const clearOutput = () => setOutput([]);
 
+
+
+  // ... inside component ...
+
   const updateBackendIndicators = async (updatedList) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/strategies/update`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ id, indicator_names: updatedList }),
-      });
-
-      if (response.status === 401) {
-        const errorData = await response.json();
-        if (["Token expired", "Invalid token"].includes(errorData.detail)) {
-          alert(t("alerts.sessionExpired"));
-          return false;
-        }
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || t("errors.requestFailed"));
-      }
-
-      await response.json();
+      const response = await api.put("/strategies/update", { id, indicator_names: updatedList });
       return true;
     } catch (err) {
+      if (err.response?.status === 401) {
+        alert(t("alerts.sessionExpired"));
+        return false;
+      }
       setOutput((prev) => [
         ...prev,
         <span key={prev.length} className="text-red-500">
-          ❌ {t("errors.notFoundPrefix")} {err.message}
+          ❌ {t("errors.notFoundPrefix")} {err.response?.data?.detail || err.message}
         </span>,
       ]);
       return false;
@@ -118,26 +107,9 @@ const TerminalStrategy = ({ id }) => {
   useEffect(() => {
     async function fetchIndicators() {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/strategies/${id}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        });
+        const response = await api.get(`/strategies/${id}`);
 
-        if (response.status === 401) {
-          const errorData = await response.json();
-          if (["Token expired", "Invalid token"].includes(errorData.detail)) {
-            alert(t("alerts.sessionExpired"));
-            return;
-          }
-        }
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.detail || t("errors.requestFailed"));
-        }
-
-        const data = await response.json();
+        const data = response.data;
         if (data.indicator_names) {
           setImportedIndicators(data.indicator_names);
           setOutput(prev => [
@@ -148,11 +120,15 @@ const TerminalStrategy = ({ id }) => {
           ]);
         }
       } catch (error) {
+        if (error.response?.status === 401) {
+          alert(t("alerts.sessionExpired"));
+          return;
+        }
         console.error("Fetch error:", error);
         setOutput(prev => [
           ...prev,
           <span key={prev.length} className="text-red-500">
-            {t("load.failed", { message: error.message })}
+            {t("load.failed", { message: error.response?.data?.detail || error.message })}
           </span>,
         ]);
       }

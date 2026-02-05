@@ -14,52 +14,91 @@ protected_router = APIRouter()
 
 @protected_router.post("/fetch-and-add-binance-coins/")
 async def fetch_and_add_binance_coins(db: AsyncSession = Depends(get_db)):
-    # Binance exchangeInfo endpoint'inden verileri çek
-    response = requests.get("https://api.binance.com/api/v3/exchangeInfo")
-    if response.status_code != 200:
-        raise HTTPException(status_code=500, detail="Binance API erişim hatası!")
-
-    data = response.json()
-    symbols_data = data.get("symbols", [])
-
     created_coins = []
     skipped_coins = []
 
-    for item in symbols_data:
-        binance_symbol = item.get("symbol")
-        base_asset = item.get("baseAsset")
-        quote_asset = item.get("quoteAsset")
+    # 1) SPOT
+    try:
+        response_spot = requests.get("https://api.binance.com/api/v3/exchangeInfo")
+        if response_spot.status_code == 200:
+            data_spot = response_spot.json()
+            symbols_spot = data_spot.get("symbols", [])
+            for item in symbols_spot:
+                binance_symbol = item.get("symbol")
+                base_asset = item.get("baseAsset")
+                # quote_asset = item.get("quoteAsset") # Kullanılmıyor
 
-        # Sadece USDT çiftlerini ekle (örn. BTCUSDT, ETHUSDT)
-        if not binance_symbol.endswith("USDT"):
-            continue
+                if not binance_symbol.endswith("USDT"):
+                    continue
+                
+                # Check existing Spot
+                result = await db.execute(
+                    select(BinanceCoin).where(
+                        BinanceCoin.binance_symbol == binance_symbol,
+                        BinanceCoin.market_type == 'spot'
+                    )
+                )
+                existing_coin = result.scalars().first()
 
-        result = await db.execute(
-            select(BinanceCoin).where(
-                BinanceCoin.symbol == base_asset,
-                BinanceCoin.binance_symbol == binance_symbol
-            )
-        )
-        existing_coin = result.scalars().first()
+                if existing_coin:
+                    skipped_coins.append(f"{binance_symbol} (Spot)")
+                    continue
 
-        if existing_coin:
-            skipped_coins.append(binance_symbol)
-            continue
+                new_coin = BinanceCoin(
+                    name=base_asset,
+                    symbol=base_asset,
+                    binance_symbol=binance_symbol,
+                    market_type='spot'
+                )
+                db.add(new_coin)
+                created_coins.append(f"{binance_symbol} (Spot)")
+    except Exception as e:
+        print(f"Spot data fetch error: {e}")
 
-        new_coin = BinanceCoin(
-            name=base_asset,              # Örnek: Bitcoin, Ethereum, vs.
-            symbol=base_asset,            # BTC, ETH
-            binance_symbol=binance_symbol  # BTCUSDT
-        )
-        db.add(new_coin)
-        created_coins.append(binance_symbol)
+    # 2) FUTURES
+    try:
+        response_futures = requests.get("https://fapi.binance.com/fapi/v1/exchangeInfo")
+        if response_futures.status_code == 200:
+            data_futures = response_futures.json()
+            symbols_futures = data_futures.get("symbols", [])
+            for item in symbols_futures:
+                binance_symbol = item.get("symbol")
+                base_asset = item.get("baseAsset")
+                # qAsset = item.get("quoteAsset") 
+
+                if not binance_symbol.endswith("USDT"):
+                    continue
+
+                # Check existing Futures
+                result = await db.execute(
+                    select(BinanceCoin).where(
+                        BinanceCoin.binance_symbol == binance_symbol,
+                        BinanceCoin.market_type == 'futures'
+                    )
+                )
+                existing_coin = result.scalars().first()
+
+                if existing_coin:
+                    skipped_coins.append(f"{binance_symbol} (Futures)")
+                    continue
+
+                new_coin = BinanceCoin(
+                    name=base_asset,
+                    symbol=base_asset,
+                    binance_symbol=binance_symbol,
+                    market_type='futures'
+                )
+                db.add(new_coin)
+                created_coins.append(f"{binance_symbol} (Futures)")
+    except Exception as e:
+        print(f"Futures data fetch error: {e}")
 
     await db.commit()
 
     return {
         "message": f"{len(created_coins)} coin eklendi.",
         "eklendi": created_coins,
-        "atlananlar": skipped_coins
+        "atlananlar_sayisi": len(skipped_coins)
     }
 
 @protected_router.get("/get-coin-list/")
@@ -82,6 +121,7 @@ async def get_coin_list(
             BinanceCoin.tick_size,
             #BinanceCoin.created_at,
             BinanceCoin.binance_symbol,
+            BinanceCoin.market_type,
             BinanceCoinsPinned.id.isnot(None).label("pinned")  # Eğer pinned varsa True, yoksa False döner
         )
         .outerjoin(BinanceCoinsPinned,  # LEFT JOIN işlemi

@@ -293,7 +293,7 @@ export default function ChartComponent({ onLoadingChange }) {
     async function fetchData() {
       setIsLoading(true);
       try {
-        const response = await api.get(`/get-binance-data/?symbol=${selectedCrypto.binance_symbol}&interval=${selectedPeriod}`);
+        const response = await api.get(`/get-binance-data/?symbol=${selectedCrypto.binance_symbol}&interval=${selectedPeriod}&market_type=${selectedCrypto.market_type}`);
 
         // api interceptor handles 401, no need for manual check here
 

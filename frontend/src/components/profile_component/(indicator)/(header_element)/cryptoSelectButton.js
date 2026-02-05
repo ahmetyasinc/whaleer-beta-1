@@ -49,6 +49,7 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
             symbol: coin.symbol,
             binance_symbol: coin.binance_symbol,
             tick_size: coin.tick_size,
+            market_type: coin.market_type, // Add market_type
           }));
 
           const pinnedCoins = response.data.coins
@@ -59,6 +60,7 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
               symbol: coin.symbol,
               binance_symbol: coin.binance_symbol,
               tick_size: coin.tick_size,
+              market_type: coin.market_type,
             }));
 
           setCryptosList(coins);
@@ -116,8 +118,9 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
   if (activeFilter === "watchlist") {
     baseList = sortedCryptos.filter((c) => watchSet.has(c.id));
   } else if (activeFilter === "spot") {
-    // TODO: spot coin filter
-    baseList = []; // şimdilik boş
+    baseList = sortedCryptos.filter((c) => c.market_type === 'spot');
+  } else if (activeFilter === "futures") {
+    baseList = sortedCryptos.filter((c) => c.market_type === 'futures');
   } else if (activeFilter === "takas") {
     // TODO: takas coin filter
     baseList = []; // şimdilik boş
@@ -155,10 +158,24 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
         title={shortcutTitle}
       >
         <IoMdSearch className="text-[19px] mr-2" />
-        <span className="ml-3">
-          {selectedCrypto
-            ? `${selectedCrypto.name} (${selectedCrypto.symbol})`
-            : "Kripto seçin"}
+        <span className="ml-3 flex items-center gap-2 overflow-hidden">
+          {selectedCrypto ? (
+            <>
+              <span className="truncate">
+                {selectedCrypto.name} <span className="text-zinc-500">({selectedCrypto.symbol})</span>
+              </span>
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded border leading-none ${selectedCrypto.market_type === "futures"
+                    ? "border-orange-900 text-orange-400 bg-orange-900/20"
+                    : "border-blue-900 text-blue-400 bg-blue-900/20"
+                  }`}
+              >
+                {selectedCrypto.market_type === "futures" ? "FUT" : "SPOT"}
+              </span>
+            </>
+          ) : (
+            "Kripto seçin"
+          )}
         </span>
       </button>
 
@@ -234,6 +251,18 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
                   {t("swap", { defaultValue: "Takas" })}
                 </button>
 
+                {/* Futures */}
+                <button
+                  type="button"
+                  onClick={() => setActiveFilter("futures")}
+                  className={`px-3 py-1.5 rounded-full border transition-colors ${activeFilter === "futures"
+                    ? "bg-zinc-800 border-zinc-500 text-zinc-100"
+                    : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500"
+                    }`}
+                >
+                  {t("futures", { defaultValue: "Vadeli" })}
+                </button>
+
                 {/* Watchlist */}
                 <button
                   type="button"
@@ -264,7 +293,7 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
                       <span className="font-medium text-zinc-200 group-hover:text-white transition-colors">
                         {`${crypto.name} `}
                         <span className="text-zinc-500 text-sm font-normal">
-                          ({crypto.symbol})
+                          ({crypto.symbol}) <span className="text-xs text-zinc-600">[{crypto.market_type === 'spot' ? 'S' : 'F'}]</span>
                         </span>
                       </span>
 

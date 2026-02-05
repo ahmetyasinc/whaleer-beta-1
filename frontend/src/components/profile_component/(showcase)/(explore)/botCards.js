@@ -15,8 +15,8 @@ import { LiaChargingStationSolid } from "react-icons/lia";
 import { useSiwsStore } from "@/store/auth/siwsStore";
 import { useTranslation } from "react-i18next";
 
-import BuyModal from "@/components/profile_component/(showcase)/(checkout)/BuyModal";
-import RentModal from "@/components/profile_component/(showcase)/(checkout)/RentModal";
+import BuyModal from "@/components/profile_component/(botmarket)/BuyModal";
+import RentModal from "@/components/profile_component/(botmarket)/RentModal";
 
 /* ---- Helpers ---- */
 const pad = (n) => String(n).padStart(2, '0');

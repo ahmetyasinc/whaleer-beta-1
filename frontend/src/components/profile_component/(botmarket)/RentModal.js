@@ -7,9 +7,9 @@ import { Connection, VersionedMessage, VersionedTransaction } from "@solana/web3
 // --- STELLAR REMOVED ---
 // -----------------------
 import ModalFrame from "./ModalFrame";
-import ErrorBar from "./ui/ErrorBar";
-import InfoRow from "./ui/InfoRow";
-import SkeletonLines from "./ui/SkeletonLines";
+import ErrorBar from "../(showcase)/(checkout)/ErrorBar";
+import InfoRow from "../(showcase)/(checkout)/InfoRow";
+import SkeletonLines from "../(showcase)/(checkout)/SkeletonLines";
 import { toast } from "react-toastify";
 import { createPurchaseIntent, confirmPayment } from "@/api/payments"; // tek tip intent
 import { acquireBot } from "@/api/bots";

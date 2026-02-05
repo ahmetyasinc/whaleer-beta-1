@@ -21,6 +21,7 @@ import { IoMdArrowDropright } from "react-icons/io";
 import { LuBot } from "react-icons/lu";
 import { BsGrid1X2 } from "react-icons/bs";
 import { AiOutlineSetting } from "react-icons/ai";
+import { MdShoppingCart } from "react-icons/md";
 
 const LeftMenu = ({ locale }) => {
   const { t } = useTranslation("leftmenu");
@@ -69,6 +70,7 @@ const LeftMenu = ({ locale }) => {
     { href: "/profile/backtest", icon: <BiLineChart />, label: t("backtest") },
     { href: "/profile/bot", icon: <LuBot />, label: t("bots") },
     { href: "/profile/showcase", icon: <BsGrid1X2 />, label: t("showcase") },
+    { href: "/profile/botmarket", icon: <MdShoppingCart />, label: t("botmarket") },
     { href: "/profile/apiconnect", icon: <BiBroadcast />, label: t("apiconnect") },
     { href: "/profile/support", icon: <BiSupport />, label: t("support") },
     { href: "/profile/settings", icon: <AiOutlineSetting />, label: t("settings") },

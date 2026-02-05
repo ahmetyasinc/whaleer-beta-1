@@ -9,10 +9,29 @@ import CommentModal from './commentModal';
 import ExtraDataCard from './extraDataCard';
 import TradeList from './tradeList';
 import Chart from './chart';
+import useBotExamineModalStore from '@/store/botmarket/BotExamineModalStore';
 
 const BotExamineModal = ({ isOpen, onClose, bot }) => {
     const { t } = useTranslation('botsList');
     const [isCommentModalOpen, setCommentModalOpen] = useState(false);
+
+    // Store actions
+    const fetchExtraData = useBotExamineModalStore((state) => state.fetchExtraData);
+    const clearExtraData = useBotExamineModalStore((state) => state.clearExtraData);
+
+    // Fetch data when modal opens
+    useEffect(() => {
+        if (isOpen && bot?.id) {
+            fetchExtraData(bot.id);
+        }
+
+        // Clear data when modal closes
+        return () => {
+            if (!isOpen) {
+                clearExtraData();
+            }
+        };
+    }, [isOpen, bot?.id, fetchExtraData, clearExtraData]);
 
     // Prevent scrolling when modal is open
     useEffect(() => {
@@ -23,7 +42,6 @@ const BotExamineModal = ({ isOpen, onClose, bot }) => {
         }
         return () => {
             document.body.style.overflow = 'unset';
-            console.log("BotExamineModal unmounted/closed");
         };
     }, [isOpen]);
 

@@ -2,15 +2,24 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FaUser, FaChartLine, FaClock, FaShoppingCart, FaKey, FaCoins, FaRobot, FaEye, FaCommentDots, FaUserShield, FaCheckCircle } from 'react-icons/fa';
+import { FaUser, FaChartLine, FaClock, FaShoppingCart, FaKey, FaCoins, FaRobot, FaEye, FaCommentDots, FaUserShield, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 import Gauge from '@/components/profile_component/(bot)/gauge';
 import CommentModal from './commentModal';
 import BotExamineModal from './botExamineModal';
+import { useSiwsStore } from "@/store/auth/siwsStore";
+import useSiwsAuth from "@/hooks/useSiwsAuth";
 
 const BotCard = ({ bot, isPreview = false }) => {
     const { t } = useTranslation('botsList');
     const [isCommentModalOpen, setCommentModalOpen] = useState(false);
     const [isExamineModalOpen, setExamineModalOpen] = useState(false);
+
+    // Phantom wallet state
+    const { walletLinked } = useSiwsStore();
+    const { isPhantomInstalled, readyState } = useSiwsAuth();
+
+    const phantomInstalled = isPhantomInstalled || readyState === "Installed";
+    const walletConnected = walletLinked;
 
     const fmtMoney = (val) => val?.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
     const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
@@ -162,24 +171,39 @@ const BotCard = ({ bot, isPreview = false }) => {
 
                         <div className="flex flex-row gap-2 w-full mt-auto">
                             {bot.isMine ? (
-                                <div className="w-full py-3 px-2 rounded-md bg-indigo-600/10 border border-indigo-600/20 text-indigo-300/60 text-[11px] text-center flex flex-col items-center justify-center min-h-[50px] gap-1">
+                                <div className="w-full py-2 px-2 rounded-md bg-indigo-600/10 border border-indigo-600/20 text-indigo-300/60 text-[11px] text-center flex flex-col items-center justify-center min-h-[50px] gap-1">
                                     <FaUserShield className="text-lg opacity-80" />
                                     <span>{t('actions.ownBotReason', 'Kendi botunuzu satın alamaz veya kiralayamazsınız.')}</span>
                                 </div>
                             ) : bot.alreadyPurchased ? (
-                                <div className="w-full py-3 px-2 rounded-md bg-green-600/10 border border-green-600/20 text-green-300/60 text-[11px] text-center flex flex-col items-center justify-center min-h-[50px] gap-1">
+                                <div className="w-full py-2 px-2 rounded-md bg-green-600/10 border border-green-600/20 text-green-300/60 text-[11px] text-center flex flex-col items-center justify-center min-h-[50px] gap-1">
                                     <FaCheckCircle className="text-lg opacity-80" />
                                     <span>{t('actions.alreadyPurchasedReason', 'Bu botu zaten satın aldınız.')}</span>
                                 </div>
                             ) : bot.alreadyRented ? (
-                                <div className="w-full py-3 px-2 rounded-md bg-amber-600/10 border border-amber-600/20 text-amber-300/60 text-[11px] text-center flex flex-col items-center justify-center min-h-[50px] gap-1">
+                                <div className="w-full py-2 px-2 rounded-md bg-amber-600/10 border border-amber-600/20 text-amber-300/60 text-[11px] text-center flex flex-col items-center justify-center min-h-[50px] gap-1">
                                     <FaCheckCircle className="text-lg opacity-80" />
                                     <span>{t('actions.alreadyRentedReason', 'Bu botu zaten kiraladınız.')}</span>
                                 </div>
                             ) : (
-                                <>
+                                <div className="relative w-full flex flex-row gap-2">
+                                    {/* Phantom Wallet Overlay */}
+                                    {(!phantomInstalled || !walletConnected) && (
+                                        <div className="absolute inset-0 z-10 bg-red-900/40 backdrop-blur-[2px] rounded-md flex items-center justify-center p-2 border border-red-500/40">
+                                            <div className="flex flex-col items-center gap-1 text-center">
+                                                <FaExclamationTriangle className="text-red-400 text-sm" />
+                                                <span className="text-[10px] text-red-200 font-medium leading-tight">
+                                                    {!phantomInstalled
+                                                        ? t('wallet.phantomRequired', 'Satın alım ve kiralama işlemleri için Phantom yüklemeniz gerekiyor')
+                                                        : t('wallet.connectionRequired', 'Satın alım ve kiralama işlemleri için cüzdanınızı bağlamanız gerekiyor')
+                                                    }
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <button
-                                        disabled={!bot.isForSale}
+                                        disabled={!bot.isForSale || !phantomInstalled || !walletConnected}
                                         className={`w-full py-2 px-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-200 flex flex-col items-center justify-center gap-0.5 min-h-[50px]
                                         ${bot.isForSale
                                                 ? 'bg-lime-500/10 hover:bg-lime-500/20 text-lime-500 border border-lime-500/50 hover:border-lime-500 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] cursor-pointer'
@@ -191,7 +215,7 @@ const BotCard = ({ bot, isPreview = false }) => {
                                     </button>
 
                                     <button
-                                        disabled={!bot.isForRent}
+                                        disabled={!bot.isForRent || !phantomInstalled || !walletConnected}
                                         className={`w-full py-2 px-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-200 flex flex-col items-center justify-center gap-0.5 min-h-[50px]
                                         ${bot.isForRent
                                                 ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/50 hover:border-amber-500 shadow-[0_0_10px_-3px_rgba(6,182,212,0.3)] cursor-pointer'
@@ -201,7 +225,7 @@ const BotCard = ({ bot, isPreview = false }) => {
                                         <span>{t('actions.rent', 'Kirala')}</span>
                                         {bot.isForRent && <span className="font-mono text-[16px] opacity-80">{fmtMoney(bot.rentalPrice)}</span>}
                                     </button>
-                                </>
+                                </div>
                             )}
                         </div>
                     </div>

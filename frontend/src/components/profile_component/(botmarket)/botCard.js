@@ -187,8 +187,10 @@ const BotCard = ({ bot, isPreview = false }) => {
                                 </div>
                             ) : (
                                 <div className="relative w-full flex flex-row gap-2">
-                                    {/* Phantom Wallet Overlay 
-                                    
+
+                                    {/* Phantom cüzdan yönetimi yaparak butonlara bloke koyar yorum satırını kaldır yeter*/}
+
+                                    {/*
                                     {(!phantomInstalled || !walletConnected) && (
                                         <div className="absolute inset-0 z-10 bg-red-900/40 backdrop-blur-[2px] rounded-md flex items-center justify-center p-2 border border-red-500/40">
                                             <div className="flex flex-col items-center gap-1 text-center">
@@ -201,7 +203,8 @@ const BotCard = ({ bot, isPreview = false }) => {
                                                 </span>
                                             </div>
                                         </div>
-                                    )}*/}
+                                    )}
+                                    */}
 
                                     <button
                                         disabled={!bot.isForSale || !phantomInstalled || !walletConnected}

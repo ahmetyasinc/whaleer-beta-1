@@ -19,7 +19,7 @@ const DEFAULT_PAYOUT_SOL = "AkmufZViBgt9mwuLPhFM8qyS1SjWNbMRBK8FySHajvUA";
 
 // Phantom Icon Component
 const PhantomIcon = ({ className }) => (
-  <img className="w-[110px] mt-[1px]" src="/PhantomLogoWhite.svg" alt="Phantom" />
+  <img className="w-[20px] mt-[1px]" src="/PhantomLogoWhite.svg" alt="Phantom" />
 );
 
 // Helperlar
@@ -335,10 +335,10 @@ export default function SellRentModal({ open, onClose }) {
                   href="https://phantom.app/download"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-[1.02] active:scale-[0.98]"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 active:scale-[0.98]"
                 >
                   <PhantomIcon className="w-5 h-5" />
-                  indir
+                  Phantom yükle
                 </a>
               </div>
             </div>

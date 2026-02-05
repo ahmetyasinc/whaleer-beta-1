@@ -187,7 +187,8 @@ const BotCard = ({ bot, isPreview = false }) => {
                                 </div>
                             ) : (
                                 <div className="relative w-full flex flex-row gap-2">
-                                    {/* Phantom Wallet Overlay */}
+                                    {/* Phantom Wallet Overlay 
+                                    
                                     {(!phantomInstalled || !walletConnected) && (
                                         <div className="absolute inset-0 z-10 bg-red-900/40 backdrop-blur-[2px] rounded-md flex items-center justify-center p-2 border border-red-500/40">
                                             <div className="flex flex-col items-center gap-1 text-center">
@@ -200,29 +201,29 @@ const BotCard = ({ bot, isPreview = false }) => {
                                                 </span>
                                             </div>
                                         </div>
-                                    )}
+                                    )}*/}
 
                                     <button
                                         disabled={!bot.isForSale || !phantomInstalled || !walletConnected}
-                                        className={`w-full py-2 px-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-200 flex flex-col items-center justify-center gap-0.5 min-h-[50px]
+                                        className={`w-full py-2 px-2 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all duration-200 flex flex-col items-center justify-center gap-0.5 min-h-[50px]
                                         ${bot.isForSale
                                                 ? 'bg-lime-500/10 hover:bg-lime-500/20 text-lime-500 border border-lime-500/50 hover:border-lime-500 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] cursor-pointer'
                                                 : 'bg-zinc-900 border border-zinc-800 text-zinc-600 cursor-not-allowed opacity-50'
                                             }`}
                                     >
-                                        <span>{t('actions.sell', 'Satın Al')}</span>
+                                        <span>{t('actions.sell')}</span>
                                         {bot.isForSale && <span className="font-mono text-[16px] opacity-80">{fmtMoney(bot.salePrice)}</span>}
                                     </button>
 
                                     <button
                                         disabled={!bot.isForRent || !phantomInstalled || !walletConnected}
-                                        className={`w-full py-2 px-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-200 flex flex-col items-center justify-center gap-0.5 min-h-[50px]
+                                        className={`w-full py-2 px-2 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all duration-200 flex flex-col items-center justify-center gap-0.5 min-h-[50px]
                                         ${bot.isForRent
                                                 ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/50 hover:border-amber-500 shadow-[0_0_10px_-3px_rgba(6,182,212,0.3)] cursor-pointer'
                                                 : 'bg-zinc-900 border border-zinc-800 text-zinc-600 cursor-not-allowed opacity-50'
                                             }`}
                                     >
-                                        <span>{t('actions.rent', 'Kirala')}</span>
+                                        <span>{t('actions.rent')}</span>
                                         {bot.isForRent && <span className="font-mono text-[16px] opacity-80">{fmtMoney(bot.rentalPrice)}</span>}
                                     </button>
                                 </div>

@@ -18,7 +18,7 @@
   },
   "actions": {
     "sell": "Satın Al",
-    "rent": "Kirala",
+    "rent": "Günlük Kirala",
     "comment": "Yorum Yap - Soru Sor",
     "ownBotReason": "Kendi botunuzu satın alamaz veya kiralayamazsınız.",
     "alreadyPurchasedReason": "Bu botu zaten satın aldınız.",

@@ -1,5 +1,6 @@
 from fastapi import Request, HTTPException, status, Depends, Header
 from jose import jwt, JWTError, ExpiredSignatureError
+from sqlalchemy.exc import IntegrityError
 from typing import Optional
 import os
 from dotenv import load_dotenv
@@ -160,11 +161,32 @@ async def verify_token(
                 await db.commit()
                 return existing_email_user.id
             
-            db.add(new_user)
-            await db.commit()
-            await db.refresh(new_user)
-            logger.info(f"verify_token: Created new user (id={new_user.id})")
-            return new_user.id
+            try:
+                db.add(new_user)
+                await db.commit()
+                await db.refresh(new_user)
+                logger.info(f"verify_token: Created new user (id={new_user.id})")
+                return new_user.id
+            except IntegrityError:
+                await db.rollback()
+                logger.warning(f"verify_token: Race condition detected for email {email}. Fetching existing user from DB.")
+                # Race condition: Another request created the user moments ago.
+                # Recalculate/refetch since we know they must exist now (either by email or provider_id)
+                # Check by provider_id first as it's the primary sync key
+                race_user_check = await db.execute(select(User).where(User.provider_user_id == supabase_uid))
+                race_user = race_user_check.scalars().first()
+                if race_user:
+                     return race_user.id
+                
+                # If not found by provider_id, check by email (maybe merged by another thread)
+                race_email_check = await db.execute(select(User).where(User.email == email))
+                race_email_user = race_email_check.scalars().first()
+                if race_email_user:
+                    return race_email_user.id
+                
+                # Should not reach here if it was truly a unique constraint violation
+                logger.error("verify_token: IntegrityError occurred but user still not found.")
+                raise
 
     except Exception as e:
         logger.error(f"verify_token: Database error during user sync: {e}")

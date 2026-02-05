@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import SearchButton from '@/ui/showcaseBotSearchButton';
-import SellRentModal from "@/components/profile_component/(showcase)/(explore)/sellRentModal";
+import SellRentModal from "@/components/profile_component/(botmarket)/sellRentModal";
 import useBotDropdownSearchStore from '@/store/showcase/botDropdownSearchStore';
 import { useSiwsStore } from "@/store/auth/siwsStore";
 import useSiwsAuth from "@/hooks/useSiwsAuth";

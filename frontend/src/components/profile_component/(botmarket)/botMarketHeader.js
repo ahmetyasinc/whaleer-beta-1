@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import SellRentModal from "@/components/profile_component/(showcase)/(explore)/sellRentModal";
+import SellRentModal from "@/components/profile_component/(botmarket)/sellRentModal";
 import { useSiwsStore } from "@/store/auth/siwsStore";
 import useSiwsAuth from "@/hooks/useSiwsAuth";
 import useBotDataStore from '@/store/showcase/botDataStore';
@@ -44,7 +44,6 @@ export default function BotMarketHeader() {
                         <button
                             className="bg-black transition px-6 py-[6px] rounded-xl font-semibold shadow-lg text-gray-200 border border-stone-600 disabled:opacity-50 hover:border-stone-500"
                             onClick={() => setModalOpen(true)}
-                            disabled={!isAnyWalletConnected}
                             type="button"
                         >
                             {t("buttons.sellRent")}

@@ -6,7 +6,7 @@ const useCryptoStore = create(
         (set) => ({
             coins: [],
             pinned: [],
-            selectedCrypto: { id: 1, name: "Bitcoin", symbol: "BTC", binance_symbol: "BTCUSDT", tick_size: 0.01 },
+            selectedCrypto: { id: 1, name: "Bitcoin", symbol: "BTC", binance_symbol: "BTCUSDT", tick_size: 0.01, market_type: "spot" },
             selectedPeriod: "1m",
 
             togglePinned: (crypto) => set((state) => {

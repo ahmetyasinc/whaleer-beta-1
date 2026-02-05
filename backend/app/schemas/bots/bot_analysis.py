@@ -21,6 +21,8 @@ class OpenPositionOut(BaseModel):
     position_side: str
     leverage: float
     profit: float
+    entryPrice: float
+    totalValue: float
 
 class HoldingsOut(BaseModel):
     symbol: str

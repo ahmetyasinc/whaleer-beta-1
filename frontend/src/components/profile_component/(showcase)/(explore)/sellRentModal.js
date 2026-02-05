@@ -10,7 +10,7 @@ import { useSiwsStore } from "@/store/auth/siwsStore";
 import { createListingIntent, confirmPayment } from "@/api/payments";
 import { patchBotListing } from "@/api/bots";
 import { useTranslation } from "react-i18next";
-import { FiCheckCircle, FiCpu, FiPercent } from "react-icons/fi"; 
+import { FiCheckCircle, FiCpu } from "react-icons/fi";
 
 // Ağ Ayarları
 const SOLANA_RPC_URL = "https://api.mainnet-beta.solana.com";
@@ -37,8 +37,8 @@ export default function SellRentModal({ open, onClose }) {
   const { t } = useTranslation('sellRentModal');
 
   // --- CÜZDAN DURUMLARI ---
-  const { walletLinked } = useSiwsStore(); 
-  const { publicKey, sendTransaction } = useWallet(); 
+  const { walletLinked } = useSiwsStore();
+  const { publicKey, sendTransaction } = useWallet();
 
   // Sadece Solana aktif
   const activeChain = useMemo(() => {
@@ -54,13 +54,8 @@ export default function SellRentModal({ open, onClose }) {
   const [rentChecked, setRentChecked] = useState(false);
   const [sellPrice, setSellPrice] = useState("");
   const [rentPrice, setRentPrice] = useState("");
-  
-  // YENİ: Profit Sharing State'leri
-  const [sellProfitShareEnabled, setSellProfitShareEnabled] = useState(false);
-  const [sellProfitShareRate, setSellProfitShareRate] = useState("");
 
-  const [rentProfitShareEnabled, setRentProfitShareEnabled] = useState(false);
-  const [rentProfitShareRate, setRentProfitShareRate] = useState("");
+
 
   const [description, setDescription] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
@@ -91,17 +86,7 @@ export default function SellRentModal({ open, onClose }) {
       setSellPrice(selectedBot?.sell_price ?? "");
       setRentPrice(selectedBot?.rent_price ?? "");
 
-      // ⭐ Sadece ilk load'da doldurulmalı ⭐
-      if (!sellProfitShareRate && !rentProfitShareRate) {
-        const soldRate = selectedBot?.sold_profit_share_rate ?? 0;
-        const rentRate = selectedBot?.rent_profit_share_rate ?? 0;
 
-        setSellProfitShareEnabled(soldRate > 0);
-        setSellProfitShareRate(soldRate ? String(soldRate) : "");
-
-        setRentProfitShareEnabled(rentRate > 0);
-        setRentProfitShareRate(rentRate ? String(rentRate) : "");
-      }
 
       setWalletAddress(selectedBot?.revenue_wallet ?? "");
       setDescription((selectedBot?.listing_description ?? selectedBot?.description ?? "").toString());
@@ -112,10 +97,7 @@ export default function SellRentModal({ open, onClose }) {
       setRentChecked(false);
       setSellPrice("");
       setRentPrice("");
-      setSellProfitShareEnabled(false);
-      setSellProfitShareRate("");
-      setRentProfitShareEnabled(false);
-      setRentProfitShareRate("");
+
 
       // Akıllı Cüzdan Doldurma
       if (activeChain === 'solana' && publicKey) {
@@ -134,34 +116,31 @@ export default function SellRentModal({ open, onClose }) {
   }, [selectedBot]);
 
   const hasAnyChoice = sellChecked || rentChecked;
-  
+
   const priceValid =
     (!sellChecked || (sellPrice !== "" && Number(sellPrice) >= 0)) &&
     (!rentChecked || (rentPrice !== "" && Number(rentPrice) >= 0));
 
-  // YENİ: Profit Share Validasyonu (0-100 arası)
-  const profitShareValid = 
-    (!sellChecked || !sellProfitShareEnabled || (Number(sellProfitShareRate) > 0 && Number(sellProfitShareRate) <= 100)) &&
-    (!rentChecked || !rentProfitShareEnabled || (Number(rentProfitShareRate) > 0 && Number(rentProfitShareRate) <= 100));
+
 
   const walletValid = useMemo(() => {
     if (!walletAddress || walletAddress.length < 20) return false;
-    return true; 
+    return true;
   }, [walletAddress]);
 
   // Payload Hazırlama
   const { diffPayload, hasDiff } = useMemo(() => {
     if (!selectedBot) return { diffPayload: {}, hasDiff: false };
-    const payload={};
-  
+    const payload = {};
+
     if (activeChain) payload.revenue_chain = activeChain;
-  
+
     const initForSale = Boolean(selectedBot?.for_sale);
     const initForRent = Boolean(selectedBot?.for_rent);
-  
+
     if (initForSale !== sellChecked) payload.for_sale = sellChecked;
     if (initForRent !== rentChecked) payload.for_rent = rentChecked;
-  
+
     // --- Fiyatlar ---
     if (sellChecked) {
       const val = sellPrice === "" ? null : Number(sellPrice);
@@ -171,42 +150,21 @@ export default function SellRentModal({ open, onClose }) {
       const val = rentPrice === "" ? null : Number(rentPrice);
       if (val !== selectedBot?.rent_price) payload.rent_price = val;
     }
-  
-    // --- PROFIT SHARE ---
-    // Global flag: herhangi birinde profit share açıksa true
-    const nextIsProfitShare = (sellChecked && sellProfitShareEnabled) || (rentChecked && rentProfitShareEnabled);
-    const initIsProfitShare = Boolean(selectedBot?.is_profit_share);
 
-    if (nextIsProfitShare !== initIsProfitShare) {
-        payload.is_profit_share = nextIsProfitShare;
-    }
 
-    // Satış oranı
-    if (sellChecked) {
-      payload.sold_profit_share_rate = sellProfitShareEnabled
-        ? Number(sellProfitShareRate || 0)
-        : 0;
-    }
-  
-    // Kiralama oranı
-    if (rentChecked) {
-      payload.rent_profit_share_rate = rentProfitShareEnabled
-        ? Number(rentProfitShareRate || 0)
-        : 0;
-    }
-  
+
     // Cüzdan
     if (walletAddress && walletAddress !== selectedBot?.revenue_wallet) {
       payload.revenue_wallet = walletAddress;
     }
-  
+
     // Açıklama
     const descTrim = (description ?? "").trim();
     const prevDesc = (selectedBot?.listing_description ?? "") + "";
     if (descTrim !== prevDesc) {
       payload.listing_description = descTrim.length ? descTrim : null;
     }
-  
+
     const diff = Object.keys(payload).length > 0;
     return { diffPayload: payload, hasDiff: diff };
   }, [
@@ -215,10 +173,7 @@ export default function SellRentModal({ open, onClose }) {
     rentChecked,
     sellPrice,
     rentPrice,
-    sellProfitShareEnabled,
-    sellProfitShareRate,
-    rentProfitShareEnabled,
-    rentProfitShareRate,
+
     walletAddress,
     description,
     activeChain,
@@ -229,7 +184,7 @@ export default function SellRentModal({ open, onClose }) {
     !!selectedBot &&
     hasAnyChoice &&
     priceValid &&
-    profitShareValid &&
+
     walletValid &&
     !loading &&
     !payLoading &&
@@ -243,11 +198,8 @@ export default function SellRentModal({ open, onClose }) {
     setRentChecked(false);
     setSellPrice("");
     setRentPrice("");
-    
-    setSellProfitShareEnabled(false);
-    setSellProfitShareRate("");
-    setRentProfitShareEnabled(false);
-    setRentProfitShareRate("");
+
+
 
     setDescription("");
     // setManualChainChoice(null); // Removed
@@ -268,39 +220,39 @@ export default function SellRentModal({ open, onClose }) {
   async function payListingFeeIfNeeded() {
     if (!isNewListing) return { paid: false };
     if (!activeChain) throw new Error(t("errors.connectWalletFirst") || "Wallet not connected");
-  
+
     setPayLoading(true);
     const toastId = toast.loading(t("toasts.preparingPayment"));
-  
+
     try {
       const extra = {};
-      
+
       // SADECE SOLANA AKIŞI
       const intent = await createListingIntent(selectedBot.id, activeChain, extra);
-    
+
       if (!intent?.intent_id) throw new Error(t("errors.invalidIntent"));
-    
+
       let confirmationResult;
-    
-        const msgBytes = b64ToUint8Array(intent.message_b64);
-        const message = VersionedMessage.deserialize(msgBytes);
-        const tx = new VersionedTransaction(message);
-      
-        toast.update(toastId, { render: t("toasts.signInWallet"), isLoading: true });
-        const connection = new Connection(SOLANA_RPC_URL, "confirmed");
-        const signature = await sendTransaction(tx, connection, { skipPreflight: false });
-      
-        toast.update(toastId, { render: t("toasts.confirmOnchain"), isLoading: true });
-        confirmationResult = await confirmPayment(intent.intent_id, signature, "solana");
-      
-    
+
+      const msgBytes = b64ToUint8Array(intent.message_b64);
+      const message = VersionedMessage.deserialize(msgBytes);
+      const tx = new VersionedTransaction(message);
+
+      toast.update(toastId, { render: t("toasts.signInWallet"), isLoading: true });
+      const connection = new Connection(SOLANA_RPC_URL, "confirmed");
+      const signature = await sendTransaction(tx, connection, { skipPreflight: false });
+
+      toast.update(toastId, { render: t("toasts.confirmOnchain"), isLoading: true });
+      confirmationResult = await confirmPayment(intent.intent_id, signature, "solana");
+
+
       if (!confirmationResult?.ok) throw new Error(t("errors.paymentNotConfirmed"));
-    
+
       toast.update(toastId, { render: t("toasts.paymentConfirmed"), type: "success", isLoading: false, autoClose: 1500 });
       setShowSuccessAnim(true);
       await new Promise((r) => setTimeout(r, 900));
       setShowSuccessAnim(false);
-    
+
       return { paid: true };
     } catch (e) {
       console.error(e);
@@ -316,7 +268,7 @@ export default function SellRentModal({ open, onClose }) {
     if (!selectedBot) { toast.error(t("errors.selectBot")); return; }
     if (!hasAnyChoice) { toast.error(t("errors.chooseOne")); return; }
     if (!priceValid) { toast.error(t("errors.invalidPrices")); return; }
-    if (!profitShareValid) { toast.error("Invalid profit share rates (0-100%)"); return; }
+
     if (!walletValid) { toast.error(t("errors.invalidWallet")); return; }
     if (isNewListing && !disclaimerAccepted) { toast.error(t("errors.acceptDisclaimer")); return; }
 
@@ -365,7 +317,7 @@ export default function SellRentModal({ open, onClose }) {
     <>
       <div className="fixed inset-0 z-[99] flex justify-center items-start bg-black/70 py-[60px]">
         <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 text-white rounded-xl shadow-2xl p-8 w-[95vw] max-w-2xl relative border border-zinc-800 max-h-[calc(100vh-120px)] overflow-y-auto">
-          
+
           <button onClick={() => { resetForm(); onClose?.(); }} className="absolute top-6 right-6 text-2xl font-bold hover:text-red-400 w-8 h-8">×</button>
 
           <h2 className="text-xl font-bold mb-4 text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
@@ -374,16 +326,16 @@ export default function SellRentModal({ open, onClose }) {
 
           {/* Ağ Seçimi */}
           <div className="flex justify-center mb-6">
-                {activeChain === 'solana' && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-900/30 text-green-200 border border-green-500/40">
-                    <span className="w-2 h-2 rounded-full bg-green-400 mr-2"></span> Solana Network
-                  </span>
-                )}
-                {!activeChain && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-900/30 text-red-200 border border-red-500/40">
-                    Wallet Not Connected
-                  </span>
-                )}
+            {activeChain === 'solana' && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-900/30 text-green-200 border border-green-500/40">
+                <span className="w-2 h-2 rounded-full bg-green-400 mr-2"></span> Solana Network
+              </span>
+            )}
+            {!activeChain && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-900/30 text-red-200 border border-red-500/40">
+                Wallet Not Connected
+              </span>
+            )}
           </div>
 
           {error && <div className="mb-4 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">{error}</div>}
@@ -425,7 +377,7 @@ export default function SellRentModal({ open, onClose }) {
                 <input type="checkbox" checked={sellChecked} onChange={() => setSellChecked(!sellChecked)} className="w-5 h-5 rounded border-gray-600 text-cyan-400 focus:ring-cyan-400 bg-zinc-800" />
                 <span className="text-base font-medium group-hover:text-cyan-400 transition-colors">{t("labels.wantSell")}</span>
               </label>
-              
+
               {sellChecked && (
                 <div className="flex flex-col gap-3 animate-in slide-in-from-top-2">
                   {/* Fiyat */}
@@ -434,20 +386,7 @@ export default function SellRentModal({ open, onClose }) {
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">USD</span>
                   </div>
 
-                  {/* Sell Profit Share */}
-                  <div className="pl-1">
-                    <label className="flex items-center gap-2 cursor-pointer text-xs text-gray-400 hover:text-cyan-300 transition-colors mb-2">
-                      <input type="checkbox" checked={sellProfitShareEnabled} onChange={() => setSellProfitShareEnabled(!sellProfitShareEnabled)} className="rounded bg-zinc-800 border-gray-600 text-cyan-500 focus:ring-cyan-500" />
-                      <span>Enable Profit Sharing?</span>
-                    </label>
-                    
-                    {sellProfitShareEnabled && (
-                      <div className="relative animate-in slide-in-from-top-1">
-                        <input type="number" min={0} max={100} placeholder="Commission %" className="w-full p-2 rounded-lg bg-zinc-900 border border-cyan-900/50 focus:border-cyan-500 focus:outline-none text-sm pr-8 text-cyan-100 placeholder-cyan-900" value={sellProfitShareRate} onChange={(e) => setSellProfitShareRate(e.target.value)} />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-cyan-600"><FiPercent /></span>
-                      </div>
-                    )}
-                  </div>
+
                 </div>
               )}
             </div>
@@ -458,7 +397,7 @@ export default function SellRentModal({ open, onClose }) {
                 <input type="checkbox" checked={rentChecked} onChange={() => setRentChecked(!rentChecked)} className="w-5 h-5 rounded border-gray-600 text-emerald-400 focus:ring-emerald-400 bg-zinc-800" />
                 <span className="text-base font-medium group-hover:text-emerald-400 transition-colors">{t("labels.wantRent")}</span>
               </label>
-              
+
               {rentChecked && (
                 <div className="flex flex-col gap-3 animate-in slide-in-from-top-2">
                   {/* Fiyat */}
@@ -467,20 +406,7 @@ export default function SellRentModal({ open, onClose }) {
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">USD / Day</span>
                   </div>
 
-                  {/* Rent Profit Share */}
-                  <div className="pl-1">
-                    <label className="flex items-center gap-2 cursor-pointer text-xs text-gray-400 hover:text-emerald-300 transition-colors mb-2">
-                      <input type="checkbox" checked={rentProfitShareEnabled} onChange={() => setRentProfitShareEnabled(!rentProfitShareEnabled)} className="rounded bg-zinc-800 border-gray-600 text-emerald-500 focus:ring-emerald-500" />
-                      <span>Enable Profit Sharing?</span>
-                    </label>
-                    
-                    {rentProfitShareEnabled && (
-                      <div className="relative animate-in slide-in-from-top-1">
-                        <input type="number" min={0} max={100} placeholder="Commission %" className="w-full p-2 rounded-lg bg-zinc-900 border border-emerald-900/50 focus:border-emerald-500 focus:outline-none text-sm pr-8 text-emerald-100 placeholder-emerald-900" value={rentProfitShareRate} onChange={(e) => setRentProfitShareRate(e.target.value)} />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600"><FiPercent /></span>
-                      </div>
-                    )}
-                  </div>
+
                 </div>
               )}
             </div>
@@ -506,7 +432,7 @@ export default function SellRentModal({ open, onClose }) {
               </div>
             </div>
             <p className="text-xs text-gray-400 mt-1.5 ml-1">
-               Listing fee will be paid via Phantom. Revenue will be sent to this Solana address.
+              Listing fee will be paid via Phantom. Revenue will be sent to this Solana address.
             </p>
           </div>
 
@@ -519,11 +445,11 @@ export default function SellRentModal({ open, onClose }) {
           {isNewListing && (
             <div className={`mb-6 rounded-lg border p-3 text-sm transition-colors border-cyan-500/30 bg-cyan-500/10`}>
               <div className={`font-semibold text-cyan-300`}>
-                  {t("banners.feeTitle")}
+                {t("banners.feeTitle")}
               </div>
               <div className="text-gray-300 text-xs mt-1">
-                You will pay <span className="font-bold text-white">1 USD</span> equivalent in 
-                 SOL/USDC (Solana).
+                You will pay <span className="font-bold text-white">1 USD</span> equivalent in
+                SOL/USDC (Solana).
               </div>
               <label className="mt-3 flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={disclaimerAccepted} onChange={() => setDisclaimerAccepted(v => !v)} className="rounded bg-zinc-800 border-gray-600" />
@@ -555,12 +481,12 @@ export default function SellRentModal({ open, onClose }) {
 
           {showSuccessAnim && (
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center rounded-xl z-50">
-               <div className="flex flex-col items-center animate-in zoom-in duration-300">
-                  <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center mb-4">
-                    <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
-                  </div>
-                  <div className="text-emerald-400 font-bold text-xl">Success!</div>
-               </div>
+              <div className="flex flex-col items-center animate-in zoom-in duration-300">
+                <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center mb-4">
+                  <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <div className="text-emerald-400 font-bold text-xl">Success!</div>
+              </div>
             </div>
           )}
         </div>

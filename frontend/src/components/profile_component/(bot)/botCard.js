@@ -171,7 +171,15 @@ export const BotCard = ({ bot }) => {
 
       const initialValues = {
         initialBalance: bot.initial_usd_value || bot.balance || 0,
-        startDate: bot.created_at || new Date().toISOString()
+        currentBalance: bot.current_usd_value || bot.balance || 0,
+        startDate: bot.created_at || new Date().toISOString(),
+        powerPoint: bot.power_score,
+        workTime: bot.work_time,
+        exposure: {
+          long: bot.exposure_long,
+          short: bot.exposure_short,
+          spot: bot.exposure_spot // For spot, we can use a single value or handle it in store
+        }
       };
 
       generatePerformance(bot.id, bot.type, initialValues);

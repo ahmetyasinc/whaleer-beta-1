@@ -99,7 +99,7 @@ export default function BuyModal({ botId, onClose }) {
         setLoading(true);
         setError(null);
         const res = await api.get(
-          `/api/bots/${botId}/checkout-summary`,
+          `/bots/${botId}/checkout-summary`,
           { params: { action: "buy" } }
         );
         const data = res?.data;

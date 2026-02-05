@@ -31,6 +31,7 @@ def _parse_bearer(auth_header: str | None) -> str | None:
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
+logging.getLogger("httpx").setLevel(logging.WARNING)  # Suppress detailed httpx request logs
 logger = logging.getLogger(__name__)
 
 # Global JWKS Cache
@@ -53,7 +54,7 @@ async def get_supabase_jwks():
             resp = await client.get(url, timeout=10.0)
             resp.raise_for_status()
             JWKS_CACHE = resp.json()
-            logger.info("Fetched Supabase JWKS successfully")
+            logger.debug("Fetched Supabase JWKS successfully")
             return JWKS_CACHE
     except Exception as e:
         logger.error(f"Failed to fetch JWKS: {e}")

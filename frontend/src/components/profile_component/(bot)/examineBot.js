@@ -144,8 +144,8 @@ export default function ExamineBot({ isOpen, onClose, botId }) {
             {/* Stats Pills */}
             <div className="flex items-center gap-3">
               <div className={`flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full border ${bot.bot_profit >= 0
-                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                  : "bg-red-500/10 text-red-400 border-red-500/20"
+                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                : "bg-red-500/10 text-red-400 border-red-500/20"
                 }`}>
                 {bot.bot_profit >= 0 ? <MdTrendingUp className="text-base" /> : <MdTrendingDown className="text-base" />}
                 <span>{t("header.totalProfit")}: <span className="font-mono">{formatUSD(bot.bot_profit)} $</span></span>
@@ -210,11 +210,11 @@ export default function ExamineBot({ isOpen, onClose, botId }) {
                           <div className="flex justify-between items-start mb-2">
                             <div>
                               <div className="text-sm font-bold text-zinc-200">{pos.symbol}</div>
-                              <div className="text-[10px] text-zinc-500 uppercase">{pos.marginType || 'Cross'} · {pos.leverage}x</div>
+                              <div className="text-[10px] text-zinc-500 uppercase">{pos.marginType || 'Isolated'} · {pos.leverage}x</div>
                             </div>
                             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase border ${String(pos.position_side).toLowerCase() === 'long'
-                                ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                                : 'bg-red-500/10 text-red-500 border-red-500/20'
+                              ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                              : 'bg-red-500/10 text-red-500 border-red-500/20'
                               }`}>
                               {pos.position_side}
                             </span>
@@ -222,7 +222,7 @@ export default function ExamineBot({ isOpen, onClose, botId }) {
                           <div className="flex justify-between items-end border-t border-zinc-800/50 pt-2 mt-1 text-xs">
                             <div>
                               <div className="text-[10px] text-zinc-500">{t("positions.amount")}</div>
-                              <div className="text-zinc-300">{(Number(pos.amount) * Number(pos.entryPrice || 0)).toFixed(1)}</div>
+                              <div className="text-zinc-300">$ {Number(pos.totalValue).toFixed(2)}</div>
                             </div>
                             <div className="text-right">
                               <div className="text-[10px] text-zinc-500">PnL</div>
@@ -290,8 +290,8 @@ export default function ExamineBot({ isOpen, onClose, botId }) {
                     key={tab}
                     onClick={() => setView(tab)}
                     className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-xs font-medium transition-all ${view === tab
-                        ? "bg-zinc-800 text-white shadow-sm"
-                        : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"
+                      ? "bg-zinc-800 text-white shadow-sm"
+                      : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"
                       }`}
                   >
                     {tab === 'trades' ? <FaExchangeAlt /> : <MdNotes className="text-sm" />}
@@ -331,8 +331,8 @@ export default function ExamineBot({ isOpen, onClose, botId }) {
                           </td>
                           <td className="py-2.5 text-center">
                             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${trade.side === "buy"
-                                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                                : "bg-red-500/10 text-red-500 border-red-500/20"
+                              ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                              : "bg-red-500/10 text-red-500 border-red-500/20"
                               }`}>
                               {String(trade.side).toUpperCase()}
                             </span>

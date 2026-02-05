@@ -1,5 +1,7 @@
 {
   "title": "Botlarım",
+  "results": "Sonuç",
+  "searchPlaceholder": "Ara...",
   "status": {
     "active": "Aktif",
     "inactive": "Pasif"
@@ -14,8 +16,96 @@
     "preview": "Önizleme",
     "loading": "Yükleniyor..."
   },
+  "actions": {
+    "sell": "Satın Al",
+    "rent": "Kirala",
+    "comment": "Yorum Yap - Soru Sor",
+    "ownBotReason": "Kendi botunuzu satın alamaz veya kiralayamazsınız.",
+    "alreadyPurchasedReason": "Bu botu zaten satın aldınız.",
+    "alreadyRentedReason": "Bu botu zaten kiraladınız."
+  },
   "empty": {
     "title": "Henüz Bot Yok",
-    "desc": "Yeni bir al-sat botu oluşturmak için otomatik botlar sayfasına gidip \"Yeni Bot Ekle\" butonuna tıklayın."
+    "desc": "Yeni bir al-sat botu oluşturmak için otomatik botlar sayfasına gidip \"Yeni Bot Ekle\" butonuna tıklayın.",
+    "list": "Kriterlere uygun bot bulunamadı..."
+  },
+  "sort": {
+    "button": "Sırala",
+    "title": "Sırala",
+    "default": "Varsayılan",
+    "defaultLabel": "Varsayılan Sıralama",
+    "cancel": "İptal",
+    "apply": "Sırala",
+    "labels": {
+      "salePrice": "Satış Fiyatı",
+      "rentalPrice": "Kiralama Fiyatı",
+      "profitMargin": "Kar Marjı",
+      "powerScore": "Güç Puanı",
+      "usageTime": "Çalışma Saati",
+      "createdAt": "Oluşturulma Tarihi",
+      "saleCount": "Satış Sayısı",
+      "rentalCount": "Kiralama Sayısı"
+    },
+    "directions": {
+      "asc": "Artan",
+      "desc": "Azalan",
+      "oldest": "Eskiden",
+      "newest": "Yeniden"
+    }
+  },
+  "filter": {
+    "addFilter": "Filtre Ekle",
+    "title": "Botları Filtrele",
+    "cancel": "İptal",
+    "apply": "Filtreleri Uygula",
+    "onlyMyBots": "Sadece Botlarım",
+    "botType": {
+      "label": "Bot Türü",
+      "all": "Tümü",
+      "spot": "Spot",
+      "futures": "Vadeli"
+    },
+    "tradeType": {
+      "label": "İşlem Türü",
+      "all": "Tümü",
+      "sale": "Satılık",
+      "rental": "Kiralık"
+    },
+    "ranges": {
+      "salePrice": "Satış Fiyat Aralığı ($)",
+      "rentalPrice": "Kiralama Fiyat Aralığı ($)",
+      "powerScore": "Minimum Güç Puanı",
+      "profitMargin": "Minimum Kar Marjı (%)",
+      "usageTime": "Min Kullanım Süresi (Saat)"
+    },
+    "placeholders": {
+      "min": "Min",
+      "max": "Maks",
+      "example85": "örn. 85",
+      "minPerc": "Min %",
+      "example24": "örn. 24"
+    },
+    "periods": {
+      "day": "Gün",
+      "week": "Hafta",
+      "month": "Ay",
+      "all": "Tüm Zamanlar"
+    },
+    "chips": {
+      "trade": {
+        "label": "İşlem",
+        "sale": "Satış",
+        "rental": "Kiralama"
+      },
+      "botType": {
+        "spot": "Spot",
+        "futures": "Vadeli"
+      },
+      "sale": "Satış",
+      "rental": "Kiralama",
+      "power": "Güç",
+      "profit": "Kar",
+      "usage": "Kullanım"
+    }
   }
 }

@@ -147,16 +147,16 @@ async def main():
     """
     # ...
     multi_bot_data = {
-        "191": [ 
+        "120": [ 
              {
          "trade_type": "futures",
-        "coin_id": "SOLUSDT",
+        "coin_id": "BTCUSDT",
         "side": "buy",
         "order_type": "LIMIT",
         "positionside": "long",
-        "value": 17.0,
-        "leverage": 3,
-        "price": 120.0,       # Limit Fiyatı
+        "value": 21.0,
+        "leverage": 9,
+        "price": 66950,       # Limit Fiyatı
         "timeInForce": "GTC"
         
 

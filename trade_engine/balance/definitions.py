@@ -28,25 +28,14 @@ class StreamStatus:
 class StreamConfig:
     """
     WebSocket (Stream) yönetim ayarları.
-    Bu değerler Binance limitlerine göre optimize edilmiştir.
     """
-    # Bir WebSocket bağlantısında (otobüs) taşınacak maksimum ListenKey sayısı.
-    # Binance limiti 1024'tür ancak performans için 200-300 idealdir.
     MAX_KEYS_PER_BUS = 200 
-
-    # ListenKey kaç saniyede bir yenilenmeli? (Binance ömrü 60dk, biz 45'te tazeleriz)
     LISTEN_KEY_REFRESH_INTERVAL = 45 * 60 
-
-    # WebSocket PING aralığı (Bağlantıyı canlı tutmak için - Saniye)
     WS_PING_INTERVAL = 20 
-    
-    # WebSocket bağlantı zaman aşımı (Saniye)
     WS_TIMEOUT = 10 
-
-    # Bağlantı koptuğunda yeniden deneme (Reconnect) ayarları
-    RECONNECT_INITIAL_DELAY = 2  # İlk deneme 2 sn sonra
-    RECONNECT_MAX_DELAY = 30     # Max 30 saniyeye kadar çıkar
-    RECONNECT_BACKOFF_FACTOR = 2 # Her başarısızlıkta bekleme süresini 2 katına çıkar
+    RECONNECT_INITIAL_DELAY = 2  
+    RECONNECT_MAX_DELAY = 30     
+    RECONNECT_BACKOFF_FACTOR = 2
 
 class BalanceEvent:
     MAP = {
@@ -97,6 +86,27 @@ class BalanceEvent:
         # Likidasyon tetiklendiğinde gelir
         "LIQUIDATION_ORDER": MarketType.FUTURES           # Liquidation order event
     }
+
+
+class SystemLimits:
+    """
+    🔥 MERKEZİ KONTROL: Sistemin tüm hız ve kapasite limitleri.
+    Sunucuyu büyüttüğünde veya limitleri değiştirmek istediğinde sadece burayı güncelle.
+    """
+    # WebSocket: Tek bir Node (Otobüs) kaç kullanıcı taşıyacak?
+    WS_NODE_CAPACITY = 200 
+    
+    # REST: Dakikada maksimum kaç ListenKey yenilenebilir? (IP Ban koruması)
+    MAX_REFRESH_PER_MINUTE = 500
+    
+    # Auth: Binance'e aynı anda kaç paralel istek gönderilsin?
+    AUTH_CONCURRENCY = 10
+    
+    # Auth: Paralel istekler arasında kaç saniye beklensin? (Damlama hızı)
+    AUTH_DELAY = 0.1
+    
+    # Buffer: Veritabanına yazmadan önce veriler kaç saniye biriktirilsin?
+    WS_FLUSH_INTERVAL = 2
 
 
 

@@ -1,0 +1,1795 @@
+VERITABANI SCHEMA RAPORU
+==================================================
+
+--- BÖLÜM 1: TABLOLAR (40 Adet) ---
+
+TABLE: API_KEYS
+---------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('api_keys_id_seq'::regclass)
+    - exchange             character varying NOT NULL
+    - api_name             character varying NOT NULL
+    - api_key              text            NOT NULL
+    - api_secret           text            NULL
+    - created_at           timestamp without time zone NULL DEFAULT CURRENT_TIMESTAMP
+    - user_id              integer         NOT NULL
+    - is_test_api          boolean         NULL DEFAULT false
+    - spot_usdt_balance    numeric         NOT NULL DEFAULT 0
+    - futures_usdt_balance numeric         NOT NULL DEFAULT 0
+    - default              boolean         NULL DEFAULT false
+    - futures_balance      numeric         NULL DEFAULT 0
+    - is_active            boolean         NOT NULL DEFAULT true
+    - spot_balance         numeric         NULL DEFAULT 0
+    - is_futures_enabled   boolean         NOT NULL DEFAULT false
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (api_keys_pkey): id
+
+  [Indexler]
+    - (UNIQUE) api_keys_pkey ON public.api_keys USING btree (id)
+
+  [Triggerlar]
+    - trg_queue_api_change (AFTER INSERT)
+      -> Çalıştırır: EXECUTE FUNCTION enqueue_system_event('API')
+    - trg_queue_api_change (AFTER DELETE)
+      -> Çalıştırır: EXECUTE FUNCTION enqueue_system_event('API')
+    - trg_queue_api_change (AFTER UPDATE)
+      -> Çalıştırır: EXECUTE FUNCTION enqueue_system_event('API')
+
+==================================================
+
+TABLE: API_SNAPSHOTS
+--------------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('api_snapshots_id_seq'::regclass)
+    - api_id               integer         NOT NULL
+    - timestamp            timestamp without time zone NOT NULL
+    - usd_value            numeric         NULL DEFAULT 0
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (api_snapshots_pkey): id
+
+  [Indexler]
+    - (UNIQUE) api_snapshots_pkey ON public.api_snapshots USING btree (id)
+    - idx_api_snapshots_api_ts ON public.api_snapshots USING btree (api_id, "timestamp" DESC)
+    - (UNIQUE) ux_api_snapshots_api_ts ON public.api_snapshots USING btree (api_id, "timestamp")
+
+==================================================
+
+TABLE: BACKTEST_ARCHIVE
+-----------------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('backtest_archive_id_seq'::regclass)
+    - user_id              integer         NOT NULL
+    - commission           numeric         NULL DEFAULT 0.0
+    - created_at           timestamp without time zone NULL DEFAULT now()
+    - data                 jsonb           NULL
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (backtest_archive_pkey): id
+
+  [Indexler]
+    - (UNIQUE) backtest_archive_pkey ON public.backtest_archive USING btree (id)
+
+==================================================
+
+TABLE: BINANCE_COINS
+--------------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('binance_coins_id_seq'::regclass)
+    - name                 character varying NOT NULL
+    - symbol               character varying NOT NULL
+    - created_at           timestamp without time zone NULL DEFAULT CURRENT_TIMESTAMP
+    - binance_symbol       character varying NULL
+    - tick_size            numeric         NULL
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (binance_coins_pkey): id
+    - UNIQUE (binance_coins_symbol_key): symbol
+
+  [Indexler]
+    - (UNIQUE) binance_coins_pkey ON public.binance_coins USING btree (id)
+    - (UNIQUE) binance_coins_symbol_key ON public.binance_coins USING btree (symbol)
+
+==================================================
+
+TABLE: BINANCE_COINS_PINNED
+---------------------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('binance_coins_pinned_id_seq'::regclass)
+    - user_id              integer         NOT NULL
+    - coin_id              integer         NOT NULL
+    - created_at           timestamp without time zone NULL DEFAULT CURRENT_TIMESTAMP
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (binance_coins_pinned_pkey): id
+    - UNIQUE (binance_coins_pinned_user_id_coin_id_key): user_id, coin_id
+
+  [Indexler]
+    - (UNIQUE) binance_coins_pinned_pkey ON public.binance_coins_pinned USING btree (id)
+    - (UNIQUE) binance_coins_pinned_user_id_coin_id_key ON public.binance_coins_pinned USING btree (user_id, coin_id)
+
+==================================================
+
+TABLE: BINANCE_DATA
+-------------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('binance_data_id_seq'::regclass)
+    - coin_id              character varying NOT NULL
+    - interval             character varying NOT NULL
+    - timestamp            timestamp without time zone NOT NULL
+    - open                 numeric         NOT NULL
+    - high                 numeric         NOT NULL
+    - low                  numeric         NOT NULL
+    - close                numeric         NOT NULL
+    - volume               numeric         NOT NULL
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (binance_data_pkey): id
+    - UNIQUE (binance_data_coin_id_interval_timestamp_key): coin_id, interval, timestamp
+
+  [Indexler]
+    - (UNIQUE) binance_data_coin_id_interval_timestamp_key ON public.binance_data USING btree (coin_id, "interval", "timestamp")
+    - (UNIQUE) binance_data_pkey ON public.binance_data USING btree (id)
+    - idx_binance_data_coin_interval ON public.binance_data USING btree (coin_id, "interval", "timestamp")
+
+==================================================
+
+TABLE: BINANCE_LAST_PRICE
+-------------------------
+  [Sütunlar]
+    - coin_id              character varying NOT NULL
+    - timestamp            timestamp without time zone NOT NULL
+    - close                numeric         NOT NULL
+    - interval             text            NOT NULL DEFAULT '1m'::text
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (binance_last_price_pkey): coin_id, interval
+
+  [Indexler]
+    - (UNIQUE) binance_last_price_pkey ON public.binance_last_price USING btree (coin_id, "interval")
+    - blp_1m_coin_idx ON public.binance_last_price USING btree (coin_id) WHERE ("interval" = '1m'::text)
+    - blp_interval_coin_idx ON public.binance_last_price USING btree ("interval", coin_id)
+
+  [Triggerlar]
+    - trg_binance_last_price_btcusdt (AFTER UPDATE)
+      -> Çalıştırır: EXECUTE FUNCTION trg_minute_calc_dispatch()
+
+==================================================
+
+TABLE: BOT_FOLLOW
+-----------------
+  [Sütunlar]
+    - user_id              integer         NOT NULL
+    - bot_id               integer         NOT NULL
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (bot_follow_pkey): user_id, bot_id
+
+  [Indexler]
+    - (UNIQUE) bot_follow_pkey ON public.bot_follow USING btree (user_id, bot_id)
+
+==================================================
+
+TABLE: BOT_HOLDINGS
+-------------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('bot_holdings_id_seq'::regclass)
+    - user_id              integer         NOT NULL
+    - bot_id               integer         NOT NULL
+    - symbol               character varying NOT NULL
+    - amount               numeric         NULL
+    - average_cost         numeric         NULL
+    - percentage           numeric         NULL
+    - open_cost            numeric         NOT NULL DEFAULT 0
+    - realized_pnl         numeric         NOT NULL DEFAULT 0
+    - unrealized_pnl       numeric         NOT NULL DEFAULT 0
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (bot_holdings_pkey): id
+    - UNIQUE (unique_bot_symbol): bot_id, symbol
+
+  [Indexler]
+    - (UNIQUE) bot_holdings_pkey ON public.bot_holdings USING btree (id)
+    - ix_holdings_bot_symbol ON public.bot_holdings USING btree (bot_id, symbol)
+    - (UNIQUE) unique_bot_symbol ON public.bot_holdings USING btree (bot_id, symbol)
+
+==================================================
+
+TABLE: BOT_LOGS
+---------------
+  [Sütunlar]
+    - id                   bigint          NOT NULL DEFAULT nextval('bot_logs_id_seq'::regclass)
+    - user_id              integer         NULL
+    - bot_id               integer         NOT NULL
+    - symbol               character varying NULL
+    - period               character varying NULL
+    - level                USER-DEFINED    NOT NULL
+    - message              text            NOT NULL
+    - details              jsonb           NULL
+    - created_at           timestamp with time zone NOT NULL DEFAULT now()
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (bot_logs_pkey): id
+
+  [Indexler]
+    - (UNIQUE) bot_logs_pkey ON public.bot_logs USING btree (id)
+    - idx_bot_logs_bot_created_desc ON public.bot_logs USING btree (bot_id, created_at DESC, id DESC)
+
+  [Triggerlar]
+    - trg_bot_logs_prune_stmt (AFTER INSERT)
+      -> Çalıştırır: EXECUTE FUNCTION prune_bot_logs_stmt()
+
+==================================================
+
+TABLE: BOT_POSITIONS
+--------------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('bot_trades_id_seq'::regclass)
+    - user_id              integer         NOT NULL
+    - bot_id               integer         NOT NULL
+    - symbol               character varying NOT NULL
+    - average_cost         numeric         NOT NULL
+    - amount               numeric         NOT NULL
+    - position_side        character varying NULL
+    - leverage             numeric         NULL
+    - percentage           numeric         NULL
+    - open_cost            numeric         NOT NULL DEFAULT 0
+    - realized_pnl         numeric         NOT NULL DEFAULT 0
+    - unrealized_pnl       numeric         NOT NULL DEFAULT 0
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (bot_positions_pkey): id
+
+  [Indexler]
+    - (UNIQUE) bot_positions_pkey ON public.bot_positions USING btree (id)
+    - ix_positions_bot_symbol ON public.bot_positions USING btree (bot_id, symbol)
+    - (UNIQUE) unique_bot_symbol_per_position_nonzero ON public.bot_positions USING btree (bot_id, symbol) WHERE (amount <> (0)::numeric)
+
+==================================================
+
+TABLE: BOT_SNAPSHOTS
+--------------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('bot_snapshots_id_seq'::regclass)
+    - bot_id               integer         NOT NULL
+    - timestamp            timestamp without time zone NOT NULL
+    - balance_usdt         numeric         NOT NULL
+    - total_profit         numeric         NULL DEFAULT 0
+    - pnl_ratio            numeric         NULL
+    - fullness             numeric         NULL
+    - active               boolean         NULL
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (bot_snapshots_pkey): id
+
+  [Indexler]
+    - (UNIQUE) bot_snapshots_pkey ON public.bot_snapshots USING btree (id)
+    - idx_bot_snapshots_bot_ts ON public.bot_snapshots USING btree (bot_id, "timestamp" DESC)
+
+==================================================
+
+TABLE: BOT_TRADES
+-----------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('bot_trades_id_seq'::regclass)
+    - user_id              integer         NOT NULL
+    - bot_id               integer         NOT NULL
+    - created_at           timestamp with time zone NOT NULL DEFAULT now()
+    - symbol               character varying NOT NULL
+    - side                 character varying NOT NULL
+    - amount               numeric         NOT NULL
+    - fee                  numeric         NULL DEFAULT 0
+    - order_id             character varying NULL
+    - status               character varying NULL DEFAULT 'filled'::character varying
+    - trade_type           character varying NULL
+    - position_side        character varying NULL
+    - price                numeric         NULL
+    - amount_state         numeric         NULL
+    - leverage             numeric         NULL
+    - order_type           character varying NULL DEFAULT 'DEFAULT'::character varying
+    - algo_id              bigint          NULL
+    - client_algo_id       character varying NULL
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (bot_trades_pkey): id
+
+  [Indexler]
+    - (UNIQUE) bot_trades_pkey ON public.bot_trades USING btree (id)
+    - idx_bot_trades_bot ON public.bot_trades USING btree (bot_id)
+    - idx_bot_trades_symbol ON public.bot_trades USING btree (symbol)
+    - (UNIQUE) idx_unique_algo_orders ON public.bot_trades USING btree (user_id, client_algo_id) WHERE (client_algo_id IS NOT NULL)
+    - (UNIQUE) idx_unique_normal_orders ON public.bot_trades USING btree (user_id, order_id) WHERE (order_id IS NOT NULL)
+
+  [Triggerlar]
+    - trg_bot_trades_apply (AFTER INSERT)
+      -> Çalıştırır: EXECUTE FUNCTION trg_bot_trades_apply_dispatch()
+    - trg_bot_trades_apply (AFTER UPDATE)
+      -> Çalıştırır: EXECUTE FUNCTION trg_bot_trades_apply_dispatch()
+
+==================================================
+
+TABLE: BOTS
+-----------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('bots_id_seq'::regclass)
+    - user_id              integer         NOT NULL
+    - strategy_id          integer         NOT NULL
+    - api_id               integer         NULL
+    - period               character varying NULL
+    - stocks               ARRAY           NULL
+    - active               boolean         NULL DEFAULT true
+    - candle_count         integer         NULL
+    - created_at           timestamp without time zone NULL DEFAULT now()
+    - active_days          ARRAY           NULL DEFAULT ARRAY['Monday'::text, 'Tuesday'::text, 'Wednesday'::text, 'Thursday'::text, 'Friday'::text]
+    - active_hours         text            NULL DEFAULT '00:00-23:59'::text
+    - initial_usd_value    numeric         NULL
+    - current_usd_value    numeric         NULL
+    - name                 character varying NULL
+    - fullness             numeric         NULL DEFAULT 0
+    - for_rent             boolean         NULL DEFAULT false
+    - for_sale             boolean         NULL DEFAULT false
+    - sold_count           integer         NULL DEFAULT 0
+    - rented_count         integer         NULL DEFAULT 0
+    - sell_price           numeric         NULL
+    - rent_price           numeric         NULL
+    - running_time         integer         NULL DEFAULT 0
+    - profit_factor        integer         NULL
+    - risk_factor          integer         NULL
+    - bot_type             character varying NOT NULL DEFAULT 'spot'::character varying
+    - revenue_wallet       text            NULL DEFAULT 'AkmufZViBgt9mwuLPhFM8qyS1SjWNbMRBK8FySHajvUA'::text
+    - parent_bot_id        integer         NULL
+    - acquisition_type     USER-DEFINED    NOT NULL DEFAULT 'ORIGINAL'::bot_acquisition_type
+    - acquired_from_user_id integer         NULL
+    - acquired_at          timestamp with time zone NULL
+    - rent_expires_at      timestamp with time zone NULL
+    - acquisition_price    numeric         NULL
+    - acquisition_tx       character varying NULL
+    - deleted              boolean         NOT NULL DEFAULT false
+    - rent_expiry_closed   boolean         NULL
+    - enter_on_start       boolean         NULL DEFAULT false
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (bots_pkey): id
+
+  [Indexler]
+    - (UNIQUE) bots_pkey ON public.bots USING btree (id)
+    - idx_bots_rent_expired ON public.bots USING btree (period, rent_expires_at) WHERE ((active = true) AND (NOT COALESCE(deleted, false)) AND (acquisition_type = 'RENTED'::bot_acquisition_type))
+    - idx_bots_strategy_deleted_false ON public.bots USING btree (strategy_id) WHERE (deleted = false)
+    - ix_bots_acquired_from_user_id ON public.bots USING btree (acquired_from_user_id)
+    - ix_bots_acquisition_type ON public.bots USING btree (acquisition_type)
+    - ix_bots_parent_bot_id ON public.bots USING btree (parent_bot_id)
+    - ix_bots_rent_expires_at ON public.bots USING btree (rent_expires_at)
+
+==================================================
+
+TABLE: INDICATOR_RELEASES
+-------------------------
+  [Sütunlar]
+    - id                   bigint          NOT NULL DEFAULT nextval('indicator_releases_id_seq'::regclass)
+    - indicator_id         bigint          NOT NULL
+    - release_no           integer         NOT NULL
+    - allow_code_view      boolean         NOT NULL DEFAULT false
+    - allow_chart_view     boolean         NOT NULL DEFAULT false
+    - description          character varying NULL
+    - status               USER-DEFINED    NOT NULL DEFAULT 'pending'::indicator_release_status
+    - reviewed_by          bigint          NULL
+    - reviewed_at          timestamp without time zone NULL
+    - review_note          text            NULL
+    - code_snapshot        text            NULL
+    - code_hash            character       NULL
+    - published_at         timestamp without time zone NULL
+    - unpublished_at       timestamp without time zone NULL
+    - created_by           bigint          NOT NULL
+    - created_at           timestamp without time zone NOT NULL DEFAULT now()
+    - views_count          bigint          NOT NULL DEFAULT 0
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (indicator_releases_pkey): id
+    - UNIQUE (uq_indicator_release_no): indicator_id, release_no
+
+  [Indexler]
+    - (UNIQUE) indicator_releases_pkey ON public.indicator_releases USING btree (id)
+    - ix_indicator_releases_approved ON public.indicator_releases USING btree (indicator_id) WHERE (status = 'approved'::indicator_release_status)
+    - ix_indicator_releases_indicator_id ON public.indicator_releases USING btree (indicator_id)
+    - ix_indicator_releases_status ON public.indicator_releases USING btree (status)
+    - (UNIQUE) uq_indicator_release_no ON public.indicator_releases USING btree (indicator_id, release_no)
+
+==================================================
+
+TABLE: INDICATORS
+-----------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('indicators_id_seq'::regclass)
+    - user_id              integer         NOT NULL
+    - name                 character varying NOT NULL
+    - code                 text            NOT NULL
+    - created_at           timestamp without time zone NULL DEFAULT CURRENT_TIMESTAMP
+    - public               boolean         NULL DEFAULT false
+    - tecnic               boolean         NULL DEFAULT false
+    - parent_indicator_id  bigint          NULL
+    - version              integer         NOT NULL DEFAULT 1
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (indicators_pkey): id
+
+  [Indexler]
+    - (UNIQUE) indicators_pkey ON public.indicators USING btree (id)
+
+==================================================
+
+TABLE: INDICATORS_FAVORITE
+--------------------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('indicators_favorite_id_seq'::regclass)
+    - user_id              integer         NOT NULL
+    - indicator_id         integer         NOT NULL
+    - created_at           timestamp without time zone NULL DEFAULT CURRENT_TIMESTAMP
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (indicators_favorite_pkey): id
+    - UNIQUE (indicators_favorite_user_id_indicator_id_key): user_id, indicator_id
+
+  [Indexler]
+    - (UNIQUE) indicators_favorite_pkey ON public.indicators_favorite USING btree (id)
+    - (UNIQUE) indicators_favorite_user_id_indicator_id_key ON public.indicators_favorite USING btree (user_id, indicator_id)
+
+==================================================
+
+TABLE: PAYMENT_INTENTS
+----------------------
+  [Sütunlar]
+    - id                   bigint          NOT NULL DEFAULT nextval('payment_intents_id_seq'::regclass)
+    - user_id              bigint          NOT NULL
+    - purpose              character varying NOT NULL
+    - bot_id               bigint          NULL
+    - seller_wallet        text            NULL
+    - platform_fee_usd     numeric         NOT NULL DEFAULT 0
+    - buyer_pays_usd       numeric         NOT NULL
+    - quote_sol            numeric         NOT NULL
+    - quote_lamports       bigint          NOT NULL
+    - quote_rate_usd_per_sol numeric         NOT NULL
+    - recipient_json       text            NOT NULL
+    - reference            text            NOT NULL
+    - status               smallint        NOT NULL DEFAULT 0
+    - created_at           timestamp with time zone NOT NULL DEFAULT now()
+    - expires_at           timestamp with time zone NOT NULL
+    - tx_sig               text            NULL
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (payment_intents_pkey): id
+
+  [Indexler]
+    - ix_payment_intents_status ON public.payment_intents USING btree (status)
+    - ix_payment_intents_user ON public.payment_intents USING btree (user_id)
+    - (UNIQUE) payment_intents_pkey ON public.payment_intents USING btree (id)
+    - (UNIQUE) uq_payment_intents_reference ON public.payment_intents USING btree (reference)
+
+==================================================
+
+TABLE: SIWS_NONCES
+------------------
+  [Sütunlar]
+    - id                   bigint          NOT NULL DEFAULT nextval('siws_nonces_id_seq'::regclass)
+    - chain                character varying NOT NULL DEFAULT 'solana'::character varying
+    - address              text            NULL
+    - nonce                text            NOT NULL
+    - status               smallint        NOT NULL DEFAULT 0
+    - expires_at           timestamp with time zone NOT NULL
+    - created_at           timestamp with time zone NOT NULL DEFAULT now()
+    - consumed_at          timestamp with time zone NULL
+    - request_ip           inet            NULL
+    - user_agent           text            NULL
+    - user_id              bigint          NOT NULL
+    - purpose              character varying NOT NULL DEFAULT 'link_wallet'::character varying
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (siws_nonces_pkey): id
+    - UNIQUE (siws_nonces_nonce_key): nonce
+
+  [Indexler]
+    - ix_siws_nonces_expires ON public.siws_nonces USING btree (expires_at)
+    - ix_siws_nonces_status ON public.siws_nonces USING btree (status)
+    - ix_siws_nonces_user ON public.siws_nonces USING btree (user_id)
+    - (UNIQUE) siws_nonces_nonce_key ON public.siws_nonces USING btree (nonce)
+    - (UNIQUE) siws_nonces_pkey ON public.siws_nonces USING btree (id)
+
+==================================================
+
+TABLE: STRATEGIES
+-----------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('indicators_id_seq'::regclass)
+    - user_id              integer         NOT NULL
+    - name                 character varying NOT NULL
+    - code                 text            NOT NULL
+    - created_at           timestamp without time zone NULL DEFAULT CURRENT_TIMESTAMP
+    - public               boolean         NULL DEFAULT false
+    - tecnic               boolean         NULL DEFAULT false
+    - indicator_ids        ARRAY           NULL
+    - parent_strategy_id   bigint          NULL
+    - version              integer         NOT NULL DEFAULT 1
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (strategies_pkey): id
+
+  [Indexler]
+    - (UNIQUE) strategies_pkey ON public.strategies USING btree (id)
+
+==================================================
+
+TABLE: STRATEGIES_FAVORITE
+--------------------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('indicators_favorite_id_seq'::regclass)
+    - user_id              integer         NOT NULL
+    - strategy_id          integer         NOT NULL
+    - created_at           timestamp without time zone NULL DEFAULT CURRENT_TIMESTAMP
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (strategies_favorite_pkey): id
+    - UNIQUE (strategies_favorite_user_id_indicator_id_key): user_id, strategy_id
+
+  [Indexler]
+    - (UNIQUE) strategies_favorite_pkey ON public.strategies_favorite USING btree (id)
+    - (UNIQUE) strategies_favorite_user_id_indicator_id_key ON public.strategies_favorite USING btree (user_id, strategy_id)
+
+==================================================
+
+TABLE: STRATEGY_RELEASES
+------------------------
+  [Sütunlar]
+    - id                   bigint          NOT NULL DEFAULT nextval('strategy_releases_id_seq'::regclass)
+    - strategy_id          bigint          NOT NULL
+    - release_no           integer         NOT NULL
+    - allow_code_view      boolean         NOT NULL DEFAULT false
+    - allow_chart_view     boolean         NOT NULL DEFAULT false
+    - allow_scanning       boolean         NOT NULL DEFAULT false
+    - allow_backtesting    boolean         NOT NULL DEFAULT false
+    - allow_bot_execution  boolean         NOT NULL DEFAULT false
+    - description          character varying NULL
+    - status               USER-DEFINED    NOT NULL DEFAULT 'pending'::strategy_release_status
+    - reviewed_by          bigint          NULL
+    - reviewed_at          timestamp without time zone NULL
+    - review_note          text            NULL
+    - code_snapshot        text            NULL
+    - code_hash            character       NULL
+    - published_at         timestamp without time zone NULL
+    - unpublished_at       timestamp without time zone NULL
+    - created_by           bigint          NOT NULL
+    - created_at           timestamp without time zone NOT NULL DEFAULT now()
+    - views_count          bigint          NOT NULL DEFAULT 0
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (strategy_releases_pkey): id
+    - UNIQUE (uq_strategy_release_no): strategy_id, release_no
+
+  [Indexler]
+    - ix_strategy_releases_approved ON public.strategy_releases USING btree (strategy_id) WHERE (status = 'approved'::strategy_release_status)
+    - ix_strategy_releases_status ON public.strategy_releases USING btree (status)
+    - ix_strategy_releases_strategy_id ON public.strategy_releases USING btree (strategy_id)
+    - (UNIQUE) strategy_releases_pkey ON public.strategy_releases USING btree (id)
+    - (UNIQUE) uq_strategy_release_no ON public.strategy_releases USING btree (strategy_id, release_no)
+
+==================================================
+
+TABLE: STREAM_KEYS
+------------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('stream_keys_id_seq'::regclass)
+    - user_id              bigint          NOT NULL
+    - api_id               integer         NOT NULL
+    - market_type          smallint        NOT NULL
+    - listen_key           text            NULL
+    - ws_id                integer         NULL
+    - status               smallint        NULL DEFAULT 1
+    - expires_at           timestamp without time zone NULL
+    - created_at           timestamp without time zone NULL DEFAULT now()
+    - updated_at           timestamp without time zone NULL DEFAULT now()
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (stream_keys_pkey): id
+    - UNIQUE (unique_api_market): api_id, market_type
+
+  [Indexler]
+    - idx_stream_status_ws ON public.stream_keys USING btree (status, ws_id)
+    - (UNIQUE) stream_keys_pkey ON public.stream_keys USING btree (id)
+    - (UNIQUE) unique_api_market ON public.stream_keys USING btree (api_id, market_type)
+
+  [Triggerlar]
+    - trg_queue_stream_status (AFTER UPDATE)
+      -> Çalıştırır: EXECUTE FUNCTION enqueue_system_event('STREAM_STATUS')
+
+==================================================
+
+TABLE: SUPPORT_ASSIGNMENTS
+--------------------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('support_assignments_id_seq'::regclass)
+    - ticket_id            integer         NOT NULL
+    - assigned_to          integer         NOT NULL
+    - assigned_by          integer         NOT NULL
+    - assigned_at          timestamp with time zone NULL DEFAULT CURRENT_TIMESTAMP
+    - unassigned_at        timestamp with time zone NULL
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (support_assignments_pkey): id
+
+  [Indexler]
+    - (UNIQUE) support_assignments_pkey ON public.support_assignments USING btree (id)
+
+==================================================
+
+TABLE: SUPPORT_ATTACHMENTS
+--------------------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('support_attachments_id_seq'::regclass)
+    - message_id           integer         NULL
+    - ticket_id            integer         NULL
+    - user_id              integer         NOT NULL
+    - filename             character varying NOT NULL
+    - storage_path         text            NOT NULL
+    - mime_type            character varying NOT NULL
+    - size_bytes           integer         NOT NULL
+    - width                integer         NULL
+    - height               integer         NULL
+    - created_at           timestamp with time zone NULL DEFAULT CURRENT_TIMESTAMP
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (support_attachments_pkey): id
+
+  [Indexler]
+    - (UNIQUE) support_attachments_pkey ON public.support_attachments USING btree (id)
+
+==================================================
+
+TABLE: SUPPORT_CATEGORIES
+-------------------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('support_categories_id_seq'::regclass)
+    - name                 character varying NOT NULL
+    - description          text            NULL
+    - is_active            boolean         NULL DEFAULT true
+    - created_at           timestamp with time zone NULL DEFAULT CURRENT_TIMESTAMP
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (support_categories_pkey): id
+
+  [Indexler]
+    - (UNIQUE) support_categories_pkey ON public.support_categories USING btree (id)
+
+==================================================
+
+TABLE: SUPPORT_MESSAGES
+-----------------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('support_messages_id_seq'::regclass)
+    - ticket_id            integer         NOT NULL
+    - user_id              integer         NOT NULL
+    - message              text            NOT NULL
+    - is_internal          boolean         NULL DEFAULT false
+    - created_at           timestamp with time zone NULL DEFAULT CURRENT_TIMESTAMP
+    - read_at              timestamp with time zone NULL
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (support_messages_pkey): id
+
+  [Indexler]
+    - (UNIQUE) support_messages_pkey ON public.support_messages USING btree (id)
+
+==================================================
+
+TABLE: SUPPORT_TICKETS
+----------------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('support_tickets_id_seq'::regclass)
+    - user_id              integer         NOT NULL
+    - category_id          integer         NULL
+    - subject              character varying NOT NULL
+    - status               character varying NULL DEFAULT 'open'::character varying
+    - priority             character varying NULL DEFAULT 'normal'::character varying
+    - satisfaction_rating  integer         NULL
+    - satisfaction_feedback text            NULL
+    - created_at           timestamp with time zone NULL DEFAULT CURRENT_TIMESTAMP
+    - updated_at           timestamp with time zone NULL DEFAULT CURRENT_TIMESTAMP
+    - closed_at            timestamp with time zone NULL
+    - deleted              boolean         NULL DEFAULT false
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (support_tickets_pkey): id
+
+  [Indexler]
+    - (UNIQUE) support_tickets_pkey ON public.support_tickets USING btree (id)
+
+==================================================
+
+TABLE: SYMBOL_FILTERS
+---------------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('symbol_filters_id_seq'::regclass)
+    - binance_symbol       character varying NULL
+    - trade_type           character varying NULL
+    - step_size            numeric         NULL
+    - min_qty              numeric         NULL
+    - tick_size            numeric         NULL
+    - updated_at           timestamp without time zone NULL
+    - exchange             character varying NOT NULL DEFAULT 'Binance'::character varying
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (symbol_filters_pkey): id
+    - UNIQUE (symbol_filters_binance_symbol_market_type_key): binance_symbol, trade_type
+
+  [Indexler]
+    - (UNIQUE) symbol_filters_binance_symbol_market_type_key ON public.symbol_filters USING btree (binance_symbol, trade_type)
+    - (UNIQUE) symbol_filters_pkey ON public.symbol_filters USING btree (id)
+
+==================================================
+
+TABLE: SYSTEM_EVENT_QUEUE
+-------------------------
+  [Sütunlar]
+    - id                   bigint          NOT NULL DEFAULT nextval('system_event_queue_id_seq'::regclass)
+    - event_type           character varying NOT NULL
+    - payload              jsonb           NOT NULL
+    - created_at           timestamp without time zone NULL DEFAULT now()
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (system_event_queue_pkey): id
+
+  [Indexler]
+    - idx_event_queue_created ON public.system_event_queue USING btree (created_at)
+    - (UNIQUE) system_event_queue_pkey ON public.system_event_queue USING btree (id)
+
+==================================================
+
+TABLE: TELEGRAM_ACCOUNTS
+------------------------
+  [Sütunlar]
+    - id                   bigint          NOT NULL DEFAULT nextval('telegram_accounts_id_seq'::regclass)
+    - user_id              bigint          NOT NULL
+    - chat_id              bigint          NULL
+    - username             character varying NULL
+    - is_active            boolean         NOT NULL DEFAULT true
+    - created_at           timestamp with time zone NOT NULL DEFAULT now()
+    - updated_at           timestamp with time zone NOT NULL DEFAULT now()
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (telegram_accounts_pkey): id
+    - UNIQUE (telegram_accounts_user_id_key): user_id
+
+  [Indexler]
+    - idx_telegram_accounts_chat_id ON public.telegram_accounts USING btree (chat_id)
+    - idx_telegram_accounts_is_active ON public.telegram_accounts USING btree (is_active)
+    - (UNIQUE) telegram_accounts_pkey ON public.telegram_accounts USING btree (id)
+    - (UNIQUE) telegram_accounts_user_id_key ON public.telegram_accounts USING btree (user_id)
+
+==================================================
+
+TABLE: TRADE_OCO_LINKS
+----------------------
+  [Sütunlar]
+    - id                   bigint          NOT NULL DEFAULT nextval('trade_oco_links_id_seq'::regclass)
+    - entry_trade_id       integer         NOT NULL
+    - bot_id               integer         NOT NULL
+    - symbol               character varying NOT NULL
+    - trade_type           character varying NOT NULL
+    - spot_order_list_id   bigint          NULL
+    - futures_tp_order_id  character varying NULL
+    - futures_sl_order_id  character varying NULL
+    - status               character varying NOT NULL DEFAULT 'ACTIVE'::character varying
+    - created_at           timestamp with time zone NOT NULL DEFAULT now()
+    - updated_at           timestamp with time zone NOT NULL DEFAULT now()
+    - take_profit_price    numeric         NULL
+    - stop_loss_price      numeric         NULL
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (trade_oco_links_pkey): id
+
+  [Indexler]
+    - (UNIQUE) trade_oco_links_pkey ON public.trade_oco_links USING btree (id)
+    - (UNIQUE) uq_active_entry_trade_idx ON public.trade_oco_links USING btree (entry_trade_id) WHERE ((status)::text = 'ACTIVE'::text)
+
+==================================================
+
+TABLE: USER_API_BALANCES
+------------------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('user_api_balances_id_seq'::regclass)
+    - user_id              integer         NOT NULL
+    - coin_symbol          character varying NOT NULL
+    - amount               numeric         NOT NULL
+    - updated_at           timestamp with time zone NULL DEFAULT now()
+    - api_id               integer         NOT NULL
+    - account_type         text            NOT NULL
+    - free_amount          numeric         NULL DEFAULT 0
+    - locked_amount        numeric         NULL DEFAULT 0
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (user_api_balances_pkey): id
+    - UNIQUE (unique_api_coin): api_id, coin_symbol, account_type
+
+  [Indexler]
+    - (UNIQUE) unique_api_coin ON public.user_api_balances USING btree (api_id, coin_symbol, account_type)
+    - (UNIQUE) user_api_balances_pkey ON public.user_api_balances USING btree (id)
+
+==================================================
+
+TABLE: USER_FUTURES_JSON_SETTINGS
+---------------------------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('user_futures_json_settings_id_seq'::regclass)
+    - api_id               integer         NOT NULL
+    - margin_leverage_infos jsonb           NOT NULL DEFAULT '{}'::jsonb
+    - updated_at           timestamp without time zone NULL DEFAULT now()
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (user_futures_json_settings_pkey): id
+
+  [Indexler]
+    - (UNIQUE) user_futures_json_settings_pkey ON public.user_futures_json_settings USING btree (id)
+
+==================================================
+
+TABLE: USER_PLANS
+-----------------
+  [Sütunlar]
+    - id                   bigint          NOT NULL DEFAULT nextval('user_plans_id_seq'::regclass)
+    - user_id              bigint          NOT NULL
+    - plan_code            character varying NOT NULL
+    - status               character varying NOT NULL DEFAULT 'active'::character varying
+    - started_at           timestamp with time zone NOT NULL DEFAULT now()
+    - expires_at           timestamp with time zone NULL
+    - canceled_at          timestamp with time zone NULL
+    - auto_renew           boolean         NOT NULL DEFAULT false
+    - notes                character varying NULL
+    - created_at           timestamp with time zone NOT NULL DEFAULT now()
+    - updated_at           timestamp with time zone NOT NULL DEFAULT now()
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (user_plans_pkey): id
+
+  [Indexler]
+    - ix_user_plans_status ON public.user_plans USING btree (status)
+    - ix_user_plans_user_id ON public.user_plans USING btree (user_id)
+    - (UNIQUE) user_plans_pkey ON public.user_plans USING btree (id)
+
+==================================================
+
+TABLE: USER_SYMBOL_SETTINGS
+---------------------------
+  [Sütunlar]
+    - id                   bigint          NOT NULL DEFAULT nextval('user_symbol_settings_id_seq'::regclass)
+    - user_id              bigint          NOT NULL
+    - api_id               bigint          NOT NULL
+    - symbol               text            NOT NULL
+    - margin_type          boolean         NOT NULL DEFAULT false
+    - leverage             integer         NOT NULL
+    - trade_type           text            NOT NULL
+    - exchange             text            NOT NULL DEFAULT 'Binance'::text
+    - created_at           timestamp with time zone NOT NULL DEFAULT now()
+    - updated_at           timestamp with time zone NOT NULL DEFAULT now()
+    - position_mode        boolean         NULL DEFAULT false
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (user_symbol_settings_pkey): id
+    - UNIQUE (user_symbol_settings_uniq): user_id, api_id, symbol, trade_type
+
+  [Indexler]
+    - (UNIQUE) idx_user_symbol_settings_unique ON public.user_symbol_settings USING btree (user_id, api_id, symbol, trade_type)
+    - (UNIQUE) user_symbol_settings_pkey ON public.user_symbol_settings USING btree (id)
+    - (UNIQUE) user_symbol_settings_uniq ON public.user_symbol_settings USING btree (user_id, api_id, symbol, trade_type)
+
+==================================================
+
+TABLE: USERS
+------------
+  [Sütunlar]
+    - id                   bigint          NOT NULL DEFAULT nextval('users_id_seq'::regclass)
+    - name                 character varying NOT NULL
+    - last_name            character varying NOT NULL
+    - username             character varying NOT NULL
+    - email                character varying NOT NULL
+    - password             character varying NULL
+    - phone                character varying NULL
+    - profile_picture      character varying NULL
+    - bio                  character varying NULL
+    - location             character varying NULL
+    - role                 character varying NOT NULL DEFAULT 'user'::character varying
+    - is_active            boolean         NOT NULL DEFAULT true
+    - is_verified          boolean         NOT NULL DEFAULT false
+    - created_at           timestamp without time zone NULL DEFAULT CURRENT_TIMESTAMP
+    - updated_at           timestamp without time zone NULL DEFAULT CURRENT_TIMESTAMP
+    - instagram            character varying NULL
+    - linkedin             character varying NULL
+    - github               character varying NULL
+    - total_followers      integer         NULL DEFAULT 0
+    - total_sold           integer         NULL DEFAULT 0
+    - total_rented         integer         NULL DEFAULT 0
+    - last_login           timestamp without time zone NULL
+    - auth_provider        character varying NOT NULL DEFAULT 'password'::character varying
+    - provider_user_id     character varying NULL
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (users_pkey): id
+    - UNIQUE (users_email_key): email
+    - UNIQUE (users_phone_key): phone
+
+  [Indexler]
+    - (UNIQUE) users_email_key ON public.users USING btree (email)
+    - (UNIQUE) users_phone_key ON public.users USING btree (phone)
+    - (UNIQUE) users_pkey ON public.users USING btree (id)
+
+==================================================
+
+TABLE: WALLET_SIGNINS
+---------------------
+  [Sütunlar]
+    - id                   bigint          NOT NULL DEFAULT nextval('wallet_signins_id_seq'::regclass)
+    - wallet_id            bigint          NOT NULL
+    - nonce_id             bigint          NOT NULL
+    - signature            text            NOT NULL
+    - verified             boolean         NOT NULL DEFAULT true
+    - remote_ip            inet            NULL
+    - user_agent           text            NULL
+    - created_at           timestamp with time zone NOT NULL DEFAULT now()
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (wallet_signins_pkey): id
+
+  [Indexler]
+    - ix_wallet_signins_created ON public.wallet_signins USING btree (created_at)
+    - ix_wallet_signins_wallet ON public.wallet_signins USING btree (wallet_id)
+    - (UNIQUE) wallet_signins_pkey ON public.wallet_signins USING btree (id)
+
+==================================================
+
+TABLE: WALLETS
+--------------
+  [Sütunlar]
+    - id                   bigint          NOT NULL DEFAULT nextval('wallets_id_seq'::regclass)
+    - user_id              bigint          NOT NULL
+    - chain                character varying NOT NULL DEFAULT 'solana'::character varying
+    - address              text            NOT NULL
+    - label                text            NULL
+    - is_primary           boolean         NOT NULL DEFAULT false
+    - is_verified          boolean         NOT NULL DEFAULT false
+    - verified_at          timestamp with time zone NULL
+    - last_sign_in_at      timestamp with time zone NULL
+    - created_at           timestamp with time zone NOT NULL DEFAULT now()
+    - updated_at           timestamp with time zone NOT NULL DEFAULT now()
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (wallets_pkey): id
+    - UNIQUE (uq_wallet_chain_address): chain, address
+
+  [Indexler]
+    - ix_wallets_created_at ON public.wallets USING btree (created_at)
+    - ix_wallets_user_id ON public.wallets USING btree (user_id)
+    - (UNIQUE) uq_primary_wallet_per_user ON public.wallets USING btree (user_id) WHERE (is_primary = true)
+    - (UNIQUE) uq_wallet_chain_address ON public.wallets USING btree (chain, address)
+    - (UNIQUE) wallets_pkey ON public.wallets USING btree (id)
+
+==================================================
+
+TABLE: WEBSOCKET_CONNECTIONS
+----------------------------
+  [Sütunlar]
+    - id                   integer         NOT NULL DEFAULT nextval('websocket_connections_id_seq'::regclass)
+    - name                 character varying NULL
+    - exchange_id          smallint        NULL DEFAULT 1
+    - type_id              smallint        NOT NULL
+    - listenkey_count      smallint        NULL DEFAULT 0
+    - is_connected         boolean         NULL DEFAULT false
+    - created_at           timestamp without time zone NULL DEFAULT now()
+    - reactivated_at       timestamp without time zone NULL DEFAULT now()
+
+  [Kısıtlamalar (PK & Unique)]
+    - PRIMARY KEY (websocket_connections_pkey): id
+
+  [Indexler]
+    - idx_ws_conn_type ON public.websocket_connections USING btree (type_id, is_connected)
+    - (UNIQUE) websocket_connections_pkey ON public.websocket_connections USING btree (id)
+
+==================================================
+
+--- BÖLÜM 2: FONKSİYONLAR (11 Adet) ---
+
+FUNCTION: api_snapshots
+------------------------------
+CREATE OR REPLACE FUNCTION public.api_snapshots(p_ts timestamp with time zone)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$DECLARE
+    v_ts_hour timestamptz := date_trunc('minute', p_ts);  -- saat başına yuvarla (minute çevirdim sonra)
+BEGIN
+    ----------------------------------------------------------------
+    -- 0) TÜM API’LER İÇİN SPOT/FUTURES USD BAKİYELERİNİ TOPLU GÜNCELLE
+    --    user_api_balances × binance_last_price('1m')
+    ----------------------------------------------------------------
+    WITH prices AS (
+        SELECT blp.coin_id, blp.close
+        FROM binance_last_price blp
+        WHERE blp.interval = '1m'
+    ),
+    valued AS (
+        SELECT
+            uab.api_id,
+            uab.account_type,                                  -- 'spot' | 'futures'
+            SUM(
+                uab.amount * (
+                    CASE
+                        WHEN uab.coin_symbol = 'USDT' THEN 1::numeric
+                        ELSE COALESCE(p.close, 0::numeric)
+                    END
+                )
+            )::numeric(20,8) AS usd
+        FROM user_api_balances uab
+        LEFT JOIN prices p
+               ON p.coin_id = (uab.coin_symbol || 'USDT')
+        GROUP BY uab.api_id, uab.account_type
+    ),
+    agg AS (
+        SELECT
+            api_id,
+            COALESCE(SUM(CASE WHEN account_type = 'spot'    THEN usd ELSE 0 END), 0)::numeric(20,8)    AS spot_usd,
+            COALESCE(SUM(CASE WHEN account_type = 'futures' THEN usd ELSE 0 END), 0)::numeric(20,8)    AS futures_usd
+        FROM valued
+        GROUP BY api_id
+    )
+    UPDATE api_keys ak
+    SET
+        spot_balance    = a.spot_usd,
+        futures_balance = a.futures_usd
+    FROM agg a
+    WHERE ak.id = a.api_id;
+
+    -- (Opsiyonel sağlamlaştırma) user_api_balances’ta satırı olmayan API’leri 0’a çek
+    UPDATE api_keys ak
+    SET spot_balance = 0::numeric(20,8),
+        futures_balance = 0::numeric(20,8)
+    WHERE NOT EXISTS (
+        SELECT 1 FROM user_api_balances u WHERE u.api_id = ak.id
+    );
+
+    ----------------------------------------------------------------
+    -- 1) SAATLİK SNAPSHOT (UPSERT)
+    --    usd_value = spot_balance + futures_balance
+    ----------------------------------------------------------------
+    INSERT INTO api_snapshots (api_id, "timestamp", usd_value)
+    SELECT
+        ak.id AS api_id,
+        v_ts_hour AS "timestamp",
+        (COALESCE(ak.spot_balance, 0)::numeric(20,8)
+       + COALESCE(ak.futures_balance, 0)::numeric(20,8)) AS usd_value
+    FROM api_keys ak
+    ON CONFLICT (api_id, "timestamp")
+    DO UPDATE SET
+        usd_value = EXCLUDED.usd_value;
+
+    ----------------------------------------------------------------
+    -- 2) PRUNING: Her api_id için en fazla 1000 satır bırak
+    --    - İlk/son 50 kaydı koru
+    --    - Ortada her 5’inciyi öncelikli sil; yetmezse sırayla tamamla
+    ----------------------------------------------------------------
+    WITH stats AS (
+        SELECT api_id,
+               COUNT(*) AS total_rows,
+               COUNT(*) - 1000 AS delete_count
+        FROM api_snapshots
+        GROUP BY api_id
+        HAVING COUNT(*) > 1000
+    ),
+    ranked AS (
+        SELECT
+            s.api_id,
+            a.id,
+            a."timestamp",
+            ROW_NUMBER() OVER (PARTITION BY s.api_id ORDER BY a."timestamp") AS rn,
+            s.total_rows,
+            s.delete_count
+        FROM stats s
+        JOIN api_snapshots a ON a.api_id = s.api_id
+    ),
+    middle AS (
+        SELECT *,
+               ROW_NUMBER() OVER (PARTITION BY api_id ORDER BY rn) AS mid_rownum
+        FROM ranked
+        WHERE rn > 50 AND rn < (total_rows - 50)
+    ),
+    picked AS (
+        SELECT
+            id,
+            api_id,
+            ROW_NUMBER() OVER (
+                PARTITION BY api_id
+                ORDER BY CASE WHEN (mid_rownum % 5) = 0 THEN 0 ELSE 1 END,
+                         rn
+            ) AS pick_ord,
+            delete_count
+        FROM middle
+    ),
+    to_delete AS (
+        SELECT id
+        FROM picked
+        WHERE pick_ord <= delete_count
+    )
+    DELETE FROM api_snapshots a
+    USING to_delete d
+    WHERE a.id = d.id;
+
+    RETURN;
+END;$function$
+
+
+**************************************************
+
+FUNCTION: apply_trades
+------------------------------
+CREATE OR REPLACE FUNCTION public.apply_trades(p_new bot_trades, p_prev_amount_state numeric)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$DECLARE
+    delta           numeric := GREATEST(COALESCE(p_new.amount_state,0) - COALESCE(p_prev_amount_state,0), 0);
+    side_txt        text    := lower(COALESCE(p_new.side,''));
+    ttype           text    := lower(COALESCE(p_new.trade_type,'')); -- 'spot' / 'futures'
+    pos_side        text    := lower(COALESCE(p_new.position_side,'')); -- 'long' / 'short' / null
+    v_bot_id        int     := p_new.bot_id;
+    v_user_id       int     := p_new.user_id;
+    sym             text    := p_new.symbol;
+    px              numeric := COALESCE(p_new.price,0);
+    fee             numeric := COALESCE(p_new.fee,0);
+    lev             numeric := COALESCE(p_new.leverage,0);
+    now_ts          timestamptz := now();
+
+    -- Spot/Futures mevcut satırlar
+    h_amount        numeric;
+    h_avg           numeric;
+    h_open          numeric;
+    h_real          numeric;
+
+    p_id            int;
+    p_amount        numeric;
+    p_avg           numeric;
+    p_open          numeric;
+    p_real          numeric;
+    p_side          text;
+    p_lev           numeric;
+BEGIN
+    IF delta <= 0 THEN
+        RETURN;
+    END IF;
+
+    ----------------------------------------------------------------
+    -- ===============   S P O T   ================================
+    ----------------------------------------------------------------
+    IF ttype = 'spot' THEN
+        -- Mevcut holding'i kilitleyerek çek
+        SELECT id, amount, average_cost, open_cost, COALESCE(realized_pnl,0)
+          INTO p_id, h_amount, h_avg, h_open, h_real
+          FROM bot_holdings
+         WHERE bot_id = v_bot_id AND symbol = sym
+         FOR UPDATE;
+
+        IF side_txt = 'buy' THEN
+            IF p_id IS NULL THEN
+                INSERT INTO bot_holdings (user_id, bot_id, symbol, amount, average_cost, open_cost, realized_pnl)
+                VALUES (v_user_id, v_bot_id, sym, delta, px, px*delta, 0 - fee);
+            ELSE
+                h_real  := h_real - fee;
+                h_amount := COALESCE(h_amount,0) + delta;
+                h_open   := COALESCE(h_open,0) + (px * delta);
+                h_avg    := CASE WHEN h_amount > 0 THEN h_open / h_amount ELSE 0 END;
+
+                UPDATE bot_holdings
+                   SET amount = h_amount,
+                       open_cost = h_open,
+                       average_cost = h_avg,
+                       realized_pnl = h_real
+                 WHERE id = p_id;
+            END IF;
+
+        ELSIF side_txt = 'sell' THEN
+            IF p_id IS NULL THEN
+                RETURN; -- satacak varlık yok; güvenli çık
+            ELSE
+                -- realized_pnl ekle
+                h_real := h_real + ((px - COALESCE(h_avg,0)) * delta) - fee;
+
+                -- miktar & maliyet küçült
+                IF COALESCE(h_amount,0) > 0 THEN
+                    h_open := COALESCE(h_open,0) * ((GREATEST(h_amount - delta,0)) / NULLIF(h_amount,0));
+                END IF;
+                h_amount := GREATEST(COALESCE(h_amount,0) - delta, 0);
+                h_avg    := CASE WHEN h_amount > 0 THEN h_open / h_amount ELSE 0 END;
+
+                UPDATE bot_holdings
+                   SET amount = h_amount,
+                       open_cost = h_open,
+                       average_cost = h_avg,
+                       realized_pnl = h_real
+                 WHERE id = p_id;
+
+                -- İstersen sıfıra inince sil:
+                -- DELETE FROM bot_holdings WHERE id=p_id AND amount=0;
+            END IF;
+        END IF;
+
+        RETURN;
+    END IF;
+
+    ----------------------------------------------------------------
+    -- =============   F U T U R E S   ============================
+    ----------------------------------------------------------------
+    IF ttype = 'futures' THEN
+        -- Mevcut (amount>0) herhangi bir pozisyonu kilitle
+        SELECT id, amount, average_cost, open_cost, COALESCE(realized_pnl,0), position_side, COALESCE(leverage,0)
+          INTO p_id, p_amount, p_avg, p_open, p_real, p_side, p_lev
+          FROM bot_positions
+         WHERE bot_id = v_bot_id
+           AND symbol = sym
+           AND amount > 0
+         FOR UPDATE SKIP LOCKED
+         LIMIT 1;
+
+        -- Çelişen kaldıraç veya ters yön geldiyse: önce mevcutı tamamen kapat
+        IF p_id IS NOT NULL AND (p_side IS DISTINCT FROM pos_side OR COALESCE(p_lev,0) IS DISTINCT FROM COALESCE(lev,0)) THEN
+            IF p_side = 'long' THEN
+                p_real := p_real + ((px - COALESCE(p_avg,0)) * p_amount * COALESCE(p_lev,0));
+            ELSIF p_side = 'short' THEN
+                p_real := p_real + ((px - COALESCE(p_avg,0)) * p_amount * COALESCE(p_lev,0) * (-1));
+            END IF;
+
+            UPDATE bot_positions
+               SET amount = 0,
+                   open_cost = 0,
+                   average_cost = 0,
+                   realized_pnl = p_real
+             WHERE id = p_id;
+
+            -- Alternatif: amount=0 satırlarını silebilirsin
+            -- DELETE FROM bot_positions WHERE id = p_id AND amount = 0;
+
+            -- Kapatıldıktan sonra bu işlem düşmeye devam etsin (aşağıda yeni yön işlenecek)
+            p_id := NULL;
+        END IF;
+
+        -- Yön: LONG
+        IF pos_side = 'long' THEN
+            IF side_txt = 'buy' THEN
+                -- artırma (open/add)
+                IF p_id IS NULL THEN
+                    INSERT INTO bot_positions (user_id, bot_id, symbol, position_side, leverage,
+                                               amount, average_cost, open_cost, realized_pnl)
+                    VALUES (v_user_id, v_bot_id, sym, 'long', lev,
+                            delta, px, px*delta, 0 - fee);
+                ELSE
+                    -- p_id mevcut ve yön/leverage uyumlu (buraya ancak uyumluysa geliyor)
+                    p_real   := p_real - fee;
+                    p_amount := p_amount + delta;
+                    p_open   := p_open + (px * delta);
+                    p_avg    := CASE WHEN p_amount>0 THEN p_open / p_amount ELSE 0 END;
+
+                    UPDATE bot_positions
+                       SET amount = p_amount,
+                           open_cost = p_open,
+                           average_cost = p_avg,
+                           realized_pnl = p_real,
+                           leverage = p_lev
+                     WHERE id = p_id;
+                END IF;
+
+            ELSIF side_txt = 'sell' THEN
+                -- azaltma (close/partial)
+                IF p_id IS NULL THEN
+                    RETURN; -- kapatılacak long yok
+                ELSE
+                    p_real := p_real + ((px - COALESCE(p_avg,0)) * delta * COALESCE(p_lev,0)) - fee;
+
+                    IF p_amount > 0 THEN
+                        p_open := p_open * ((GREATEST(p_amount - delta,0)) / NULLIF(p_amount,0));
+                    END IF;
+                    p_amount := GREATEST(p_amount - delta, 0);
+                    p_avg    := CASE WHEN p_amount>0 THEN p_open / p_amount ELSE 0 END;
+
+                    UPDATE bot_positions
+                       SET amount = p_amount,
+                           open_cost = p_open,
+                           average_cost = p_avg,
+                           realized_pnl = p_real,
+                           leverage = p_lev
+                     WHERE id = p_id;
+
+                    -- İstersen sıfırı sil
+                    -- DELETE FROM bot_positions WHERE id=p_id AND amount=0;
+                END IF;
+            END IF;
+
+        -- Yön: SHORT
+        ELSIF pos_side = 'short' THEN
+            IF side_txt = 'sell' THEN
+                -- artırma (open/add)
+                IF p_id IS NULL THEN
+                    INSERT INTO bot_positions (user_id, bot_id, symbol, position_side, leverage,
+                                               amount, average_cost, open_cost, realized_pnl)
+                    VALUES (v_user_id, v_bot_id, sym, 'short', lev,
+                            delta, px, px*delta, 0 - fee);
+                ELSE
+                    p_real   := p_real - fee;
+                    p_amount := p_amount + delta;
+                    p_open   := p_open + (px * delta);
+                    p_avg    := CASE WHEN p_amount>0 THEN p_open / p_amount ELSE 0 END;
+
+                    UPDATE bot_positions
+                       SET amount = p_amount,
+                           open_cost = p_open,
+                           average_cost = p_avg,
+                           realized_pnl = p_real,
+                           leverage = p_lev
+                     WHERE id = p_id;
+                END IF;
+
+            ELSIF side_txt = 'buy' THEN
+                -- azaltma (close/partial)
+                IF p_id IS NULL THEN
+                    RETURN; -- kapatılacak short yok
+                ELSE
+                    p_real := p_real + ((px - COALESCE(p_avg,0)) * delta * COALESCE(p_lev,0) * (-1)) - fee;
+
+                    IF p_amount > 0 THEN
+                        p_open := p_open * ((GREATEST(p_amount - delta,0)) / NULLIF(p_amount,0));
+                    END IF;
+                    p_amount := GREATEST(p_amount - delta, 0);
+                    p_avg    := CASE WHEN p_amount>0 THEN p_open / p_amount ELSE 0 END;
+
+                    UPDATE bot_positions
+                       SET amount = p_amount,
+                           open_cost = p_open,
+                           average_cost = p_avg,
+                           realized_pnl = p_real,
+                           leverage = p_lev
+                     WHERE id = p_id;
+
+                    -- İstersen sıfırı sil
+                    -- DELETE FROM bot_positions WHERE id=p_id AND amount=0;
+                END IF;
+            END IF;
+        END IF;
+
+        RETURN;
+    END IF;
+
+END;
+
+$function$
+
+
+**************************************************
+
+FUNCTION: bot_snapshots
+------------------------------
+CREATE OR REPLACE FUNCTION public.bot_snapshots(p_ts timestamp with time zone)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    ----------------------------------------------------------------
+    -- 1) TÜM BOTLAR İÇİN SNAPSHOT EKLE
+    ----------------------------------------------------------------
+    INSERT INTO bot_snapshots (
+        bot_id,
+        "timestamp",
+        balance_usdt,
+        total_profit,
+        pnl_ratio,
+        fullness,
+        active
+    )
+    SELECT
+        b.id                                                AS bot_id,
+        p_ts                                                AS "timestamp",
+        COALESCE(b.current_usd_value, 0)                    AS balance_usdt,
+        COALESCE(b.current_usd_value, 0) - COALESCE(b.initial_usd_value, 0) AS total_profit,
+        CASE
+            WHEN COALESCE(b.initial_usd_value, 0) <> 0
+            THEN (
+                (COALESCE(b.current_usd_value, 0) - COALESCE(b.initial_usd_value, 0))
+                / b.initial_usd_value
+            ) * 100
+            ELSE NULL
+        END                                                 AS pnl_ratio,
+        b.fullness                                          AS fullness,
+        b.active                                            AS active
+    FROM bots b;
+
+    ----------------------------------------------------------------
+    -- 2) VERİ BUDAMA (PRUNING): Her bot için en fazla 1000 satır
+    --    - Baş/son 50 kaydı koru
+    --    - Ortadan her 5'inci kaydı öncelikli sil; yetmezse en eski
+    --      ortalardan tamamla (tek geçişte, partitioned LIMIT ile)
+    ----------------------------------------------------------------
+    WITH stats AS (
+        SELECT bot_id,
+               COUNT(*) AS total_rows,
+               COUNT(*) - 1000 AS delete_count
+        FROM bot_snapshots
+        GROUP BY bot_id
+        HAVING COUNT(*) > 1000
+    ),
+    ranked AS (
+        SELECT
+            bs.id,
+            bs.bot_id,
+            bs."timestamp",
+            ROW_NUMBER() OVER (PARTITION BY bs.bot_id ORDER BY bs."timestamp") AS rn,
+            s.total_rows,
+            s.delete_count
+        FROM bot_snapshots bs
+        JOIN stats s ON s.bot_id = bs.bot_id
+    ),
+    middle AS (
+        SELECT *,
+               ROW_NUMBER() OVER (PARTITION BY bot_id ORDER BY rn) AS mid_rownum
+        FROM ranked
+        WHERE rn > 50 AND rn < (total_rows - 50)
+    ),
+    picked AS (
+        -- Önce her 5'inciyi tercih et, yetmezse kalanları rn sırasıyla doldur
+        SELECT
+            id,
+            bot_id,
+            ROW_NUMBER() OVER (
+                PARTITION BY bot_id
+                ORDER BY CASE WHEN (mid_rownum % 5) = 0 THEN 0 ELSE 1 END,
+                         rn
+            ) AS pick_ord,
+            delete_count
+        FROM middle
+    ),
+    to_delete AS (
+        SELECT id
+        FROM picked
+        WHERE pick_ord <= delete_count
+    )
+    DELETE FROM bot_snapshots bs
+    USING to_delete td
+    WHERE bs.id = td.id;
+
+    RETURN;
+END;
+$function$
+
+
+**************************************************
+
+FUNCTION: bot_updates
+------------------------------
+CREATE OR REPLACE FUNCTION public.bot_updates()
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$BEGIN
+    ----------------------------------------------------------------
+    -- SPOT botlar için güncelleme
+    ----------------------------------------------------------------
+    WITH spot_agg AS (
+        SELECT
+            h.bot_id,
+            COALESCE(SUM(h.realized_pnl + h.unrealized_pnl), 0)::numeric AS pnl_sum,
+            COALESCE(SUM(h.amount * blp.close), 0)::numeric            AS exposure_usd
+        FROM bot_holdings h
+        JOIN binance_last_price blp
+          ON blp.coin_id = h.symbol
+         AND blp."interval" = '1m'
+        GROUP BY h.bot_id
+    )
+    UPDATE bots b
+    SET current_usd_value = ROUND(b.initial_usd_value + sa.pnl_sum, 2),
+        fullness          = ROUND(sa.exposure_usd, 8)
+    FROM spot_agg sa
+    WHERE b.id = sa.bot_id
+      AND b.bot_type = 'spot';
+
+    ----------------------------------------------------------------
+    -- FUTURES botlar için güncelleme
+    ----------------------------------------------------------------
+    WITH fut_agg AS (
+        SELECT
+            p.bot_id,
+            COALESCE(SUM(p.realized_pnl + p.unrealized_pnl), 0)::numeric AS pnl_sum,
+            COALESCE(SUM(p.amount * blp.close), 0)::numeric              AS exposure_usd
+        FROM bot_positions p
+        JOIN binance_last_price blp
+          ON blp.coin_id = p.symbol
+         AND blp."interval" = '1m'
+        GROUP BY p.bot_id
+    )
+    UPDATE bots b
+    SET current_usd_value = ROUND(b.initial_usd_value + fa.pnl_sum, 2),
+        fullness          = ROUND(fa.exposure_usd, 8)
+    FROM fut_agg fa
+    WHERE b.id = fa.bot_id
+      AND b.bot_type = 'futures';
+
+    ----------------------------------------------------------------
+    -- SPOT yüzde dağılımları
+    ----------------------------------------------------------------
+    UPDATE bot_holdings h
+    SET percentage = ROUND(
+        CASE
+            WHEN COALESCE(b.current_usd_value, 0) = 0 THEN 0
+            ELSE 100::numeric *
+                 (COALESCE(h.amount, 0) * COALESCE(blp.close, 0)) /
+                 NULLIF(b.current_usd_value, 0)
+        END
+    , 2)
+    FROM bots b, binance_last_price blp
+    WHERE b.id = h.bot_id
+      AND b.bot_type = 'spot'
+      AND blp.coin_id   = h.symbol
+      AND blp."interval" = '1m';
+
+    ----------------------------------------------------------------
+    -- FUTURES yüzde dağılımları
+    ----------------------------------------------------------------
+    UPDATE bot_positions p
+    SET percentage = ROUND(
+        CASE
+            WHEN COALESCE(b.current_usd_value, 0) = 0 THEN 0
+            ELSE 100::numeric *
+                 (COALESCE(p.amount, 0) * COALESCE(blp.close, 0)) /
+                 NULLIF(b.current_usd_value, 0)
+        END
+    , 2)
+    FROM bots b, binance_last_price blp
+    WHERE b.id = p.bot_id
+      AND b.bot_type = 'futures'
+      AND blp.coin_id   = p.symbol
+      AND blp."interval" = '1m';
+
+    RETURN;
+END;$function$
+
+
+**************************************************
+
+FUNCTION: enqueue_system_event
+------------------------------
+CREATE OR REPLACE FUNCTION public.enqueue_system_event()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    v_payload JSONB;
+    v_base_name VARCHAR(50); -- Trigger'dan gelen kök isim (örn: 'API')
+    v_final_event VARCHAR(50); -- Python'a gidecek net isim (örn: 'API_ADD')
+BEGIN
+    -- 1. Kök ismi al (Trigger tanımlarken verdiğimiz isim)
+    v_base_name := TG_ARGV[0];
+
+    -- 2. Olayın Adını Dinamik Olarak Belirle (Milisaniyelik işlem)
+    IF TG_OP = 'INSERT' THEN
+        v_final_event := v_base_name || '_ADD'; -- Örn: API_ADD
+
+    ELSIF TG_OP = 'DELETE' THEN
+        v_final_event := v_base_name || '_DELETE'; -- Örn: API_DELETE
+
+    ELSIF TG_OP = 'UPDATE' THEN
+        -- Sadece 'api_keys' tablosuna özel akıllı kontrol
+        IF TG_TABLE_NAME = 'api_keys' THEN
+            -- Futures durumu değişmiş mi?
+            IF (OLD.is_futures_enabled = false AND NEW.is_futures_enabled = true) THEN
+                v_final_event := 'FUTURES_ENABLED';
+            ELSIF (OLD.is_futures_enabled = true AND NEW.is_futures_enabled = false) THEN
+                v_final_event := 'FUTURES_DISABLED';
+            ELSE
+                -- Futures değişmediyse normal güncellemedir
+                v_final_event := v_base_name || '_UPDATE'; 
+            END IF;
+        ELSE
+            -- Diğer tablolar (fiyat vs.) için standart
+            v_final_event := v_base_name || '_UPDATE';
+        END IF;
+    END IF;
+
+    -- 3. Veriyi Paketle (Payload)
+    v_payload = jsonb_build_object(
+        'action', TG_OP,
+        'table', TG_TABLE_NAME,
+        'id', COALESCE(NEW.id, OLD.id),
+        -- Sadece ihtiyacımız olan veriyi alıyoruz
+        'data', CASE WHEN TG_OP = 'DELETE' THEN row_to_json(OLD)::jsonb ELSE row_to_json(NEW)::jsonb END
+    );
+
+    -- 4. Kuyruğa Yaz (Özelleşmiş isimle)
+    INSERT INTO public.system_event_queue (event_type, payload)
+    VALUES (v_final_event, v_payload);
+
+    -- 5. Python'u Dürt (Sadece uyandırır, veri taşımaz)
+    PERFORM pg_notify('system_event_signal', 'wake_up');
+
+    RETURN NULL;
+END;
+$function$
+
+
+**************************************************
+
+FUNCTION: minute_calculation
+------------------------------
+CREATE OR REPLACE FUNCTION public.minute_calculation(p_ts timestamp with time zone, p_interval text)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    IF p_interval = '1m' THEN
+        -- 1m için tüm hesaplamalar
+        PERFORM positions_calculate();
+        PERFORM bot_updates();
+
+        -- Bildirim gönder
+        PERFORM pg_notify('new_data', p_interval);
+
+        -- Snapshot al
+        PERFORM bot_snapshots(p_ts);
+    ELSE
+        -- 1m değilse sadece NOTIFY
+        PERFORM pg_notify('new_data', p_interval);
+    END IF;
+
+    RETURN;
+END;
+$function$
+
+
+**************************************************
+
+FUNCTION: notify_listenkey_refresh_on_update
+------------------------------
+CREATE OR REPLACE FUNCTION public.notify_listenkey_refresh_on_update()
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    -- Python servisini dinleyen kanala bildirim gönder.
+    -- Payload olarak basit bir bilgilendirme mesajı ekliyoruz.
+    PERFORM pg_notify(
+        'run_listenkey_refresh',
+        json_build_object(
+            'message', '30m BTC price updated. Refreshing keys.'
+        )::text
+    );
+END;
+$function$
+
+
+**************************************************
+
+FUNCTION: positions_calculate
+------------------------------
+CREATE OR REPLACE FUNCTION public.positions_calculate()
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    -- HOLDINGS: (last_close - average_cost) * amount
+    UPDATE bot_holdings h
+    SET unrealized_pnl = ROUND(
+        (COALESCE(blp.close, 0)::numeric - COALESCE(h.average_cost, 0)::numeric)
+        * COALESCE(h.amount, 0)::numeric
+    , 8)
+    FROM binance_last_price blp
+    WHERE blp.coin_id   = h.symbol
+      AND blp."interval" = '1m';
+
+    -- POSITIONS: sign * (last_close - average_cost) * leverage * amount
+    UPDATE bot_positions p
+    SET unrealized_pnl = ROUND(
+        (CASE WHEN LOWER(p.position_side) = 'short' THEN -1 ELSE 1 END) *
+        (COALESCE(blp.close, 0)::numeric - COALESCE(p.average_cost, 0)::numeric) *
+        COALESCE(p.leverage, 1)::numeric *
+        COALESCE(p.amount, 0)::numeric
+    , 8)
+    FROM binance_last_price blp
+    WHERE blp.coin_id   = p.symbol
+      AND blp."interval" = '1m';
+
+    RETURN;
+END;
+$function$
+
+
+**************************************************
+
+FUNCTION: prune_bot_logs_stmt
+------------------------------
+CREATE OR REPLACE FUNCTION public.prune_bot_logs_stmt()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+  -- Bu INSERT ifadesinde etkilenen bot_id'ler
+  WITH affected AS (
+    SELECT DISTINCT bot_id FROM new_rows
+  ),
+  ranked AS (
+    SELECT bl.id,
+           ROW_NUMBER() OVER (
+             PARTITION BY bl.bot_id
+             ORDER BY bl.created_at DESC, bl.id DESC
+           ) rn
+    FROM bot_logs bl
+    JOIN affected a ON a.bot_id = bl.bot_id
+  ),
+  to_del AS (
+    SELECT id FROM ranked WHERE rn > 200
+  )
+  DELETE FROM bot_logs b
+  USING to_del d
+  WHERE b.id = d.id;
+
+  RETURN NULL;
+END;
+$function$
+
+
+**************************************************
+
+FUNCTION: trg_bot_trades_apply_dispatch
+------------------------------
+CREATE OR REPLACE FUNCTION public.trg_bot_trades_apply_dispatch()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        PERFORM apply_trades(NEW, 0);
+
+    ELSIF TG_OP = 'UPDATE' THEN
+        IF NEW.amount_state IS DISTINCT FROM OLD.amount_state THEN
+            PERFORM apply_trades(NEW, COALESCE(OLD.amount_state,0));
+        END IF;
+    END IF;
+
+    RETURN NULL; -- AFTER trigger
+END;
+$function$
+
+
+**************************************************
+
+FUNCTION: trg_minute_calc_dispatch
+------------------------------
+CREATE OR REPLACE FUNCTION public.trg_minute_calc_dispatch()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    -- Sadece BTCUSDT ve 1m için tetikle
+    IF NEW.coin_id <> 'BTCUSDT' THEN
+        RETURN NULL;
+    END IF;
+
+    -- UPDATE ise, timestamp değişmediyse boşuna çalıştırma
+    IF TG_OP = 'UPDATE' THEN
+        IF NEW."timestamp" IS NOT DISTINCT FROM OLD."timestamp" THEN
+            RETURN NULL;
+        END IF;
+    END IF;
+
+    -- (İsteğe bağlı) En güncel olup olmadığını kontrol etmek istersen:
+    -- Örn. NEW."timestamp" < (SELECT "timestamp" FROM binance_last_price WHERE coin_id='BTCUSDT' AND interval='1m')
+    -- ama burada zaten NEW kayıt kendisi olduğundan genelde gerek yok.
+
+    -- Orkestratörü çağır
+    PERFORM minute_calculation(NEW.timestamp,NEW.interval);
+
+	IF NEW.interval <> '5m' THEN
+		PERFORM api_snapshots(NEW.timestamp);
+	END IF;
+    -- AFTER trigger olduğumuz için return NEW/NULL fark etmez; NULL da olur
+    RETURN NULL;
+END;
+$function$
+
+
+**************************************************
+

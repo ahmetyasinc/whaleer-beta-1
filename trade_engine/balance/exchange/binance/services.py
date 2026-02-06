@@ -6,9 +6,9 @@ import hashlib
 from typing import Optional, List
 from urllib.parse import urlencode
 
-from backend.trade_engine.balance.exchange.base import BaseExchangeService
-from backend.trade_engine.balance.definitions import MarketType
-from backend.trade_engine.balance.core.network_binance import BinanceNetworkAdapter
+from trade_engine.balance.exchange.base import BaseExchangeService
+from trade_engine.balance.definitions import MarketType
+from trade_engine.balance.core.network_binance import BinanceNetworkAdapter
 logger = logging.getLogger("BinanceService")
 
 class BinanceService(BaseExchangeService):

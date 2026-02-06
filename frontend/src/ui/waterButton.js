@@ -1,96 +1,94 @@
-'use client';
+'use client'
 
 import React from 'react';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
 
-const Button = ({ onClick, icon, spinning }) => {
+const Button = ({ onClick, icon }) => {
   const { t } = useTranslation('notFound');
 
   return (
     <StyledWrapper>
-      <button className="button" onClick={onClick}>
-        <span className="liquid" />
-        <span className="btn-content text-black">
-          {icon}
-          <span className="btn-txt text-black text-sm">{t('goHome')}</span>
-        </span>
+      <button className="drip-button mt-8" onClick={onClick}>
+        {icon}
+        <span className="btn-txt text-white text-sm">{t('goHome')}</span>
+        {/* Drip elemanları */}
+        {[...Array(10)].map((_, i) => (
+          <span key={i} className="drip" />
+        ))}
       </button>
     </StyledWrapper>
   );
-};
+}
 
 const StyledWrapper = styled.div`
-  .button {
-    background-color: #ffff;
-    border: 0px;
-    outline: 0px;
-    color: #fff;
-    width: 290px;
-    padding: 10px;
-    border-radius: 50px;
+  .drip-button {
+    display: flex;           
+    align-items: center;   
+    justify-content: center;  
+    gap: 8px; /* Gap biraz küçültüldü */
     position: relative;
-    overflow: hidden;
+    background-color: #007bff;
+    color: white;
+    /* Boyutlar küçültüldü */
+    padding: 0.6em 1.2em; 
+    font-size: 14px; 
     cursor: pointer;
-    margin-top: 20px;
+    overflow: hidden;
+    border-radius: 8px;
+    transition: background-color 0.01s ease;
+    border: 3px solid #0056b3; /* Kenarlık inceltildi */
+    z-index: 30;
   }
 
-  .btn-content {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    position: relative;
-    z-index: 1;
+  .drip-button:hover {
+    background-color: #004da0;
   }
 
-  .btn-txt {
-    font-size: 18px;
-    font-family: sans-serif;
-    letter-spacing: 1.5px;
-  }
-
-  .liquid {
-    background-color: #2893eb;
-    width: 100%;
-    height: 70px;
+  .drip-button .drip {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    box-shadow: inset 5px -5px 25px #104e81,
-                inset -5px 0px 25px #104e81;
+    width: 10px; /* Damla boyutu küçültüldü */
+    height: 10px;
+    background-color: #007bff;
+    border-radius: 50%;
+    opacity: 0;
+    animation: drip 0s ease-in-out;
+    z-index: 100;
   }
 
-  .liquid::after,
-  .liquid::before {
-    content: '';
-    width: 450px;
-    height: 400px;
-    position: absolute;
-    left: -110px;
-    top: -380px;
-    border-radius: 45%;
-    animation: animate 5s linear infinite;
-    z-index: 0;
+  .drip-button:hover .drip {
+    animation: drip 1s ease-in-out infinite;
   }
 
-  .liquid::after {
-    background: #d4d4d8
-;
-    animation-delay: 2s;
+  .drip-button:active {
+    background-color: #003a77;
   }
 
-  .liquid::before {
-    background: rgb(68, 160, 235);
-    animation-delay: 1.8s;
-    border-radius: 40%;
-  }
+  /* Staggered efektleri (aynı kaldı, sadece damla sayılarını map ile optimize edebilirsiniz) */
+  .drip-button .drip:nth-child(1) { left: 0%; animation-delay: 0.8s; }
+  .drip-button .drip:nth-child(2) { left: 11%; animation-delay: 0.2s; }
+  .drip-button .drip:nth-child(3) { left: 20%; animation-delay: 0.4s; }
+  .drip-button .drip:nth-child(4) { left: 31%; animation-delay: 0.7s; }
+  .drip-button .drip:nth-child(5) { left: 39%; animation-delay: 0.3s; }
+  .drip-button .drip:nth-child(6) { left: 49%; animation-delay: 0.6s; }
+  .drip-button .drip:nth-child(7) { left: 61%; animation-delay: 1s; }
+  .drip-button .drip:nth-child(8) { left: 69%; animation-delay: 0.1s; }
+  .drip-button .drip:nth-child(9) { left: 79%; animation-delay: 0.9s; }
+  .drip-button .drip:nth-child(10) { left: 90%; animation-delay: 0.5s; }
 
-  @keyframes animate {
-    from {
-      transform: rotate(0deg);
+  @keyframes drip {
+    0% {
+      top: 60%;
+      opacity: 1;
     }
-    to {
-      transform: rotate(360deg);
+    50% {
+      top: 100%;
+      opacity: 0.7;
+    }
+    100% {
+      opacity: 0;
+      top: 140%;
+      transform: scaleY(1.5);
     }
   }
 `;

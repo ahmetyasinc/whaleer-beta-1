@@ -7,28 +7,28 @@ const CandleLoader = () => {
   const chartData = useMemo(() => {
     const data = [
       // 1-5: Yükselen başlangıç
-      { open: 100, close: 116, high: 121, low: 99 },
+      { open: 100, close: 116, high: 121, low: 94 },
       { open: 116, close: 118, high: 123, low: 110.4 },
       { open: 118.2, close: 122, high: 126.6, low: 108.3 },
-      { open: 123.45, close: 120.55, high: 134.3, low: 130.7 },
+      { open: 123.45, close: 120.55, high: 134.3, low: 110.7 },
       { open: 120.55, close: 133.6, high: 140.9, low: 117.18 },
 
       // 6-10: Zirveye tırmanış ve ilk düşüş
-      { open: 133.57, close: 133.33, high: 148.3, low: 130.7 }, // Düşüş (fitilli)
+      { open: 133.57, close: 133.33, high: 151.3, low: 130.7 }, // Düşüş (fitilli)
       { open: 131.65, close: 124.3, high: 139.8, low: 119.1 }, // Büyük düşüş
-      { open: 124.3, close: 103.86, high: 125.4, low: 102.5 }, // Zirve sonrası en büyük düşüş
-      { open: 104, close: 116.76, high: 121.8, low: 103.7 }, // Düşüş devamı
+      { open: 124.3, close: 103.86, high: 125.4, low: 98.5 }, // Zirve sonrası en büyük düşüş
+      { open: 104, close: 116.76, high: 121.8, low: 100.7 }, // Düşüş devamı
       { open: 117.5, close: 127.67, high: 141.2, low: 117.4 }, // Büyük yükseliş (dipten dönüş)
 
       // 11-15: Zirve bölgesi (dalgalı)
       { open: 127.67, close: 151.54, high: 151.55, low: 127.4 }, // Zirveye çıkış
       { open: 153.83, close: 159.13, high: 166.5, low: 145.51 }, // Zirve mum (fitilli)
-      { open: 160.34, close: 158.05, high: 176, low: 151.78 }, // Zirveden ilk düşüş
+      { open: 160.34, close: 158.05, high: 178.5, low: 151.78 }, // Zirveden ilk düşüş
       { open: 158.17, close: 150.81, high: 169.86, low: 148.76 }, // Yatay/düşüş
       { open: 151.3, close: 157.93, high: 165.9, low: 142.62 }, // Düşüş
       { open: 158.41, close: 153.22, high: 159.5, low: 141.05 }, // Düşüş (uzun üst fitilli)
       { open: 153.22, close: 150.1, high: 165.16, low: 143.1 },
-      { open: 148.76, close: 157.02, high: 157.44, low: 134.42 }, // Hafif yükseliş
+      { open: 148.76, close: 157.02, high: 157.44, low: 132.42 }, // Hafif yükseliş
     ];
 
     // Normalizasyon için min/max
@@ -42,18 +42,18 @@ const CandleLoader = () => {
       {/* Animasyon Keyframes ve Shadow Efekti Tanımı */}
       <style jsx>{`
         @keyframes candle-cycle {
-          0% { opacity: 0; transform: scaleY(0.8); }
+          0% { opacity: 0; transform: scaleY(0); }
           10% { opacity: 1; transform: scaleY(1); }
           50% { opacity: 1; transform: scaleY(1); }
-          60% { opacity: 0; transform: scaleY(0.8); }
-          100% { opacity: 0; transform: scaleY(0.8); }
+          60% { opacity: 0; transform: scaleY(0.2); }
+          100% { opacity: 0; transform: scaleY(0.2); }
         }
         .animate-candle {
-          animation: candle-cycle 3s infinite ease-in-out;
+          animation: candle-cycle 2.5s infinite ease-in-out;
         }
         /* Mum ve fitillere beyaz parlama efekti */
         .white-glow {
-          filter: drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.4));
+          filter: drop-shadow(0 0 2.5px rgba(255, 255, 255));
         }
       `}</style>
 
@@ -71,7 +71,7 @@ const CandleLoader = () => {
           const heightBody = (Math.abs(candle.open - candle.close) / range) * 100;
 
           // Gecikme Hesaplama (Daha hızlı dalgalanma için 0.06s)
-          const delay = `${i * 0.06}s`;
+          const delay = `${i * 0.065}s`;
 
           return (
             <div

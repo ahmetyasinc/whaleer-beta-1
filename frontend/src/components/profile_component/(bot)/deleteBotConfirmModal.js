@@ -11,29 +11,37 @@ export default function DeleteBotConfirmModal({ isOpen, onClose, onConfirm }) {
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           aria-modal="true"
           role="dialog"
-          aria-labelledby="delete-modal-title"
-          aria-describedby="delete-modal-desc"
         >
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/85 backdrop-blur-md"
+            onClick={onClose}
+          />
+
+          {/* Modal */}
           <motion.div
-            className="bg-zinc-950 text-zinc-100 rounded-xl border border-zinc-800 shadow-2xl w-full max-w-sm flex flex-col overflow-hidden"
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
+            className="relative bg-zinc-950 text-zinc-100 rounded-2xl border border-zinc-800 shadow-2xl w-full max-w-sm flex flex-col overflow-hidden"
+            initial={{ scale: 0.95, opacity: 0, y: 10 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 10 }}
           >
+            {/* Üst Kırmızı Işıma */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-red-500/50 to-transparent" />
+
             {/* Header */}
-            <div className="flex justify-between items-center px-6 py-4 border-b border-zinc-800 bg-zinc-950">
-              <h2 id="delete-modal-title" className="text-lg font-semibold tracking-wide text-zinc-50">
+            <div className="relative flex justify-between items-center px-6 py-5 border-b border-zinc-900">
+              <h2 className="text-lg font-semibold text-zinc-50 tracking-tight">
                 {t("title")}
               </h2>
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors duration-100"
+                className="p-2 -mr-2 rounded-full text-zinc-500 hover:text-white hover:bg-zinc-800 transition-all"
               >
                 <IoClose className="text-xl" />
               </button>
@@ -41,33 +49,38 @@ export default function DeleteBotConfirmModal({ isOpen, onClose, onConfirm }) {
 
             {/* Content */}
             <div className="p-6">
-              <div className="flex items-start gap-4">
-                <IoWarningOutline className="text-3xl text-orange-500 shrink-0" />
-                <div className="space-y-2">
-                  <p id="delete-modal-desc" className="text-sm text-zinc-300 leading-relaxed">
+              <div className="flex gap-4">
+                <div className="flex-shrink-0">
+                  <div className="p-2.5 bg-orange-500/10 rounded-xl">
+                    <IoWarningOutline className="text-2xl text-orange-500" />
+                  </div>
+                </div>
+
+                <div className="flex flex-col justify-center gap-1">
+                  <p className="text-[15px] font-medium text-zinc-200 leading-snug">
                     {t("warning")}
                   </p>
-                  <p className="text-sm text-zinc-500">
+                  <p className="text-sm text-zinc-500 leading-relaxed">
                     {t("irreversible")}
                   </p>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 mt-8">
+              {/* Footer Buttons */}
+              <div className="flex items-center justify-end gap-3 mt-8">
                 <button
                   onClick={onClose}
-                  className="px-4 py-2 text-sm font-medium text-zinc-300 bg-zinc-800 hover:bg-zinc-700 rounded-md transition-colors"
-                  aria-label={t("actions.cancel")}
+                  className="flex-1 sm:flex-none px-5 py-2.5 text-sm font-medium text-zinc-400 bg-transparent hover:text-zinc-100 hover:bg-zinc-900 border border-zinc-800 rounded-lg transition-all"
                 >
                   {t("actions.cancel")}
                 </button>
+
                 <button
                   onClick={() => {
                     onConfirm();
                     onClose();
                   }}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors shadow-lg shadow-red-900/20"
-                  aria-label={t("actions.delete")}
+                  className="flex-1 sm:flex-none px-5 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-500 rounded-lg transition-all shadow-lg shadow-red-900/20 active:scale-95"
                 >
                   {t("actions.delete")}
                 </button>

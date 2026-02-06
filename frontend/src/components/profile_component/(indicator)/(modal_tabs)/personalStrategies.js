@@ -239,18 +239,36 @@ const PersonalStrategies = ({ closeModal }) => {
       {/* Silme Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-[60]">
-          <div className="bg-zinc-900 text-zinc-200 rounded-md w-[400px] p-6 shadow-xl relative border border-zinc-800">
-            <h2 className="text-lg font-bold mb-4 text-zinc-100">{t("titles.deleteConfirm")}</h2>
-            <p className="text-zinc-400">{t("messages.deleteConfirmQuestion", { name: toDelete?.name })}</p>
-            <div className="flex justify-end mt-4 gap-2">
+          <div className="bg-zinc-900 text-zinc-200 rounded-lg w-[400px] shadow-xl border border-zinc-800 overflow-hidden">
+
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-zinc-800 bg-zinc-900/80">
+              <h2 className="text-lg font-semibold text-zinc-100">
+                {t("titles.deleteConfirm")}
+              </h2>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-5">
+              <p className="text-zinc-400 leading-relaxed">
+                {t("messages.deleteConfirmQuestion", { name: toDelete?.name })}
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-zinc-800 flex justify-end gap-2 bg-zinc-900/80">
               <button
-                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded transition-colors"
-                onClick={() => { setShowDeleteModal(false); setToDelete(null); }}
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-2xl border border-zinc-700 transition-colors"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setToDelete(null);
+                }}
               >
                 {t("buttons.no")}
               </button>
+
               <button
-                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded transition-colors"
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 border border-gray-400 text-white rounded-2xl shadow-sm transition-colors"
                 onClick={confirmDelete}
               >
                 {t("buttons.yesDelete")}
@@ -259,6 +277,7 @@ const PersonalStrategies = ({ closeModal }) => {
           </div>
         </div>
       )}
+
     </div>
   );
 };

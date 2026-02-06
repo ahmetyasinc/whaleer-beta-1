@@ -70,7 +70,7 @@ const LeftMenu = ({ locale }) => {
     { href: "/profile/backtest", icon: <BiLineChart />, label: t("backtest") },
     { href: "/profile/bot", icon: <LuBot />, label: t("bots") },
     { href: "/profile/botmarket", icon: <MdShoppingCart />, label: t("botmarket") },
-    { href: "/profile/showcase", icon: <CiCompass1 />, label: t("showcase") },
+    //  { href: "/profile/showcase", icon: <CiCompass1 />, label: t("showcase") },
     { href: "/profile/apiconnect", icon: <BiBroadcast />, label: t("apiconnect") },
     { href: "/profile/support", icon: <BiSupport />, label: t("support") },
     { href: "/profile/settings", icon: <AiOutlineSetting />, label: t("settings") },

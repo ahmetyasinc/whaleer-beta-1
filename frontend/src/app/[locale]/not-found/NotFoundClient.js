@@ -12,6 +12,7 @@ import FishAquarium from '@/components/profile_component/FishAquarium';
 import JellyfishAquarium from '@/components/profile_component/jellyFish';
 import './notFound.css';
 import Salmon from '@/components/profile_component/salmon';
+import Crabs from '@/components/profile_component/crab';
 
 export default function NotFound({ locale }) {
   const { t } = useTranslation('notFound');
@@ -233,6 +234,7 @@ export default function NotFound({ locale }) {
       <FishAquarium count={13} />
       <JellyfishAquarium count={1} />
       <Salmon />
+      <Crabs />
 
       {/* İçerik */}
       <div className="min-h-screen flex items-center justify-between px-20 mt-[-80px] relative z-10">

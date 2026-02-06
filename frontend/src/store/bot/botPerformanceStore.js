@@ -14,11 +14,31 @@ export const useBotPerformanceStore = create((set, get) => ({
         };
 
         // 2. BACKEND VERİLERİ (Simüle edilen / API'den gelecek veriler)
+
+
+        const workTime = initialValues.workTime !== undefined ? Number(initialValues.workTime) : Math.floor(Math.random() * 1400);
+        const powerPoint = initialValues.powerPoint !== undefined ? Number(initialValues.powerPoint) : Math.floor(Math.random() * 100);
+        const currentBalance = initialValues.currentBalance !== undefined ? Number(initialValues.currentBalance) : inputs.initialBalance * (1 + (Math.random() * 0.4 - 0.1));
+
+        let exposure;
+        if (initialValues.exposure) {
+            if (isFutures) {
+                exposure = {
+                    long: Number(initialValues.exposure.long) || 0,
+                    short: Number(initialValues.exposure.short) || 0
+                };
+            } else {
+                exposure = Number(initialValues.exposure.spot) || 0;
+            }
+        } else {
+            exposure = isFutures ? { long: Math.floor(Math.random() * 100), short: Math.floor(Math.random() * 100) } : Math.floor(Math.random() * 100);
+        }
+
         const backend = {
-            workTime: Math.floor(Math.random() * 1400), // Saat cinsinden integer (Örn: 125 sa)
-            powerPoint: Math.floor(Math.random() * 100),
-            currentBalance: inputs.initialBalance * (1 + (Math.random() * 0.4 - 0.1)),
-            exposure: isFutures ? { long: Math.floor(Math.random() * 100), short: Math.floor(Math.random() * 100) } : Math.floor(Math.random() * 100)
+            workTime,
+            powerPoint,
+            currentBalance,
+            exposure
         };
 
         // 3. FRONTEND HESAPLAMALARI (Derived Data)

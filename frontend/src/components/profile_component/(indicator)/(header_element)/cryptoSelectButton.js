@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
-import axios from "axios";
+import api from "@/api/axios";
 import { IoMdSearch } from "react-icons/io";
 import { BsPinAngle, BsPinAngleFill } from "react-icons/bs";
 import { FiSearch } from "react-icons/fi";
@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 
 import i18n from "@/i18n";
 
-axios.defaults.withCredentials = true;
+// axios.defaults.withCredentials = true;
 
 const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
   const { t } = useTranslation("indicator");
@@ -40,9 +40,7 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
   useEffect(() => {
     const fetchCoins = async () => {
       try {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/get-coin-list/`
-        );
+        const response = await api.get("/get-coin-list/");
 
         if (response.data && response.data.coins) {
           const coins = response.data.coins.map((coin) => ({
@@ -51,6 +49,7 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
             symbol: coin.symbol,
             binance_symbol: coin.binance_symbol,
             tick_size: coin.tick_size,
+            market_type: coin.market_type, // Add market_type
           }));
 
           const pinnedCoins = response.data.coins
@@ -61,6 +60,7 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
               symbol: coin.symbol,
               binance_symbol: coin.binance_symbol,
               tick_size: coin.tick_size,
+              market_type: coin.market_type,
             }));
 
           setCryptosList(coins);
@@ -84,10 +84,7 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
       togglePinned(crypto);
 
       try {
-        await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/pin-binance_coin/`,
-          { coin_id: crypto.id }
-        );
+        await api.post("/pin-binance_coin/", { coin_id: crypto.id });
       } catch (error) {
         console.error("Pinleme işlemi sırasında hata oluştu:", error);
       }
@@ -98,12 +95,9 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
     togglePinned(crypto);
 
     try {
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/unpin-binance-coin/`,
-        {
-          data: { coin_id: crypto.id },
-        }
-      );
+      await api.delete("/unpin-binance-coin/", {
+        data: { coin_id: crypto.id },
+      });
     } catch (error) {
       console.error("Pin kaldırma işlemi sırasında hata oluştu:", error);
     }
@@ -124,8 +118,9 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
   if (activeFilter === "watchlist") {
     baseList = sortedCryptos.filter((c) => watchSet.has(c.id));
   } else if (activeFilter === "spot") {
-    // TODO: spot coin filter
-    baseList = []; // şimdilik boş
+    baseList = sortedCryptos.filter((c) => c.market_type === 'spot');
+  } else if (activeFilter === "futures") {
+    baseList = sortedCryptos.filter((c) => c.market_type === 'futures');
   } else if (activeFilter === "takas") {
     // TODO: takas coin filter
     baseList = []; // şimdilik boş
@@ -163,17 +158,31 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
         title={shortcutTitle}
       >
         <IoMdSearch className="text-[19px] mr-2" />
-        <span className="ml-3">
-          {selectedCrypto
-            ? `${selectedCrypto.name} (${selectedCrypto.symbol})`
-            : "Kripto seçin"}
+        <span className="ml-3 flex items-center gap-2 overflow-hidden">
+          {selectedCrypto ? (
+            <>
+              <span className="truncate">
+                {selectedCrypto.name} <span className="text-zinc-500">({selectedCrypto.symbol})</span>
+              </span>
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded border leading-none ${selectedCrypto.market_type === "futures"
+                    ? "border-orange-900 text-orange-400 bg-orange-900/20"
+                    : "border-blue-900 text-blue-400 bg-blue-900/20"
+                  }`}
+              >
+                {selectedCrypto.market_type === "futures" ? "FUT" : "SPOT"}
+              </span>
+            </>
+          ) : (
+            "Kripto seçin"
+          )}
         </span>
       </button>
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 animate-in fade-in duration-200">
-          <div className="bg-zinc-900 text-white rounded-xl p-6 w-[700px] h-[calc(100vh-36px)] shadow-2xl border border-zinc-800 flex flex-col relative">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/20 z-50 animate-in fade-in duration-200">
+          <div className="bg-zinc-950 text-white rounded-xl p-6 w-[700px] h-[calc(100vh-36px)] shadow-2xl border border-zinc-800 flex flex-col relative">
             {/* Çarpı Kapat Butonu */}
             <button
               className="absolute top-4 right-5 text-zinc-500 hover:text-white hover:rotate-90 transition-all duration-200 text-3xl font-light"
@@ -191,7 +200,7 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
               <input
                 type="text"
                 placeholder={t("searchCrypto")}
-                className="w-full pr-10 px-4 py-3 rounded-3xl bg-zinc-950 text-white border border-zinc-800 
+                className="w-full pr-10 px-4 py-3 rounded-3xl bg-zinc-900 text-white border border-zinc-800 
                            focus:outline-none focus:border-zinc-600 focus:ring-2 focus:ring-zinc-700/50 
                            transition-all duration-200 placeholder:text-zinc-500"
                 value={searchTerm}
@@ -242,6 +251,18 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
                   {t("swap", { defaultValue: "Takas" })}
                 </button>
 
+                {/* Futures */}
+                <button
+                  type="button"
+                  onClick={() => setActiveFilter("futures")}
+                  className={`px-3 py-1.5 rounded-full border transition-colors ${activeFilter === "futures"
+                    ? "bg-zinc-800 border-zinc-500 text-zinc-100"
+                    : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500"
+                    }`}
+                >
+                  {t("futures", { defaultValue: "Vadeli" })}
+                </button>
+
                 {/* Watchlist */}
                 <button
                   type="button"
@@ -266,13 +287,13 @@ const CryptoSelectButton = forwardRef(({ locale, shortcutTitle }, ref) => {
                   {filteredCryptos.map((crypto) => (
                     <li
                       key={crypto.id}
-                      className="py-[10px] pl-5 pr-4 hover:bg-zinc-800 active:bg-zinc-750 cursor-pointer rounded-lg flex items-center justify-between transition-all duration-0 group border border-transparent hover:border-zinc-700"
+                      className="py-[10px] pl-5 pr-4 hover:bg-zinc-900 active:bg-zinc-750 cursor-pointer rounded-lg flex items-center justify-between transition-all duration-0 group border border-transparent hover:border-zinc-700"
                       onClick={() => handleSelectCrypto(crypto)}
                     >
                       <span className="font-medium text-zinc-200 group-hover:text-white transition-colors">
                         {`${crypto.name} `}
                         <span className="text-zinc-500 text-sm font-normal">
-                          ({crypto.symbol})
+                          ({crypto.symbol}) <span className="text-xs text-zinc-600">[{crypto.market_type === 'spot' ? 'S' : 'F'}]</span>
                         </span>
                       </span>
 

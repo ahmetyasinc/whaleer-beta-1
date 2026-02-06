@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '@/api/axios';
 import FreeFallDiv from '@/components/FreeFallDiv';
 
-axios.defaults.withCredentials = true;
+// axios.defaults.withCredentials = true;
 
 export default function Page() {
   const [users, setUsers] = useState([]);
@@ -12,7 +12,7 @@ export default function Page() {
   useEffect(() => {
     async function fetchUsers() {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/fetch/user/last_login`);
+        const response = await api.get("/fetch/user/last_login");
         setUsers(response.data);
       } catch (error) {
         console.error('Kullanıcılar alınamadı:', error);

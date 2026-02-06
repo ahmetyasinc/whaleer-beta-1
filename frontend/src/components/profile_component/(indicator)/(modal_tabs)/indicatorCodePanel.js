@@ -10,7 +10,7 @@ import useCodePanelStore from "@/store/indicator/indicatorCodePanelStore";
 import useIndicatorStore from "@/store/indicator/indicatorStore";
 import RunButton from "./run_button";
 import TerminalIndicator from "./terminalIndicator";
-import axios from "axios";
+import api from "@/api/axios";
 import VersionSelect from "./versionSelect";
 import CodeModal from "./fullScreenCodeModal";
 import { useTranslation } from "react-i18next";
@@ -68,10 +68,9 @@ const CodePanel = () => {
         setIndicatorName(localName);
         setIndicatorCode(codeToSave);
 
-        const updateRequest = axios.put(
-          `${process.env.NEXT_PUBLIC_API_URL}/edit-indicator/`,
-          { id: selected.id, name: localName, code: codeToSave },
-          { withCredentials: true, headers: { "Content-Type": "application/json" } }
+        const updateRequest = api.put(
+          "/edit-indicator/",
+          { id: selected.id, name: localName, code: codeToSave }
         );
 
         await Promise.all([updateRequest, delay]);
@@ -83,10 +82,9 @@ const CodePanel = () => {
 
         setIndicatorEditing({ ...selected, name: localName, code: codeToSave });
       } else {
-        const postRequest = axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/add-indicator/`,
-          { name: localName, code: codeToSave, parent_indicator_id },
-          { withCredentials: true, headers: { "Content-Type": "application/json" } }
+        const postRequest = api.post(
+          "/add-indicator/",
+          { name: localName, code: codeToSave, parent_indicator_id }
         );
 
         const [response] = await Promise.all([postRequest, delay]);
@@ -297,10 +295,9 @@ const CodePanel = () => {
             setIsSaving(true);
             try {
               const nameToSave = codeModalIndicator.name || "Untitled";
-              await axios.put(
-                `${process.env.NEXT_PUBLIC_API_URL}/edit-indicator/`,
-                { id: codeModalIndicator.id, name: nameToSave, code: codeFromModal },
-                { withCredentials: true, headers: { "Content-Type": "application/json" } }
+              await api.put(
+                "/edit-indicator/",
+                { id: codeModalIndicator.id, name: nameToSave, code: codeFromModal }
               );
 
               // Update the store

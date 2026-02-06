@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
 import { useLogout } from "@/utils/HookLogout";
-import axios from "axios";
+import api from "@/api/axios";
 import LogoutConfirmModal from "./confirmLogout";
 import {
   BiUser,
@@ -17,10 +17,11 @@ import {
   BiChevronLeft,
   BiSupport,
 } from "react-icons/bi";
-import { IoMdArrowDropright } from "react-icons/io";
+import { IoIosArrowForward } from "react-icons/io";
 import { LuBot } from "react-icons/lu";
-import { BsGrid1X2 } from "react-icons/bs";
 import { AiOutlineSetting } from "react-icons/ai";
+import { MdShoppingCart } from "react-icons/md";
+import { CiCompass1 } from "react-icons/ci";
 
 const LeftMenu = ({ locale }) => {
   const { t } = useTranslation("leftmenu");
@@ -68,7 +69,8 @@ const LeftMenu = ({ locale }) => {
     { href: "/profile/strategies", icon: <BiCandles />, label: t("strategies") },
     { href: "/profile/backtest", icon: <BiLineChart />, label: t("backtest") },
     { href: "/profile/bot", icon: <LuBot />, label: t("bots") },
-    { href: "/profile/showcase", icon: <BsGrid1X2 />, label: t("showcase") },
+    { href: "/profile/botmarket", icon: <MdShoppingCart />, label: t("botmarket") },
+    { href: "/profile/showcase", icon: <CiCompass1 />, label: t("showcase") },
     { href: "/profile/apiconnect", icon: <BiBroadcast />, label: t("apiconnect") },
     { href: "/profile/support", icon: <BiSupport />, label: t("support") },
     { href: "/profile/settings", icon: <AiOutlineSetting />, label: t("settings") },
@@ -77,9 +79,7 @@ const LeftMenu = ({ locale }) => {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user-info`, {
-          withCredentials: true,
-        });
+        const res = await api.get("/user-info");
         setUser(res.data);
       } catch (err) {
         console.error("Kullanıcı alınamadı", err);
@@ -137,31 +137,33 @@ const LeftMenu = ({ locale }) => {
         {/* Links */}
         <ul className="space-y-1.5 pl-4 mt-4">
           {menuItems.map((item, index) => {
-            const active = pathname === item.href;
+            const isActive = pathname === item.href;
+
             return (
-              <li key={index} className="relative flex items-center">
+              <li key={index} className="relative flex items-center overflow-visible">
                 <Link
                   href={item.href}
                   onClick={() => setIsOpen(false)}
                   className={[
-                    "flex items-center gap-3 w-full px-4 py-2 text-white transition-colors duration-200",
-                    active ? "bg-white/10 rounded-md" : "hover:text-[hsl(209,100%,50%)]",
+                    "relative flex items-center gap-3 w-full px-4 py-2 text-white transition-colors duration-100 overflow-visible",
+                    isActive ? "bg-white/10 rounded-md" : "hover:text-[#00d9ff]",
                   ].join(" ")}
                 >
-                  {active && (
-                    <IoMdArrowDropright className="absolute left-[-10px] top-1/2 -translate-y-1/2 text-2xl text-white" />
+                  {isActive && (
+                    <IoIosArrowForward className="absolute left-1 top-1/2 -translate-y-1/2 text-base text-[#00d9ff] z-[9999]" />
                   )}
                   <span className="text-[20px] inline-flex">{item.icon}</span>
                   {isOpen && <span className="text-sm">{item.label}</span>}
                 </Link>
               </li>
             );
-          })}
+          })
+          }
 
           {/* Logout */}
           <li>
             <button
-              className="flex items-center gap-3 w-full px-4 py-2 text-left text-white hover:text-[hsl(209,100%,50%)] transition-colors duration-200"
+              className="flex items-center gap-3 w-full px-4 py-2 text-left text-white hover:text-[#00d9ff] transition-colors duration-200"
               onClick={() => setShowLogoutModal(true)}
             >
               <span className="text-[20px] inline-flex">

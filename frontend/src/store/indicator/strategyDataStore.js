@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import axios from 'axios';
+import api from '@/api/axios';
 import useCryptoStore from "./cryptoPinStore";
 import usePanelStore from "./panelStore";
 
@@ -192,8 +192,8 @@ const useStrategyDataStore = create((set, get) => ({
                 };
             }
 
-            const response = await axios.post(
-                `${process.env.NEXT_PUBLIC_API_URL}/run-updated-strategy/`,
+            const response = await api.post(
+                "/run-updated-strategy/",
                 {
                     strategy_id: strategyId,
                     inputs: inputs,

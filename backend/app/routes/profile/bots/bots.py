@@ -29,6 +29,8 @@ from app.routes.profile.telegram.telegram_service import notify_user_by_telegram
 
 protected_router = APIRouter()
 
+import random
+
 # GET all bots for user
 @protected_router.get("/get-bots", response_model=list[BotsOut])
 async def get_all_bots(db: AsyncSession = Depends(get_db), user_id: dict = Depends(verify_token)):
@@ -37,7 +39,89 @@ async def get_all_bots(db: AsyncSession = Depends(get_db), user_id: dict = Depen
         .where(Bots.user_id == int(user_id),Bots.deleted.is_(False))
         .order_by(Bots.id) 
     )
-    return result.scalars().all()
+    bots = result.scalars().all()
+    
+    # Pydantic modeline dönüştürmeden önce manuel alanları ekleyelim
+    bots_data = []
+    for bot in bots:
+        # SQLAlchemy nesnesini dictionary'ye çevirelim (veya Pydantic modeline)
+        # Basitçe objenin özelliklerini alıp üzerine ekleme yapalım
+        
+        # SQLAlchemy objesinden dict üretmek için __dict__ kullanılabilir ama state vs gelir.
+        # BotsOut.from_orm(bot) ile pydantic objesine çevirip copy() ile değiştirebiliriz
+        
+        # Ancak response model list[BotsOut] olduğu için, direkt Pydantic modeli döndürebiliriz
+        bot_pydantic = BotsOut.model_validate(bot)
+
+        # Random Power Score (Frontend isteği üzerine)
+        bot_pydantic.power_score = random.choice([30, 40, 50])
+        
+        # 1. Work Time (DB'den)
+        bot_pydantic.work_time = bot.running_time if bot.running_time else 0
+        
+        # 2. Exposure Calculation (DB'den)
+        is_futures = str(bot.bot_type).lower().strip() == "futures"
+        
+        if is_futures:
+            # Fetch active positions
+            pos_result = await db.execute(select(BotPositions).where(BotPositions.bot_id == bot.id))
+            positions = pos_result.scalars().all()
+            
+            long_exposure = 0
+            short_exposure = 0
+            
+            # Exposure hesabı: Eğer percentage sütunu varsa onu kullan, yoksa (open_cost / current_usd_value)
+            current_val = float(bot.current_usd_value) if bot.current_usd_value else 0
+            
+            for pos in positions:
+                if pos.percentage is not None:
+                    try:
+                        val = float(pos.percentage)
+                    except:
+                        val = 0
+                elif current_val > 0:
+                    val = (float(pos.open_cost) / current_val) * 100
+                else:
+                    val = 0
+                
+                side = str(pos.position_side).lower()
+                if side == 'long':
+                    long_exposure += val
+                elif side == 'short':
+                    short_exposure += val
+            
+            bot_pydantic.exposure_long = int(long_exposure)
+            bot_pydantic.exposure_short = int(short_exposure)
+            bot_pydantic.exposure_spot = 0
+            
+        else:
+            # Fetch holdings
+            hold_result = await db.execute(select(BotHoldings).where(BotHoldings.bot_id == bot.id))
+            holdings = hold_result.scalars().all()
+            
+            spot_exposure = 0
+            current_val = float(bot.current_usd_value) if bot.current_usd_value else 0
+
+            for h in holdings:
+                # USDT (nakit) holding ise exposure'a dahil etme
+                if str(h.symbol).upper() == "USDT":
+                    continue
+                    
+                if h.percentage is not None:
+                    try:
+                        spot_exposure += float(h.percentage)
+                    except:
+                        pass
+                elif current_val > 0:
+                     spot_exposure += (float(h.open_cost) / current_val) * 100
+            
+            bot_pydantic.exposure_long = 0
+            bot_pydantic.exposure_short = 0
+            bot_pydantic.exposure_spot = int(spot_exposure)
+        
+        bots_data.append(bot_pydantic)
+        
+    return bots_data
 
 # POST new bot (otomatik user_id eklenir)
 @protected_router.post("/create-bots", response_model=BotsOut)
@@ -545,9 +629,7 @@ async def update_bot_listing(
         "for_rent",
         "rent_price",
         "listing_description",
-        "is_profit_share",
-        "rent_profit_share_rate",
-        "sold_profit_share_rate",
+        "listing_description",
     }
 
     raw_data = payload.dict(exclude_unset=True)
@@ -564,7 +646,7 @@ async def update_bot_listing(
         if data["for_sale"] is False:
             logger.info("[update_bot_listing] for_sale=False, resetting sell_price & sold_profit_share_rate")
             data["sell_price"] = None
-            data["sold_profit_share_rate"] = 0
+            data["sell_price"] = None
         else:
             # for_sale True ise fiyat var mı?
             sell_price = data.get("sell_price", bot.sell_price)
@@ -582,7 +664,7 @@ async def update_bot_listing(
         if data["for_rent"] is False:
             logger.info("[update_bot_listing] for_rent=False, resetting rent_price & rent_profit_share_rate")
             data["rent_price"] = None
-            data["rent_profit_share_rate"] = 0
+            data["rent_price"] = None
         else:
             rent_price = data.get("rent_price", bot.rent_price)
             logger.info("[update_bot_listing] Effective rent_price=%s (payload or existing)", rent_price)
@@ -600,46 +682,7 @@ async def update_bot_listing(
         data["listing_description"] = desc if desc else None
         logger.info("[update_bot_listing] Normalized listing_description=%r", data["listing_description"])
 
-    # 3.d) Profit share kuralları
-    if "is_profit_share" in data:
-        logger.info("[update_bot_listing] Incoming is_profit_share=%s", data["is_profit_share"])
 
-        if data["is_profit_share"] is False:
-            logger.info("[update_bot_listing] is_profit_share=False, zeroing profit share rates")
-            data["rent_profit_share_rate"] = 0
-            data["sold_profit_share_rate"] = 0
-        else:
-            # is_profit_share True ise oranların 0–100 aralığında olduğundan emin ol
-            rent_rate = data.get("rent_profit_share_rate", bot.rent_profit_share_rate or 0)
-            sold_rate = data.get("sold_profit_share_rate", bot.sold_profit_share_rate or 0)
-
-            logger.info(
-                "[update_bot_listing] Effective profit share rates (rent=%s, sold=%s)",
-                rent_rate, sold_rate
-            )
-
-            for field_name, val in [
-                ("rent_profit_share_rate", rent_rate),
-                ("sold_profit_share_rate", sold_rate),
-            ]:
-                if val is not None:
-                    fval = float(val)
-                    logger.info(
-                        "[update_bot_listing] Checking %s=%s (float=%s)",
-                        field_name, val, fval
-                    )
-                    if fval < 0 or fval > 100:
-                        logger.warning(
-                            "[update_bot_listing] %s out of range: %s",
-                            field_name, fval
-                        )
-                        raise HTTPException(
-                            status_code=400,
-                            detail=f"{field_name} must be between 0 and 100.",
-                        )
-                    # data içinde yoksa (sadece validasyon yaptık) set edelim
-                    if field_name not in data:
-                        data[field_name] = fval
 
     logger.info("[update_bot_listing] Final data to set on bot: %s", data)
 

@@ -47,6 +47,9 @@ import trLogin from '@/locales/tr/auth/login.json';
 import enRegister from '@/locales/en/auth/register.json';
 import trRegister from '@/locales/tr/auth/register.json';
 
+import enUpdatePassword from '@/locales/en/auth/updatePassword.json';
+import trUpdatePassword from '@/locales/tr/auth/updatePassword.json';
+
 import enLeftMenu from '@/locales/en/profile/leftMenu.json';
 import trLeftMenu from '@/locales/tr/profile/leftMenu.json';
 
@@ -248,6 +251,15 @@ import trHomeAbout from '@/locales/tr/home/pages/about.json';
 import enRecycleBinModal from '@/locales/en/profile/recycleBinModal.json';
 import trRecycleBinModal from '@/locales/tr/profile/recycleBinModal.json';
 
+import enResetPassword from '@/locales/en/auth/resetPassword.json';
+import trResetPassword from '@/locales/tr/auth/resetPassword.json';
+
+// ... (other imports)
+
+// Inside resources object:
+// en: { ..., resetPassword: enResetPassword, ... }
+// tr: { ..., resetPassword: trResetPassword, ... }
+
 if (!i18n.isInitialized) {
   i18n
     .use(initReactI18next)
@@ -258,13 +270,13 @@ if (!i18n.isInitialized) {
 
       resources: {
         en: {
-          notFound: enNotFound, metadata: enMetadata, header: enHeader, hero: enHero, about: enAbout, feature: enFuature, footer: enFooter, login: enLogin, register: enRegister, leftmenu: enLeftMenu, indicator: enIndicator, profileHeader: enProfileHeader, portfolio: enPortfolio, portfolioChart: enPortfolioChart, rightBar: enRightBar, botsList: enBotsList, examineBot: enExamineBot, botPieChart: enBotPieChart, strategyIndicator: enStrategyIndicator, publishStrategyModal: enPublishStrategyModal, publishIndicatorModal: enPublishIndicatorModal, settings: enSettings, personalIndicators: enPersonalIndicators, addStrategyButton: enAddStrategyButton, personalStrategies: enPersonalStrategies, indicatorEditor: enIndicatorEditor, indicatorTerminal: enIndicatorTerminal, strategyCodePanel: enStrategyCodePanel, strategyTerminal: enStrategyTerminal, strategiesHeader: enStrategiesHeader, ruler: enRuler, backtestHeader: enBacktestHeader, backtestStrategyButton: enBacktestStrategyButton, backtestTechnicalStrategies: enBacktestTechnicalStrategies, backtestPersonalStrategies: enBacktestPersonalStrategies, backtestCommunityStrategies: enBacktestCommunityStrategies, backtestCryptoSelectButton: enBacktestCryptoSelectButton, backtestPage: enBacktestPage, backtestArchivedBacktest: enBacktestArchivedBacktest, backtestInfoCard: enBacktestInfoCard,
+          notFound: enNotFound, metadata: enMetadata, header: enHeader, hero: enHero, about: enAbout, feature: enFuature, footer: enFooter, login: enLogin, register: enRegister, resetPassword: enResetPassword, updatePassword: enUpdatePassword, leftmenu: enLeftMenu, indicator: enIndicator, profileHeader: enProfileHeader, portfolio: enPortfolio, portfolioChart: enPortfolioChart, rightBar: enRightBar, botsList: enBotsList, examineBot: enExamineBot, botPieChart: enBotPieChart, strategyIndicator: enStrategyIndicator, publishStrategyModal: enPublishStrategyModal, publishIndicatorModal: enPublishIndicatorModal, settings: enSettings, personalIndicators: enPersonalIndicators, addStrategyButton: enAddStrategyButton, personalStrategies: enPersonalStrategies, indicatorEditor: enIndicatorEditor, indicatorTerminal: enIndicatorTerminal, strategyCodePanel: enStrategyCodePanel, strategyTerminal: enStrategyTerminal, strategiesHeader: enStrategiesHeader, ruler: enRuler, backtestHeader: enBacktestHeader, backtestStrategyButton: enBacktestStrategyButton, backtestTechnicalStrategies: enBacktestTechnicalStrategies, backtestPersonalStrategies: enBacktestPersonalStrategies, backtestCommunityStrategies: enBacktestCommunityStrategies, backtestCryptoSelectButton: enBacktestCryptoSelectButton, backtestPage: enBacktestPage, backtestArchivedBacktest: enBacktestArchivedBacktest, backtestInfoCard: enBacktestInfoCard,
           backtestChart: enBacktestChart, backtestPerformanceMetrics: enBacktestPerformanceMetrics, backtestTradesList: enBacktestTradesList, botPage: enBotPage, botModal: enBotModal, botChooseStrategy: enBotChooseStrategy, botCard: enBotCard, deleteConfirm: enDeleteConfirm, shutDown: enShutDown, criticalConfirmModal: enCriticalConfirmModal, technicalStrategies: enTechnicalStrategies, botPersonalStrategies: enBotPersonalStrategies, communityStrategies: enCommunityStrategies, showcaseHeader: enshowcaseHeader,
           searchButton: enShowcaseSearchButton, sellRentModal: enShowcaseSellRentModal, chooseBotModal: enShowcaseChooseBotModal, botFilterSidebar: enBotFilterSidebar, botDiscoveryApp: enBotDiscoveryApp, showcaseBotCard: enShowcaseBotCard, buyModal: enBuyModal, rentModal: enRentModal, userProfileCard: enUserProfileCard, botterGuide: enBotterGuide, trades: enTrades, sideBar: enSideBar, userLeaderBoard: enUserLeaderBoard, botLeaderBoard: enBotLeaderBoard, apiContent: enApiContent, addApi: enAddApi, confirmDelete: enConfirmDelete, strategiesSettings: enStrategiesSettings,
           features: enFeatures, premium: enPremium, homeAbout: enHomeAbout, recycleBinModal: enRecycleBinModal,
         },
         tr: {
-          notFound: trNotFound, metadata: trMetadata, header: trHeader, hero: trHero, about: trAbout, feature: trFuature, footer: trFooter, login: trLogin, register: trRegister, leftmenu: trLeftMenu, indicator: trIndicator, profileHeader: trProfileHeader, portfolio: trPortfolio, portfolioChart: trPortfolioChart, rightBar: trRightBar, botsList: trBotsList, examineBot: trExamineBot, botPieChart: trBotPieChart, strategyIndicator: trStrategyIndicator, publishStrategyModal: trPublishStrategyModal, publishIndicatorModal: trPublishIndicatorModal, settings: trSettings, personalIndicators: trPersonalIndicators, addStrategyButton: trAddStrategyButton, personalStrategies: trPersonalStrategies, indicatorEditor: trIndicatorEditor, indicatorTerminal: trIndicatorTerminal, strategyCodePanel: trStrategyCodePanel, strategyTerminal: trStrategyTerminal, strategiesHeader: trStrategiesHeader, ruler: trRuler, backtestHeader: trBacktestHeader, backtestStrategyButton: trBacktestStrategyButton, backtestTechnicalStrategies: trBacktestTechnicalStrategies, backtestPersonalStrategies: trBacktestPersonalStrategies, backtestCommunityStrategies: trBacktestCommunityStrategies, backtestCryptoSelectButton: trBacktestCryptoSelectButton, backtestPage: trBacktestPage, backtestArchivedBacktest: trBacktestArchivedBacktest, backtestInfoCard: trBacktestInfoCard,
+          notFound: trNotFound, metadata: trMetadata, header: trHeader, hero: trHero, about: trAbout, feature: trFuature, footer: trFooter, login: trLogin, register: trRegister, resetPassword: trResetPassword, updatePassword: trUpdatePassword, leftmenu: trLeftMenu, indicator: trIndicator, profileHeader: trProfileHeader, portfolio: trPortfolio, portfolioChart: trPortfolioChart, rightBar: trRightBar, botsList: trBotsList, examineBot: trExamineBot, botPieChart: trBotPieChart, strategyIndicator: trStrategyIndicator, publishStrategyModal: trPublishStrategyModal, publishIndicatorModal: trPublishIndicatorModal, settings: trSettings, personalIndicators: trPersonalIndicators, addStrategyButton: trAddStrategyButton, personalStrategies: trPersonalStrategies, indicatorEditor: trIndicatorEditor, indicatorTerminal: trIndicatorTerminal, strategyCodePanel: trStrategyCodePanel, strategyTerminal: trStrategyTerminal, strategiesHeader: trStrategiesHeader, ruler: trRuler, backtestHeader: trBacktestHeader, backtestStrategyButton: trBacktestStrategyButton, backtestTechnicalStrategies: trBacktestTechnicalStrategies, backtestPersonalStrategies: trBacktestPersonalStrategies, backtestCommunityStrategies: trBacktestCommunityStrategies, backtestCryptoSelectButton: trBacktestCryptoSelectButton, backtestPage: trBacktestPage, backtestArchivedBacktest: trBacktestArchivedBacktest, backtestInfoCard: trBacktestInfoCard,
           backtestChart: trBacktestChart, backtestPerformanceMetrics: trBacktestPerformanceMetrics, backtestTradesList: trBacktestTradesList, botPage: trBotPage, botModal: trBotModal, botChooseStrategy: trBotChooseStrategy, botCard: trBotCard, deleteConfirm: trDeleteConfirm, shutDown: trShutDown, criticalConfirmModal: trCriticalConfirmModal, technicalStrategies: trTechnicalStrategies, botPersonalStrategies: trBotPersonalStrategies, communityStrategies: trCommunityStrategies, showcaseHeader: trshowcaseHeader,
           searchButton: trShowcaseSearchButton, sellRentModal: trShowcaseSellRentModal, chooseBotModal: trShowcaseChooseBotModal, botFilterSidebar: trBotFilterSidebar, botDiscoveryApp: trBotDiscoveryApp, showcaseBotCard: trShowcaseBotCard, buyModal: trBuyModal, rentModal: trRentModal, userProfileCard: trUserProfileCard, botterGuide: trBotterGuide, trades: trTrades, sideBar: trSideBar, userLeaderBoard: trUserLeaderBoard, botLeaderBoard: trBotLeaderBoard, apiContent: trApiContent, addApi: trAddApi, confirmDelete: trConfirmDelete, strategiesSettings: trStrategiesSettings,
           features: trFeatures, premium: trPremium, homeAbout: trHomeAbout, recycleBinModal: trRecycleBinModal,
@@ -272,12 +284,10 @@ if (!i18n.isInitialized) {
       },
 
       // App’te explicit namespace kullanıyorsun, yine de liste dursun:
-      ns: ['common', 'notFound', 'metadata', 'header', 'hero', 'about', 'feature', 'footer', 'login', 'leftmenu', 'profileHeader', 'portfolio', 'portfolioChart', 'strategyIndicator', 'recycleBinModal'],
+      ns: ['common', 'notFound', 'metadata', 'header', 'hero', 'about', 'feature', 'footer', 'login', 'register', 'resetPassword', 'updatePassword', 'leftmenu', 'profileHeader', 'portfolio', 'portfolioChart', 'strategyIndicator', 'recycleBinModal'],
       defaultNS: 'common',
 
       interpolation: { escapeValue: false },
-      // react-i18next tarafında ihtiyaç duyarsan:
-      // react: { useSuspense: false },
     });
 }
 

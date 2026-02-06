@@ -6,6 +6,7 @@
   "backtest": "Backtest",
   "bots": "My Bots",
   "showcase": "Showcase",
+  "botmarket": "Bot Market",
   "apiconnect": "API Connection",
   "settings": "Settings",
   "support": "Support",
@@ -14,4 +15,3 @@
   "no": "No",
   "loading": "Loading user information..."
 }
-

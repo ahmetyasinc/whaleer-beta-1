@@ -1,11 +1,11 @@
-import axios from 'axios';
+import api from '@/api/axios';
 
 // Çerezleri otomatik olarak isteğe dahil et
-axios.defaults.withCredentials = true;
+// axios.defaults.withCredentials = true;
 
 export const getStrategies = async () => {
   try {
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/all-strategies/`);
+    const response = await api.get("/all-strategies/");
 
     // Backend'den dönen veriyi kategorilere ayır
     const tecnic_strategies = response.data.tecnic_strategies || [];
@@ -41,8 +41,8 @@ export const publishStrategy = async ({ strategyId, permissions, description }) 
       allow_backtesting: !!permissions?.backtest,
       allow_bot_execution: !!permissions?.botRun,
     };
-    const { data } = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/strategies/publish`,
+    const { data } = await api.post(
+      "/strategies/publish",
       payload
     );
 
@@ -71,8 +71,8 @@ export const publishIndicator = async ({ indicatorId, permissions, description }
       allow_chart_view: !!permissions?.chartView,
     };
 
-    const { data } = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/indicators/publish`,
+    const { data } = await api.post(
+      "/indicators/publish",
       payload
     );
 

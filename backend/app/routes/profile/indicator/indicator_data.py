@@ -8,9 +8,19 @@ from app.database import get_db
 protected_router = APIRouter()
 
 @protected_router.get("/get-binance-data/")
-async def get_binance_data(symbol: str, interval: str, db: AsyncSession = Depends(get_db), user_id: dict = Depends(verify_token)):
+async def get_binance_data(
+    symbol: str, 
+    interval: str, 
+    market_type: str = "spot", 
+    db: AsyncSession = Depends(get_db), 
+    user_id: dict = Depends(verify_token)
+):
     """Veritabanından belirtilen sembol ve zaman aralığındaki son 5000 veriyi JSON olarak getirir."""
-    query = text("""
+    
+    # Tablo ismini belirle
+    table_name = "public.binance_futures" if market_type == "futures" else "public.binance_data"
+
+    query = text(f"""
         SELECT jsonb_agg(jsonb_build_object(
             'timestamp', timestamp,
             'open', open,
@@ -22,7 +32,7 @@ async def get_binance_data(symbol: str, interval: str, db: AsyncSession = Depend
         FROM (
             SELECT * FROM (
                 SELECT timestamp, open, high, low, close, volume
-                FROM public.binance_data
+                FROM {table_name}
                 WHERE coin_id = :symbol 
                   AND interval = :interval
                 ORDER BY timestamp DESC

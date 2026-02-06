@@ -1,5 +1,6 @@
 {
   "title": "My Bots",
+  "searchPlaceholder": "Search...",
   "status": {
     "active": "Active",
     "inactive": "Inactive"
@@ -16,6 +17,86 @@
   },
   "empty": {
     "title": "No Bots Yet",
-    "desc": "To create your trading bot, go to the automated bots page and click the \"Add New Bot\" button."
+    "desc": "To create your trading bot, go to the automated bots page and click the \"Add New Bot\" button.",
+    "list": "Bots list content will appear here..."
+  },
+  "sort": {
+    "button": "Sort",
+    "title": "Sort",
+    "default": "Default",
+    "defaultLabel": "Default Sorting",
+    "cancel": "Cancel",
+    "apply": "Sort",
+    "labels": {
+      "salePrice": "Sale Price",
+      "rentalPrice": "Rental Price",
+      "profitMargin": "Profit Margin",
+      "powerScore": "Power Score",
+      "usageTime": "Usage Time",
+      "createdAt": "Created At",
+      "saleCount": "Sale Count",
+      "rentalCount": "Rental Count"
+    },
+    "directions": {
+      "asc": "Ascending",
+      "desc": "Descending",
+      "oldest": "Oldest",
+      "newest": "Newest"
+    }
+  },
+  "filter": {
+    "addFilter": "Add Filter",
+    "title": "Filter Bots",
+    "cancel": "Cancel",
+    "apply": "Apply Filters",
+    "onlyMyBots": "Only My Bots",
+    "botType": {
+      "label": "Bot Type",
+      "all": "All",
+      "spot": "Spot",
+      "futures": "Futures"
+    },
+    "tradeType": {
+      "label": "Trade Type",
+      "all": "All",
+      "sale": "Sale",
+      "rental": "Rental"
+    },
+    "ranges": {
+      "salePrice": "Sale Price Range ($)",
+      "rentalPrice": "Rental Price Range ($)",
+      "powerScore": "Minimum Power Score",
+      "profitMargin": "Minimum Profit Margin (%)",
+      "usageTime": "Min Usage Time (Hours)"
+    },
+    "placeholders": {
+      "min": "Min",
+      "max": "Max",
+      "example85": "e.g. 85",
+      "minPerc": "Min %",
+      "example24": "e.g. 24"
+    },
+    "periods": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "all": "All Time"
+    },
+    "chips": {
+      "trade": {
+        "label": "Trade",
+        "sale": "Sale",
+        "rental": "Rental"
+      },
+      "botType": {
+        "spot": "Spot",
+        "futures": "Futures"
+      },
+      "sale": "Sale",
+      "rental": "Rental",
+      "power": "Power",
+      "profit": "Profit",
+      "usage": "Usage"
+    }
   }
 }

@@ -15,10 +15,10 @@ import dynamic from "next/dynamic";
 import useIndicatorStore from "@/store/indicator/indicatorStore";
 import useStrategyStore from "@/store/indicator/strategyStore";
 import FullScreenChooseIndicator from "./fullScreenChooseIndicator";
-import axios from "axios";
+import api from "@/api/axios";
 import { TbMaximize } from "react-icons/tb";
 
-axios.defaults.withCredentials = true;
+// axios.defaults.withCredentials = true;
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
@@ -275,10 +275,10 @@ const CodeModal = ({
       try {
         if (isStrategyPanel) {
           // Strategy API endpoint
-          await axios.put(
-            `${process.env.NEXT_PUBLIC_API_URL}/edit-strategy/`,
+          await api.put(
+            "/edit-strategy/",
             { id: panelEntity.id, name: panelEntity.name, code: codeToSave },
-            { headers: { "Content-Type": "application/json" }, withCredentials: true }
+            { headers: { "Content-Type": "application/json" } }
           );
           // Update the strategy in store
           const updateFn = useStrategyStore.getState().updateStrategy;
@@ -287,10 +287,10 @@ const CodeModal = ({
           }
         } else {
           // Indicator API endpoint
-          await axios.put(
-            `${process.env.NEXT_PUBLIC_API_URL}/edit-indicator/`,
+          await api.put(
+            "/edit-indicator/",
             { id: panelEntity.id, name: panelEntity.name, code: codeToSave },
-            { headers: { "Content-Type": "application/json" }, withCredentials: true }
+            { headers: { "Content-Type": "application/json" } }
           );
           // Update the indicator in store
           const updateFn = useIndicatorStore.getState().updateIndicator;

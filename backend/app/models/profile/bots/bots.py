@@ -64,11 +64,7 @@ class Bots(Base):
 
     description = Column(Text, nullable=True)
 
-    is_profit_share = Column(
-        Boolean,
-        nullable=False,
-        server_default=expression.false()
-    )
+
 
     deposit = Column(
         Numeric(12, 2),
@@ -81,14 +77,3 @@ class Bots(Base):
         nullable=True
     )
 
-    rent_profit_share_rate = Column(
-        Numeric(5, 2),
-        nullable=False,
-        server_default="0"
-    )
-
-    sold_profit_share_rate = Column(
-        Numeric(5, 2),
-        nullable=False,
-        server_default="0"
-    )

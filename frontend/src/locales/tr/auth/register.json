@@ -28,5 +28,7 @@
     "success": "Kayıt başarılı! Giriş sayfasına yönlendiriliyorsunuz…",
     "unexpected": "Beklenmeyen bir hata oluştu.",
     "genericError": "İşlem sırasında bir hata oluştu."
-  }
+  },
+  "checkEmailTitle": "E-postanızı Kontrol Edin",
+  "checkEmailMessage": "Kayıt işleminiz alındı. Lütfen e-posta adresinize gönderilen doğrulama bağlantısına tıklayarak hesabınızı etkinleştirin."
 }

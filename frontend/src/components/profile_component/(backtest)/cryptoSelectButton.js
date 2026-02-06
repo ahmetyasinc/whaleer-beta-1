@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import axios from 'axios';
+import api from "@/api/axios";
 import { BsPinAngle, BsPinAngleFill } from 'react-icons/bs';
 import useBacktestStore from '@/store/backtest/backtestStore';
 import useCryptoStore from '@/store/indicator/cryptoPinStore';
 import { useTranslation } from 'react-i18next';
 
-axios.defaults.withCredentials = true;
+// axios.defaults.withCredentials = true;
 
 const CryptoSelectButton = () => {
   const { t } = useTranslation('backtestCryptoSelectButton');
@@ -23,7 +23,7 @@ const CryptoSelectButton = () => {
     setMounted(true);
     const fetchCoins = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/get-coin-list/`);
+        const response = await api.get("/get-coin-list/");
 
         if (response.data && response.data.coins) {
           const coins = response.data.coins.map(coin => ({
@@ -31,7 +31,8 @@ const CryptoSelectButton = () => {
             name: coin.name,
             symbol: coin.symbol,
             binance_symbol: coin.binance_symbol,
-            tick_size: coin.tick_size
+            tick_size: coin.tick_size,
+            market_type: coin.market_type
           }));
 
           const pinnedCoins = response.data.coins
@@ -41,7 +42,8 @@ const CryptoSelectButton = () => {
               name: coin.name,
               symbol: coin.symbol,
               binance_symbol: coin.binance_symbol,
-              tick_size: coin.tick_size
+              tick_size: coin.tick_size,
+              market_type: coin.market_type
             }));
 
           setCryptosList(coins);
@@ -109,7 +111,7 @@ const CryptoSelectButton = () => {
                   role="option"
                   aria-selected={selectedCrypto?.id === crypto.id}
                 >
-                  {`${crypto.name} (${crypto.symbol})`}
+                  {`${crypto.name} (${crypto.symbol})`} <span className="text-xs text-zinc-500 ml-1">[{crypto.market_type === 'spot' ? 'S' : 'F'}]</span>
                   <div>
                     {pinned.find(p => p.id === crypto.id) ? (
                       <BsPinAngleFill className="text-red-600 drop-shadow-[0_0_5px_rgba(220,38,38,0.5)]" />
@@ -138,7 +140,7 @@ const CryptoSelectButton = () => {
         title={t('buttons.selectCrypto')}
       >
         <span className="ml-3">
-          {selectedCrypto ? `${selectedCrypto.name} (${selectedCrypto.symbol})` : t('buttons.selectCrypto')}
+          {selectedCrypto ? `${selectedCrypto.name} (${selectedCrypto.symbol}) [${selectedCrypto.market_type === 'spot' ? 'S' : 'F'}]` : t('buttons.selectCrypto')}
         </span>
       </button>
 

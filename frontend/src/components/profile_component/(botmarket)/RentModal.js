@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useMemo } from "react";
-import axios from "axios";
+import api from "@/api/axios";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Connection, VersionedMessage, VersionedTransaction } from "@solana/web3.js";
 // --- STELLAR REMOVED ---
 // -----------------------
 import ModalFrame from "./ModalFrame";
-import ErrorBar from "./ui/ErrorBar";
-import InfoRow from "./ui/InfoRow";
-import SkeletonLines from "./ui/SkeletonLines";
+import ErrorBar from "../(showcase)/(checkout)/ErrorBar";
+import InfoRow from "../(showcase)/(checkout)/InfoRow";
+import SkeletonLines from "../(showcase)/(checkout)/SkeletonLines";
 import { toast } from "react-toastify";
 import { createPurchaseIntent, confirmPayment } from "@/api/payments"; // tek tip intent
 import { acquireBot } from "@/api/bots";
@@ -99,9 +99,9 @@ export default function RentModal({ botId, onClose, minDays = 1 }) {
       try {
         setLoading(true);
         setError(null);
-        const res = await axios.get(
-          `${API}/bots/${botId}/checkout-summary`,
-          { params: { action: "rent" }, withCredentials: true }
+        const res = await api.get(
+          `/bots/${botId}/checkout-summary`,
+          { params: { action: "rent" } }
         );
         const data = res?.data;
         if (typeof data === "string") throw new Error(t("errors.nonJson"));

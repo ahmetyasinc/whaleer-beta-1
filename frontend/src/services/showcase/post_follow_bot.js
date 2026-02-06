@@ -1,11 +1,11 @@
-import axios from 'axios';
+import api from '@/api/axios';
 
-axios.defaults.withCredentials = true;
+// axios.defaults.withCredentials = true;
 
 export const post_follow_bot = async (bot_id) => {
   try {
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/bot/follow`,
+    const response = await api.post(
+      "/bot/follow",
       { bot_id }
     );
     return response.data;

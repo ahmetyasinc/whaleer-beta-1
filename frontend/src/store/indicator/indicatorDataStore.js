@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import axios from 'axios';
+import api from '@/api/axios';
 import useCryptoStore from "./cryptoPinStore";
 import usePanelStore from "./panelStore";
 
@@ -170,15 +170,15 @@ const useIndicatorDataStore = create(persist((set, get) => ({
         return { result: [], prints: [] };
       }
 
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/run-updated-indicator/`;
 
-      const response = await axios.post(apiUrl, {
+
+      const response = await api.post("/run-updated-indicator/", {
         indicator_id: indicatorId,
         inputs: inputs,
         binance_symbol: selectedCrypto.binance_symbol,
         interval: selectedPeriod,
         end: end,
-      }, { withCredentials: true });
+      });
 
       return {
         result: response.data.indicator_result,
@@ -418,7 +418,7 @@ const useIndicatorDataStore = create((set, get) => ({
         return { result: [], prints: [], status: "error", message: "Eksik bilgi" };
       }
 
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/run-updated-indicator/`, {
+      const response = await api.post("/run-updated-indicator/", {
         indicator_id: indicatorId,
         inputs: inputs,
         binance_symbol: selectedCrypto.binance_symbol,

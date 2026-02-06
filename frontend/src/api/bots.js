@@ -1,12 +1,12 @@
-import axios from 'axios';
+import api from '@/api/axios';
 import useApiStore from '@/store/api/apiStore';
 import useStrategyStore from '@/store/indicator/strategyStore';
 
-axios.defaults.withCredentials = true;
+// api.defaults.withCredentials = true;
 
 export const getBots = async () => {
   try {
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/get-bots`);
+    const response = await api.get("/get-bots");
     console.log("getBots response:", response.data);
     const { apiList } = useApiStore.getState();
     const { all_strategies } = useStrategyStore.getState();
@@ -44,6 +44,13 @@ export const getBots = async () => {
         description: item.description,
         profit_share_only: item.is_profit_share,   // kardan komisyon modu
         deposit_balance: item.deposit,           // depozito bakiyesi
+
+        // Performance Data
+        power_score: item.power_score,
+        work_time: item.work_time,
+        exposure_long: item.exposure_long,
+        exposure_short: item.exposure_short,
+        exposure_spot: item.exposure_spot,
       };
     });
 
@@ -91,8 +98,8 @@ export const createBot = async (botData) => {
       enter_on_start: botData.enterOnCurrentSignal || false
     };
 
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/create-bots`,
+    const response = await api.post(
+      "/create-bots",
       payload
     );
     return response.data;
@@ -158,8 +165,8 @@ export const updateBot = async (id, botData) => {
       bot_type: botData.bot_type || {},
     };
 
-    const response = await axios.put(
-      `${process.env.NEXT_PUBLIC_API_URL}/update-bot/${id}`,
+    const response = await api.put(
+      `/update-bot/${id}`,
       payload
     );
     console.log("updateBot response:", response.data); // DEBUG
@@ -174,8 +181,7 @@ export const updateBot = async (id, botData) => {
 
 export const deleteBot = async (id) => {// GELİŞTİRİCİ MODU
   try {
-    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/bots/delete/${id}`); //const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/bots/${id}`);
-    return response.data;
+    const response = await api.post(`/bots/delete/${id}`); //const response = await  const { data } = await api.post("/shutdown/bots", { scope, id });
   } catch (error) {
     console.error("Error occured while deleting:", error);
     throw error;
@@ -185,8 +191,7 @@ export const deleteBot = async (id) => {// GELİŞTİRİCİ MODU
 export const shutdownBots = async ({ scope = "bot", id }) => {
   // scope: "bot" | "api" | "user"
   if (!id) throw new Error("shutdownBots: id gerekli.");
-  const url = `${process.env.NEXT_PUBLIC_API_URL}/shutdown/bots`;
-  const { data } = await axios.post(url, { scope, id });
+  const { data } = await api.post("/shutdown/bots", { scope, id });
   // beklenen response örn: { affected_bot_ids: [..], closed_positions: 5 }
   return data;
 };
@@ -194,7 +199,7 @@ export const shutdownBots = async ({ scope = "bot", id }) => {
 export const toggleBotActiveApi = async (id, isActive) => {
   try {
     const endpoint = isActive ? "deactivate" : "activate";
-    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/bots/${id}/${endpoint}`);
+    const response = await api.post(`/bots/${id}/${endpoint}`);
     return response.data;
   } catch (error) {
     console.error("Bot durumu değiştirilirken hata:", error);
@@ -204,19 +209,17 @@ export const toggleBotActiveApi = async (id, isActive) => {
 
 export async function patchBotListing(botId, payload) {
   console.log("patchBotListing called:", botId, payload); // DEBUG
-  const { data } = await axios.patch(
-    `${process.env.NEXT_PUBLIC_API_URL}/bots/${botId}/listing`,
-    payload,
-    { withCredentials: true }
+  const { data } = await api.patch(
+    `/bots/${botId}/listing`,
+    payload
   );
   return data;
 }
 
 export async function acquireBot(botId, payload /* { action: 'buy'|'rent', price_paid: number, tx: string, rent_duration_days?: number } */) {
-  const { data } = await axios.post(
-    `${process.env.NEXT_PUBLIC_API_URL}/bots/${botId}/acquire`,
-    payload,
-    { withCredentials: true }
+  const { data } = await api.post(
+    `/bots/${botId}/acquire`,
+    payload
   );
   return data;
 }

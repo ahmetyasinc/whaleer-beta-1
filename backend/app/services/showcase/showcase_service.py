@@ -25,17 +25,6 @@ class ShowcaseService:
             if bot.initial_usd_value else 0.0
         )
     
-        # 🔽 PROFIT COMMISSION HESABI
-        # DB alanları: is_profit_share, sold_profit_share_rate, rent_profit_share_rate
-        buy_rate = int(bot.sold_profit_share_rate or 0)
-        rent_rate = int(bot.rent_profit_share_rate or 0)
-    
-        # Global flag'i de dikkate almak istersen:
-        is_share_enabled = bool(getattr(bot, "is_profit_share", False))
-    
-        has_profit_commission_buy = is_share_enabled and buy_rate != 0
-        has_profit_commission_rent = is_share_enabled and rent_rate != 0
-    
         bot_summary = BotSummary(
             bot_id=bot.id,
             name=bot.name,
@@ -67,11 +56,7 @@ class ShowcaseService:
             trades=trades,
             positions=positions,
     
-            # 🔽 YENİ ALANLAR
-            has_profit_commission_buy=has_profit_commission_buy,
-            profit_commission_rate_buy=buy_rate,
-            has_profit_commission_rent=has_profit_commission_rent,
-            profit_commission_rate_rent=rent_rate,
+
         )
 
 

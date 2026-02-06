@@ -4,8 +4,9 @@ import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
-import axios from "axios";
+
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabaseClient";
 import { FaArrowLeftLong } from "react-icons/fa6";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import ContinueWithGoogle from "@/ui/ContinueWithGoogle";
@@ -26,7 +27,7 @@ function extractApiError(err, t) {
         else parts.push(`${key}: ${JSON.stringify(val)}`);
       }
       if (parts.length) return parts.join(" • ");
-    } catch {}
+    } catch { }
   }
   return t("toast.genericError");
 }
@@ -55,6 +56,8 @@ export default function RegisterForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const [successState, setSuccessState] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -63,24 +66,23 @@ export default function RegisterForm() {
       return;
     }
 
-    const payload = {
-      first_name: formData.first_name,
-      last_name: formData.last_name,
-      username: formData.username,
-      email: formData.email,
-      password: formData.password,
-      confirmPassword: formData.confirmPassword,
-    };
-
     setSubmitting(true);
     const toastId = toast.loading(t("toast.submitting"));
 
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/register/`,
-        payload,
-        { headers: { "Content-Type": "application/json" } }
-      );
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            username: formData.username,
+          },
+        },
+      });
+
+      if (error) throw error;
 
       toast.update(toastId, {
         render: t("toast.success"),
@@ -90,9 +92,15 @@ export default function RegisterForm() {
         closeOnClick: true,
       });
 
-      router.push(withLocale("/login")); // ✅ locale’li yönlendirme
+      // Eğer otomatik giriş olmadıysa (email confirmation gerekli)
+      if (!data.session) {
+        setSuccessState(true); // Formu gizle, mesajı göster
+      } else {
+        router.push(withLocale("/login"));
+      }
+
     } catch (error) {
-      const msg = extractApiError(error, t);
+      const msg = error?.message || t("toast.genericError");
       toast.update(toastId, {
         render: msg,
         type: "error",
@@ -105,6 +113,22 @@ export default function RegisterForm() {
       setSubmitting(false);
     }
   };
+
+  if (successState) {
+    return (
+      <div className="py-12 flex flex-col items-center justify-center">
+        <div className="bg-white/10 backdrop-blur-lg border border-gray-400 rounded-lg shadow-lg p-8 w-full max-w-md text-center text-white">
+          <h2 className="text-2xl font-bold mb-4">📧 {t("checkEmailTitle")}</h2>
+          <p className="text-gray-200 mb-6">
+            {t("checkEmailMessage").replace("{{email}}", formData.email) /* Basit replace veya i18n interpolation kullanabilirsin */}
+          </p>
+          <Link href={withLocale("/login")} className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded transition-colors">
+            {t("login") || "Giriş Yap"}
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="py-12">

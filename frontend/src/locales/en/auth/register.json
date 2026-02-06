@@ -28,5 +28,7 @@
     "success": "Registration successful! Redirecting to login…",
     "unexpected": "Unexpected error occurred.",
     "genericError": "An error occurred."
-  }
+  },
+  "checkEmailTitle": "Check Your Email",
+  "checkEmailMessage": "Registration received. Please click the verification link sent to your email address to activate your account."
 }

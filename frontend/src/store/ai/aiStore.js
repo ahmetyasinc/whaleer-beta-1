@@ -117,9 +117,7 @@ const useAiStore = create((set, get) => ({
 
 export default useAiStore;*/
 
-import axios from 'axios';
-
-axios.defaults.withCredentials = true;
+import api from '@/api/axios';
 
 
 import { create } from 'zustand';
@@ -127,13 +125,13 @@ import { create } from 'zustand';
 const useAiStore = create((set, get) => ({
   // Current active chat
   activeChat: null,
-  
+
   // All chats storage
   chats: [],
-  
+
   // Active code index for compiler
   activeCodeIndex: 0,
-  
+
   // Static AI response for testing
   staticAiResponse: {
     message: "Merhaba! Ben bir AI asistanıyım. Size nasıl yardımcı olabilirim? Bu statik bir yanıttır ve backend bağlantısı olmadığı için şu anda gerçek AI işlevi bulunmamaktadır AHMETİ GOTTEN.",
@@ -195,12 +193,12 @@ print(f"\\nOrtalama Maaş: {ortalama_maas}")`
       messages: [],
       createdAt: new Date().toISOString(),
     };
-    
+
     set((state) => ({
       chats: [newChat, ...state.chats],
       activeChat: newChat
     }));
-    
+
     return newChat.id;
   },
 
@@ -237,14 +235,14 @@ print(f"\\nOrtalama Maaş: {ortalama_maas}")`
       const updatedChats = state.chats.map(chat => {
         if (chat.id === state.activeChat.id) {
           const updatedMessages = [...chat.messages, newMessage];
-          
+
           // Update chat title with first user message if it's still default
           let updatedTitle = chat.title;
           if (chat.title.startsWith('Yeni Sohbet') && isUser && updatedMessages.filter(m => m.isUser).length === 1) {
             const messageText = typeof messageData === 'string' ? messageData : messageData.message;
             updatedTitle = messageText.length > 30 ? messageText.substring(0, 30) + '...' : messageText;
           }
-          
+
           return {
             ...chat,
             messages: updatedMessages,
@@ -273,8 +271,8 @@ print(f"\\nOrtalama Maaş: {ortalama_maas}")`
     state.addMessage(message, true);
 
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/chat2`, // kendi endpoint'ine göre düzenle
+      const response = await api.post(
+        "/chat2", // kendi endpoint'ine göre düzenle
         { message }
       );
 
@@ -312,7 +310,7 @@ print(f"\\nOrtalama Maaş: {ortalama_maas}")`
     set((state) => {
       const updatedChats = state.chats.filter(chat => chat.id !== chatId);
       const newActiveChat = state.activeChat?.id === chatId ? null : state.activeChat;
-      
+
       return {
         chats: updatedChats,
         activeChat: newActiveChat
@@ -320,7 +318,7 @@ print(f"\\nOrtalama Maaş: {ortalama_maas}")`
     });
   },
 
-  
+
   // Clear all chats
   clearAllChats: () => {
     set({

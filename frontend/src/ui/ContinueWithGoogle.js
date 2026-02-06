@@ -1,64 +1,39 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import styled from "styled-components";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
-import { startGoogleOidcFlow } from "@/lib/auth/googleFlow"; // önceki mesajdaki fonksiyon
+import { supabase } from "@/lib/supabaseClient";
 
 /**
  * Props:
  * - locale?: string  (opsiyonel; vermezsen i18n’den alınır)
  */
-export default function ContinueWithGoogle({ locale: givenLocale }) {
-  const { t, i18n } = useTranslation("register", { useSuspense: false });
-  const locale = givenLocale || i18n.resolvedLanguage || i18n.language || "en";
+export default function ContinueWithGoogle() {
+  const { t } = useTranslation("register", { useSuspense: false });
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const onClick = async () => {
     if (loading) return;
     setLoading(true);
 
-    const toastId = toast.loading(t("toast.submitting", "İşlem yapılıyor..."));
-
     try {
-      await startGoogleOidcFlow({
-        locale,
-        onSuccess: () => {
-          toast.update(toastId, {
-            render: t("toast.success", "Giriş başarılı"),
-            type: "success",
-            isLoading: false,
-            autoClose: 1500,
-            closeOnClick: true,
-          });
-          console.log("Google ile giriş başarılı, sayfa yenileniyor...");
-          setTimeout(() => {
-            router.push("/profile");
-            router.refresh();           // SSR/Middleware’ı tetikler
-          }, 200);
-        },
-        onError: (reason) => {
-          toast.update(toastId, {
-            render: reason || t("toast.genericError", "Bir hata oluştu"),
-            type: "error",
-            isLoading: false,
-            autoClose: 4000,
-            closeOnClick: true,
-          });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/profile`, // veya auth callback sayfanız
         },
       });
+
+      if (error) {
+        toast.error(error.message);
+        setLoading(false);
+      }
+      // Başarılı olursa Supabase otomatik yönlendirme yapar, loading false yapmaya gerek kalmayabilir
+      // ama yine de kullanıcı geri dönerse diye bırakabiliriz.
     } catch (e) {
-      toast.update(toastId, {
-        render: e?.message || t("toast.unexpected", "Beklenmeyen bir hata oluştu"),
-        type: "error",
-        isLoading: false,
-        autoClose: 4000,
-        closeOnClick: true,
-      });
-    } finally {
+      toast.error(t("toast.unexpected", "Beklenmeyen bir hata oluştu"));
       setLoading(false);
     }
   };
@@ -109,3 +84,4 @@ const StyledWrapper = styled.div`
   button:hover { transform: scale(1.01); }
   button:disabled { opacity: .6; cursor: not-allowed; }
 `;
+

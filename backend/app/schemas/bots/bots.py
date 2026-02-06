@@ -49,12 +49,19 @@ class BotsOut(BotsBase):
     rent_expires_at: Optional[datetime] = None
     enter_on_start: Optional[bool] = None
     description: Optional[str] = None
-    is_profit_share: Optional[bool] = None
+
     deposit: Optional[float] = None
+    
+    # Performance fields
+    power_score: Optional[int] = None
+    work_time: Optional[int] = None
+    exposure_long: Optional[int] = 0
+    exposure_short: Optional[int] = 0
+    exposure_spot: Optional[int] = 0
     
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class BotListingUpdate(BaseModel):
@@ -63,9 +70,7 @@ class BotListingUpdate(BaseModel):
     sell_price: Optional[float] = None
     rent_price: Optional[float] = None
     revenue_wallet: Optional[str] = None
-    is_profit_share: Optional[bool] = None
-    sold_profit_share_rate: Optional[float] = None
-    rent_profit_share_rate: Optional[float] = None
+
     listing_description: Optional[str] = Field(None, max_length=1000)
 
 

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import axios from "axios";
+import api from "@/api/axios";
 
 const useBotExamineStore = create((set, get) => ({
   bots: {},
@@ -48,11 +48,9 @@ const useBotExamineStore = create((set, get) => ({
   // ✅ Yeni fonksiyon: Analiz verilerini çek ve store'a ekle
   fetchAndStoreBotAnalysis: async (botId) => {
     try {
-      axios.defaults.withCredentials = true;
+      // axios.defaults.withCredentials = true; // api instance already handles this
 
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/bots/${botId}/analysis`
-      );
+      const response = await api.get(`/bots/${botId}/analysis`);
 
       const botData = response.data;
 

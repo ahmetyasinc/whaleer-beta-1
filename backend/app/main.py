@@ -5,9 +5,6 @@ from app.routes.auth import router as auth_router
 from app.routes.phantom.auth import router as phantom_auth_router
 from app.routes.phantom.payments import router as phantom_purchase_router
 
-from app.routes.mobile.auth.auth import router as auth_router_mobile
-from app.routes.mobile.bots.bots import protected_router as bot_router_mobile
-from app.routes.mobile.showcase.showcase import protected_router as showcase_router_mobile
 from app.routes.profile.indicator.indicator_data import protected_router as indicator_data_router
 from app.routes.profile.indicator.indicator import protected_router as indicator_router
 from app.routes.profile.indicator.indicator_release import protected_router as indicator_release
@@ -31,7 +28,6 @@ from app.routes.profile.scan.scan import protected_router as scan_router
 from app.routes.profile.whaleer_ai.whaleer_ai import protected_router as whaleer_ai_router
 from app.routes.profile.showcase.showcase import protected_router as showcase
 from app.routes.profile.profile.profile import protected_router as profile
-from app.routes.mobile.profile.profile import protected_router as profileMobile
 from app.routes.admin.admin import protected_router as admin
 from app.routes.profile.support.support import protected_router as support_router
 from app.routes import google_auth
@@ -52,7 +48,6 @@ api_router.include_router(tg_public)
 api_router.include_router(google_auth.router)
 api_router.include_router(user_router)
 api_router.include_router(auth_router)
-api_router.include_router(auth_router_mobile)
 api_router.include_router(phantom_auth_router)
 api_router.include_router(phantom_purchase_router)
 
@@ -80,17 +75,14 @@ api_router.include_router(backtest_router)
 api_router.include_router(backtest_run_router)
 # BOT ROUTES
 api_router.include_router(bots_router)
-api_router.include_router(bot_router_mobile)
 # SCAN ROUTES
 api_router.include_router(scan_router)
 # WHALEER AI ROUTES
 api_router.include_router(whaleer_ai_router)
 # SHOWCASE ROUTES
 api_router.include_router(showcase)
-api_router.include_router(showcase_router_mobile)
 # PROFİLE ROUTES
 api_router.include_router(profile)
-api_router.include_router(profileMobile)
 api_router.include_router(support_router)
 # ADMİN ROUTES
 api_router.include_router(admin)

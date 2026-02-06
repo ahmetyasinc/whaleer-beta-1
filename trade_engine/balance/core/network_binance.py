@@ -3,7 +3,7 @@ import asyncio
 from typing import Dict, Any
 
 # Eğer core klasörü içindeyse tam yolu kullanıyoruz:
-from backend.trade_engine.balance.core.network_adapter import AsyncNetworkAdapter
+from trade_engine.balance.core.network_adapter import AsyncNetworkAdapter
 
 # Logger Tanımları
 logger = logging.getLogger("BinanceNetwork")

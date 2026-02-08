@@ -4,20 +4,76 @@ import { useMemo, useState } from "react";
 import api from "@/api/axios";
 import { IoMdAdd, IoIosStarOutline, IoMdStar } from "react-icons/io";
 import { HiOutlineTrash } from "react-icons/hi";
+import { MdPublish } from "react-icons/md";
 import AddStrategyButton from "./add_strategy_button";
+import { PublishStrategyModal } from "../../(profile)/publishStrategyModal";
 import { SiRobinhood } from "react-icons/si";
 import useStrategyStore from "@/store/indicator/strategyStore";
 import useCodePanelStore from "@/store/indicator/strategyCodePanelStore";
 import useStrategyDataStore from "@/store/indicator/strategyDataStore";
 import { RiErrorWarningFill, RiLockFill } from "react-icons/ri";
 import { useTranslation } from "react-i18next";
+import { publishStrategy } from "@/api/strategies";
 
 // axios.defaults.withCredentials = true;
 
 // GÜNCELLEME: closeModal prop'u eklendi
-const PersonalStrategies = ({ closeModal }) => {
+
+/* ------------------------ Toast ------------------------ */
+function Toast({ toasts }) {
+  const { t } = useTranslation("personalStrategies");
+  return (
+    <div className="fixed top-4 right-4 space-y-3 z-[2000]">
+      {toasts.map((to) => {
+        const title =
+          to.title ||
+          (to.type === "success"
+            ? t("toast.titles.success", "Başarılı")
+            : to.type === "error"
+              ? t("toast.titles.error", "Hata")
+              : t("toast.titles.info", "Bilgi"));
+        return (
+          <div
+            key={to.id}
+            className={`min-w-[260px] max-w-[380px] px-4 py-3 rounded-xl text-sm shadow-2xl border backdrop-blur-md animate-[toastIn_0.25s_ease-out]
+            ${to.type === "success"
+                ? "bg-zinc-900/90 text-emerald-200 border-emerald-500/30 shadow-emerald-500/10"
+                : to.type === "error"
+                  ? "bg-zinc-900/90 text-rose-200 border-rose-500/30 shadow-rose-500/10"
+                  : "bg-zinc-900/90 text-zinc-200 border-zinc-500/30"
+              }`}
+            role="status"
+          >
+            <div className="font-medium">{title}</div>
+            {to.msg && <div className="opacity-80 mt-0.5 text-xs">{to.msg}</div>}
+          </div>
+        );
+      })}
+
+      <style jsx>{`
+        @keyframes toastIn {
+          from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+const PersonalStrategies = ({ closeModal, isPublishMode }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [toDelete, setToDelete] = useState(null); // seçili versiyon objesi
+
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [strategyToPublish, setStrategyToPublish] = useState(null);
+
+  // Toast state
+  const [toasts, setToasts] = useState([]);
+  const showToast = (type, msg, title) => {
+    const id = Math.random().toString(36).slice(2);
+    setToasts((prev) => [...prev, { id, type, msg, title }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 2600);
+  };
 
   const { favorites, toggleFavorite, strategies, setPersonalStrategies } = useStrategyStore();
   const { openPanel, closePanelIfMatches } = useCodePanelStore();
@@ -93,6 +149,36 @@ const PersonalStrategies = ({ closeModal }) => {
     } finally {
       setShowDeleteModal(false);
       setToDelete(null);
+    }
+  };
+
+  const handlePublishClick = (strategy) => {
+    setStrategyToPublish(strategy);
+    setShowPublishModal(true);
+  };
+
+  const handlePublish = async ({ permissions, description }) => {
+    if (!strategyToPublish) return;
+    try {
+      const res = await publishStrategy({
+        strategyId: strategyToPublish.id,
+        permissions,
+        description
+      });
+
+      if (res.ok) {
+        console.log("Strategy published successfully", res.data);
+        showToast("success", t("toast.messages.strategyPublish.ok", "Strateji başarıyla yayınlandı."), t("toast.titles.success", "Başarılı"));
+      } else {
+        console.error("Publish failed:", res.error);
+        showToast("error", res.error || t("toast.messages.strategyPublish.failed", "Yayınlama başarısız oldu."), t("toast.titles.error", "Hata"));
+      }
+    } catch (error) {
+      console.error("Publish error:", error);
+      showToast("error", t("toast.messages.strategyPublish.unexpected", "Beklenmedik bir hata oluştu."), t("toast.titles.error", "Hata"));
+    } finally {
+      setShowPublishModal(false);
+      setStrategyToPublish(null);
     }
   };
 
@@ -180,42 +266,55 @@ const PersonalStrategies = ({ closeModal }) => {
 
                 {/* right */}
                 <div className="flex items-center gap-2">
-                  {/* Kilit ikonu — SEÇİLİ versiyon özelinde */}
-                  {isLocked && (
-                    <div className="group relative" title={t("tooltips.lockedVersion")}>
-                      <RiLockFill className="text-amber-500/80 text-[18px]" />
-                    </div>
+                  {isPublishMode ? (
+                    <button
+                      className="bg-transparent mr-4 text-zinc-200 px-2 py-1 rounded-2xl flex items-center gap-2 transition-all shadow hover:shadow-[0_0_25px_rgba(37,99,235,0.5)] hover:text-sky-400"
+                      onClick={() => handlePublishClick(selected)}
+                      title={t("Publish")}
+                    >
+                      <MdPublish className="text-[18px]" />
+                      <span className="text-[12px] font-medium">{t("Yayınla")}</span>
+                    </button>
+                  ) : (
+                    <>
+                      {/* Kilit ikonu — SEÇİLİ versiyon özelinde */}
+                      {isLocked && (
+                        <div className="group relative" title={t("tooltips.lockedVersion")}>
+                          <RiLockFill className="text-amber-500/80 text-[18px]" />
+                        </div>
+                      )}
+
+                      {/* AddStrategyButton sadece SEÇİLİ versiyon için */}
+                      {/* GÜNCELLEME: closeModal prop'u AddStrategyButton'a aktarılıyor */}
+                      <AddStrategyButton strategyId={selected.id} closeModal={closeModal} />
+
+                      {/* Paneli AÇ (SiRobinhood) — TÜM versiyonları ve groupId’yi gönder */}
+                      <button
+                        className="bg-transparent p-2 rounded-md transition-colors"
+                        onClick={() => {
+                          openPanel({
+                            groupId,
+                            versions,                 // tüm versiyon objeleri
+                            initialSelectedId: selected.id,
+                          });
+                          // GÜNCELLEME: Düzenleme butonuna tıklandığında modalı kapat
+                          if (closeModal) closeModal();
+                        }}
+                        title={t("buttons.openEdit")}
+                      >
+                        <SiRobinhood className="text-blue-400 hover:text-blue-600 text-lg cursor-pointer" />
+                      </button>
+
+                      {/* Silme sadece SEÇİLİ versiyon için */}
+                      <button
+                        className="bg-transparent pr-4 pl-2 rounded-md transition-colors"
+                        onClick={() => askDelete(selected)}
+                        title={t("tooltips.delete")}
+                      >
+                        <HiOutlineTrash className="text-red-600 hover:text-red-500 text-[19.5px] cursor-pointer" />
+                      </button>
+                    </>
                   )}
-
-                  {/* AddStrategyButton sadece SEÇİLİ versiyon için */}
-                  {/* GÜNCELLEME: closeModal prop'u AddStrategyButton'a aktarılıyor */}
-                  <AddStrategyButton strategyId={selected.id} closeModal={closeModal} />
-
-                  {/* Paneli AÇ (SiRobinhood) — TÜM versiyonları ve groupId’yi gönder */}
-                  <button
-                    className="bg-transparent p-2 rounded-md transition-colors"
-                    onClick={() => {
-                      openPanel({
-                        groupId,
-                        versions,                 // tüm versiyon objeleri
-                        initialSelectedId: selected.id,
-                      });
-                      // GÜNCELLEME: Düzenleme butonuna tıklandığında modalı kapat
-                      if (closeModal) closeModal();
-                    }}
-                    title={t("buttons.openEdit")}
-                  >
-                    <SiRobinhood className="text-blue-400 hover:text-blue-600 text-lg cursor-pointer" />
-                  </button>
-
-                  {/* Silme sadece SEÇİLİ versiyon için */}
-                  <button
-                    className="bg-transparent pr-4 pl-2 rounded-md transition-colors"
-                    onClick={() => askDelete(selected)}
-                    title={t("tooltips.delete")}
-                  >
-                    <HiOutlineTrash className="text-red-600 hover:text-red-500 text-[19.5px] cursor-pointer" />
-                  </button>
                 </div>
               </div>
             );
@@ -278,6 +377,17 @@ const PersonalStrategies = ({ closeModal }) => {
         </div>
       )}
 
+      <PublishStrategyModal
+        isOpen={showPublishModal}
+        onClose={() => {
+          setShowPublishModal(false);
+          setStrategyToPublish(null);
+        }}
+        onPublish={handlePublish}
+      />
+
+      {/* Toast container */}
+      <Toast toasts={toasts} />
     </div>
   );
 };

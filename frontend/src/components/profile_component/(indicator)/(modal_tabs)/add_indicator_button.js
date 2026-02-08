@@ -4,8 +4,8 @@ import usePanelStore from "@/store/indicator/panelStore";
 import useCryptoStore from "@/store/indicator/cryptoPinStore";
 import useIndicatorDataStore from "@/store/indicator/indicatorDataStore";
 import api from "@/api/axios";
-import { IoDownloadOutline } from "react-icons/io5";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { MdDownload } from "react-icons/md";
 import { useTranslation } from "react-i18next";
 
 // axios.defaults.withCredentials = true;
@@ -78,7 +78,7 @@ const AddIndicatorButton = ({ indicatorId, closeModal }) => {
       {isLoading ? (
         <AiOutlineLoading3Quarters className="animate-spin text-yellow-400 text-lg" />
       ) : (
-        <IoDownloadOutline className="text-green-300 hover:text-emerald-500 text-lg" />
+        <MdDownload className="text-green-300 hover:text-emerald-500 text-[22px]" />
       )}
     </button>
   );

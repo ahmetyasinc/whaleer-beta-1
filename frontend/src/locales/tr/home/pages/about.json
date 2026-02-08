@@ -1,9 +1,117 @@
 {
   "title": "Whaleer Hakkında",
-  "p1": "yenilikçi, web tabanlı bir platformdur. Kullanıcıların teknik geçmişleri ne olursa olsun kendi alım-satım algoritmalarını tasarlamalarını, test etmelerini ve ticarileştirmelerini sağlar. Misyonumuz; algoritmik alım-satımı, başlangıç seviyesinden ileri düzey geliştiricilere ve profesyonel trader’lara kadar herkes için erişilebilir, verimli ve kullanıcı dostu hâle getirmektir.",
-  "p2": "Whaleer’ın merkezinde güçlü ama sezgisel bir arayüz bulunur. Yeni başlayanlar basit yapılandırma panelleriyle strateji oluşturabilirken, deneyimli kullanıcılar gelişmiş özelleştirme seçenekleriyle kendi algoritmik betiklerini yazıp ince ayar yapabilir. Tüm seviyelere hitap ederek kullanıcıların öğrenmesine, denemesine ve birlikte büyümesine imkân veren işbirlikçi bir ekosistem sunar.",
-  "p3": "Algoritma oluşturmanın ötesinde Whaleer, stratejilerin diğer kullanıcılarla paylaşılabildiği, satılabildiği veya kiralanabildiği dinamik bir pazaryeri sunar. Bu, üreticiler için yeni bir gelir kapısı açarken yatırımcılara da çeşitli ve kullanıma hazır stratejilere erişim sağlar. Platformumuz yeniliği ve bilgi paylaşımını teşvik ederek geliştiriciler ile tüketicilerin etkileşime geçip birlikte fayda sağlamasına ortam oluşturur.",
-  "p4": "Hafif, vektör tabanlı işlem motorumuz yüksek performansı korurken ücretsiz katman sınırlarını genişletmemizi sağlar. Whaleer, gelişmiş analizler, backtest araçları ve daha yüksek strateji limitleri gibi premium özellikler de sunar. ",
-  "p5": "Whaleer sadece bir platform değil herkes için daha şeffaf, işbirliğine açık ve geleceğin güçlendirilmiş alım-satım dünyasına doğru bir hareket.",
+  "introduction": {
+    "title": "Platformun Tanıtımı",
+    "content": "Finansal Teknolojide Yeni Bir Çağ: Whaleer ile Tanışın Whaleer; kripto para piyasalarının karmaşıklığını, veriye dayalı stratejiler ve otomatize edilmiş işlem modelleriyle sadeleştiren profesyonel bir algotrade platformudur. Günümüzün hızla değişen finansal ortamında, manuel işlemlerin getirdiği duygusal hataları ve zaman kaybını ortadan kaldırmak amacıyla kurulan Whaleer; kullanıcılarına sadece bir araç değil, uçtan uca tasarlanmış dijital bir ticaret ekosistemi sunar. Python tabanlı esnek yapısı sayesinde, teknik analizlerinizi doğrudan algoritmalara dönüştürebilir, borsalarla tam entegre bir şekilde 7/24 kesintisiz işlem yapma gücüne erişebilirsiniz. Herkes İçin Profesyonel ÇözümlerWhaleer, ticaret dünyasının farklı katmanlarındaki tüm aktörler için özelleştirilmiş bir deneyim alanı yaratır:Strateji Geliştiriciler İçin: Kendi algoritmalarınızı yazabileceğiniz güçlü bir geliştirme ortamı ve yazdığınız stratejileri NFT tabanlı bir altyapı ile güvenle satabileceğiniz bir pazar yeri.Yatırımcılar İçin: Teknik bilgiye ihtiyaç duymadan, platform üzerindeki doğrulanmış ve geçmiş performansı şeffafça sergilenen stratejileri satın alıp kendi portföylerini otomatik botlara emanet etme imkânı.Analistler İçin: Bot çalıştırmasalar bile, piyasanın nabzını tutabilecekleri gelişmiş grafik arayüzleri ve manuel analiz araçlarıyla donatılmış bir terminal.Şeffaflık, Güvenlik ve Sosyal EtkileşimPlatformumuzun kalbinde, her bir işlemin ve stratejinin şeffaf bir şekilde test edilebildiği Gelişmiş Backtest Modülü yer alır. Kullanıcılar, bir stratejiyi yayına almadan veya satın almadan önce, o stratejinin geçmiş piyasa koşullarında nasıl performans sergilediğini tüm detaylarıyla inceleyebilirler. Ödeme sistemlerinde kullanılan NFT teknolojisi, mülkiyet haklarını ve işlem güvenliğini en üst seviyeye taşırken; Keşfet arayüzümüz sayesinde kullanıcılar arasında etkileşim sağlayarak algoritmik ticareti sosyal bir deneyime dönüştürüyoruz.Vizyonumuz: Bireysel Yatırımcıyı Kurumsal Güce UlaştırmakWhaleer’ın temel amacı, algoritmik ticareti sadece büyük finans kuruluşlarının tekelinden çıkarıp bireysel yatırımcıların da erişebileceği bir standart haline getirmektir. Şeffaf ekosistemimiz, kullanıcı dostu arayüzümüz ve her adımda yanınızda olan destek hattımızla; ticaretin geleceğini bugünden inşa ediyoruz. Piyasadaki bireysel işlem hacmini artırırken, her seviyeden kullanıcının kendi finansal özgürlük hikâyesini profesyonel bir altyapı üzerinde yazmasını hedefliyoruz.Whaleer, kullanıcıların python tabanlı bir dil ile stratejilerini algoritmik kripto botlarına engtegre edip borsalar üzerinde otomatik işlemler gerçekleştirebildiği grafik üzerinde analizler yapabildiği ve stratejilerin geçmiş performanslarını görmek için backtest yapabildiği doğrulanmış stratejileri satışa çıkarabildiği ve başkalarının stratejilerini satın alabildiği bir algotrade platformudur, ödeme işlemleri nft tabanlı olmakla beraber tüm veriler yüksek güvenlikle korunmaktadır. Projemiz ellerinde iyi kar ettiklerini düşündükleri stratejileri satmak isteyen satıcılar ve elindeki parayı algoritmik robota koymak isteyen alıcılar için mükkemmel bir ekosistem sunmaktadır sade ve anlaşılır arayüzü müşteriyi mağdur etmeyen bir destek hattı ve yüksek etkileşim şansı tanıyan keşfey arayüzü sayesinde sosyal bir ortam oluşması planlanmaktadır. ayrıca bot alıp satmasa bile kendi botunu yazıp çalıştıracak kullanıcılar için veya bot çalıştırmasa bile sadece grafik üzerinde manuel analiz yapacak kullanıcılar için bile faydalı bir hixmet vermektedir. Projenin amacı algotirmik trade e yeni başlayanlara kendilerini geliştirebilecekleri ve ilk deneyimlerini profesyonel bir şekilde yaşayabilecekleri şeffaf bir ekosistem oluşturmak ve piyasadaki algoritmik işlem hacminin bireysel oranını bir nebze olsun artırmaktır."
+  },
+  "story": {
+    "title": "Hikayemiz - Nasıl & Neden Kuruldu?",
+    "content": "Whaleer’ın doğuşu, modern kripto para piyasalarındaki temel bir paradoksun analiziyle başladı: Piyasalar 7/24 kesintisiz ve milisaniyelik hızlarla hareket ederken, bireysel yatırımcıların hala manuel yöntemlere, kısıtlı grafik araçlarına ve en önemlisi kendi duygusal tepkilerine mahkûm olması. Mevcut finansal ekosistemde, kurumsal devlerin sahip olduğu yüksek frekanslı işlem (HFT) algoritmaları ile bireysel yatırımcının kısıtlı imkanları arasındaki uçurumun her geçen gün açıldığını gözlemledik. Yatırımcıların en büyük problemi, ellerinde başarılı olabilecek stratejik fikirler olsa dahi, bunları disiplinli bir şekilde uygulayacak teknik altyapıdan yoksun olmalarıydı. Ayrıca, piyasada sinyal grupları veya kopya ticaret adı altında dönen, hiçbir şeffaflığı bulunmayan ve manipülasyona açık olan yapıların, güven arayan yatırımcıları sürekli mağdur etmesi, çözülmesi gereken devasa bir güven krizini temsil ediyordu. Whaleer; işte bu teknolojik asimetriyi, denetimsiz strateji kirliliğini ve yatırımcıyı uykusuz gecelere mahkûm eden manuel işlem zorunluluğunu ortadan kaldırmak, finansal özgürlüğü veriye dayalı şeffaf bir zemine oturtmak amacıyla bir zorunluluktan doğdu. Whaleer’ın kurucu vizyonu, aslında bir mühendislik disipliniyle finansal piyasaların kaotik yapısını evlendirme arzusuna dayanmaktadır. Kurucunun temel amacı; gelişmiş algoritmik stratejilerin sadece quant seviyesindeki yazılımcıların veya dev fonların elinde olduğu o kapalı kapıları, her seviyeden kullanıcı için ardına kadar açmaktı. Kurucu, bireysel yatırımcının en zayıf halkası olan duygusal işlem yapma ve zaman yönetimi engellerini teknoloji ile aşmayı hedefledi. İnsan psikolojisinin piyasadaki anlık dalgalanmalar karşısında gösterdiği korku ve açgözlülük reflekslerini sistemden tamamen izole ederek, yerine Python tabanlı, matematiksel bir kesinlik ve soğukkanlılık koymak istedi.Bunun ötesinde, sektördeki en büyük yaralardan biri olan strateji güvenilirliği sorununa radikal bir çözüm getirmeyi amaçladı; başarısı kanıtlanmış bir stratejinin bir başkasına aktarılma sürecini, hiçbir manipülasyona izin vermeyen NFT tabanlı bir mülkiyet ve onay sistemiyle profesyonelleştirmeyi hedefledi. Kısacası kurucu; strateji üretenin emeğini koruyan, sermaye sahibinin ise neye yatırım yaptığını şeffafça bildiği, piyasada bireyin şansla değil veriyle var olabildiği adil bir teknolojik zemin inşa etmek için yola çıktı. Whaleer fikrinin ilk kıvılcımı, bir gece yarısı piyasadaki ani bir dalgalanma sırasında, manuel olarak işlem yapmaya çalışırken yaşanan o kaçınılmaz gecikme ve 'keşke bu stratejiyi koda dökebilseydim' iç çekişiyle ateşlendi. Kurucunun, kendi yazdığı scriptleri borsalara bağlamaya çalışırken karşılaştığı teknik zorluklar ve piyasadaki mevcut bot platformlarının ya çok yetersiz ya da aşırı pahalı ve kapalı kutu olduğunu fark etmesi, projenin ilk taslaklarını oluşturdu.Asıl kırılma noktası ise, başarılı stratejilere sahip kişilerin bunları sadece kısıtlı bir çevreyle paylaşabildiğini, buna karşılık yatırım yapmak isteyenlerin ise güvenilir strateji bulamadığı o pazar yeri boşluğunu görmesiyle yaşandı. Neden profesyonel bir yazılımcının algoritması, bir yatırımcı için dijital bir varlık (NFT) haline gelmesin? sorusu, Whaleer'ı basit bir bot sitesinden devasa bir ekosisteme dönüştüren o büyük fikri doğurdu. Bu fikir; teknik analiz araçlarının yetersizliği, API entegrasyonlarının karmaşıklığı ve piyasadaki güven erozyonu bir araya geldiğinde, tüm bu sorunları tek bir çatı altında çözen 'Whaleer' projesine evrildi."
+  },
+  "vision_mission": {
+    "title1": "Vizyonumuz",
+    "title2": "Misyonumuz",
+    "content1": "Vizyonumuz: Bireysel Yatırımcıyı Kurumsal Güce Ulaştırmak. Whaleer’ın temel amacı, algoritmik ticareti sadece büyük finans kuruluşlarının tekelinden çıkarıp bireysel yatırımcıların da erişebileceği bir standart haline getirmektir. Şeffaf ekosistemimiz, kullanıcı dostu arayüzümüz ve her adımda yanınızda olan destek hattımızla; ticaretin geleceğini bugünden inşa ediyoruz. Whaleer olarak vizyonumuz; algoritmik ticareti bir ayrıcalık olmaktan çıkarıp, her seviyeden yatırımcı için bir standart haline getirmektir. Kripto para ekosisteminde veriye dayalı kararların duyguların önüne geçtiği, şeffaf ve denetlenebilir bir ticaret kültürünün öncüsü olmayı hedefliyoruz. Yakın gelecekte, sadece bir platform değil; en yetenekli strateji geliştiricilerin küresel ölçekte tanındığı, NFT tabanlı finansal ürünlerin ticaretin merkezinde yer aldığı ve bireysel yatırımcıların birer \"Balina\" (Whale) disipliniyle hareket edebildiği dünyanın en kapsamlı algotrade ekosistemi olmayı amaçlıyoruz.",
+    "content2": "Misyonumuz: Güveni ve Şeffaflığı Yeniden Tanımlamak. Whaleer’ın misyonu, kripto piyasalarındaki güven krizini ortadan kaldırmaktır. Sektördeki şeffaflık eksikliğini ve manipülasyon risklerini, blockchain tabanlı NFT mülkiyet sistemi ve denetlenebilir backtest sonuçları ile çözüyoruz. Amacımız; her yatırımcının, neye yatırım yaptığını tam olarak bilerek, duygusal kararlar yerine veri odaklı, disiplinli ve güvenli bir ticaret deneyimi yaşamasını sağlamaktır. karmaşık finansal teknolojileri, kullanıcı dostu ve yüksek güvenlikli bir arayüzle demokratikleştirmektir.",
+    "article1": "Teknolojik Üstünlük: Python tabanlı esnek altyapımızla, en karmaşık stratejilerin bile milisaniyeler içinde hayata geçirilmesini sağlamak.",
+    "article2": "Güven ve Şeffaflık: NFT tabanlı mülkiyet ve doğrulanmış performans verileriyle, piyasadaki \"bilgi kirliliği\" ve \"manipülasyonu\" tamamen ortadan kaldırmak.",
+    "article3": "Erişilebilirlik: Kurulum ve kullanım zorluklarını ortadan kaldıran, her seviyeden yatırımcının kolayca adapte olabileceği bir arayüz sunmak. Teknik bilgisi ne olursa olsun, her yatırımcının profesyonel araçlara ve başarılı stratejilere kolayca ulaşabileceği adil bir zemin yaratmak.",
+    "article4": "Eğitim ve Gelişim: Algoritmik ticarete yeni başlayan bireyleri destekleyerek, bireysel işlem hacminin piyasadaki ağırlığını ve kalitesini artırmak..Topluluk ve İnovasyon: Dünyanın dört bir yanından yetenekli geliştiricileri bir araya getirerek, sürekli gelişen ve yenilikçi bir ekosistem yaratmak."
+  },
+  "team": {
+    "title": "Ekip",
+    "description": "Whaleer'ın arkasındaki profesyonel ekip.",
+    "list": [
+      {
+        "name": "Ahmet Yasin Çelik",
+        "role": "Founder & CEO",
+        "bio": "Marmara Üniversitesi Elektrik Eelektronik Mühendisliği öğrencisi.",
+        "linkedin": "https://www.linkedin.com/in/ahmet-yasin-çelik?utm_source=share_via&utm_content=profile&utm_medium=member_android",
+        "instagram": "https://www.instagram.com/ahmet_yasinc?igsh=eW54dG9ucDdodHlm",
+        "image": "/team/ahmet.png"
+      },
+      {
+        "name": "Bilal Bostan",
+        "role": "CPO - Frontend Develeoper",
+        "bio": "Marmara Üniversitesi Elektrik Eelektronik Mühendisliği öğrencisi.",
+        "linkedin": "https://www.linkedin.com/in/bilal-bostan-a16b7a2a2?utm_source=share_via&utm_content=profile&utm_medium=member_android",
+        "instagram": "https://www.instagram.com/bilalbstn7?igsh=MXZxMm9rbzlrdTBiYQ==",
+        "image": "/team/bilal.png"
+      },
+      {
+        "name": "Taha Emre Can",
+        "role": "CTO - Backend Developer",
+        "bio": "Marmara Üniversitesi Elektrik Eelektronik Mühendisliği öğrencisi.",
+        "linkedin": "https://www.linkedin.com/in/tahaemrecan?utm_source=share_via&utm_content=profile&utm_medium=member_android",
+        "instagram": "https://www.instagram.com/tahaemrecan?igsh=MzRkcmJhYXVpYXM5",
+        "image": "/team/taha.png"
+      },
+      {
+        "name": "Mevlüt Akhan",
+        "role": "Senior COO",
+        "bio": "Marmara Üniversitesi Elektrik Eelektronik Mühendisliği öğrencisi.",
+        "linkedin": "https://www.linkedin.com/in/mevlutakhan?utm_source=share_via&utm_content=profile&utm_medium=member_android",
+        "instagram": "https://www.instagram.com/akhanmevlut?igsh=bWJ5ZW1rbWhkaHBz",
+        "image": "/team/mevlüt.png"
+      },
+      {
+        "name": "Abdulsamet Yaramış",
+        "role": "CFO - Data Analyst",
+        "bio": "Marmara Üniversitesi Elektrik Eelektronik Mühendisliği öğrencisi.",
+        "linkedin": "https://www.linkedin.com/in/sametyaramis?utm_source=share_via&utm_content=profile&utm_medium=member_android",
+        "instagram": "https://www.instagram.com/samet.yaramiss?igsh=bjJsa2M5cmVoZW1r",
+        "image": "/team/samet.png"
+      }
+    ]
+  },
+  "how_it_works": {
+    "title": "Neden Whaleer?",
+    "steps": [
+      {
+        "title": "Algoritmik trade’e başlamak neden bu kadar zor olmak zorunda?",
+        "desc": "Algoritmik trade’i karmaşık gösteren şey; dağınık araçlar, teknik bariyerler, güven eksikliği ve doğrulanmamış stratejilerle dolu bir ekosistemdir. Whaleer, analizden backteste, bot çalıştırmadan strateji paylaşımına kadar tüm süreci tek ve sade bir platformda birleştirerek bu engelleri ortadan kaldırmayı hedefler. Çünkü finansal teknolojiler yalnızca uzmanların değil, öğrenmek, denemek ve büyümek isteyen herkesin erişebileceği kadar anlaşılır olmalıdır."
+      },
+      {
+        "title": "Stratejilerin gerçekten işe yaradığını görmeden neden risk alalım?",
+        "desc": "Gerçek verilere dayanmayan, geçmiş performansı şeffaf biçimde gösterilmeyen hiçbir strateji güven vermez. Whaleer, her stratejinin backtest sonuçlarını, risk metriklerini ve doğrulama süreçlerini görünür kılarak kullanıcıların tahmine değil veriye dayalı karar vermesini sağlar. Çünkü sürdürülebilir kazanç; umutla değil, ölçülebilir ve kanıtlanabilir performansla başlar."
+      },
+      {
+        "title": "Güvenliğini bilmediğimiz botlara neden paramızı emanet edelim?",
+        "desc": "Finansal güven, varsayımlarla değil şeffaflık, teknik güvenlik ve doğrulanabilir süreçlerle inşa edilir. Whaleer; API anahtarlarının şifreli şekilde saklandığı, kullanıcı fonlarına doğrudan erişim bulunmayan ve izole ortamlarda çalışan bot altyapısıyla riski en aza indirmeyi hedefler. Ayrıca stratejilerin performansı ve davranışı izlenebilir olduğundan, kullanıcılar kontrolü her zaman elinde tutar. Çünkü gerçek güven; parayı teslim etmekten değil, kontrolü kaybetmemekten doğar."
+      },
+      {
+        "title": "Başarılı strateji geliştirenler neden bundan gelir elde edemesin?",
+        "desc": "Algoritmik bilgi ve emek; yalnızca kişisel kazançla sınırlı kalmamalı, değer üretenler için sürdürülebilir bir gelir modeline dönüşebilmelidir. Whaleer, doğrulanmış performansa sahip stratejilerin şeffaf biçimde sergilenmesini ve güvenli bir altyapı üzerinden alıcılarla buluşmasını sağlayarak geliştiricilerin emeklerini kazanca çevirebileceği adil bir pazar sunar. Çünkü güçlü bir ekosistem; üreteni ödüllendiren, paylaşımı teşvik eden ve değeri görünür kılan bir yapı üzerine kurulur."
+      },
+      {
+        "title": "Karmaşık arayüzler olmadan profesyonel işlem yapmak mümkün değil mi?",
+        "desc": "Profesyonellik; karmaşık görünen ekranlardan değil, doğru tasarlanmış, anlaşılır ve amaca hizmet eden bir deneyimden doğar. Whaleer, güçlü analiz araçlarını ve otomasyon süreçlerini sade bir arayüzle birleştirerek hem yeni başlayanların zorlanmadan ilerleyebilmesini hem de deneyimli kullanıcıların ihtiyaç duyduğu derinliği kaybetmemesini hedefler. Çünkü iyi bir finansal deneyim; karmaşıklığı artırmakla değil, onu görünmez kılmakla değer kazanır."
+      },
+      {
+        "title": "Toplulukla birlikte öğrenmek ve büyümek daha güçlü değil mi?",
+        "desc": "Bilginin paylaşıldığı, deneyimlerin aktarıldığı ve stratejilerin birlikte geliştiği bir topluluk; bireysel deneme-yanılma sürecini hızlandırır ve daha sağlam sonuçlar üretir. Whaleer, kullanıcıların stratejilerini görünür kılabildiği, geri bildirim alabildiği ve ortak bir öğrenme kültürü içinde ilerleyebildiği sosyal bir ekosistem kurmayı hedefler. Çünkü kalıcı başarı; tek başına ilerlemekten değil, birlikte öğrenip birlikte büyümekten doğar."
+      },
+      {
+        "title": "Sadece profesyonellerin değil, herkesin algoritmik trade yapma hakkı yok mu?",
+        "desc": "Finansal teknolojiler, yalnızca uzmanların erişebildiği kapalı alanlar değil; öğrenmek, denemek ve kendini geliştirmek isteyen herkes için ulaşılabilir olmalıdır. Whaleer, teknik engelleri azaltan araçları, rehberlik eden bir deneyimi ve şeffaf bir ekosistemi bir araya getirerek algoritmik trade’i daha kapsayıcı hale getirmeyi amaçlar. Çünkü fırsat eşitliği; bilginin ve teknolojinin herkes için erişilebilir olmasıyla başlar."
+      },
+      {
+        "title": "Algoritmik finans neden sadece azınlığa ait olsun?",
+        "desc": "Algoritmik finansın yalnızca sınırlı bir kesimin erişebildiği bir alan olarak kalması; bilginin, teknolojinin ve fırsatların eşit dağılmamasından kaynaklanır. Oysa doğru araçlar, şeffaf veriler ve anlaşılır bir deneyim sunulduğunda herkes bu dünyanın parçası olabilir. Whaleer, teknik bariyerleri azaltarak ve doğrulanabilir bir ekosistem oluşturarak algoritmik finansı daha erişilebilir ve adil hale getirmeyi hedefler. Çünkü geleceğin finansı; azınlığın değil, katılmak isteyen herkesin söz sahibi olabildiği bir yapı üzerine kurulmalıdır."
+      },
+      {
+        "title": "Veriye dayalı, şeffaf ve doğrulanabilir bir trade ekosistemi mümkün mü?",
+        "desc": "Gerçek zamanlı verilerin doğru şekilde işlenmesi, strateji performanslarının ölçülebilir metriklerle sunulması ve tüm süreçlerin şeffaf biçimde izlenebilmesi; güvenilir bir trade ekosisteminin temelini oluşturur. Whaleer, backtest sonuçlarından risk göstergelerine, doğrulama mekanizmalarından kullanıcı geri bildirimlerine kadar her adımı görünür kılarak kararların tahmine değil veriye dayanmasını sağlar. Çünkü sürdürülebilir başarı; belirsizlikten değil, ölçülebilirlik ve şeffaflıktan doğar."
+      },
+      {
+        "title": "Tek bir platformda analiz, otomasyon ve gelir modeli birleşemez mi?",
+        "desc": "Analiz araçlarının, otomatik işlem altyapısının ve sürdürülebilir bir gelir modelinin tek bir çatı altında toplanması; hem kullanıcı deneyimini sadeleştirir hem de üretkenliği artırır. Whaleer, grafik üzerinde derinlemesine analiz yapabilmeyi, stratejileri algoritmik botlara dönüştürüp çalıştırmayı ve doğrulanmış performansı gelir fırsatına çevirmeyi aynı ekosistemde buluşturarak bu bütüncül yapıyı mümkün kılar. Çünkü gerçek değer; parçalı çözümlerden değil, birlikte çalışan bütünsel sistemlerden doğar."
+      },
+      {
+        "title": "Geleceğin trade deneyimi nasıl olmalı?",
+        "desc": "Geleceğin trade deneyimi; karmaşık, kapalı ve yalnızca uzmanlara hitap eden bir yapıdan uzak, erişilebilir, şeffaf ve veri odaklı olmalıdır. Kullanıcıların stratejilerini kolayca geliştirebildiği, gerçek performansı net biçimde görebildiği, otomasyonu güvenle kullanabildiği ve ister bireysel ister topluluk içinde büyüyebildiği bir ekosistem bu deneyimin temelini oluşturur. Whaleer, analizden otomasyona, doğrulamadan gelir modeline kadar tüm süreci tek bir çatı altında toplayarak trade’i daha anlaşılır, güvenilir ve kapsayıcı hale getirmeyi hedefler. Çünkü geleceğin finansı; belirsizliğin değil, kontrolün, şeffaflığın ve ortak büyümenin üzerine inşa edilir."
+      }
+    ]
+  },
   "imageAlt": "Whaleer logosu"
 }

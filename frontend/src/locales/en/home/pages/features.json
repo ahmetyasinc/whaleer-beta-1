@@ -1,23 +1,86 @@
 {
   "title": "Algorithmic Trading with Whaleer",
-  "subtitle": "Create, test, run, and share strategies with Whaleer. Follow the steps below to get started!",
-  "cta": "Get Started Now",
-  "steps": {
+  "subtitle": "The features you can access and benefit from in the Whaleer project are listed. We recommend that you review and follow these steps for efficient use.",
+  "items": {
     "1": {
-      "title": "1. Create Your Strategy",
-      "desc": "Easily build your own algorithmic strategy using the Python-based editor. Define your rules with indicators like RSI, MACD."
+      "title": "Easy-to-track profile interface",
+      "desc": "Whaleer profile page allows you to monitor portfolio distribution, investment performance, and all transaction history from a single center. Users can see the number of active indicators, strategies, and bots, as well as track their share in the balance and current profit/loss status with real-time data. The interface simplifies complex financial data, offering strategy management and asset tracking with technical clarity."
     },
     "2": {
-      "title": "2. Test with Backtest",
-      "desc": "Test your strategy on historical data. Instantly see the results and analyze its performance."
+      "title": "Professional analysis charts",
+      "desc": "Whaleer provides high-resolution and interactive charting infrastructure to analyze market data and user strategies. In this section, you can examine asset value changes over time, strategy success rates, and market trends in detail accompanied by technical indicators. Customizable chart tools combine volume analysis, price movements, and indicator outputs on a single plane, enabling data-driven technical analysis."
     },
     "3": {
-      "title": "3. Run the Bot",
-      "desc": "Execute your strategy in real-time with live market data. Let the system trade on your behalf."
+      "title": "Python-Based Editor",
+      "desc": "Whaleer offers an integrated Python-based code editor for users to develop their own trading strategies and algorithms. With this editor, customized data processing models and automated trading bots can be written beyond standard indicators. The structure compatible with Python's flexible library support allows code writing, debugging, and strategy testing processes to be carried out directly within the platform. Written codes work synchronously with Whaleer data flow, allowing performance analysis in real-time market conditions."
     },
     "4": {
-      "title": "4. Archive and Market",
-      "desc": "Archive your strategies, compare their past performance. Rent or sell them if you like."
+      "title": "Advanced Backtest interface",
+      "desc": "Whaleer offers a comprehensive backtest module to measure the performance of developed strategies on historical data. Thanks to this interface, how the created algorithms will result in different time frames and various market conditions is analyzed with basic metrics such as maximum drawdown, profit factor, successful transaction rate, and risk-reward ratio. Users can optimize strategy parameters with historical data and follow transaction simulations on the chart on a candle basis. This structure, where realistic slippage and commission rates can be included, ensures that strategies are technically verified before being released to the live market."
+    },
+    "5": {
+      "title": "Functional Bot interface",
+      "desc": "Whaleer offers a functional bot management interface for the autonomous operation and management of established strategies. critical parameters such as the operating status of active bots, target balance limits, leverage ratios, and stop-loss/take-profit levels can be monitored instantly via this panel. Users can assign special order types for each bot and track the reactions of bots to market signals via real-time log records. The interface accelerates operational processes by allowing bots to be started, stopped or updated with a single click and systematizes the simultaneous management of multiple algorithms."
+    },
+    "6": {
+      "title": "2FA Protection",
+      "desc": "Whaleer uses two-factor authentication (2FA) infrastructure to keep the security of user accounts and connected assets at the highest level. It ensures full account security in cases such as password theft or leakage."
+    },
+    "7": {
+      "title": "Bot market",
+      "desc": "Whaleer Bot Market is a central platform where users can share their developed strategies or examine and use performance-oriented algorithms created by other expert developers. Each bot in the market is listed with transparent metrics such as historical performance data, risk level, transaction frequency, and success rate. Users can filter bots suitable for their investment goals and risk tolerances, compare detailed statistics, and integrate chosen strategies directly into their portfolios. This ecosystem ensures access to professional algorithmic strategies for all users regardless of technical knowledge level and allows strategy developers to present their own models to the ecosystem."
+    },
+    "8": {
+      "title": "Exchange API connection",
+      "desc": "Whaleer offers a high-standard API connection infrastructure for users to securely integrate their existing exchange accounts into the platform. Thanks to this integration, real-time data tracking and order submission can be performed via Whaleer without removing assets from the exchange. Users can provide full control by restricting only reading and trading permissions when defining API keys. API connections are protected by end-to-end encryption and establish a low-latency bridge between Whaleer's strategy engine and the exchange order book, allowing algorithms to run uninterrupted."
+    },
+    "9": {
+      "title": "Uninterrupted support line",
+      "desc": "Whaleer offers an uninterrupted support infrastructure to respond to users' technical questions and platform usage needs. The support system provides technical guidance on issues such as API connections, strategy setup, bot management, and interface usage. Users can benefit from quick solution processes by conveying the problems they experience or their feedback about the platform directly to the support team. This service is kept constantly active to ensure efficient use of all platform features and to prevent operational disruptions."
+    },
+    "10": {
+      "title": "Multiple Bot Execution",
+      "desc": "Whaleer has an advanced multi-processing infrastructure that allows multiple strategies and bots to run independently of each other at the same time. Thanks to this feature, users can simultaneously execute strategies with different risk profiles on different parities or the same parity. Balance, transaction limits, and security parameters allocated for each bot can be configured separately. The system prevents resource conflict between bots, ensuring that each algorithm runs uninterrupted within its own data flow and order cycle. This structure allows risk to be distributed among different strategies and portfolio diversification to be managed without operational confusion."
+    },
+    "11": {
+      "title": "Cloud system",
+      "desc": "Whaleer runs on a cloud-based infrastructure that executes all strategy and bot operations independently of local devices. Algorithms prepared by users and active bots are hosted 24/7 uninterruptedly on Whaleer's high-availability servers. In this way, situations such as the computer being turned off or the internet connection being cut do not affect transaction processes. While cloud architecture performs real-time data flow and order submissions with the lowest latency times, it provides synchronized access to all data via different devices."
+    },
+    "12": {
+      "title": "Discovery interface",
+      "desc": "Whaleer offers an integrated discovery ecosystem where users can interact with each other and examine successful strategies. Technical analyses, strategy notes, and market comments shared by other users can be followed via the community interface. In this platform where popular indicators and prominent bots are exhibited, users can learn about different investment approaches and submit their developed models to community approval. Designed as a transparent social layer, this structure encourages information sharing and transforms algorithmic trading processes into a collective learning experience."
+    },
+    "13": {
+      "title": "NFT payment system",
+      "desc": "Whaleer offers a blockchain-based NFT payment system to secure the usage rights of trading strategies and bots in the bot market. In this structure, each purchased bot or strategy access right is represented by a unique NFT (Non-Fungible Token) defined in the user's wallet. Thanks to NFT-based licensing, users can transparently verify their usage rights, manage their term licenses, and transfer these rights in secondary markets when necessary. This process, carried out through smart contracts, protects the copyrights of developers and provides users with an autonomous payment experience with the security of digital asset ownership."
+    },
+    "14": {
+      "title": "Real exchange data",
+      "desc": "Whaleer uses real-time and high-precision data flows from leading cryptocurrency exchanges to produce the most accurate results for strategies. The platform processes this instantaneous data provided by WebSocket technology and transfers price movements, order book depth, and trading volumes to the analysis engine with millisecond delays. Historical data is presented as cleaned and optimized data sets; thus, market conditions are simulated in the most realistic way in backtest processes. Data consistency guarantees that all indicator calculations and bot orders work in full compliance with exchange prices."
+    },
+    "15": {
+      "title": "Community strategies",
+      "desc": "Whaleer has a strategy ecosystem where users share their knowledge and open successful models to common use. Strategies developed by the community are listed transparently with data such as performance history, risk level, and usage statistics. Users can integrate proven strategies into their portfolios by examining them or interact with developers on technical details. This structure creates a collective growth area that allows experienced investors to commercialize their strategies and new users to take part in the market with tested methods."
+    },
+    "16": {
+      "title": "Parameter Optimization",
+      "desc": "Whaleer offers an advanced parameter optimization engine to find the most efficient working values of created strategies. This feature automatically tests variables within a strategy (e.g., moving average periods or RSI threshold values) in specified ranges, determining combinations that provide the highest profit and lowest risk in light of historical data. Users can view technical reports on which parameters their strategies show maximum performance thanks to the optimization algorithm, instead of manually trying hundreds of different scenarios. This process ensures that strategies are calibrated precisely according to market dynamics."
+    },
+    "17": {
+      "title": "Cryptocurrency Screening",
+      "desc": "Whaleer offers a comprehensive cryptocurrency screening interface to help users quickly detect potential trading opportunities. This feature automatically analyzes thousands of assets in the market based on determined technical indicators (e.g., RSI, MACD, Bollinger Bands) or price movements. Users can instantly list assets that meet their specified criteria and view the charts and performance data of these assets on a single screen. The screening engine reduces the burden of constant market monitoring for users, offering only the most suitable trading signals and providing strategy-oriented market tracking."
+    },
+    "18": {
+      "title": "AI-powered code writing",
+      "desc": "Whaleer offers an AI-powered code writing interface to help users code their algorithmic trading strategies quickly and effectively. This feature analyzes natural language commands to perform operations such as automatic strategy creation, optimizing existing codes, and debugging. Users can receive support from AI by explaining strategy logic or providing sample code snippets. The system accelerates the coding process by offering suggestions in light of market data and best practices, allowing users to bring their strategies to life without needing complex programming knowledge."
+    },
+    "19": {
+      "title": "Profit commission bot sales",
+      "desc": "Whaleer supports a performance-based revenue sharing model designed for strategy developers to reach their algorithms to a wide user base. In this system, developers offer their strategies for sale in the platform's market, and users start using these strategies with subscription or one-time payment. A portion of the generated revenue is paid to the developer during the usage period of the strategy, while the remaining portion is used for the platform's service and infrastructure expenses. This model encourages developers to earn passive income and contributes to the growth of the ecosystem by offering users access to reliable and tested strategies."
+    },
+    "20": {
+      "title": "Telegram integration",
+      "desc": "Whaleer offers an integrated notification system that allows users to instantly track strategy performances and trading signals via Telegram. Thanks to this feature, users can transfer the profit/loss statuses, open positions, and important market events of their determined strategies directly to Telegram chats or channels. The system allows users to manage their strategies via Telegram bots, approve orders, or adjust risk parameters remotely. This integration provides users with the flexibility to track transactions quickly and securely from their mobile devices without the obligation to be constantly on the platform for market tracking."
     }
   }
 }

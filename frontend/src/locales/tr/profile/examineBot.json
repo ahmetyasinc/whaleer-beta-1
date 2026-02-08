@@ -1,7 +1,8 @@
 {
   "header": {
     "totalProfit": "Toplam Kâr",
-    "totalValue": "Toplam Değer"
+    "totalValue": "Toplam Değer",
+    "refresh": "Yenile"
   },
   "charts": {
     "pnlTitle": "Kâr / Zarar Grafiği (%)"
@@ -32,7 +33,7 @@
     "title": "Spot Varlıklar",
     "empty": "Herhangi bir spot varlık bulunamadı.",
     "amount": "Miktar",
-      "profit": "Kâr"
+    "profit": "Kâr"
   },
   "tabs": {
     "trades": "İşlemler",

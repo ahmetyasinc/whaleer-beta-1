@@ -210,12 +210,12 @@ export default async function DocsPage(props) {
   return (
     <section
       id="docs"
-      className="bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 text-neutral-100 pt-20 sm:pt-22 md:pt-24"
+      className="home-hard-gradient-2 text-neutral-200 pt-20 sm:pt-22 md:pt-24"
     >
       {/* Skip link */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-neutral-800 focus:text-white focus:px-3 focus:py-2 focus:rounded"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-zinc-950/50 focus:text-white focus:px-3 focus:py-2 focus:rounded"
       >
         İçeriğe atla
       </a>
@@ -224,7 +224,7 @@ export default async function DocsPage(props) {
       <div className="mx-auto w-full max-w-[1650px] px-0 lg:px-0 lg:grid lg:grid-cols-[280px_1fr] xl:grid-cols-[320px_1fr] gap-0">
         {/* Sidebar (lg+): sticky, header altı 70px; container içinde kaldığı için footer'a binmez */}
         <aside
-          className="hidden lg:block sticky top-[70px] self-start h-[calc(100dvh-70px)] overflow-y-auto border-r border-white/10 bg-white/5 backdrop-blur px-5 py-5"
+          className="hidden lg:block sticky top-[102px] self-start h-[calc(100dvh-110px)] scrollbar-hide overflow-y-auto border-r border-white/10 bg-zinc-950/50 backdrop-blur px-5 py-5"
           aria-label={dict.title}
         >
           <nav>
@@ -258,7 +258,7 @@ export default async function DocsPage(props) {
         >
           {/* Mobile TOC */}
           <div className="lg:hidden mb-6">
-            <details className="group rounded-xl border border-white/10 bg-white/5 backdrop-blur">
+            <details className="group rounded-xl border border-white/10 bg-zinc-950/50 backdrop-blur">
               <summary className="list-none px-4 py-3 flex items-center justify-between cursor-pointer select-none">
                 <span className="font-semibold">İçindekiler</span>
                 <span className="transition group-open:rotate-180">⌄</span>
@@ -294,11 +294,13 @@ export default async function DocsPage(props) {
             </details>
           </div>
 
-          {/* Header */}
-          <header className="mb-6 sm:mb-8">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">{dict.title}</h1>
+          {/* Header Bölümü */}
+          <header className="mb-12 sm:mb-16 text-center border-b border-neutral-800 pb-10">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl py-2 font-extrabold tracking-tight bg-gradient-to-b from-white to-stone-500 bg-clip-text text-transparent">
+              {dict.title}
+            </h1>
             {dict.intro && (
-              <p className="text-neutral-300 mt-2 text-[15.5px] sm:text-base max-w-[78ch]">
+              <p className="mt-4 text-neutral-400 text-base sm:text-base max-w-3xl mx-auto leading-relaxed">
                 {dict.intro}
               </p>
             )}
@@ -310,7 +312,7 @@ export default async function DocsPage(props) {
               <article
                 key={section.id}
                 id={section.id}
-                className="scroll-mt-24 sm:scroll-mt-28 bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-6 md:p-8 shadow-xl mb-8 md:mb-10"
+                className="scroll-mt-24 sm:scroll-mt-28 bg-zinc-950/50 border border-white/10 rounded-2xl p-4 sm:p-6 md:p-8 shadow-xl mb-8 md:mb-10"
               >
                 <h2 className="text-xl sm:text-2xl font-bold mb-4 text-white">{section.title}</h2>
 

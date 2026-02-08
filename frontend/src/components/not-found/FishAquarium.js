@@ -45,7 +45,8 @@ const FishAquarium = ({ count = 1 }) => {
                 { texture: '/not-found/fish1.svg', scale: 0.22 },
                 { texture: '/not-found/fish2.svg', scale: 0.34 },
                 { texture: '/not-found/fish3.svg', scale: 0.52 },
-                { texture: '/not-found/fish4.svg', scale: 0.05 }
+                { texture: '/not-found/fish4.svg', scale: 0.05 },
+                { texture: '/not-found/fish5.svg', scale: 0.6 }
             ];
             const randomFish = fishConfig[Math.floor(Math.random() * fishConfig.length)];
 

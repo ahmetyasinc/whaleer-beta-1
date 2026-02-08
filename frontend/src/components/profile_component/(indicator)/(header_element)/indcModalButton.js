@@ -18,6 +18,7 @@ const IndicatorsButton = forwardRef(({ locale, shortcutTitle }, ref) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(1);
   const [favorites, setFavorites] = useState([]);
+  const [isPublishMode, setIsPublishMode] = useState(false); // Make sure to reset this when changing tabs if needed
   useEffect(() => {
     if (locale && i18n.language !== locale) {
       i18n.changeLanguage(locale);
@@ -48,7 +49,7 @@ const IndicatorsButton = forwardRef(({ locale, shortcutTitle }, ref) => {
       case 1:
         return <TechnicalIndicators locale={locale} addFavorite={addFavorite} favorites={favorites} closeModal={() => setIsModalOpen(false)} />;
       case 2:
-        return <PersonalIndicators closeModal={() => setIsModalOpen(false)} />;
+        return <PersonalIndicators isPublishMode={isPublishMode} closeModal={() => setIsModalOpen(false)} />;
       case 3:
         return <CommunityIndicators locale={locale} closeModal={() => setIsModalOpen(false)} />;
       case 4:
@@ -70,12 +71,25 @@ const IndicatorsButton = forwardRef(({ locale, shortcutTitle }, ref) => {
         {/* Modal Başlık Kısmı */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-zinc-800 h-16 bg-zinc-900/50">
           <h2 className="text-lg font-bold text-zinc-100">{t("indicators")}</h2>
-          <button
-            className="text-zinc-500 hover:text-white text-3xl transition-colors"
-            onClick={() => setIsModalOpen(false)}
-          >
-            &times;
-          </button>
+          <div className="flex items-center gap-4">
+            {activeTab === 2 && (
+              <button
+                className={`text-[12px] mr-2 px-2 py-1 rounded-full transition-all border ${isPublishMode
+                  ? "bg-blue-600 border-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]"
+                  : "bg-zinc-800 border-sky-700 text-sky-400 hover:text-sky-300 hover:border-sky-600 shadow-sm hover:shadow-sky-600/20"
+                  }`}
+                onClick={() => setIsPublishMode(!isPublishMode)}
+              >
+                Yayınla
+              </button>
+            )}
+            <button
+              className="text-zinc-500 hover:text-white text-3xl transition-colors"
+              onClick={() => setIsModalOpen(false)}
+            >
+              &times;
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-grow">

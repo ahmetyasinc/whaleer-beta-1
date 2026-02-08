@@ -1,7 +1,8 @@
 {
   "header": {
     "totalProfit": "Total Profit",
-    "totalValue": "Total Value"
+    "totalValue": "Total Value",
+    "refresh": "Refresh"
   },
   "charts": {
     "pnlTitle": "Profit / Loss Chart (%)"

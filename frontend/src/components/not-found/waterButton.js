@@ -10,7 +10,10 @@ const Button = ({ onClick, icon }) => {
   return (
     <StyledWrapper>
       <button className="drip-button mt-8" onClick={onClick}>
-        {icon}
+        <span className="spin">
+          {icon}
+        </span>
+
         <span className="btn-txt text-white text-sm">{t('goHome')}</span>
         {/* Drip elemanları */}
         {[...Array(10)].map((_, i) => (

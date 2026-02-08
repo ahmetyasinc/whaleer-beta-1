@@ -1,18 +1,22 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LuShipWheel } from 'react-icons/lu';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import Button from '@/ui/waterButton';
+import Button from '@/components/not-found/waterButton';
 import i18n from '@/i18n';
-import FishAquarium from '@/components/profile_component/FishAquarium';
-import JellyfishAquarium from '@/components/profile_component/jellyFish';
+import FishAquarium from '@/components/not-found/FishAquarium';
+import JellyfishAquarium from '@/components/not-found/jellyFish';
 import './notFound.css';
-import Salmon from '@/components/profile_component/salmon';
-import Crabs from '@/components/profile_component/crab';
+import Salmon from '@/components/not-found/salmon';
+import Tropheus from '@/components/not-found/tropheus';
+import FishRock from '@/components/not-found/fish-rock';
+import LionFish from '@/components/not-found/lionFish';
+
+
 
 export default function NotFound({ locale }) {
   const { t } = useTranslation('notFound');
@@ -24,15 +28,24 @@ export default function NotFound({ locale }) {
   const [displayedText, setDisplayedText] = useState('');
   const [clickBubbles, setClickBubbles] = useState([]);
 
-  // Tıklama ile baloncuk oluşturma
-  const handlePageClick = useCallback((e) => {
-    // Buton tıklamalarını yoksay
-    if (e.target.closest('button')) return;
+  // Basılı tutma için refs
+  const bubbleIntervalRef = useRef(null);
+  const mousePosRef = useRef({ x: 0, y: 0 });
+  const soundPlayedRef = useRef(false);
+  const audioRef = useRef(null);
 
+  // Ses dosyasını önceden yükle
+  useEffect(() => {
+    audioRef.current = new Audio('/sounds/waterdrop.mp3');
+    audioRef.current.volume = 0.5;
+  }, []);
+
+  // Baloncuk oluşturma fonksiyonu
+  const createBubble = useCallback((x, y) => {
     const newBubble = {
       id: Date.now() + Math.random(),
-      x: e.clientX,
-      y: e.clientY,
+      x: x,
+      y: y,
       size: Math.random() * 10 + 8, // 8-18px arası
     };
 
@@ -44,6 +57,91 @@ export default function NotFound({ locale }) {
     }, 2000);
   }, []);
 
+  // Mouse basıldığında
+  const handleMouseDown = useCallback((e) => {
+    // Buton tıklamalarını yoksay
+    if (e.target.closest('button')) return;
+
+    mousePosRef.current = { x: e.clientX, y: e.clientY };
+
+    // İlk baloncuğu oluştur
+    createBubble(e.clientX, e.clientY);
+
+    // İlk ses çal
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(() => { });
+    }
+
+    // Basılı tutulduğunda sürekli baloncuk oluştur ve aralıklı ses çal
+    let bubbleCount = 0;
+    bubbleIntervalRef.current = setInterval(() => {
+      createBubble(
+        mousePosRef.current.x + (Math.random() - 0.5) * 20,
+        mousePosRef.current.y + (Math.random() - 0.5) * 20
+      );
+      bubbleCount++;
+
+      // Her 4 baloncukta bir ses çal (~320ms aralıklarla)
+      if (bubbleCount % 4 === 0 && audioRef.current) {
+        const sound = new Audio('/sounds/waterdrop.mp3');
+        sound.volume = 0.4;
+        sound.play().catch(() => { });
+      }
+    }, 80); // 80ms aralıklarla yeni baloncuk
+  }, [createBubble]);
+
+  // Mouse hareket ettiğinde pozisyonu güncelle
+  const handleMouseMove = useCallback((e) => {
+    mousePosRef.current = { x: e.clientX, y: e.clientY };
+  }, []);
+
+  // Mouse bırakıldığında veya sayfa odağı kaybettiğinde temizle
+  const clearBubbleInterval = useCallback(() => {
+    if (bubbleIntervalRef.current) {
+      clearInterval(bubbleIntervalRef.current);
+      bubbleIntervalRef.current = null;
+    }
+    soundPlayedRef.current = false;
+  }, []);
+
+  // Mouse bırakıldığında
+  const handleMouseUp = useCallback(() => {
+    clearBubbleInterval();
+  }, [clearBubbleInterval]);
+
+  // Sayfa dışına çıkıldığında, odak kaybedildiğinde veya sağ tık menüsü açıldığında temizle
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        clearBubbleInterval();
+      }
+    };
+
+    const handleBlur = () => {
+      clearBubbleInterval();
+    };
+
+    const handleContextMenu = () => {
+      clearBubbleInterval();
+    };
+
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('blur', handleBlur);
+    window.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('mouseleave', clearBubbleInterval);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('mouseleave', clearBubbleInterval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearBubbleInterval();
+    };
+  }, [handleMouseUp, clearBubbleInterval]);
+
   useEffect(() => {
     i18n.changeLanguage(locale);
     setMounted(true);
@@ -51,16 +149,30 @@ export default function NotFound({ locale }) {
 
   useEffect(() => {
     if (!mounted) return;
+
     const message = t('message');
-    let index = 0;
+
+    // Eğer mesaj zaten tamamlanmışsa tekrar başlatma
+    if (displayedText === message) return;
+
+    // Animasyon başlarken metni sıfırla (sadece boşsa veya farklı mesajsa)
+    if (displayedText && !message.startsWith(displayedText)) {
+      setDisplayedText('');
+    }
+
+    // Mevcut ilerlemeyi kullan
+    let currentIndex = displayedText.length;
+
     const interval = setInterval(() => {
-      if (index < message.length) {
-        setDisplayedText((prev) => prev + message.charAt(index));
-        index++;
+      if (currentIndex < message.length) {
+        const charToAdd = message.charAt(currentIndex);
+        setDisplayedText(message.substring(0, currentIndex + 1));
+        currentIndex++;
       } else {
         clearInterval(interval);
       }
     }, 50);
+
     return () => clearInterval(interval);
   }, [mounted, t]);
 
@@ -73,7 +185,7 @@ export default function NotFound({ locale }) {
   if (!mounted) return null;
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden" onClick={handlePageClick}>
+    <div className="relative h-screen w-screen overflow-hidden" onMouseDown={handleMouseDown} onMouseMove={handleMouseMove}>
       {/* Tıklama Baloncukları */}
       <AnimatePresence>
         {clickBubbles.map((bubble) => (
@@ -131,9 +243,22 @@ export default function NotFound({ locale }) {
         style={{
           position: 'fixed',
           bottom: -7,
-          right: -40,
-          width: 200,
-          height: 200,
+          right: -50,
+          width: 225,
+          height: 225,
+          zIndex: 5,
+          pointerEvents: 'none',
+        }}
+      >
+        <DotLottieReact src="/not-found/moss1.lottie" loop autoplay style={{ width: '100%', height: '100%' }} />
+      </div>
+      <div
+        style={{
+          position: 'fixed',
+          bottom: -3,
+          right: 360,
+          width: 130,
+          height: 130,
           zIndex: 5,
           pointerEvents: 'none',
         }}
@@ -196,14 +321,17 @@ export default function NotFound({ locale }) {
               rotate: [0, -2, -5, -3, -8]
             }
             : {
-              y: [0, -8, 0, 8, 0],
-              rotate: [0, 1, 0, -1, 0]
+              // Çok sayıda küçük adım, bekleme hissini yok eder
+              y: [0, -2, -5, -8, -5, -2, 0, 2, 5, 8, 5, 2, 0],
+              rotate: [0, 0.3, 0.8, 1.2, 0.8, 0.3, 0, -0.3, -0.8, -1.2, -0.8, -0.3, 0],
             }
         }
         transition={{
-          duration: sailAway ? 2.5 : 5,
+          duration: sailAway ? 2.5 : 6,
           repeat: sailAway ? 0 : Infinity,
-          ease: sailAway ? 'easeInOut' : 'easeInOut',
+          // "linear" kullanarak adımlar arası hızlanma/yavaşlamayı (easing) kaldırdık
+          ease: "linear",
+          // repeatType: "loop" varsayılandır, akışı kesmez
         }}
       />
 
@@ -231,16 +359,17 @@ export default function NotFound({ locale }) {
       <div className="fog" />
 
       {/* Balıklar */}
-      <FishAquarium count={13} />
+      <FishAquarium count={10} />
       <JellyfishAquarium count={1} />
       <Salmon />
-      <Crabs />
+      <LionFish />
+      <Tropheus size={500} offsetX={600} offsetY={-30} />
 
       {/* İçerik */}
       <div className="min-h-screen flex items-center justify-between px-20 mt-[-80px] relative z-10">
         <div className="flex items-start space-x-4 ml-12">
           <img src="/img/sailorWhale.png" alt="avatar" className="w-40 h-60 object-cover rounded" />
-          <div className="relative bg-[rgba(7,22,44,0.85)] backdrop-blur-sm pt-4 pb-2 px-4 rounded-lg shadow-lg max-w-[410px] mt-4 border border-[rgba(100,180,255,0.1)]">
+          <div className="relative bg-[rgba(7,22,44,0.5)] backdrop-blur-sm pt-4 pb-2 px-4 rounded-lg shadow-lg max-w-[410px] mt-4 border border-[rgba(100,180,255,0.1)]">
             <p className="text-white leading-relaxed whitespace-pre-line">
               {displayedText}
               <span className="ml-1">🌊</span>
@@ -251,9 +380,32 @@ export default function NotFound({ locale }) {
               border-r-[8px] border-r-[rgba(7,22,44,0.85)]" />
           </div>
         </div>
-        <div className="text-white text-right mb-8 mr-36">
-          <h1 className="text-[140px] font-extrabold leading-none font-mono drop-shadow-[0_0_30px_rgba(100,180,255,0.3)]">404</h1>
-          <p className="text-2xl font-semibold text-[rgba(180,220,255,0.9)]">{t('pageTitle')}</p>
+        <div className="text-white gap-6 z-20 flex items-end justify-end mb-6 mr-36 relative">
+          {/* İlk 4 - Üstte */}
+          <h1 className="text-[180px] z-50 leading-none font-black drop-shadow-[0_0_30px_rgba(100,180,255,0.3)]">
+            4
+          </h1>
+
+          {/* 0 - Altta kalması için z-0 */}
+          <h1 className="text-[180px] z-0 leading-none font-black drop-shadow-[0_0_30px_rgba(100,180,255,0.3)] -mx-6">
+            0
+          </h1>
+
+          {/* FishRock - 0'ın üstünde, 4'lerin altında (z-25)     280,390,380 */}
+          <div className="absolute z-25" style={{ right: '-100px', bottom: '-50px' }}>
+            <FishRock zIndex={25} size={370} offsetX={370} offsetY={315} />
+            <FishRock zIndex={25} size={290} offsetX={390} offsetY={355} />
+          </div>
+
+          {/* Son 4 - Üstte */}
+          <h1 className="text-[180px] z-50 leading-none font-black drop-shadow-[0_0_30px_rgba(100,180,255,0.3)]">
+            4
+          </h1>
+
+          {/* Sayfa Başlığı - Mutlak konumlandırma ile altına yerleştirilebilir */}
+          <p className="absolute -bottom-10 right-4 text-2xl font-semibold text-[rgba(180,220,255,0.9)]">
+            {t('pageTitle')}
+          </p>
         </div>
       </div>
 

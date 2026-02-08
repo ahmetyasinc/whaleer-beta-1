@@ -4,8 +4,7 @@ import usePanelStore from "@/store/indicator/panelStore";
 import useCryptoStore from "@/store/indicator/cryptoPinStore";
 import useStrategyDataStore from "@/store/indicator/strategyDataStore";
 import api from "@/api/axios";
-
-import { IoDownloadOutline } from "react-icons/io5";
+import { MdDownload } from "react-icons/md";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { useTranslation } from "react-i18next";
 
@@ -93,7 +92,7 @@ const AddStrategyButton = ({ strategyId, closeModal }) => {
       {isLoading ? (
         <AiOutlineLoading3Quarters className="animate-spin text-yellow-400 text-lg" />
       ) : (
-        <IoDownloadOutline className="text-green-300 hover:text-emerald-500 text-lg" />
+        <MdDownload className="text-green-300 hover:text-emerald-500 text-[22px]" />
       )}
     </button>
   );

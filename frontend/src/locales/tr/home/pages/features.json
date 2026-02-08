@@ -1,23 +1,86 @@
 {
   "title": "Whaleer ile Algoritmik Trade",
-  "subtitle": "Whaleer ile stratejiler oluştur, test et, çalıştır ve paylaş. Başlamak için aşağıdaki adımları takip et!",
-  "cta": "Hemen Başla",
-  "steps": {
+  "subtitle": "Whaleer projesinde erişebileceğiniz ve faydalanabileceğiniz özellikler listelenmiştir. Verimli bir kullanım için bu adımları incelemenizi ve takip etmenizi öneririz.",
+  "items": {
     "1": {
-      "title": "1. Stratejini Oluştur",
-      "desc": "Python tabanlı editör ile kendi algoritmik stratejini kolayca oluştur. RSI, MACD gibi indikatörlerle kurallarını tanımla."
+      "title": "Kolay takip edilebilir profil arayüzü",
+      "desc": "Whaleer profil sayfası; portföy dağılımı, yatırım performansı ve tüm işlem geçmişini tek bir merkezden izlemenize olanak tanır. Kullanıcılar, aktif olarak kullanılan indikatör, strateji ve bot sayılarını görebildikleri gibi, bu botların bakiye üzerindeki paylarını ve güncel kâr/zarar durumlarını anlık verilerle takip edebilirler. Arayüz, karmaşık finansal verileri sadeleştirerek stratejilerin yönetimini ve varlık takibini teknik bir netlikle sunar."
     },
     "2": {
-      "title": "2. Backtest ile Test Et",
-      "desc": "Stratejini geçmiş veriler üzerinde test et. Sonuçları anında gör ve performansını analiz et."
+      "title": "Profesyonel analiz grafikleri",
+      "desc": "Whaleer, piyasa verilerini ve kullanıcı stratejilerini analiz etmek için yüksek çözünürlüklü ve etkileşimli grafik altyapısı sunar. Bu bölümde, varlıkların zaman içindeki değer değişimlerini, stratejilerin başarı oranlarını ve piyasa trendlerini teknik göstergeler eşliğinde detaylı olarak inceleyebilirsiniz. Özelleştirilebilir grafik araçları; hacim analizi, fiyat hareketleri ve indikatör çıktılarını tek bir düzlemde birleştirerek veriye dayalı teknik analiz yapmayı mümkün kılar."
     },
     "3": {
-      "title": "3. Botu Çalıştır",
-      "desc": "Stratejini gerçek zamanlı piyasa verileriyle çalıştır. Sistem senin yerine al-sat işlemlerini gerçekleştirsin."
+      "title": "Python Tabanlı Editör",
+      "desc": "Whaleer, kullanıcıların kendi işlem stratejilerini ve algoritmalarını geliştirebilmeleri için entegre bir Python tabanlı kod editörü sunar. Bu editör sayesinde, standart indikatörlerin ötesine geçerek özelleştirilmiş veri işleme modelleri ve otomatik işlem botları yazılabilir. Python'ın esnek kütüphane desteğiyle uyumlu çalışan yapı; kod yazımı, hata ayıklama (debugging) ve strateji test süreçlerini doğrudan platform içerisinden yürütmeye olanak tanır. Yazılan kodlar, Whaleer veri akışıyla senkronize şekilde çalışarak gerçek zamanlı piyasa koşullarında performans analizine imkan verir."
     },
     "4": {
-      "title": "4. Arşivle ve Piyasaya Sun",
-      "desc": "Stratejilerini arşivle, geçmiş performanslarını karşılaştır. İstersen kiraya ver ya da sat."
+      "title": "Gelişmiş Backtest arayüzü",
+      "desc": "Whaleer, geliştirilen stratejilerin geçmiş veriler üzerindeki performansını ölçmek için kapsamlı bir backtest modülü sunar. Bu arayüz sayesinde, oluşturulan algoritmaların farklı zaman dilimlerinde ve çeşitli piyasa koşullarında nasıl sonuç vereceği; maksimum düşüş (drawdown), kâr faktörü, başarılı işlem oranı ve risk-ödül rasyosu gibi temel metriklerle analiz edilir. Kullanıcılar, strateji parametrelerini geçmişe dönük verilerle optimize edebilir ve işlem simülasyonlarını grafik üzerinden mum bazlı olarak takip edebilirler. Gerçekçi kayma (slippage) ve komisyon oranlarının dahil edilebildiği bu yapı, stratejilerin canlı piyasaya sürülmeden önce teknik olarak doğrulanmasını sağlar."
+    },
+    "5": {
+      "title": "Fonksiyonel Bot arayüzü",
+      "desc": "Whaleer, kurulan stratejilerin otonom bir şekilde çalıştırılması ve yönetilmesi için işlevsel bir bot yönetim arayüzü sunar. Bu panel üzerinden aktif botların çalışma durumu, hedef bakiye limitleri, kaldıraç oranları ve stop-loss/take-profit seviyeleri gibi kritik parametreler anlık olarak kontrol edilebilir. Kullanıcılar, her bir bot için özel emir tipleri atayabilir ve botların piyasa sinyallerine verdiği tepkileri gerçek zamanlı log kayıtları üzerinden takip edebilirler. Arayüz; botları tek tuşla başlatma, durdurma veya parametre güncelleme imkanı tanıyarak operasyonel süreçleri hızlandırır ve birden fazla algoritmanın eş zamanlı yönetimini sistematik bir yapıya kavuşturur."
+    },
+    "6": {
+      "title": "2FA Koruma",
+      "desc": "Whaleer, kullanıcı hesaplarının ve bağlı varlıkların güvenliğini en üst düzeyde tutmak için iki aşamalı doğrulama (2FA) altyapısını kullanır. Şifre hırsızlığı veya sızıntısı gibi durumlarda hesabın tam güvenliğini sağlar."
+    },
+    "7": {
+      "title": "Bot marketi",
+      "desc": "Whaleer Bot Marketi, kullanıcıların kendi geliştirdikleri stratejileri paylaşabildiği veya diğer uzman geliştiriciler tarafından oluşturulmuş performans odaklı algoritmaları inceleyip kullanabildiği merkezi bir platformdur. Market içerisindeki her bot; geçmiş performans verileri, risk seviyesi, işlem sıklığı ve başarı oranı gibi şeffaf metriklerle listelenir. Kullanıcılar, kendi yatırım hedeflerine ve risk toleranslarına uygun botları filtreleyebilir, detaylı istatistiklerini karşılaştırabilir ve seçtikleri stratejileri doğrudan kendi portföylerine entegre edebilirler. Bu ekosistem, teknik bilgi seviyesinden bağımsız olarak tüm kullanıcıların profesyonel algoritmik stratejilere erişimini ve strateji geliştiricilerin kendi modellerini ekosisteme sunmasını sağlar."
+    },
+    "8": {
+      "title": "Borsa API bağlama",
+      "desc": "Whaleer, kullanıcıların mevcut borsa hesaplarını platforma güvenli bir şekilde entegre etmeleri için yüksek standartlı bir API bağlantı altyapısı sunar. Bu entegrasyon sayesinde, varlıklar borsadan çıkarılmadan Whaleer üzerinden gerçek zamanlı veri takibi ve emir gönderimi gerçekleştirilebilir. Kullanıcılar, API anahtarlarını tanımlarken sadece okuma ve işlem yapma yetkilerini kısıtlayarak tam denetim sağlayabilirler. API bağlantıları, uçtan uca şifreleme ile korunur ve Whaleer'ın strateji motoru ile borsa emir defteri arasında düşük gecikmeli bir köprü kurarak algoritmaların kesintisiz çalışmasına olanak tanır."
+    },
+    "9": {
+      "title": "Kesintisiz destek hattı",
+      "desc": "Whaleer, kullanıcıların teknik sorularına ve platform kullanımına dair ihtiyaçlarına yanıt vermek amacıyla kesintisiz bir destek altyapısı sunar. Destek sistemi; API bağlantıları, strateji kurulumu, bot yönetimi ve arayüz kullanımı gibi konularda teknik rehberlik sağlar. Kullanıcılar, yaşadıkları sorunları veya platformla ilgili geri bildirimlerini doğrudan destek ekibine ileterek hızlı çözüm süreçlerinden faydalanabilirler. Bu hizmet, platformun tüm özelliklerinin verimli bir şekilde kullanılmasını sağlamak ve operasyonel aksaklıkların önüne geçmek için sürekli aktif tutulur."
+    },
+    "10": {
+      "title": "Çoklu Bot Çalıştırma",
+      "desc": "Whaleer, aynı anda birden fazla stratejinin ve botun birbirinden bağımsız olarak çalıştırılmasına olanak tanıyan gelişmiş bir çoklu işlem altyapısına sahiptir. Bu özellik sayesinde kullanıcılar, farklı paritelerde veya aynı parite üzerinde farklı risk profillerine sahip stratejileri eş zamanlı olarak yürütebilirler. Her bir bot için ayrılan bakiye, işlem limitleri ve güvenlik parametreleri ayrı ayrı konfigüre edilebilir. Sistem, botlar arasında kaynak çakışmasını önleyerek her bir algoritmanın kendi veri akışı ve emir döngüsü içerisinde kesintisiz çalışmasını sağlar. Bu yapı, riskin farklı stratejiler arasında dağıtılmasına ve portföy çeşitlendirmesinin operasyonel bir karmaşa yaşanmadan yönetilmesine imkan tanır."
+    },
+    "11": {
+      "title": "Bulut sistemi",
+      "desc": "Whaleer, tüm strateji ve bot operasyonlarını yerel cihazlardan bağımsız olarak yürüten bulut tabanlı bir altyapı üzerinde çalışır. Kullanıcıların hazırladığı algoritmalar ve aktif botlar, Whaleer’ın yüksek erişilebilirlik sunan sunucularında 7/24 kesintisiz şekilde barındırılır. Bu sayede bilgisayarın kapalı olması veya internet bağlantısının kesilmesi gibi durumlar işlem süreçlerini etkilemez. Bulut mimarisi, gerçek zamanlı veri akışını ve emir gönderimlerini en düşük gecikme süreleriyle gerçekleştirirken, tüm verilere farklı cihazlar üzerinden senkronize bir şekilde erişim imkanı sağlar."
+    },
+    "12": {
+      "title": "Keşfet arayüzü",
+      "desc": "Whaleer, kullanıcıların birbirleriyle etkileşime geçebildiği ve başarılı stratejileri inceleyebildiği entegre bir keşfetme ekosistemi sunar. Topluluk arayüzü üzerinden diğer kullanıcıların paylaştığı teknik analizler, strateji notları ve piyasa yorumları takip edilebilir. Popüler indikatörlerin ve öne çıkan botların sergilendiği bu platformda, kullanıcılar farklı yatırım yaklaşımları hakkında bilgi edinebilir ve kendi geliştirdikleri modelleri topluluk onayına sunabilirler. Şeffaf bir sosyal katman olarak tasarlanan bu yapı, bilgi paylaşımını teşvik ederek algoritmik ticaret süreçlerini kolektif bir öğrenme deneyimine dönüştürür."
+    },
+    "13": {
+      "title": "NFT ödeme sistemi",
+      "desc": "Whaleer, bot marketindeki işlem stratejilerinin ve botların kullanım haklarını güvence altına almak için blokzincir tabanlı bir NFT ödeme sistemi sunar. Bu yapıda, satın alınan her bot veya strateji erişim hakkı, kullanıcının cüzdanına tanımlanan benzersiz bir NFT (Non-Fungible Token) ile temsil edilir. NFT tabanlı lisanslama sayesinde, kullanıcılar sahip oldukları kullanım haklarını şeffaf bir şekilde doğrulayabilir, süreli lisanslarını yönetebilir ve gerektiğinde bu hakları ikincil marketlerde transfer edebilirler. Akıllı sözleşmeler aracılığıyla yürütülen bu süreç, hem geliştiricilerin telif haklarını korur hem de kullanıcılara dijital varlık sahipliği güvenliğiyle otonom bir ödeme deneyimi sağlar."
+    },
+    "14": {
+      "title": "Gerçek borsa verileri",
+      "desc": "Whaleer, stratejilerin en doğru sonuçları üretmesi için önde gelen kripto para borsalarından gelen gerçek zamanlı ve yüksek hassasiyetli veri akışlarını kullanır. Platform, WebSocket teknolojisi ile sağlanan bu anlık verileri işleyerek fiyat hareketlerini, emir defteri (order book) derinliğini ve işlem hacimlerini milisaniyelik gecikmelerle analiz motoruna aktarır. Geçmişe dönük veriler ise temizlenmiş ve optimize edilmiş veri setleri olarak sunulur; böylece backtest süreçlerinde piyasa koşulları en gerçekçi haliyle simüle edilir. Veri tutarlılığı, tüm indikatör hesaplamalarının ve bot emirlerinin borsa fiyatlarıyla tam uyumlu çalışmasını garanti altına alır."
+    },
+    "15": {
+      "title": "Topluluk stratejileri",
+      "desc": "Whaleer, kullanıcıların bilgi birikimlerini paylaştığı ve başarılı modelleri ortak kullanıma açtığı bir strateji ekosistemine sahiptir. Topluluk tarafından geliştirilen stratejiler; performans geçmişi, risk seviyesi ve kullanım istatistikleri gibi verilerle birlikte şeffaf bir şekilde listelenir. Kullanıcılar, güvenilirliğini kanıtlamış stratejileri inceleyerek kendi portföylerine entegre edebilir veya geliştiricilerle teknik detaylar üzerinde etkileşim kurabilirler. Bu yapı, deneyimli yatırımcıların stratejilerini ticarileştirmesine, yeni kullanıcıların ise test edilmiş yöntemlerle piyasada yer almasına imkan tanıyan kolektif bir büyüme alanı oluşturur."
+    },
+    "16": {
+      "title": "Parametre Optimizasyonu",
+      "desc": "Whaleer, oluşturulan stratejilerin en verimli çalışma değerlerini bulmak için gelişmiş bir parametre optimizasyon motoru sunar. Bu özellik, bir stratejinin içindeki değişkenleri (örneğin; hareketli ortalama periyotları veya RSI eşik değerleri) belirli aralıklarda otomatik olarak test ederek, geçmiş veriler ışığında en yüksek kârı ve en düşük riski sağlayan kombinasyonları belirler. Kullanıcılar, yüzlerce farklı senaryoyu manuel olarak denemek yerine, optimizasyon algoritması sayesinde stratejilerinin hangi parametrelerle maksimum performans gösterdiğini teknik raporlar halinde görüntüleyebilirler. Bu süreç, stratejilerin piyasa dinamiklerine göre hassas bir şekilde kalibre edilmesini sağlar."
+    },
+    "17": {
+      "title": "Kripto para Tarama",
+      "desc": "Whaleer, kullanıcıların potansiyel işlem fırsatlarını hızlı bir şekilde tespit etmelerine yardımcı olmak için kapsamlı bir kripto para tarama arayüzü sunar. Bu özellik, belirlenen teknik göstergelere (örneğin; RSI, MACD, Bollinger Bands) veya fiyat hareketlerine göre piyasadaki binlerce varlığı otomatik olarak analiz eder. Kullanıcılar, kendi belirledikleri kriterlere uyan varlıkları anlık olarak listeleyebilir, bu varlıkların grafiklerini ve performans verilerini tek bir ekranda görüntüleyebilirler. Tarama motoru, kullanıcıların piyasayı sürekli izleme yükünü azaltarak, sadece en uygun işlem sinyallerini sunar ve strateji odaklı bir piyasa takibi sağlar."
+    },
+    "18": {
+      "title": "Yapay Zeka destekli kod yazma",
+      "desc": "Whaleer, kullanıcıların algoritmik ticaret stratejilerini hızlı ve etkili bir şekilde kodlamalarına yardımcı olmak için yapay zeka destekli bir kod yazma arayüzü sunar. Bu özellik, doğal dil komutlarını analiz ederek otomatik strateji oluşturma, mevcut kodları optimize etme ve hata ayıklama gibi işlemleri gerçekleştirir. Kullanıcılar, strateji mantığını açıklayarak veya örnek kod parçacıkları sunarak yapay zekadan destek alabilirler. Sistem, piyasa verileri ve en iyi uygulama örnekleri ışığında öneriler sunarak kodlama sürecini hızlandırır ve kullanıcıların karmaşık programlama bilgisine ihtiyaç duymadan stratejilerini hayata geçirmelerini sağlar."
+    },
+    "19": {
+      "title": "Kar komisyonlu bot satışı",
+      "desc": "Whaleer, strateji geliştiricilerinin algoritmalarını geniş bir kullanıcı kitlesine ulaştırmaları için tasarlanmış, performansa dayalı bir gelir paylaşım modelini destekler. Bu sistemde, geliştiriciler kendi stratejilerini platformun marketinde satışa sunar ve kullanıcılar bu stratejileri abonelik veya tek seferlik ödeme ile kullanmaya başlar. Elde edilen gelirin bir kısmı, stratejinin kullanım süresi boyunca geliştiriciye ödenirken, kalan kısım platformun hizmet ve altyapı giderleri için kullanılır. Bu model, hem geliştiricilerin pasif gelir elde etmesini teşvik eder hem de kullanıcılara güvenilir ve test edilmiş stratejilere erişim imkanı sunarak ekosistemin büyümesine katkı sağlar."
+    },
+    "20": {
+      "title": "Telegram entegrasyonu",
+      "desc": "Whaleer, kullanıcıların strateji performanslarını ve işlem sinyallerini Telegram üzerinden anlık olarak takip etmelerini sağlayan entegre bir bildirim sistemi sunar. Bu özellik sayesinde, kullanıcılar belirledikleri stratejilerin kâr/zarar durumlarını, açık pozisyonlarını ve önemli piyasa olaylarını doğrudan Telegram sohbetlerine veya kanallarına aktarabilirler. Sistem, kullanıcıların Telegram botları aracılığıyla stratejilerini yönetmelerine, emirleri onaylamalarına veya risk parametrelerini uzaktan ayarlamalarına olanak tanır. Bu entegrasyon, kullanıcılara piyasa takibi için sürekli platformda bulunma zorunluluğu olmadan, mobil cihazlarından hızlı ve güvenli bir şekilde işlem takibi yapma esnekliği sağlar."
     }
   }
 }

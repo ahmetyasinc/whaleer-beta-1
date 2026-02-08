@@ -6,10 +6,10 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 const JellyfishAquarium = ({
     count = 1,
     // Denizanası Ayarları
-    jellySpeedMin = 0.1,
+    jellySpeedMin = 0.3,
     jellySpeedMax = 0.3,
-    accelerationDuration = 2000, // Hızlanma/Yavaşlama süresi (ms)
-    constantSpeedDuration = 2000 // Maksimum hızda gitme süresi (ms)
+    accelerationDuration = 9999, // Hızlanma/Yavaşlama süresi (ms)
+    constantSpeedDuration = 9999 // Maksimum hızda gitme süresi (ms)
 }) => {
     const sceneRef = useRef(null);
     const [jellyPos, setJellyPos] = useState({ x: 50, y: 110 }); // Yüzde olarak
@@ -140,8 +140,8 @@ const JellyfishAquarium = ({
                 position: 'fixed',
                 left: `${jellyPos.x}%`,
                 top: `${jellyPos.y}%`,
-                width: '55px',
-                height: '55px',
+                width: '80px',
+                height: '80px',
                 transform: 'translate(-50%, -50%)',
                 pointerEvents: 'none',
                 zIndex: 1,

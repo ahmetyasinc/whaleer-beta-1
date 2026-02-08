@@ -1,4 +1,4 @@
-import { IoMdClose } from "react-icons/io";
+import { IoMdClose, IoMdRefresh } from "react-icons/io";
 import PnLChart from "./pnlCharts";
 import useBotExamineStore from "@/store/bot/botExamineStore";
 import { MdTrendingUp, MdTrendingDown, MdNotes } from "react-icons/md";
@@ -62,6 +62,14 @@ export default function ExamineBot({ isOpen, onClose, botId }) {
   const [view, setView] = useState("trades");
   const [expandedLogId, setExpandedLogId] = useState(null);
   const [tzOffsetMin, setTzOffsetMin] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    fetchAndStoreBotAnalysis(botId);
+    setTimeout(() => setIsRefreshing(false), 1000);
+  };
 
   // mount'ta cookie'den TZ ofsetini al
   useEffect(() => {
@@ -75,6 +83,7 @@ export default function ExamineBot({ isOpen, onClose, botId }) {
   };
 
   const bot = useBotExamineStore((s) => s.getBot(botId));
+  const fetchAndStoreBotAnalysis = useBotExamineStore((s) => s.fetchAndStoreBotAnalysis);
 
   const trades = bot?.trades || [];
   const logs = bot?.logs || [];
@@ -156,12 +165,22 @@ export default function ExamineBot({ isOpen, onClose, botId }) {
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-2 text-zinc-400 hover:text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg transition-colors"
-          >
-            <IoMdClose size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleRefresh}
+              className="p-2 text-zinc-400 hover:text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg transition-colors"
+              title={t("header.refresh") || "Refresh"}
+              disabled={isRefreshing}
+            >
+              <IoMdRefresh size={20} className={isRefreshing ? "animate-spin" : ""} />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 text-zinc-400 hover:text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg transition-colors"
+            >
+              <IoMdClose size={20} />
+            </button>
+          </div>
         </div>
 
         {/* --- BODY (2-Column Split) --- */}

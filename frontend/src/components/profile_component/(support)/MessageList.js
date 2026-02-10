@@ -5,37 +5,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import AuthenticatedImage from "@/components/AuthenticatedImage";
 import api from "@/api/axios";
 
-// Basit, dosya içi Lightbox
-function ImageLightbox({ src, alt = "", onClose }) {
-  useEffect(() => {
-    const onKey = (e) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  return (
-    <div
-      className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-    >
-      <AuthenticatedImage
-        src={src}
-        alt={alt}
-        className="max-h-[90vh] max-w-[95vw] rounded-lg shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-        draggable={false}
-      />
-      <button
-        className="absolute top-4 right-4 text-white/90 bg-black/40 hover:bg-black/60 rounded-full px-3 py-1"
-        onClick={onClose}
-      >
-        ✕
-      </button>
-    </div>
-  );
-}
+import ImageLightbox from "@/components/profile_component/(support)/ImageLightbox";
 
 const isImage = (m) => (m || "").startsWith("image/");
 
@@ -139,14 +109,14 @@ export default function MessageList({ messages = [], currentUserId }) {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-1">
       {messages.map((message) => {
         const mine = message.user_id === currentUserId;
         const bubble =
-          "max-w-xs lg:max-w-md px-4 py-2 rounded-lg " +
+          "max-w-xs lg:max-w-md px-4 py-2 rounded-2xl " +
           (mine
-            ? "bg-blue-600 text-white"
-            : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100");
+            ? "bg-[#144D37] text-white rounded-tr-sm"
+            : "bg-zinc-800 text-zinc-200 rounded-tl-sm border border-zinc-700");
 
         return (
           <div
@@ -156,7 +126,7 @@ export default function MessageList({ messages = [], currentUserId }) {
             <div className={bubble}>
               {/* Metin */}
               {message.message && (
-                <p className="text-sm whitespace-pre-wrap">{message.message}</p>
+                <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.message}</p>
               )}
 
               {/* Ekler */}
@@ -173,21 +143,21 @@ export default function MessageList({ messages = [], currentUserId }) {
                           <div
                             role="button"
                             tabIndex={0}
-                            onClick={() => openPreview(fileUrl)} // TODO: Preview için de auth fetch gerekebilir, şimdilik böyle bırakalım veya ImageLightbox'ı güncelleyelim
+                            onClick={() => openPreview(fileUrl)}
                             onKeyDown={(e) =>
                               (e.key === "Enter" || e.key === " ") &&
                               openPreview(fileUrl)
                             }
                             title="Büyütmek için tıklayın"
-                            className="outline-none ring-0 focus-visible:ring-2 focus-visible:ring-white/60 rounded"
+                            className="outline-none ring-0 focus-visible:ring-2 focus-visible:ring-white/60 rounded overflow-hidden"
                           >
                             <AuthenticatedImage
                               src={thumbnailUrl}
                               alt={att.filename || ""}
-                              className="w-full max-h-48 object-cover rounded border border-black/5"
+                              className="w-full max-h-48 object-cover rounded border border-black/20"
                             />
                           </div>
-                          <div className="mt-1 text-xs text-gray-500">
+                          <div className="mt-1 text-xs opacity-70">
                             {att.filename} • {formatFileSize(att.size_bytes)}
                           </div>
                         </div>
@@ -197,11 +167,11 @@ export default function MessageList({ messages = [], currentUserId }) {
                     return (
                       <div
                         key={att.id}
-                        className="bg-white dark:bg-gray-800 rounded p-2 flex items-center justify-between"
+                        className={`rounded p-2 flex items-center justify-between ${mine ? "bg-blue-700/50" : "bg-zinc-900/50"}`}
                       >
                         <div className="flex items-center min-w-0">
                           <svg
-                            className="w-6 h-6 text-gray-400 mr-2 flex-shrink-0"
+                            className="w-5 h-5 opacity-70 mr-2 flex-shrink-0"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -214,10 +184,10 @@ export default function MessageList({ messages = [], currentUserId }) {
                             />
                           </svg>
                           <div className="min-w-0">
-                            <p className="text-sm font-medium truncate">
+                            <p className="text-sm font-medium truncate opacity-90">
                               {att.filename}
                             </p>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs opacity-60">
                               {formatFileSize(att.size_bytes)}
                             </p>
                           </div>
@@ -239,7 +209,7 @@ export default function MessageList({ messages = [], currentUserId }) {
                               alert("İndirme başarısız oldu.");
                             }
                           }}
-                          className="text-blue-600 hover:text-blue-700 text-sm ml-3 flex-shrink-0 bg-transparent border-0 cursor-pointer"
+                          className="text-xs ml-3 flex-shrink-0 bg-white/10 hover:bg-white/20 rounded px-2 py-1 transition-colors"
                         >
                           İndir
                         </button>
@@ -251,7 +221,7 @@ export default function MessageList({ messages = [], currentUserId }) {
 
               {/* Zaman */}
               {message.created_at && (
-                <p className={`text-xs mt-1 ${mine ? "text-blue-200" : "text-gray-500"}`}>
+                <p className={`text-[10px] mt-1 text-right ${mine ? "text-blue-100/70" : "text-zinc-500"}`}>
                   {formatTime(message.created_at)}
                 </p>
               )}

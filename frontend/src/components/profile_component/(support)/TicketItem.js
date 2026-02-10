@@ -4,88 +4,98 @@
 import { useState } from "react";
 
 const priorityColors = {
-  low: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200",
-  normal: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  high: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-  urgent: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+  low: "bg-zinc-500/10 text-zinc-400 border border-zinc-500/20",
+  normal: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+  high: "bg-orange-500/10 text-orange-400 border border-orange-500/20",
+  urgent: "bg-red-500/10 text-red-400 border border-red-500/20",
 };
 
 const statusColors = {
-  open: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  in_progress: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  resolved: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-  closed: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200",
+  open: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+  in_progress: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+  resolved: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+  closed: "bg-zinc-500/10 text-zinc-500 border border-zinc-500/20",
 };
 
 const priorityLabels = { low: "Düşük", normal: "Normal", high: "Yüksek", urgent: "Acil" };
 const statusLabels = { open: "Açık", in_progress: "İşlemde", resolved: "Çözüldü", closed: "Kapalı" };
 
-export default function TicketItem({ ticket, onSelect, isSelected }) {
+export default function TicketItem({ ticket, onSelect, isSelected, showUserInfo }) {
   const [expanded, setExpanded] = useState(false);
 
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" });
 
-  const handleClick = () => {
+  const handleClick = (e) => {
+    // Eğer metin seçiliyse (select işlemi varsa) tıklamayı tetikleme
+    if (window.getSelection().toString().length > 0) return;
+
     if (onSelect) return onSelect(ticket.id);
     setExpanded((x) => !x);
   };
 
   return (
     <div
-      className={`border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-all cursor-pointer ${
-        isSelected ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700" : "hover:bg-gray-50 dark:hover:bg-gray-700"
-      }`}
+      className={`group relative rounded-xl p-4 transition-all duration-200 cursor-pointer border ${isSelected
+        ? "bg-zinc-800/50 border-zinc-700 shadow-lg shadow-black/20"
+        : "bg-transparent hover:bg-zinc-900/60 border-zinc-800"
+        }`}
       onClick={handleClick}
     >
-      <div className="flex items-start justify-between">
+      {/* Sol kenar çizgisi (aktifse görünür) */}
+      {isSelected && (
+        <div className="absolute left-0 top-3 bottom-3 w-1 bg-blue-500 rounded-r-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+      )}
+
+      <div className="flex items-start justify-between gap-3 pl-2">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColors[ticket.priority]}`}>
-              {priorityLabels[ticket.priority]}
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${priorityColors[ticket.priority] || priorityColors.low}`}>
+              {priorityLabels[ticket.priority] || ticket.priority}
             </span>
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[ticket.status]}`}>
-              {statusLabels[ticket.status]}
+            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium ${statusColors[ticket.status] || statusColors.open}`}>
+              {statusLabels[ticket.status] || ticket.status}
             </span>
+            <span className="text-[10px] font-mono text-zinc-600">#{ticket.id}</span>
           </div>
 
-          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{ticket.subject}</h4>
+          <h4 className={`text-sm font-medium mb-1 truncate transition-colors ${isSelected ? "text-blue-100" : "text-zinc-300 group-hover:text-zinc-200"}`}>
+            {ticket.subject}
+          </h4>
 
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {formatDate(ticket.created_at)} • #{ticket.id}
-          </p>
+          <div className="text-xs text-zinc-500 flex items-center gap-2">
+            <span>{formatDate(ticket.created_at)}</span>
+            {showUserInfo && ticket.user && (
+              <>
+                <span className="w-1 h-1 rounded-full bg-zinc-700"></span>
+                <span className="truncate max-w-[120px]" title={ticket.user.email}>{ticket.user.name || ticket.user.email}</span>
+              </>
+            )}
+          </div>
 
           {(expanded || isSelected) && (
-            <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                {ticket.messages?.[0]?.message || "Mesaj bulunamadı"}
+            <div className="mt-3 pt-3 border-t border-zinc-800/50">
+              <p className="text-sm text-zinc-400 line-clamp-2 leading-relaxed opacity-90">
+                {ticket.messages?.[0]?.message || "Mesaj içeriği bulunamadı..."}
               </p>
             </div>
           )}
         </div>
 
-        {/* “ok” artık buton değil, span */}
         {!onSelect && (
-          <span
-            role="button"
-            tabIndex={0}
+          <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               setExpanded((x) => !x);
             }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.stopPropagation();
-                setExpanded((x) => !x);
-              }
-            }}
-            className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
+            className="mt-1 p-1 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 rounded transition-colors"
             aria-label={expanded ? "Kapat" : "Genişlet"}
           >
-            <svg className={`w-4 h-4 transition-transform ${expanded ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`w-4 h-4 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
-          </span>
+          </button>
         )}
       </div>
     </div>

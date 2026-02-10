@@ -27,9 +27,9 @@ export default function ClientLayoutWrapper({ children, locale }) {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen w-screen hard-gradient">
+    <div className="h-screen w-screen hard-gradient overflow-hidden">
       <LeftMenu locale={locale} />
-      <main>{children}</main>
+      <main className="h-full overflow-auto">{children}</main>
     </div>
   );
 }

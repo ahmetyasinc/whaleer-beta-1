@@ -15,6 +15,7 @@ export default function UpdatePasswordForm({ locale }) {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     useEffect(() => {
         if (locale && i18n.language !== locale) {
@@ -81,27 +82,33 @@ export default function UpdatePasswordForm({ locale }) {
                                 />
                                 <div
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 cursor-pointer pb-4 sm:pb-6"
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 cursor-pointer"
                                 >
                                     {showPassword ? <FiEyeOff /> : <FiEye />}
                                 </div>
                             </div>
 
-                            <div>
+                            <div className="relative">
                                 <label className="sr-only" htmlFor="confirmPassword">
                                     {t("confirmPassword") || "Confirm Password"}
                                 </label>
                                 <input
-                                    type={showPassword ? "text" : "password"}
+                                    type={showConfirmPassword ? "text" : "password"}
                                     id="confirmPassword"
                                     name="confirmPassword"
                                     placeholder={t("confirmPassword") || "Confirm New Password"}
-                                    className="appearance-none block w-full px-3 py-3 sm:py-4 bg-white text-black focus:outline-none rounded-md sm:text-sm mb-4 sm:mb-6"
+                                    className="appearance-none block w-full px-3 py-3 sm:py-4 bg-white text-black focus:outline-none rounded-md sm:text-sm mb-4 sm:mb-6 pr-10"
                                     required
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
                                     minLength={6}
                                 />
+                                <div
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 cursor-pointer"
+                                >
+                                    {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                                </div>
                             </div>
                         </div>
 

@@ -7,6 +7,8 @@ import MessageList from "./MessageList";
 import SatisfactionForm from "./SatisfactionForm";
 import MessageComposer from "./MessageComposer";
 
+import { RiLoader4Fill } from "react-icons/ri";
+
 export default function TicketDetail({ ticketId, onBack, user }) {
   const { currentTicket, fetchTicket, closeTicket } = useSupportStore();
   const [showSatisfaction, setShowSatisfaction] = useState(false);
@@ -16,61 +18,65 @@ export default function TicketDetail({ ticketId, onBack, user }) {
   }, [ticketId, fetchTicket]);
 
   if (!currentTicket || currentTicket.id !== ticketId) {
-    return <div className="p-4 text-center">Yükleniyor...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen p-8">
+        <RiLoader4Fill className="w-16 h-16 text-sky-500 animate-spin mb-24" />
+      </div>
+    );
+
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 bg-zinc-900/90 border border-zinc-800 rounded-xl overflow-hidden backdrop-blur-sm">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="px-6 py-4 border-b bg-zinc-950/90 border-zinc-800/50">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <button onClick={onBack} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-              ← Geri
+          <div className="flex items-center space-x-3">
+            <button onClick={onBack} className="text-zinc-500 hover:text-zinc-300 transition-colors p-1 -ml-1">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             </button>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            <h2 className="text-lg font-semibold text-white tracking-tight">
               {currentTicket.subject}
             </h2>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             <span
-              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                currentTicket.status === "open"
-                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                  : currentTicket.status === "in_progress"
-                  ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+              className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${currentTicket.status === "open"
+                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                : currentTicket.status === "in_progress"
+                  ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
                   : currentTicket.status === "resolved"
-                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                  : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-              }`}
+                    ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                    : "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
+                }`}
             >
               {currentTicket.status === "open"
                 ? "Açık"
                 : currentTicket.status === "in_progress"
-                ? "İşlemde"
-                : currentTicket.status === "resolved"
-                ? "Çözüldü"
-                : "Kapalı"}
+                  ? "İşlemde"
+                  : currentTicket.status === "resolved"
+                    ? "Çözüldü"
+                    : "Kapalı"}
             </span>
 
             {currentTicket.status !== "closed" && (
               <button
                 onClick={() => setShowSatisfaction(true)}
-                className="px-3 py-1 bg-red-100 text-red-700 rounded-md text-sm hover:bg-red-200 dark:bg-red-900 dark:text-red-200 dark:hover:bg-red-800"
+                className="px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg text-sm hover:bg-red-500/20 transition-colors"
               >
                 Kapat
               </button>
             )}
           </div>
         </div>
-        <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          #{currentTicket.id} • {new Date(currentTicket.created_at).toLocaleDateString("tr-TR")}
+        <div className="mt-1 ml-8 text-xs text-zinc-500">
+          #{currentTicket.id} • {new Date(currentTicket.created_at).toLocaleDateString("tr-TR", { year: 'numeric', month: 'long', day: 'numeric' })}
         </div>
       </div>
 
       {/* Mesajlar */}
-      <div className="h-96 overflow-y-auto p-4 bg-gray-50 dark:bg-gray-900">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 bg-zinc-950/30 custom-scrollbar">
         <MessageList messages={currentTicket.messages || []} currentUserId={user?.id} />
       </div>
 
@@ -86,7 +92,9 @@ export default function TicketDetail({ ticketId, onBack, user }) {
 
       {/* Composer (görsel ekleme destekli) */}
       {currentTicket.status !== "closed" && !showSatisfaction && (
-        <MessageComposer ticketId={ticketId} />
+        <div className="border-t border-zinc-800 p-4 bg-zinc-900/30">
+          <MessageComposer ticketId={ticketId} />
+        </div>
       )}
     </div>
   );

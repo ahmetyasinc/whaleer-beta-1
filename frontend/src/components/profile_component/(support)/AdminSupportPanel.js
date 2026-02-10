@@ -146,249 +146,222 @@ export default function AdminSupportPanel() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6 gap-2">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-          Admin Destek Yönetim Paneli
-        </h2>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => fetchTickets()}
-            className="px-3 py-2 text-sm rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-            disabled={loading}
-            title="Yenile"
-          >
-            {loading ? "Yenileniyor..." : "Yenile"}
-          </button>
-        </div>
-      </div>
+    <div className="bg-transparent min-h-screen text-zinc-200">
+      {/* Ana Konteyner - Artık Tamamen Opak */}
+      <div className="max-w-full mx-auto h-[calc(100vh-30px)] bg-zinc-900 rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden">
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <StatCard label="Toplam" value={stats.total} />
-        <StatCard label="Atanmış" value={stats.assigned} />
-        <StatCard label="Atanmamış" value={stats.unassigned} />
-        <div className="grid grid-cols-3 gap-2">
-          <MiniStat label="Açık" value={stats.byStatus.open || 0} />
-          <MiniStat label="İşlemde" value={stats.byStatus.in_progress || 0} />
-          <MiniStat label="Kapalı" value={stats.byStatus.closed || 0} />
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col md:flex-row md:items-end gap-3 mb-4">
-        <div className="flex-1">
-          <label className="block text-xs mb-1 text-gray-600 dark:text-gray-300">Ara</label>
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Konu, kullanıcı e-postası..."
-            className="w-full px-3 py-2 rounded border dark:border-gray-700 dark:bg-gray-700 dark:text-white"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs mb-1 text-gray-600 dark:text-gray-300">Durum</label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="px-3 py-2 rounded border dark:border-gray-700 dark:bg-gray-700 dark:text-white"
-          >
-            {STATUS_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-xs mb-1 text-gray-600 dark:text-gray-300">Öncelik</label>
-          <select
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
-            className="px-3 py-2 rounded border dark:border-gray-700 dark:bg-gray-700 dark:text-white"
-          >
-            {PRIORITY_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-xs mb-1 text-gray-600 dark:text-gray-300">Atama</label>
-          <select
-            value={assignState}
-            onChange={(e) => setAssignState(e.target.value)}
-            className="px-3 py-2 rounded border dark:border-gray-700 dark:bg-gray-700 dark:text-white"
-          >
-            {ASSIGN_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-xs mb-1 text-gray-600 dark:text-gray-300">Sırala</label>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className="px-3 py-2 rounded border dark:border-gray-700 dark:bg-gray-700 dark:text-white"
-          >
-            {SORT_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex gap-2">
-          <button
-            onClick={resetFilters}
-            className="px-3 py-2 text-sm rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-          >
-            Temizle
-          </button>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left text-gray-700 dark:text-gray-300">
-          <thead className="text-xs uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-300">
-            <tr>
-              <Th text="ID" />
-              <Th text="Kategori" />
-              <Th text="Konu" />
-              <Th text="Kullanıcı ID" />
-              <Th text="Durum" />
-              <Th text="Öncelik" />
-              <Th text="Atanan" />
-              <Th text="İşlemler" />
-            </tr>
-          </thead>
-          <tbody>
-            {filteredSorted.map((ticket) => {
-              const hasAssignee =
-                !!ticket.assigned_moderator ||
-                (ticket.assignments && ticket.assignments.length > 0);
-
-              return (
-                <tr key={ticket.id} className="border-b dark:border-gray-700">
-                  <td className="px-4 py-3">#{ticket.id}</td>
-                  <td className="px-4 py-3">
-                      {ticket.category
-                        ? `${ticket.category.name}`
-                        : "—"}
-                    </td>
-
-                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
-                    {ticket.subject ?? "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    {ticket.user_id ?? "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <select
-                      value={ticket.status}
-                      onChange={(e) => updateTicketStatus(ticket.id, e.target.value)}
-                      className="border rounded p-1 dark:bg-gray-700 dark:text-white"
-                      disabled={loading}
-                    >
-                      {STATUS_OPTIONS.filter((o) => o.value !== "").map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-4 py-3">
-                    <PriorityBadge priority={ticket.priority} />
-                  </td>
-                  <td className="px-4 py-3">
-                    {ticket.assigned_moderator
-                      ? `${ticket.assigned_moderator.name ?? ticket.assigned_moderator.email ?? "—"}`
-                      : "Atanmamış"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      {!hasAssignee ? (
-                        <button
-                          onClick={() => {
-                            setSelectedTicket(ticket);
-                            setSelectedModerator("");
-                          }}
-                          className="bg-green-600 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
-                          disabled={loading}
-                        >
-                          Ata
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => unassignTicket(ticket.id)}
-                          className="bg-red-600 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
-                          disabled={loading}
-                        >
-                          Atamayı Kaldır
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-
-            {filteredSorted.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-gray-500 dark:text-gray-400">
-                  Filtrene uygun ticket bulunamadı.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Assign Modal */}
-      {selectedTicket && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-96">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-              Ticket’ı Moderatöre Ata
-            </h3>
-
-            <div className="text-sm mb-3 text-gray-600 dark:text-gray-300">
-              <div>
-                <span className="font-medium">Ticket:</span>{" "}
-                #{selectedTicket.id} — {selectedTicket.subject}
-              </div>
-            </div>
-
-            <select
-              value={selectedModerator}
-              onChange={(e) => setSelectedModerator(e.target.value)}
-              className="w-full p-2 border rounded mb-4 dark:bg-gray-700 dark:text-white"
+        {/* Header Bölümü */}
+        <div className="p-6 border-b border-zinc-800 bg-zinc-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-white tracking-tight">
+              Destek Yönetim Paneli
+            </h2>
+            <p className="text-zinc-500 text-sm mt-1">Sistemdeki tüm biletleri buradan yönetebilirsiniz.</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => fetchTickets()}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 transition-all border border-zinc-700 active:scale-95"
               disabled={loading}
             >
-              <option value="">Moderator seçin</option>
-              {moderators.map((mod) => (
-                <option key={mod.id} value={mod.id}>
-                  {mod.name ?? mod.email ?? `ID ${mod.id}`}
-                </option>
-              ))}
-            </select>
+              <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {loading ? "Yenileniyor..." : "Yenile"}
+            </button>
+          </div>
+        </div>
 
-            <div className="flex gap-2 justify-end">
+        <div className="p-6">
+          {/* Hızlı İstatistik Kartları - Opak ve Gölgeli */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="bg-zinc-800 border border-zinc-700 p-5 rounded-xl shadow-sm">
+              <StatCard label="Toplam Bilet" value={stats.total} color="text-white" />
+            </div>
+            <div className="bg-zinc-800 border border-zinc-700 p-5 rounded-xl shadow-sm">
+              <StatCard label="Atanmış" value={stats.assigned} color="text-blue-400" />
+            </div>
+            <div className="bg-zinc-800 border border-zinc-700 p-5 rounded-xl shadow-sm">
+              <StatCard label="Atanmamış" value={stats.unassigned} color="text-amber-400" />
+            </div>
+            <div className="bg-zinc-800 border border-zinc-700 p-5 rounded-xl shadow-sm grid grid-cols-3 gap-2">
+              <MiniStat label="Açık" value={stats.byStatus.open || 0} color="emerald" />
+              <MiniStat label="İşlemde" value={stats.byStatus.in_progress || 0} color="blue" />
+              <MiniStat label="Kapalı" value={stats.byStatus.closed || 0} color="zinc" />
+            </div>
+          </div>
+
+          {/* Filtreleme Paneli - Solid Background */}
+          <div className="bg-zinc-800/40 p-5 rounded-xl border border-zinc-800 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+              <div className="lg:col-span-1">
+                <label className="block text-xs font-semibold mb-2 uppercase tracking-wider text-zinc-500">Arama</label>
+                <input
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Konu veya e-posta..."
+                  className="w-full px-3 py-2.5 rounded-lg border border-zinc-700 bg-zinc-950 text-zinc-200 placeholder-zinc-600 focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all"
+                />
+              </div>
+
+              {[
+                { label: 'Durum', value: status, setter: setStatus, options: STATUS_OPTIONS },
+                { label: 'Öncelik', value: priority, setter: setPriority, options: PRIORITY_OPTIONS },
+                { label: 'Atama', value: assignState, setter: setAssignState, options: ASSIGN_OPTIONS },
+                { label: 'Sıralama', value: sort, setter: setSort, options: SORT_OPTIONS }
+              ].map((filter, idx) => (
+                <div key={idx}>
+                  <label className="block text-xs font-semibold mb-2 uppercase tracking-wider text-zinc-500">{filter.label}</label>
+                  <select
+                    value={filter.value}
+                    onChange={(e) => filter.setter(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-lg border border-zinc-700 bg-zinc-950 text-zinc-200 focus:ring-2 focus:ring-blue-600 outline-none transition-all cursor-pointer"
+                  >
+                    {filter.options.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 flex justify-end">
               <button
-                onClick={() => setSelectedTicket(null)}
-                className="bg-gray-600 text-white px-4 py-2 rounded"
-                disabled={loading}
+                onClick={resetFilters}
+                className="text-sm font-medium text-zinc-400 hover:text-white transition-colors flex items-center gap-1"
               >
-                İptal
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                Filtreleri Temizle
               </button>
-              <button
-                onClick={handleAssignTicket}
-                disabled={!selectedModerator || loading}
-                className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
-              >
-                {loading ? "Atanıyor..." : "Ata"}
-              </button>
+            </div>
+          </div>
+
+          {/* Tablo Konteyneri */}
+          <div className="border border-zinc-800 rounded-xl overflow-hidden bg-zinc-950">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-zinc-800 text-zinc-400 border-b border-zinc-700">
+                <tr>
+                  <th className="px-4 py-4 font-semibold uppercase tracking-wider text-[11px]">ID</th>
+                  <th className="px-4 py-4 font-semibold uppercase tracking-wider text-[11px]">Kategori</th>
+                  <th className="px-4 py-4 font-semibold uppercase tracking-wider text-[11px]">Konu</th>
+                  <th className="px-4 py-4 font-semibold uppercase tracking-wider text-[11px]">Durum</th>
+                  <th className="px-4 py-4 font-semibold uppercase tracking-wider text-[11px]">Öncelik</th>
+                  <th className="px-4 py-4 font-semibold uppercase tracking-wider text-[11px]">Moderatör</th>
+                  <th className="px-4 py-4 font-semibold uppercase tracking-wider text-[11px] text-right">İşlemler</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-800">
+                {filteredSorted.map((ticket) => {
+                  const hasAssignee = !!ticket.assigned_moderator || (ticket.assignments && ticket.assignments.length > 0);
+
+                  return (
+                    <tr key={ticket.id} className="hover:bg-zinc-900/50 transition-colors group">
+                      <td className="px-4 py-4 font-mono text-zinc-500 text-xs">#{ticket.id}</td>
+                      <td className="px-4 py-4 text-zinc-400 font-medium">
+                        {ticket.category ? ticket.category.name : "—"}
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="font-semibold text-zinc-100">{ticket.subject}</div>
+                        <div className="text-[11px] text-zinc-500 mt-0.5">{ticket.user_id}</div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <select
+                          value={ticket.status}
+                          onChange={(e) => updateTicketStatus(ticket.id, e.target.value)}
+                          className="bg-zinc-800 border border-zinc-700 rounded-md px-2 py-1 text-xs text-zinc-200 outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer transition-all"
+                          disabled={loading}
+                        >
+                          {STATUS_OPTIONS.filter((o) => o.value !== "").map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-4 py-4">
+                        <PriorityBadge priority={ticket.priority} />
+                      </td>
+                      <td className="px-4 py-4">
+                        {ticket.assigned_moderator ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold">
+                              {(ticket.assigned_moderator.name || 'A')[0].toUpperCase()}
+                            </div>
+                            <span className="text-zinc-300">{ticket.assigned_moderator.name || ticket.assigned_moderator.email}</span>
+                          </div>
+                        ) : (
+                          <span className="text-zinc-600 italic text-xs">Atanmamış</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        {!hasAssignee ? (
+                          <button
+                            onClick={() => { setSelectedTicket(ticket); setSelectedModerator(""); }}
+                            className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-lg shadow-blue-900/20 active:scale-95"
+                            disabled={loading}
+                          >
+                            Ata
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => unassignTicket(ticket.id)}
+                            className="bg-zinc-800 hover:bg-red-900/30 hover:text-red-400 hover:border-red-900/50 text-zinc-400 border border-zinc-700 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95"
+                            disabled={loading}
+                          >
+                            Geri Al
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal - Opak ve Keskin Tasarım */}
+      {selectedTicket && (
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+          <div className="bg-zinc-900 border border-zinc-700 p-8 rounded-2xl w-full max-w-md shadow-2xl scale-in-center">
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-white mb-2">Bilet Atama</h3>
+              <p className="text-zinc-400 text-sm">
+                <span className="font-mono text-blue-400">#{selectedTicket.id}</span> nolu bileti yönetmesi için bir moderatör seçin.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-zinc-500 uppercase mb-2">Moderatör Listesi</label>
+                <select
+                  value={selectedModerator}
+                  onChange={(e) => setSelectedModerator(e.target.value)}
+                  className="w-full p-3 border border-zinc-700 rounded-xl bg-zinc-950 text-zinc-200 outline-none focus:ring-2 focus:ring-blue-600"
+                >
+                  <option value="">Bir seçim yapın...</option>
+                  {moderators.map((mod) => (
+                    <option key={mod.id} value={mod.id}>
+                      {mod.name || mod.email}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setSelectedTicket(null)}
+                  className="flex-1 px-4 py-3 rounded-xl bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors font-medium"
+                >
+                  İptal
+                </button>
+                <button
+                  onClick={handleAssignTicket}
+                  disabled={!selectedModerator || loading}
+                  className="flex-1 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-900/40"
+                >
+                  {loading ? "İşleniyor..." : "Atamayı Tamamla"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -400,23 +373,28 @@ export default function AdminSupportPanel() {
 /* ---------- Small UI helpers ---------- */
 
 function Th({ text }) {
-  return <th className="px-4 py-3 whitespace-nowrap">{text}</th>;
+  return <th className="px-4 py-3 whitespace-nowrap font-medium tracking-wider">{text}</th>;
 }
 
 function StatCard({ label, value }) {
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/40">
-      <div className="text-xs text-gray-500 dark:text-gray-400">{label}</div>
-      <div className="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">{value}</div>
+    <div className="rounded-xl border border-zinc-800 p-4 bg-zinc-950/50 backdrop-blur-sm hover:border-zinc-700 transition-colors">
+      <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider">{label}</div>
+      <div className="mt-1 text-2xl font-bold text-white tracking-tight">{value}</div>
     </div>
   );
 }
 
-function MiniStat({ label, value }) {
+function MiniStat({ label, value, color = "zinc" }) {
+  const colors = {
+    emerald: "text-emerald-300",
+    blue: "text-blue-300",
+    zinc: "text-zinc-300"
+  }
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-900/60">
-      <div className="text-[11px] text-gray-500 dark:text-gray-400">{label}</div>
-      <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">{value}</div>
+    <div className="rounded-lg border border-zinc-800 p-3 bg-zinc-950/50 hover:border-zinc-700 transition-colors">
+      <div className="text-[10px] font-medium text-zinc-500 uppercase">{label}</div>
+      <div className={`text-lg font-semibold ${colors[color] || "text-white"}`}>{value}</div>
     </div>
   );
 }
@@ -424,17 +402,17 @@ function MiniStat({ label, value }) {
 function PriorityBadge({ priority }) {
   const p = String(priority || "").toLowerCase();
   const map = {
-    urgent: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200",
-    high: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200",
-    normal: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200",
-    low: "bg-gray-100 text-gray-800 dark:bg-gray-900/40 dark:text-gray-200",
+    urgent: "bg-red-500/10 text-red-400 border-red-500/20",
+    high: "bg-orange-500/10 text-orange-400 border-orange-500/20",
+    normal: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    low: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
   };
-  const cls = map[p] || "bg-gray-100 text-gray-800 dark:bg-gray-900/40 dark:text-gray-200";
+  const cls = map[p] || "bg-zinc-500/10 text-zinc-400 border-zinc-500/20";
   const label =
     p === "urgent" ? "Acil" :
-    p === "high" ? "Yüksek" :
-    p === "normal" ? "Normal" :
-    p === "low" ? "Düşük" : "—";
+      p === "high" ? "Yüksek" :
+        p === "normal" ? "Normal" :
+          p === "low" ? "Düşük" : "—";
 
-  return <span className={`px-2 py-1 rounded text-xs font-medium ${cls}`}>{label}</span>;
+  return <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${cls}`}>{label}</span>;
 }

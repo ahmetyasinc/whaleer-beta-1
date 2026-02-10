@@ -58,22 +58,22 @@ export default function MessageComposer({ ticketId }) {
   };
 
   return (
-    <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-      <div className="flex items-start gap-2">
+    <div className="flex flex-col gap-3">
+      <div className="relative">
         <textarea
-          rows={2}
+          rows={3}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Mesajınızı yazın…"
-          className="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+          placeholder="Mesajınızı yazın..."
+          className="w-full p-4 pr-32 bg-zinc-950/50 border border-zinc-700 rounded-xl text-zinc-200 placeholder-zinc-500 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none resize-none transition-all scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent"
           onKeyDown={(e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === "Enter") send();
           }}
         />
 
-        <div className="flex flex-col gap-2">
-          <label className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md cursor-pointer text-sm">
-            Dosya
+        <div className="absolute bottom-3 right-3 flex items-center gap-2">
+          <label className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg cursor-pointer transition-colors" title="Dosya ekle">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
             <input
               type="file"
               className="hidden"
@@ -82,30 +82,38 @@ export default function MessageComposer({ ticketId }) {
               accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.zip,.rar"
             />
           </label>
-
           <button
             onClick={send}
             disabled={disabled || (!text.trim() && files.length === 0)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md disabled:opacity-50"
-            title="Ctrl/⌘ + Enter"
+            className="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-900/20 active:scale-95"
+            title="Gönder (Ctrl + Enter)"
           >
-            {disabled ? "Gönderiliyor…" : "Gönder"}
+            <svg className={`w-5 h-5 ${sending ? "animate-spin" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {sending ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+              )}
+            </svg>
           </button>
         </div>
       </div>
 
       {previews.length > 0 && (
-        <div className="mt-3 grid grid-cols-3 gap-2">
+        <div className="flex gap-2 overflow-x-auto py-2 px-1 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
           {previews.map((p, i) => (
-            <div key={i} className="relative rounded border overflow-hidden">
+            <div key={i} className="relative group shrink-0 w-20 h-20 rounded-lg border border-zinc-700 bg-zinc-900 overflow-hidden">
               {p.url ? (
-                <img src={p.url} alt={p.name} className="w-full h-24 object-cover" />
+                <img src={p.url} alt={p.name} className="w-full h-full object-cover" />
               ) : (
-                <div className="h-24 flex items-center justify-center text-xs text-gray-500">{p.name}</div>
+                <div className="w-full h-full flex flex-col items-center justify-center p-1 text-center">
+                  <svg className="w-6 h-6 text-zinc-600 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                  <span className="text-[9px] text-zinc-500 truncate w-full px-1">{p.name}</span>
+                </div>
               )}
               <button
                 type="button"
-                className="absolute top-1 right-1 bg-black/60 text-white text-xs rounded px-1"
+                className="absolute top-0.5 right-0.5 bg-black/50 hover:bg-red-500/80 text-white rounded-md p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
                 onClick={() => {
                   setFiles((arr) => arr.filter((_, idx) => idx !== i));
                   setPreviews((arr) => {
@@ -116,7 +124,7 @@ export default function MessageComposer({ ticketId }) {
                   });
                 }}
               >
-                ×
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
             </div>
           ))}

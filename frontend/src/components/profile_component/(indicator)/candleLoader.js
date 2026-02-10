@@ -43,17 +43,17 @@ const CandleLoader = () => {
       <style jsx>{`
         @keyframes candle-cycle {
           0% { opacity: 0; transform: scaleY(0); }
-          10% { opacity: 1; transform: scaleY(1); }
-          50% { opacity: 1; transform: scaleY(1); }
-          60% { opacity: 0; transform: scaleY(0.2); }
-          100% { opacity: 0; transform: scaleY(0.2); }
+          10% { opacity: 1; transform: scaleY(1.5); }
+          50% { opacity: 1; transform: scaleY(1.35); }
+          60% { opacity: 0; transform: scaleY(1.5); }
+          100% { opacity: 0; transform: scaleY(0); }
         }
         .animate-candle {
-          animation: candle-cycle 2.5s infinite ease-in-out;
+          animation: candle-cycle 2.55s infinite ease-in-out;
         }
         /* Mum ve fitillere beyaz parlama efekti */
         .white-glow {
-          filter: drop-shadow(0 0 2.5px rgba(255, 255, 255));
+          filter: drop-shadow(0 0 2.8px rgba(255, 255, 255));
         }
       `}</style>
 

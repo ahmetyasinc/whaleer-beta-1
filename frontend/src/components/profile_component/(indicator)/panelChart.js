@@ -147,6 +147,11 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
   // formatter’ı settings’e bağlı hale getir
   const fmt = makeZonedFormatter(selectedPeriod, tzOffsetMin);
 
+  const priceFmt = (p) => {
+    if (Math.abs(p) >= 100000) return (p / 1000).toFixed(0) + "k";
+    return p.toFixed(2);
+  };
+
   // Series -> { span: HTMLElement, data: Map<time, value> } mapping
   const seriesLabelMapRef = useRef(new Map());
 
@@ -171,7 +176,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       layout: { background: { color: bgColor }, textColor },
       grid: { vertLines: { color: gridColor }, horzLines: { color: gridColor } },
       lastValueVisible: false,
-      localization: { timeFormatter: fmt },
+      localization: { timeFormatter: fmt, priceFormatter: priceFmt },
       timeScale: {
         rightBarStaysOnScroll: true,
         shiftVisibleRangeOnNewBar: false,
@@ -491,7 +496,13 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     chartRef.current.applyOptions({
       layout: { background: { color: bgColor }, textColor },
       grid: { vertLines: { color: gridColor }, horzLines: { color: gridColor } },
-      localization: { timeFormatter: makeZonedFormatter(selectedPeriod, tzOffsetMin) },
+      localization: {
+        timeFormatter: makeZonedFormatter(selectedPeriod, tzOffsetMin),
+        priceFormatter: (p) => {
+          if (Math.abs(p) >= 100000) return (p / 1000).toFixed(0) + "k";
+          return p.toFixed(2);
+        },
+      },
       timeScale: { tickMarkFormatter: makeZonedFormatter(selectedPeriod, tzOffsetMin) },
       crosshair: {
         vertLine: {

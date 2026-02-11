@@ -18,11 +18,12 @@ export function installCursorWheelZoom({
   });
 
   const onWheelZoom = (e) => {
-    // Sadece dikey wheel’e tepki verelim; touchpad “pinch-zoom” zaten açık
-    if (!e || typeof e.deltaY !== "number") return;
+    // 1. Yatay scroll domine ediyorsa (pan yapılıyordur), zoom yapma
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
 
-    // Scroll yerine zoom davranışı istiyoruz → varsayılanı engelle
-    e.preventDefault();
+    // 2. Standart zoom davranışı için preventDefault
+    // Native sayfa scroll'unu engellemek istiyoruz.
+    if (e.cancelable) e.preventDefault();
 
     const ts = timeScale;
     const logical = ts.coordinateToLogical(e.offsetX);
@@ -35,11 +36,23 @@ export function installCursorWheelZoom({
     let from = vr.from;
     let to = vr.to;
     const currentBars = Math.max(1, to - from);
-    const minBars = Math.max(1, minBarsFor(selectedPeriod)); // sizde 50
+    const minBars = Math.max(1, minBarsFor(selectedPeriod));
 
-    // Zoom hızı (negatif deltaY → zoom in)
-    const zoomIn = e.deltaY < 0;
-    const factor = zoomIn ? 0.85 : 1.15; // %15 adım
+    // 3. Delta normalizasyonu (Mouse vs Touchpad)
+    // deltaMode 1 (Line) ise piksel cinsine çevir (yaklaşık 33px)
+    let delta = e.deltaY;
+    if (e.deltaMode === 1) delta *= 33;
+
+    // 4. Zoom faktörü hesaplama (Dinamik)
+    // Eski sabit: %15 (0.85 / 1.15)
+    // Yeni: Math.exp(delta * sensitivity)
+    // Sensitivity: 0.0015 civarı, 100px scroll için ~%15 zoom verir.
+    // Touchpad (delta ~1-5) için çok daha yumuşak (%0.1 - %0.7) olur.
+    // delta > 0 (aşağı) -> zoom out (factor > 1)
+    // delta < 0 (yukarı) -> zoom in (factor < 1)
+    const sensitivity = 0.0015;
+    const factor = Math.exp(delta * sensitivity);
+
     let newBars = currentBars * factor;
 
     // Aşırı yaklaşmayı engelle

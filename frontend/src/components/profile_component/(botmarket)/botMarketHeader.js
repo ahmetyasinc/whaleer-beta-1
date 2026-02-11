@@ -1,15 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import SellRentModal from "@/components/profile_component/(botmarket)/sellRentModal";
 import { useSiwsStore } from "@/store/auth/siwsStore";
 import useSiwsAuth from "@/hooks/useSiwsAuth";
 import useBotDataStore from '@/store/showcase/botDataStore';
 import { useTranslation } from "react-i18next";
 import { MdSell } from "react-icons/md";
-import React from 'react';
 
 const PhantomIcon = ({ }) => (
     <img className="w-[20px] mt-[1px]" src="/PhantomLogoWhite.svg" alt="Phantom" />
@@ -32,7 +30,17 @@ export default function BotMarketHeader() {
     const setViewMode = useBotDataStore(s => s.setViewMode);
     const initializeBots = useBotDataStore(s => s.initializeBots);
 
-    const [showSvg, setShowSvg] = useState(false);//nah state'i
+
+    //Nah kontrolleri
+    const audioRef = useRef(null);
+    useEffect(() => {
+        audioRef.current = new Audio("/sounds/yetersiz-bakiye.mp3");
+    }, []);
+
+    const playSound = () => {
+        audioRef.current?.play();
+    };
+    const [showSvg, setShowSvg] = useState(false);
 
 
     return (
@@ -52,12 +60,16 @@ export default function BotMarketHeader() {
 
                         {/* Nah butonu */}
                         <button
-                            onClick={() => setShowSvg(true)}
+                            onClick={() => {
+                                setShowSvg(true);
+                                playSound();
+                            }}
                             className="bg-black transition px-6 py-[6px] rounded-xl font-semibold shadow-lg text-gray-200 border border-stone-600 disabled:opacity-50 hover:border-stone-500 flex items-center justify-center gap-2"
                             type="button"
                         >
                             <span>Para ödemeden bütün botları satın almak istiyorum</span>
                         </button>
+
                         {/* Nah ikonu */}
                         {showSvg && (
                             <div
@@ -102,7 +114,7 @@ export default function BotMarketHeader() {
                                 <button
                                     onClick={connectWalletAndSignIn}
                                     disabled={authLoading}
-                                    className="inline-flex items-center gap-2 px-4 py-[6px] rounded-xl border border-stone-600 hover:border-stone-500"
+                                    className="inline-flex items-center gap-2 px-6 py-[7px] bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 active:scale-[0.98]"
                                 >
                                     <PhantomIcon className="w-5 h-5" />
                                     {authLoading ? t("buttons.connecting") : t("buttons.connectWallet")}

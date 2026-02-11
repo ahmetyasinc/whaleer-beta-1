@@ -31,6 +31,7 @@ export default function ChartComponent({ onLoadingChange }) {
 
   function toUnixSecUTC(t) {
     if (t == null) return undefined;
+    if (typeof t === 'object' && 'year' in t) return Math.floor(Date.UTC(t.year, t.month - 1, t.day) / 1000);
     if (typeof t === 'number') return t > 1e12 ? Math.floor(t / 1000) : Math.floor(t);
     if (typeof t === 'string') {
       const iso = /Z$|[+-]\d\d:\d\d$/.test(t) ? t : t + 'Z';
@@ -155,6 +156,7 @@ export default function ChartComponent({ onLoadingChange }) {
   // Hover state ref for button flickering fix
   const isHoveringButtonsRef = useRef(false);
   const clearTimerRef = useRef(null);
+  const lastMouseXRef = useRef(null); // YENİ
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -214,7 +216,28 @@ export default function ChartComponent({ onLoadingChange }) {
   const openIndicatorSettings = (indicatorId, subId) => { setActiveIndicatorId(indicatorId); setActiveSubIndicatorId(subId); setSettingsIndicatorModalOpen(true); };
   const openStrategySettings = (strategyId, subId) => { setActiveStrategyId(strategyId); setActiveSubStrategyId(subId); setSettingsStrategyModalOpen(true); };
 
-  useEffect(() => { setTzOffsetMin(readTimezoneOffsetMinutesFromCookie()); }, [settings.timezoneMode, settings.timezoneFixed]);
+  useEffect(() => {
+    const updateTz = () => setTzOffsetMin(readTimezoneOffsetMinutesFromCookie());
+    updateTz(); // İlk yüklemede oku
+
+    const onTzChange = (e) => {
+      // Custom event'ten gelen veri varsa onu kullan, yoksa cookie'den oku
+      if (e.detail && typeof e.detail === 'string') {
+        setTzOffsetMin(parseGmtToMinutes(e.detail));
+      } else {
+        updateTz();
+      }
+    };
+
+    window.addEventListener('WH_TIMEZONE_CHANGED', onTzChange);
+    // Başka sekmede değişirse storage event tetiklenir (cookie değişimi için storage eventi çalışmaz ama manuel tetikleme yapıyoruz)
+    window.addEventListener('storage', updateTz);
+
+    return () => {
+      window.removeEventListener('WH_TIMEZONE_CHANGED', onTzChange);
+      window.removeEventListener('storage', updateTz);
+    };
+  }, []);
 
   // ===== (KRİTİK) Seçim veya end değişince indikatör/strateji inputlarını yeniden hesapla =====
   useEffect(() => {
@@ -517,7 +540,8 @@ export default function ChartComponent({ onLoadingChange }) {
         Object.entries(indObj.subItems || {}).forEach(([subId, subItem]) => {
           if (subItem.visible === false) return;
 
-          const results = subItem.result || [];
+          const results = subItem.result;
+          if (!Array.isArray(results)) return;
           results.forEach((res, rIdx) => {
             const point = res.data?.find(d => {
               const t = toUnixSecUTC(d[0]);
@@ -584,6 +608,18 @@ export default function ChartComponent({ onLoadingChange }) {
       el.addEventListener('dblclick', onDblClick);
       cleanupFns.push(() => el.removeEventListener('dblclick', onDblClick));
 
+      // YENİ: lastMouseXRef takibi
+      const onMouseMove = (e) => {
+        const rect = el.getBoundingClientRect();
+        lastMouseXRef.current = e.clientX - rect.left;
+      };
+      const onMouseLeave = () => { lastMouseXRef.current = null; };
+      el.addEventListener('mousemove', onMouseMove);
+      el.addEventListener('mouseleave', onMouseLeave);
+      cleanupFns.push(() => {
+        el.removeEventListener('mousemove', onMouseMove);
+        el.removeEventListener('mouseleave', onMouseLeave);
+      });
     }
 
     // === MAIN SERIES ===
@@ -738,12 +774,29 @@ export default function ChartComponent({ onLoadingChange }) {
 
       const rightOffset = timeScale.getRightOffset ? timeScale.getRightOffset() : FUTURE_PADDING_BARS;
 
+      // YENİ ENTEGRASYON: Jitter Fix
+      // Local crosshair'ı HEMEN güncelle (RAF bekleme) -> Titremeyi keser
+      if (lastMouseXRef.current !== null && chartRef.current && priceSeriesRef.current) {
+        const time = timeScale.coordinateToTime(lastMouseXRef.current);
+        if (time) {
+          chartRef.current.setCrosshairPosition(NaN, time, priceSeriesRef.current);
+        }
+      }
+
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       const seq = nextSeq();
       setLastRangeCache({ from, to, rightOffset, sourceId: chartId });
       rafRef.current = requestAnimationFrame(() => {
         if (!isMountedRef.current || chartInstanceIdRef.current !== myInstanceId) return;
         window.dispatchEvent(new CustomEvent(RANGE_EVENT, { detail: { from, to, rightOffset, sourceId: chartId, seq } }));
+
+        // Diğer grafikler için event fırlat (Burası RAF içinde kalabilir, sorun değil)
+        if (lastMouseXRef.current !== null) {
+          const time = timeScale.coordinateToTime(lastMouseXRef.current);
+          if (time) {
+            window.dispatchEvent(new CustomEvent(CROSSHAIR_EVENT, { detail: { time: toUnixSecUTC(time), sourceId: chartId } }));
+          }
+        }
       });
     });
 

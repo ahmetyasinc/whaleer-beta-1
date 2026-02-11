@@ -23,7 +23,6 @@ import SocialLinksCard from '@/components/profile_component/(settings)/SocialLin
 import AccountSecurityCard from '@/components/profile_component/(settings)/AccountSecurityCard';
 import LanguageCard from '@/components/profile_component/(settings)/LanguageCard';
 import ThemeCard from '@/components/profile_component/(settings)/ThemeCard';
-import TimezoneCard from '@/components/profile_component/(settings)/TimezoneCard';
 
 /* =========================
    Defaults & Utilities
@@ -32,7 +31,6 @@ const LOCALES = ['en', 'tr'];
 const DEFAULTS = {
   language: 'tr',
   theme: 'dark',
-  timezone: 'GMT+00:00',
 };
 
 function setLangCookie(lng) {
@@ -48,12 +46,6 @@ function splitLocalePath(pathname, locales = LOCALES) {
     return { locale: maybe, rest: parts.slice(1).join('/') };
   }
   return { locale: null, rest: parts.join('/') };
-}
-
-function normalizeTimezoneCookieValue(tzValue) {
-  if (!tzValue) return 'GMT+00:00';
-  if (/^GMT[+-]\d{2}:\d{2}$/.test(tzValue) || tzValue === 'GMT+00:00') return tzValue;
-  return 'GMT+00:00';
 }
 
 /* =========================
@@ -77,6 +69,8 @@ export default function SettingsPage() {
     let mounted = true;
     try {
       const fromCookie = readSettingsCookie();
+
+
       const initial = { ...DEFAULTS, ...(fromCookie || {}) };
 
       if (initial.language && i18n.language !== initial.language) {
@@ -84,11 +78,7 @@ export default function SettingsPage() {
         setLangCookie(initial.language);
       }
 
-      const normalizedTz = normalizeTimezoneCookieValue(initial.timezone);
-      initial.timezone = normalizedTz;
-      if (fromCookie && fromCookie.timezone !== normalizedTz) {
-        mergeSettingsCookie({ timezone: normalizedTz });
-      }
+
 
       if (mounted) {
         setForm(initial);
@@ -121,10 +111,7 @@ export default function SettingsPage() {
     mergeSettingsCookie({ theme: newTheme });
   };
 
-  const handleTimezoneChange = (newGmt) => {
-    update('timezone', newGmt);
-    mergeSettingsCookie({ timezone: newGmt });
-  };
+
 
   const onSave = async () => {
     setSaving(true);
@@ -188,14 +175,7 @@ export default function SettingsPage() {
             onThemeChange={handleThemeChange}
           />
         );
-      case 'timezone':
-        return (
-          <TimezoneCard
-            t={t}
-            currentTimezone={form.timezone}
-            onTimezoneChange={handleTimezoneChange}
-          />
-        );
+
       case 'telegram':
         return <TelegramConnect className="" />;
       default:

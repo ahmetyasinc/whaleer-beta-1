@@ -30,31 +30,7 @@ export function installRulerTool({ chart, series, container, isRulerModeRef, onC
   let moveRafId = null;
   let hasFinalShape = false;
 
-  // Interaction lock while measuring
-  let savedHandleScale = null;
-  let savedHandleScroll = null;
 
-  function lockInteractions() {
-    const opts = chart.options ? chart.options() : {};
-    savedHandleScale = opts?.handleScale ?? { axisPressedMouseMove: true, mouseWheel: true, pinch: true };
-    savedHandleScroll = opts?.handleScroll ?? { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: true };
-    chart.applyOptions({
-      handleScale: false,
-      handleScroll: {
-        mouseWheel: false,
-        pressedMouseMove: true,
-        horzTouchDrag: false,
-        vertTouchDrag: false,
-      },
-    });
-  }
-  function unlockInteractions() {
-    chart.applyOptions({
-      handleScale: savedHandleScale ?? { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
-      handleScroll: savedHandleScroll ?? { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: true },
-    });
-    savedHandleScale = null; savedHandleScroll = null;
-  }
 
   // ---------- Overlay (info card) ----------
   function ensureOverlayBox() {
@@ -321,7 +297,7 @@ export function installRulerTool({ chart, series, container, isRulerModeRef, onC
     start = null;
     removeOverlayBox();
     clearShapes();
-    unlockInteractions();
+    clearShapes();
   }
 
   // Close on zoom/scroll range changes
@@ -373,7 +349,7 @@ export function installRulerTool({ chart, series, container, isRulerModeRef, onC
         start.point.y
       );
 
-      lockInteractions();
+
       return;
     }
 
@@ -386,7 +362,7 @@ export function installRulerTool({ chart, series, container, isRulerModeRef, onC
       onComplete?.();
     }
     setOverlayHtml(measureHTML(start, end, { live: false }), end.point.x, end.point.y);
-    unlockInteractions();
+    // unlockInteractions() removed
     start = null;
   }
 
@@ -451,6 +427,6 @@ export function installRulerTool({ chart, series, container, isRulerModeRef, onC
     removeOverlayBox();
     removeSvg();
     start = null; hasFinalShape = false;
-    unlockInteractions();
+    start = null; hasFinalShape = false;
   };
 }

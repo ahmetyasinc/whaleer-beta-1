@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useChartSettingsStore } from "@/store/indicator/chartSettingsStore";
 import i18n from "@/i18n";
 import { useTranslation } from "react-i18next";
@@ -49,15 +49,55 @@ const DEFAULTS = {
 };
 // --------------------------------------------------------------------------
 
-const TZ_OFFSETS = (() => {
-  const res = [];
-  for (let h = -12; h <= 14; h++) {
-    const sign = h >= 0 ? "+" : "-";
-    const abs = Math.abs(h).toString().padStart(2, "0");
-    res.push(`GMT${sign}${abs}:00`);
+// --- TIMEZONE HELPERS ---
+function getAllTimezones() {
+  if (typeof Intl !== 'undefined' && typeof Intl.supportedValuesOf === 'function') {
+    try {
+      const vals = Intl.supportedValuesOf('timeZone');
+      if (Array.isArray(vals) && vals.length > 0) return vals;
+    } catch { }
   }
-  return res;
-})();
+  return [
+    'UTC', 'Europe/Istanbul', 'Europe/London', 'Europe/Berlin',
+    'Europe/Paris', 'America/New_York', 'Asia/Tokyo'
+  ];
+}
+
+function ianaToGmtOffset(tz) {
+  try {
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz,
+      timeZoneName: 'shortOffset',
+      hour12: false,
+    }).formatToParts(now);
+
+    // Get offset string like "GMT+3", "GMT-5", "GMT+03:00"
+    let offset = parts.find(p => p.type === 'timeZoneName')?.value || 'GMT+00:00';
+
+    // If it's UTC, replace with GMT
+    offset = offset.replace(/^UTC/, 'GMT');
+
+    // Normalize "GMT+3" -> "GMT+03:00"
+    // Regex matches GMT, followed by sign, then hours (1 or 2 digits), optional minutes
+    const match = offset.match(/^GMT([+-])(\d{1,2})(?::(\d{2}))?$/);
+
+    if (match) {
+      const sign = match[1];
+      const hours = match[2].padStart(2, '0');
+      const minutes = match[3] || '00';
+      return `GMT${sign}${hours}:${minutes}`;
+    }
+
+    return 'GMT+00:00';
+  } catch {
+    return 'GMT+00:00';
+  }
+}
+
+function labelForIana(tz) {
+  return `${ianaToGmtOffset(tz)} ${tz}`;
+}
 
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 const ONE_OF = (v, arr, d) => (arr.includes(v) ? v : d);
@@ -189,6 +229,60 @@ export default function SettingsModal({ open, onClose, locale }) {
 
   const [localState, setLocalState] = useState(defaultState);
 
+  // --- Timezone State ---
+  const [allTimezones, setAllTimezones] = useState([]);
+  const [isTzListOpen, setIsTzListOpen] = useState(false);
+  const [tzQuery, setTzQuery] = useState('');
+  const [selectedIana, setSelectedIana] = useState(
+    typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'Europe/Istanbul'
+  );
+
+  useEffect(() => {
+    const tzs = getAllTimezones();
+    setAllTimezones(tzs);
+
+    // 1. Check localStorage for saved IANA
+    try {
+      const storedIana = localStorage.getItem('wh_timezone_iana');
+      // If we have a stored IANA, and its offset matches the current settings.timezoneFixed (if mode is fixed), use it.
+      // Or just prefer storedIana if mode is 'fixed' or 'local'.
+      if (storedIana) {
+        setSelectedIana(storedIana);
+        return;
+      }
+    } catch { }
+
+    // 2. Fallback: try to match current fixed offset if possible
+    if (settings?.timezoneFixed) {
+      const match = tzs.find(tz => ianaToGmtOffset(tz) === settings.timezoneFixed);
+      if (match) setSelectedIana(match);
+    }
+  }, [settings?.timezoneFixed]);
+
+  // Sync query with selection when list is closed
+  useEffect(() => {
+    if (!isTzListOpen) {
+      setTzQuery(labelForIana(selectedIana));
+    }
+  }, [selectedIana, isTzListOpen]);
+
+  const filteredTimezones = useMemo(() => {
+    const q = tzQuery.trim().toLowerCase();
+    const selectedLabel = labelForIana(selectedIana).toLowerCase();
+
+    // Show all if empty or matches the currently selected label
+    if (!q || q === selectedLabel) return allTimezones;
+
+    return allTimezones.filter((tz) => labelForIana(tz).toLowerCase().includes(q));
+  }, [tzQuery, allTimezones, selectedIana]);
+
+  const handleTzSelect = (tz) => {
+    setSelectedIana(tz);
+    // Auto-switch mode to fixed when user manually selects a timezone
+    handleChange("timezoneMode", "fixed");
+    setIsTzListOpen(false);
+  };
+
   const scrollRef = useRef(null);
   const scrollPosRef = useRef(0);
 
@@ -267,11 +361,20 @@ export default function SettingsModal({ open, onClose, locale }) {
     // 2) Persist chart settings
     save(nextState);
 
-    // 3) Persist timezone into wh_settings cookie
+    // 3) Persist timezone into wh_settings cookie AND localStorage
     let tzStr = "GMT+0:00";
-    if (nextState.timezoneMode === "fixed") tzStr = nextState.timezoneFixed;
-    else if (nextState.timezoneMode === "utc") tzStr = "GMT+0:00";
-    else if (nextState.timezoneMode === "local") {
+
+    // Update local storage for IANA if we use fixed/selected timezone
+    if (localState.timezoneMode === "fixed") {
+      localStorage.setItem('wh_timezone_iana', selectedIana);
+      tzStr = ianaToGmtOffset(selectedIana);
+
+      // Update the state's fixed timezone to match the IANA selection
+      nextState.timezoneFixed = tzStr;
+
+    } else if (localState.timezoneMode === "utc") {
+      tzStr = "GMT+0:00";
+    } else if (localState.timezoneMode === "local") {
       const offMin = -new Date().getTimezoneOffset();
       const sign = offMin >= 0 ? "+" : "-";
       const abs = Math.abs(offMin);
@@ -279,6 +382,13 @@ export default function SettingsModal({ open, onClose, locale }) {
       const mm = String(abs % 60).padStart(2, "0");
       tzStr = `GMT${sign}${hh}:${mm}`;
     }
+
+    // Ensure we save the correct offset in the chart settings too
+    if (localState.timezoneMode === "fixed") {
+      nextState.timezoneFixed = tzStr;
+    }
+
+    save(nextState);
     writeTimezoneCookie(tzStr);
 
     onClose?.();
@@ -511,7 +621,7 @@ export default function SettingsModal({ open, onClose, locale }) {
                 </button>
               }
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-2">
                 <label className="text-gray-300 text-sm">{t("fields.mode")}</label>
                 <select
                   className="bg-black border border-gray-700 rounded-md px-2 py-1 text-gray-200"
@@ -524,21 +634,58 @@ export default function SettingsModal({ open, onClose, locale }) {
                   <option value="fixed">{t("timezone.fixed")}</option>
                 </select>
               </div>
+
               {localState.timezoneMode === "fixed" && (
-                <div className="flex items-center justify-between">
-                  <label className="text-gray-300 text-sm">{t("fields.gmt")}</label>
-                  <select
-                    className="bg-black border border-gray-700 rounded-md px-2 py-1 text-gray-200"
-                    value={localState.timezoneFixed}
-                    onChange={(e) => handleChange("timezoneFixed", e.target.value)}
-                    aria-label={t("fields.gmt")}
-                  >
-                    {TZ_OFFSETS.map((z) => (
-                      <option key={z} value={z}>
-                        {z}
-                      </option>
-                    ))}
-                  </select>
+                <div className="mt-3">
+                  {/* Search Box */}
+                  <input
+                    type="text"
+                    value={tzQuery}
+                    onChange={(e) => {
+                      setTzQuery(e.target.value);
+                      setIsTzListOpen(true);
+                    }}
+                    onClick={() => setIsTzListOpen(true)}
+                    onFocus={(e) => {
+                      setIsTzListOpen(true);
+                      e.target.select();
+                    }}
+                    placeholder={t('timezone_search') || "Search timezone..."}
+                    className="w-full px-3 py-2 text-sm rounded-lg outline-none bg-zinc-900/40 text-zinc-50 
+                      border border-zinc-800 placeholder-zinc-500 transition-all mb-2
+                      focus:border-blue-500/70 focus:ring-1 focus:ring-blue-600/40"
+                  />
+
+                  {/* List */}
+                  {isTzListOpen && (
+                    <div className="max-h-40 overflow-y-auto border border-zinc-800 rounded-lg custom-scrollbar">
+                      <ul className="divide-y divide-zinc-800">
+                        {filteredTimezones.map((tz) => {
+                          const isSelected = selectedIana === tz;
+                          return (
+                            <li
+                              key={tz}
+                              onClick={() => handleTzSelect(tz)}
+                              className={`flex items-center justify-between px-3 py-2 cursor-pointer text-xs
+                              transition-colors
+                              ${isSelected
+                                  ? "bg-blue-900/20 text-blue-300"
+                                  : "text-zinc-400 hover:bg-zinc-800/50"
+                                }`}
+                            >
+                              <span>{labelForIana(tz)}</span>
+                              {isSelected && <span className="text-blue-400">✓</span>}
+                            </li>
+                          );
+                        })}
+                        {filteredTimezones.length === 0 && (
+                          <li className="px-3 py-2 text-zinc-500 text-xs text-center">
+                            {t('no_results') || "No results"}
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               )}
             </Section>

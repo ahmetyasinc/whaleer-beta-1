@@ -42,10 +42,11 @@ const FlexibleGridLayout = () => {
           Array.isArray(sub.result) &&
           sub.result.some((res) => res.on_graph === false)
         )
-        .map(([subId]) => ({
+        .map(([subId, sub]) => ({ // sub obje de lazım (visible bilgisi için)
           indicatorId,
           subId,
-          indicatorName: indicatorObj.name
+          indicatorName: indicatorObj.name,
+          visible: sub.visible !== false // varsayılan true
         }))
     );
 
@@ -144,20 +145,39 @@ const FlexibleGridLayout = () => {
       isDraggable: false,
     });
 
-    finalFilteredSubItems.forEach(({ indicatorId, subId }, index) => {
+    finalFilteredSubItems.forEach(({ indicatorId, subId, visible }, index) => {
       const id = `panel-${indicatorId}-${subId}`;
       const props = getExisting(id, 11 + index * 4, 6);
+
+      // Visibility Logic:
+      // If hidden -> collapse to height 2 (header only), allow resize? No need.
+      // If shown -> restore to props.h (if stored) OR default 6.
+
+      let h = props.h;
+      let minH = 3;
+      let isResizable = true;
+
+      if (!visible) {
+        h = 2;
+        minH = 2;
+        isResizable = false; // Gizliyken boyutlandırmaya gerek yok
+      } else {
+        // Eğer daha önce gizliymiş ve h=2 kalmışsa veya çok küçükse, varsayıla (6) dön
+        if (h <= 2) h = 6;
+      }
+
       newLg.push({
         i: id,
         x: 0,
         y: props.y,
         w: panelWidth,
-        h: props.h,
+        h: h,
         minW: 13,
         maxW: 60,
-        minH: 3,
+        minH: minH,
         maxH: 40,
-        isDraggable: false,
+        isDraggable: false, // Paneller draggable değil (şimdilik)
+        isResizable: isResizable
       });
     });
 

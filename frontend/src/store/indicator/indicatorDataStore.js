@@ -26,7 +26,7 @@ const useIndicatorDataStore = create(persist((set, get) => ({
               result,
               result,
               prints,
-              visible: true
+              visible: existingSubItems[newSubId]?.visible ?? true
             }
           }
         }
@@ -71,7 +71,7 @@ const useIndicatorDataStore = create(persist((set, get) => ({
                 result,
                 result,
                 prints,
-                visible: true,
+                visible: subItems[maxSubId]?.visible ?? true,
               },
             },
           },

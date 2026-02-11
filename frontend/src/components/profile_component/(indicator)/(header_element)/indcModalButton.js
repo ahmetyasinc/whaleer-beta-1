@@ -11,6 +11,7 @@ import PersonalIndicators from "../(modal_tabs)/personalIndicator";
 import CommunityIndicators from "../(modal_tabs)/communityIndicator";
 import FavoriteIndicators from "../(modal_tabs)/favIndicator";
 import i18n from "@/i18n";
+import { MdOutlineEmergencyShare } from "react-icons/md";
 import { useTranslation } from "react-i18next";
 
 const IndicatorsButton = forwardRef(({ locale, shortcutTitle }, ref) => {
@@ -74,13 +75,14 @@ const IndicatorsButton = forwardRef(({ locale, shortcutTitle }, ref) => {
           <div className="flex items-center gap-4">
             {activeTab === 2 && (
               <button
-                className={`text-[12px] mr-2 px-2 py-1 rounded-full transition-all border ${isPublishMode
+                className={`text-[15px] mb-[1px] px-2 py-1 rounded-full transition-all border ${isPublishMode
                   ? "bg-blue-600 border-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]"
                   : "bg-zinc-800 border-sky-700 text-sky-400 hover:text-sky-300 hover:border-sky-600 shadow-sm hover:shadow-sky-600/20"
                   }`}
                 onClick={() => setIsPublishMode(!isPublishMode)}
+                title={t("publish")}
               >
-                Yayınla
+                <MdOutlineEmergencyShare />
               </button>
             )}
             <button

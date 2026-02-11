@@ -60,7 +60,11 @@
     "wmSize": "Su İzi Boyutu",
     "style": "Stil",
     "cursorType": "İmleç Tipi",
-    "labelColor": "Etiket Rengi"
+    "labelColor": "Etiket Rengi",
+    "lastPriceLine": "Son Fiyat Çizgisi",
+    "lastValueLabel": "Son Fiyat Etiketi",
+    "chartSeparatorLines": "Grafik Ayırıcı Çizgiler",
+    "timeScaleVisible": "Ana Grafik için Zaman Skalası"
   },
   "series": {
     "candlestick": "Mum",

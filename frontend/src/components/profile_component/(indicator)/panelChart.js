@@ -166,7 +166,15 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
     if (firstNonGraphItem?.name) setDisplayName(firstNonGraphItem.name);
 
     // 🔽 YENİ: main chart’taki görsel ayarları kullan
-    const textColor = settings.textColor === "black" ? "#8C8C8C" : "#8C8C8C";
+    const COLOR_MAP = {
+      white: "#FFFFFF",
+      black: "#111111",
+      gray: "#8C8C8C",
+      yellow: "#F2D024",
+      red: "#F23645",
+      green: "#0ECB81"
+    };
+    const textColor = COLOR_MAP[settings.textColor] ?? "#8C8C8C";
     const gridColor = settings?.grid?.color || "#111111";
     const bgColor = settings.bgColor || (settings.theme === 'light' ? '#ffffff' : 'rgb(0,0,7)');
 
@@ -174,15 +182,16 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       width: chartContainerRef.current.clientWidth,
       height: chartContainerRef.current.clientHeight,
       layout: { background: { color: bgColor }, textColor },
-      grid: { vertLines: { color: gridColor }, horzLines: { color: gridColor } },
+      grid: { vertLines: { color: gridColor, style: 1 }, horzLines: { color: gridColor, style: 1 } },
       lastValueVisible: false,
-      localization: { timeFormatter: fmt, priceFormatter: priceFmt },
       timeScale: {
         rightBarStaysOnScroll: true,
         shiftVisibleRangeOnNewBar: false,
-        timeVisible: !["1d", "1w"].includes(selectedPeriod),
+        visible: false,
+        timeVisible: false,
         secondsVisible: false,
         tickMarkFormatter: fmt,
+        borderVisible: true,
       },
       rightPriceScale: { minimumWidth: 70, autoScale: true },
       crosshair: {
@@ -214,14 +223,14 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
       el.addEventListener('wheel', onStart, { passive: false });
       el.addEventListener('touchstart', onStart, { passive: true });
       window.addEventListener('mouseup', onEnd);
-      el.addEventListener('mouseleave', onEnd);
+      // el.addEventListener('mouseleave', onEnd); // Faresi çıkında sync kopmasın (momentum scroll için)
       window.addEventListener('touchend', onEnd);
       cleanupFns.push(() => {
         el.removeEventListener('mousedown', onStart);
         el.removeEventListener('wheel', onStart);
         el.removeEventListener('touchstart', onStart);
         window.removeEventListener('mouseup', onEnd);
-        el.removeEventListener('mouseleave', onEnd);
+        // el.removeEventListener('mouseleave', onEnd);
         window.removeEventListener('touchend', onEnd);
       });
     }
@@ -238,13 +247,13 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
         let series;
         switch (type) {
           case "line":
-            series = chart.addLineSeries({ color: s?.color || "white", lineWidth: s?.width || 1, priceLineVisible: false, lastValueVisible: false, visible: isVisible, crosshairMarkerVisible: false });
+            series = chart.addLineSeries({ color: s?.color || "white", lineWidth: s?.width || 1, priceLineVisible: settings.lastPriceLine, lastValueVisible: settings.lastValueLabel, visible: isVisible, crosshairMarkerVisible: false });
             break;
           case "histogram": {
             const defaultColor = s?.color ?? "0, 128, 0";
             const opacity = s?.opacity ?? 1;
             const colorString = defaultColor.includes(",") ? `rgba(${defaultColor}, ${opacity})` : hexToRgba(defaultColor, opacity);
-            series = chart.addHistogramSeries({ color: colorString, priceLineVisible: false, lastValueVisible: false, visible: isVisible, crosshairMarkerVisible: false });
+            series = chart.addHistogramSeries({ color: colorString, priceLineVisible: settings.lastPriceLine, lastValueVisible: settings.lastValueLabel, visible: isVisible, crosshairMarkerVisible: false });
             break;
           }
           case "area":
@@ -252,14 +261,14 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
               topColor: s?.color || "rgba(33, 150, 243, 0.5)",
               bottomColor: "rgba(33, 150, 243, 0.1)",
               lineColor: s?.color || "blue",
-              priceLineVisible: false,
-              lastValueVisible: false,
+              priceLineVisible: settings.lastPriceLine,
+              lastValueVisible: settings.lastValueLabel,
               visible: isVisible,
               crosshairMarkerVisible: false,
             });
             break;
           default:
-            series = chart.addLineSeries({ color: "white", lineWidth: 2, priceLineVisible: false, lastValueVisible: false, visible: isVisible, crosshairMarkerVisible: false });
+            series = chart.addLineSeries({ color: "white", lineWidth: 2, priceLineVisible: settings.lastPriceLine, lastValueVisible: settings.lastValueLabel, visible: isVisible, crosshairMarkerVisible: false });
         }
         const timeValueMap = new Map();
         data.forEach(([time, value]) => {
@@ -490,7 +499,15 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
   // 🔽 YENİ: settings görseli değişirse chart’ı yeniden yaratmadan da güncelle (opsiyonel ama akıcı)
   useEffect(() => {
     if (!chartRef.current) return;
-    const textColor = settings.textColor === "black" ? "#8C8C8C" : "#8C8C8C";
+    const COLOR_MAP = {
+      white: "#FFFFFF",
+      black: "#111111",
+      gray: "#8C8C8C",
+      yellow: "#F2D024",
+      red: "#F23645",
+      green: "#0ECB81"
+    };
+    const textColor = COLOR_MAP[settings.textColor] ?? "#8C8C8C";
     const gridColor = settings?.grid?.color || "#111111";
     const bgColor = settings.bgColor || (settings.theme === 'light' ? '#ffffff' : 'rgb(0,0,7)');
     chartRef.current.applyOptions({

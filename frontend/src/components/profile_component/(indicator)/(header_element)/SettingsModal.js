@@ -159,6 +159,10 @@ export default function SettingsModal({ open, onClose, locale }) {
       ["white", "black"],
       "white"
     ),
+    lastPriceLine: !!(settings?.lastPriceLine ?? DEFAULTS.lastPriceLine),
+    lastValueLabel: !!(settings?.lastValueLabel ?? DEFAULTS.lastValueLabel),
+    chartSeparatorLines: !!(settings?.chartSeparatorLines ?? DEFAULTS.chartSeparatorLines),
+    timeScaleVisible: !!(settings?.timeScaleVisible ?? DEFAULTS.timeScaleVisible),
     cursorType: ONE_OF(settings?.cursorType, ["crosshair", "arrow", "dot"], "crosshair"),
     grid: { color: settings?.grid?.color || "#111111" },
     series: {
@@ -462,6 +466,10 @@ export default function SettingsModal({ open, onClose, locale }) {
                       cursorType: DEFAULTS.cursorType,
                       grid: { ...prev.grid, color: DEFAULTS.grid.color },
                       series: { ...prev.series, type: DEFAULTS.series.type },
+                      lastPriceLine: DEFAULTS.lastPriceLine,
+                      lastValueLabel: DEFAULTS.lastValueLabel,
+                      chartSeparatorLines: DEFAULTS.chartSeparatorLines,
+                      timeScaleVisible: DEFAULTS.timeScaleVisible,
                     }))
                   }
                   className="text-xs text-cyan-500 hover:text-cyan-400 font-medium"
@@ -528,6 +536,29 @@ export default function SettingsModal({ open, onClose, locale }) {
                 </select>
               </div>
 
+              <SettingToggle
+                label={t("fields.lastPriceLine") || "Son Fiyat Çizgisi"}
+                value={!!localState.lastPriceLine}
+                onChange={(val) => handleChange("lastPriceLine", val)}
+              />
+
+              <SettingToggle
+                label={t("fields.lastValueLabel") || "Son Fiyat Etiketi"}
+                value={!!localState.lastValueLabel}
+                onChange={(val) => handleChange("lastValueLabel", val)}
+              />
+
+              <SettingToggle
+                label={t("fields.timeScaleVisible") || "Zaman Skalası"}
+                value={!!localState.timeScaleVisible}
+                onChange={(val) => handleChange("timeScaleVisible", val)}
+              />
+
+              <SettingToggle
+                label={t("fields.chartSeparatorLines") || "Grafik Ayırıcı Çizgiler"}
+                value={!!localState.chartSeparatorLines}
+                onChange={(val) => handleChange("chartSeparatorLines", val)}
+              />
 
               {/* Series type */}
               <div className="flex items-center justify-between">

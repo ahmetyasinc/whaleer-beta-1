@@ -60,7 +60,11 @@
     "wmSize": "Watermark Size",
     "style": "Style",
     "cursorType": "Cursor Type",
-    "labelColor": "Label Color"
+    "labelColor": "Label Color",
+    "lastPriceLine": "Last Price Line",
+    "lastValueLabel": "Last Value Label",
+    "chartSeparatorLines": "Chart Separator Lines",
+    "timeScaleVisible": "Time Scale for Main Chart"
   },
   "series": {
     "candlestick": "Candlestick",

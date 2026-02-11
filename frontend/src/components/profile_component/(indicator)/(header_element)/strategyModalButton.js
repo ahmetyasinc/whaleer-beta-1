@@ -13,6 +13,7 @@ import FavStrategies from "../(modal_tabs)/favStrategies";
 import { FaChessBishop } from "react-icons/fa";
 import i18n from "@/i18n";
 import { useTranslation } from "react-i18next";
+import { MdOutlineEmergencyShare } from "react-icons/md";
 
 const StrategyButton = forwardRef(({ locale, shortcutTitle }, ref) => {
   const { t } = useTranslation("indicator");
@@ -78,13 +79,14 @@ const StrategyButton = forwardRef(({ locale, shortcutTitle }, ref) => {
           <div className="flex items-center gap-4">
             {activeTab === 2 && (
               <button
-                className={`text-[12px] mr-2 px-2 py-1 rounded-full transition-all border ${isPublishMode
+                className={`text-[15px] mb-[1px] px-2 py-1 rounded-full transition-all border ${isPublishMode
                   ? "bg-blue-600 border-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]"
                   : "bg-zinc-800 border-sky-700 text-sky-400 hover:text-sky-300 hover:border-sky-600 shadow-sm hover:shadow-sky-600/20"
                   }`}
                 onClick={() => setIsPublishMode(!isPublishMode)}
+                title={t("publish")}
               >
-                Yayınla
+                <MdOutlineEmergencyShare />
               </button>
             )}
             <button

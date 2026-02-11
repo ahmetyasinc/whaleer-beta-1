@@ -375,34 +375,34 @@ export default function ChartComponent({ onLoadingChange }) {
     let series;
     switch (seriesType) {
       case 'bar':
-        series = chart.addBarSeries({ upColor: s.bar.upColor, downColor: s.bar.downColor });
+        series = chart.addBarSeries({ upColor: s.bar.upColor, downColor: s.bar.downColor, priceLineVisible: true, lastValueVisible: true });
         series.setData(data);
         break;
       case 'line':
-        series = chart.addLineSeries({ color: s.line.color, lineWidth: s.line.width, lineType: s.line.stepped ? 1 : 0, crosshairMarkerVisible: false });
+        series = chart.addLineSeries({ color: s.line.color, lineWidth: s.line.width, lineType: s.line.stepped ? 1 : 0, crosshairMarkerVisible: false, priceLineVisible: true, lastValueVisible: true });
         series.setData(mapToSingleValue(data, s.series.valueSource));
         break;
       // YENİ EKLENENLer: Kesikli Çizgi (Dashed) - Noktalı Çizgi (Dotted)
       case 'dashed':
-        series = chart.addLineSeries({ color: s.line.color, lineWidth: s.line.width, lineStyle: 2, lineType: s.line.stepped ? 1 : 0, crosshairMarkerVisible: false });
+        series = chart.addLineSeries({ color: s.line.color, lineWidth: s.line.width, lineStyle: 2, lineType: s.line.stepped ? 1 : 0, crosshairMarkerVisible: false, priceLineVisible: true, lastValueVisible: true });
         series.setData(mapToSingleValue(data, s.series.valueSource));
         break;
 
       case 'dotted':
-        series = chart.addLineSeries({ color: s.line.color, lineWidth: s.line.width, lineStyle: 1, lineType: s.line.stepped ? 1 : 0, crosshairMarkerVisible: false });
+        series = chart.addLineSeries({ color: s.line.color, lineWidth: s.line.width, lineStyle: 1, lineType: s.line.stepped ? 1 : 0, crosshairMarkerVisible: false, priceLineVisible: true, lastValueVisible: true });
         series.setData(mapToSingleValue(data, s.series.valueSource));
         break;
       //--------------------------------------------------------------------
       case 'area':
-        series = chart.addAreaSeries({ lineColor: s.area.lineColor, topColor: hexToRgba(s.area.topColor, s.area.topAlpha), bottomColor: hexToRgba(s.area.bottomColor, s.area.bottomAlpha), crosshairMarkerVisible: false });
+        series = chart.addAreaSeries({ lineColor: s.area.lineColor, topColor: hexToRgba(s.area.topColor, s.area.topAlpha), bottomColor: hexToRgba(s.area.bottomColor, s.area.bottomAlpha), crosshairMarkerVisible: false, priceLineVisible: true, lastValueVisible: true });
         series.setData(mapToSingleValue(data, s.series.valueSource));
         break;
       case 'baseline':
-        series = chart.addBaselineSeries({ baseValue: { type: 'price', price: s.baseline.baseValue }, topFillColor1: s.baseline.topColor, topFillColor2: s.baseline.topColor, bottomFillColor1: s.baseline.bottomColor, bottomFillColor2: s.baseline.bottomColor, crosshairMarkerVisible: false });
+        series = chart.addBaselineSeries({ baseValue: { type: 'price', price: s.baseline.baseValue }, topFillColor1: s.baseline.topColor, topFillColor2: s.baseline.topColor, bottomFillColor1: s.baseline.bottomColor, bottomFillColor2: s.baseline.bottomColor, crosshairMarkerVisible: false, priceLineVisible: true, lastValueVisible: true });
         series.setData(mapToSingleValue(data, s.series.valueSource));
         break;
       case 'histogram':
-        series = chart.addHistogramSeries({ color: hexToRgba(s.histogram.color, s.histogram.alpha) });
+        series = chart.addHistogramSeries({ color: hexToRgba(s.histogram.color, s.histogram.alpha), priceLineVisible: true, lastValueVisible: true });
         series.setData(mapToSingleValue(data, s.series.valueSource));
         break;
       case 'candlestick':
@@ -416,6 +416,8 @@ export default function ChartComponent({ onLoadingChange }) {
           borderVisible: !!s.candle.border,
           borderUpColor: s.candle.borderUp || s.candle.upBody,
           borderDownColor: s.candle.borderDown || s.candle.downBody,
+          priceLineVisible: true,
+          lastValueVisible: true,
         });
         if (s.series.hollow) {
           series.applyOptions({ borderVisible: true, upColor: hexToRgba(s.candle.upBody, 0), downColor: hexToRgba(s.candle.downBody, 0) });
@@ -488,7 +490,15 @@ export default function ChartComponent({ onLoadingChange }) {
         horzLine: crosshairStyle,
       },
       localization: { timeFormatter: fmt },
-      timeScale: { timeVisible: !['1d', '1w'].includes(selectedPeriod), secondsVisible: false, tickMarkFormatter: fmt, rightBarStaysOnScroll: true, shiftVisibleRangeOnNewBar: false },
+      timeScale: {
+        visible: settings.timeScaleVisible,
+        timeVisible: settings.timeScaleVisible,
+        secondsVisible: false,
+        tickMarkFormatter: fmt,
+        rightBarStaysOnScroll: true,
+        shiftVisibleRangeOnNewBar: false,
+        borderVisible: false,
+      },
       rightPriceScale: { minimumWidth: 70, autoScale: true },
     };
 
@@ -1112,10 +1122,10 @@ export default function ChartComponent({ onLoadingChange }) {
             // Yeni seri oluştur
             let series;
             switch (type) {
-              case 'line': series = chart.addLineSeries({ color: s?.color || 'yellow', lineWidth: s?.width || 2, lastValueVisible: false, priceLineVisible: false, visible: isVisible, crosshairMarkerVisible: false }); break;
-              case 'area': series = chart.addAreaSeries({ topColor: s?.color || 'rgba(33,150,243,0.5)', bottomColor: 'rgba(33,150,243,0.1)', lineColor: s?.color || 'blue', lastValueVisible: false, priceLineVisible: false, visible: isVisible, crosshairMarkerVisible: false }); break;
-              case 'histogram': { const c = s?.color ?? '0, 128, 0'; const opacity = s?.opacity ?? 0.3; series = chart.addHistogramSeries({ color: `rgba(${c}, ${opacity})`, lastValueVisible: false, priceLineVisible: false, visible: isVisible }); break; }
-              default: series = chart.addLineSeries({ color: 'white', lineWidth: 2, lastValueVisible: false, priceLineVisible: false, visible: isVisible, crosshairMarkerVisible: false });
+              case 'line': series = chart.addLineSeries({ color: s?.color || 'yellow', lineWidth: s?.width || 2, lastValueVisible: settings.lastValueLabel, priceLineVisible: settings.lastPriceLine, visible: isVisible, crosshairMarkerVisible: false }); break;
+              case 'area': series = chart.addAreaSeries({ topColor: s?.color || 'rgba(33,150,243,0.5)', bottomColor: 'rgba(33,150,243,0.1)', lineColor: s?.color || 'blue', lastValueVisible: settings.lastValueLabel, priceLineVisible: settings.lastPriceLine, visible: isVisible, crosshairMarkerVisible: false }); break;
+              case 'histogram': { const c = s?.color ?? '0, 128, 0'; const opacity = s?.opacity ?? 0.3; series = chart.addHistogramSeries({ color: `rgba(${c}, ${opacity})`, lastValueVisible: settings.lastValueLabel, priceLineVisible: settings.lastPriceLine, visible: isVisible }); break; }
+              default: series = chart.addLineSeries({ color: 'white', lineWidth: 2, lastValueVisible: settings.lastValueLabel, priceLineVisible: settings.lastPriceLine, visible: isVisible, crosshairMarkerVisible: false });
             }
             series.setData(formattedData);
 
@@ -1232,7 +1242,11 @@ export default function ChartComponent({ onLoadingChange }) {
 
           } else {
             // Mevcut seri var, görünürlüğü, datayı VE stil ayarlarını güncelle
-            let options = { visible: isVisible };
+            let options = {
+              visible: isVisible,
+              lastValueVisible: settings.lastValueLabel,
+              priceLineVisible: settings.lastPriceLine
+            };
 
             switch (type) {
               case 'line':

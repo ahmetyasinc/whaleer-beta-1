@@ -10,6 +10,7 @@ export const DEFAULTS = {
   bgColor: "#000007",              // yeni
   textColor: "white",              // yeni ("white" | "black")
   labelColor: "white",             // yeni ("white" | "black")
+  chartSeparatorLines: true,       // yeni
   timezoneMode: "local",
   timezoneFixed: "GMT+03:00",
 
@@ -19,6 +20,13 @@ export const DEFAULTS = {
 
   // volume kaldırıldı ama geriye dönük kalsın
   volumeVisible: true,
+
+  // Last Price Settings
+  lastPriceLine: false,
+  lastValueLabel: true,
+
+  // Time Scale Settings
+  timeScaleVisible: false,
 
   // crosshair settings
   crosshair: {

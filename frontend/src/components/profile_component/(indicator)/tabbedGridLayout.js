@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Responsive, WidthProvider } from "react-grid-layout";
+import { useChartSettingsStore } from "@/store/indicator/chartSettingsStore";
 import StockChart from "@/components/profile_component/(indicator)/StockChart";
 import PanelChart from "./panelChart";
+import TimeScale from "./timeScale";
 import usePanelStore from "@/store/indicator/panelStore";
 import useCodePanelStore from "@/store/indicator/indicatorCodePanelStore";
 import CodePanel from "./(modal_tabs)/indicatorCodePanel"; // yeni bileşen
@@ -32,6 +34,8 @@ const FlexibleGridLayout = () => {
     updateItemLayout,
     syncWidths
   } = usePanelStore();
+
+  const showSeparator = useChartSettingsStore(s => s.settings.chartSeparatorLines ?? true);
 
 
 
@@ -135,7 +139,7 @@ const FlexibleGridLayout = () => {
     newLg.push({
       i: "chart",
       x: 0,
-      y: chartProps.y,
+      y: 0, // En üstte
       w: panelWidth,
       h: chartProps.h,
       minW: 13,
@@ -145,14 +149,13 @@ const FlexibleGridLayout = () => {
       isDraggable: false,
     });
 
+    let currentY = chartProps.h; // Y ekseninde ilerleme takibi
+
     finalFilteredSubItems.forEach(({ indicatorId, subId, visible }, index) => {
       const id = `panel-${indicatorId}-${subId}`;
-      const props = getExisting(id, 11 + index * 4, 6);
+      const props = getExisting(id, currentY, 3);
 
       // Visibility Logic:
-      // If hidden -> collapse to height 2 (header only), allow resize? No need.
-      // If shown -> restore to props.h (if stored) OR default 6.
-
       let h = props.h;
       let minH = 3;
       let isResizable = true;
@@ -162,14 +165,14 @@ const FlexibleGridLayout = () => {
         minH = 2;
         isResizable = false; // Gizliyken boyutlandırmaya gerek yok
       } else {
-        // Eğer daha önce gizliymiş ve h=2 kalmışsa veya çok küçükse, varsayıla (6) dön
-        if (h <= 2) h = 6;
+        // Eğer daha önce gizliymiş ve h=2 kalmışsa veya çok küçükse, varsayıla (4) dön
+        if (h <= 2) h = 3;
       }
 
       newLg.push({
         i: id,
         x: 0,
-        y: props.y,
+        y: currentY, // Sırayla ekle
         w: panelWidth,
         h: h,
         minW: 13,
@@ -179,7 +182,26 @@ const FlexibleGridLayout = () => {
         isDraggable: false, // Paneller draggable değil (şimdilik)
         isResizable: isResizable
       });
+
+      currentY += h; // Sonraki panel için Y'yi artır
     });
+
+    // TimeScale - En altta, sabit yükseklik
+    const timeScaleProps = getExisting("time-scale", currentY, 1);
+    newLg.push({
+      i: "time-scale",
+      x: 0,
+      y: currentY, // En sonda
+      w: panelWidth,
+      h: 1, // Minimize height to show only time axis (approx 30px)
+      minW: 13,
+      maxW: 60,
+      minH: 1, // Allow it to be small
+      maxH: 2,
+      isDraggable: false,
+      isResizable: false
+    });
+    // currentY += 2; // Gerekirse editor panelleri için
 
     const indEditorProps = getExisting("panel-indicator-editor", 50, 11);
     newLg.push({
@@ -228,56 +250,88 @@ const FlexibleGridLayout = () => {
   return (
     <div className="p-0 w-full min-h-screen">
       {windowWidth > 0 && (
-        <ResponsiveGridLayout
-          className="layout"
-          layouts={memoizedLayouts}
-          initialLayout={[
-            { i: 'panel-indicator-editor', x: 0, y: 50, w: 34, h: 11 }
-          ]}
-          breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480 }}
-          cols={{ lg: 60, md: 48, sm: 30, xs: 20 }}
-          rowHeight={30}
-          margin={[3, 3]}
-          containerPadding={[8, 9]}
-          isDraggable={true}
-          isResizable={true}
-          onLayoutChange={handleLayoutChange}
-          onResizeStart={handleResizeStart}
-          onResize={handleResize} // Anlık senkronizasyon için
-          onResizeStop={(layout) => handleResizeStop(layout)}
-          onDragStop={handleDragStop}
-          draggableHandle=".drag-handle" // Sürükleme alanı tanımlandı
-          style={{ minHeight: "100vh", overflow: "visible" }}
-        >
-          {/* Ana grafik */}
-          <div key="chart" className="relative w-full h-full m-0">
-            <StockChart onLoadingChange={setIsMainChartLoading} />
-          </div>
-
-          {/* Sadece on_graph: false olan indikatör panelleri */}
-          {finalFilteredSubItems.map(({ indicatorName, indicatorId, subId }) => (
-            <div key={`panel-${indicatorId}-${subId}`} className="relative w-full h-full m-0">
-              <PanelChart indicatorName={indicatorName} indicatorId={indicatorId} subId={subId} />
+        <>
+          <style>{`
+          .react-resizable-handle {
+            z-index: 100 !important;
+            background-image: none !important; /* Optional: customize */
+          }
+          .react-resizable-handle::after {
+            content: "";
+            position: absolute;
+            right: 5px;
+            bottom: 5px;
+            width: 8px;
+            height: 8px;
+            border-right: 2px solid white;
+            border-bottom: 2px solid white;
+            pointer-events: none;
+          }
+          .react-grid-item:hover .react-resizable-handle::after {
+             border-color: #2196f3;
+          }
+        `}</style>
+          <ResponsiveGridLayout
+            className="layout"
+            layouts={memoizedLayouts}
+            initialLayout={[
+              { i: 'panel-indicator-editor', x: 0, y: 50, w: 34, h: 11 }
+            ]}
+            breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480 }}
+            cols={{ lg: 60, md: 48, sm: 30, xs: 20 }}
+            rowHeight={30}
+            margin={[3, 0]}
+            containerPadding={[8, 9]}
+            isDraggable={true}
+            isResizable={true}
+            onLayoutChange={handleLayoutChange}
+            onResizeStart={handleResizeStart}
+            onResize={handleResize} // Anlık senkronizasyon için
+            onResizeStop={(layout) => handleResizeStop(layout)}
+            onDragStop={handleDragStop}
+            draggableHandle=".drag-handle" // Sürükleme alanı tanımlandı
+            style={{ minHeight: "100vh", overflow: "visible" }}
+          >
+            {/* Ana grafik */}
+            <div key="chart" className="relative w-full h-full m-0">
+              <StockChart onLoadingChange={setIsMainChartLoading} />
             </div>
-          ))}
 
-          <div
-            key="panel-indicator-editor"
-            className="relative w-full h-full m-0"
-            style={{ display: isCodePanelOpen ? "block" : "none" }}
-          >
-            {isCodePanelOpen && <CodePanel />}
-          </div>
+            {/* Sadece on_graph: false olan indikatör panelleri ve Görünür olanlar */}
+            {finalFilteredSubItems.map(({ indicatorName, indicatorId, subId }) => {
+              return (
+                <div
+                  key={`panel-${indicatorId}-${subId}`}
+                  className={`relative w-full h-full m-0 ${showSeparator ? "border-t-[3px] border-[rgb(43,43,67)]" : ""}`}
+                >
+                  <PanelChart indicatorName={indicatorName} indicatorId={indicatorId} subId={subId} />
+                </div>
+              );
+            })}
 
-          {/* Strategy Code Panel her zaman DOM’da, ama yalnızca açıkken görünür */}
-          <div
-            key="panel-strategy-editor"
-            className="relative w-full h-full m-0"
-            style={{ display: isStrategyCodePanelOpen ? "block" : "none" }}
-          >
-            {isStrategyCodePanelOpen && <StrategyCodePanel />}
-          </div>
-        </ResponsiveGridLayout>
+            {/* TimeScale Component - Singleton at bottom */}
+            <div key="time-scale" className="relative w-full h-full m-0">
+              <TimeScale />
+            </div>
+
+            <div
+              key="panel-indicator-editor"
+              className="relative w-full h-full m-0"
+              style={{ display: isCodePanelOpen ? "block" : "none" }}
+            >
+              {isCodePanelOpen && <CodePanel />}
+            </div>
+
+            {/* Strategy Code Panel her zaman DOM’da, ama yalnızca açıkken görünür */}
+            <div
+              key="panel-strategy-editor"
+              className="relative w-full h-full my-1"
+              style={{ display: isStrategyCodePanelOpen ? "block" : "none" }}
+            >
+              {isStrategyCodePanelOpen && <StrategyCodePanel />}
+            </div>
+          </ResponsiveGridLayout>
+        </>
       )}
     </div>
   );

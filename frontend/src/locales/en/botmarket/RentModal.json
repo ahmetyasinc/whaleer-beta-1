@@ -1,0 +1,40 @@
+{
+    "title": "Rent Bot",
+    "errors": {
+        "nonJson": "Invalid response from server",
+        "prepareFailed": "Failed to prepare rental summary",
+        "connectWallet": "Please connect your wallet",
+        "invalidCheckout": "Invalid checkout data",
+        "notConfirmed": "Payment not confirmed",
+        "operationFailed": "Operation failed"
+    },
+    "toasts": {
+        "preparing": "Preparing transaction...",
+        "signWallet": "Please sign the transaction in your wallet",
+        "confirmOnchain": "Confirming transaction on-chain...",
+        "activatingRental": "Activating rental..."
+    },
+    "rows": {
+        "action": "Action",
+        "botName": "Bot Name",
+        "owner": "Owner",
+        "durationTitle": "Duration (Days)",
+        "minDaysHint": "Minimum {{minDays}} days",
+        "dailyUsd": "Daily Price",
+        "totalUsd": "Total Price (USD)",
+        "totalSol": "Total Price (SOL)",
+        "revenueWallet": "Revenue Wallet"
+    },
+    "actionNames": {
+        "rent": "Rent"
+    },
+    "buttons": {
+        "cancel": "Cancel",
+        "continue": "Continue",
+        "processing": "Processing..."
+    },
+    "network": {
+        "solana": "Solana Network",
+        "notConnected": "Wallet Not Connected"
+    }
+}

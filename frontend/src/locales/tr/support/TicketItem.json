@@ -1,0 +1,17 @@
+{
+    "priority": {
+        "low": "Düşük",
+        "normal": "Normal",
+        "high": "Yüksek",
+        "urgent": "Acil"
+    },
+    "status": {
+        "open": "Açık",
+        "in_progress": "İşlemde",
+        "resolved": "Çözüldü",
+        "closed": "Kapalı"
+    },
+    "noMessageContent": "Mesaj içeriği bulunamadı...",
+    "expand": "Genişlet",
+    "collapse": "Kapat"
+}

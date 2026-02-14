@@ -55,6 +55,7 @@
     "dataSoon": "Performance Data (Soon)",
     "notAvailable": "Not Available",
     "sellEligibilityTooltip": "To sell or rent your bot, it must run for at least 700 hours",
-    "powerPointTooltip": "It is a success indicator calculated by us based on your bot's risk profile and the profit it made during its operation."
+    "powerPointTooltip": "It is a success indicator calculated by us based on your bot's risk profile and the profit it made during its operation.",
+    "powerPoint": "Power Point"
   }
 }

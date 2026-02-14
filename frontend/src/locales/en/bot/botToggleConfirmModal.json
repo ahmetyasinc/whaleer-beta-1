@@ -1,0 +1,8 @@
+{
+    "confirmStart": "I confirm starting the bot",
+    "confirmStop": "I confirm stopping the bot",
+    "startBot": "Start Bot",
+    "stopBot": "Stop Bot",
+    "cancel": "Cancel",
+    "continue": "Continue"
+}

@@ -1,0 +1,37 @@
+{
+    "title": "New Support Ticket",
+    "category": "Category",
+    "selectCategory": "Select a category",
+    "subject": "Subject",
+    "subjectPlaceholder": "Brief summary of your request",
+    "message": "Message",
+    "messagePlaceholder": "Describe your issue in detail...",
+    "priority": "Priority",
+    "priorityLevel": {
+        "low": "Low",
+        "normal": "Normal",
+        "high": "High",
+        "urgent": "Urgent"
+    },
+    "addFile": "Add File",
+    "selectedFiles": "Selected files:",
+    "createTicket": "Create Ticket",
+    "creating": "Creating...",
+    "validation": {
+        "requiredFields": "Please enter a subject and message."
+    },
+    "error": {
+        "generic": "An error occurred during the process: "
+    },
+    "fileInput": {
+        "dragDrop": "Drag and drop files here, or",
+        "browse": "browse",
+        "supports": "Supports: JPG, PNG, PDF, DOC (Max 10MB)"
+    },
+    "categories": {
+        "genel": "General",
+        "faturalandırma": "Billing",
+        "teknik": "Technical",
+        "öneri": "Suggestion"
+    }
+}

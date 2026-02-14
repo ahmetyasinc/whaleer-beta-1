@@ -1,0 +1,37 @@
+{
+    "title": "Buy Bot",
+    "errors": {
+        "nonJson": "Response is not valid JSON.",
+        "prepareFailed": "Failed to prepare checkout.",
+        "connectWallet": "Please connect your wallet first.",
+        "invalidCheckout": "Invalid checkout data.",
+        "invalidIntent": "Could not create purchase intent.",
+        "notConfirmed": "Payment could not be confirmed.",
+        "operationFailed": "Operation failed."
+    },
+    "toasts": {
+        "preparing": "Preparing transaction...",
+        "signWallet": "Please sign the transaction in your wallet...",
+        "confirmOnchain": "Confirming transaction on-chain..."
+    },
+    "rows": {
+        "action": "Action",
+        "botName": "Bot Name",
+        "sellerName": "Seller",
+        "priceUsd": "Price (USD)",
+        "approxSol": "Approx. SOL",
+        "revenueWallet": "Seller Wallet"
+    },
+    "actionNames": {
+        "buy": "Buy"
+    },
+    "buttons": {
+        "cancel": "Cancel",
+        "continue": "Continue",
+        "processing": "Processing..."
+    },
+    "wallet": {
+        "solanaNetwork": "Solana Network",
+        "notConnected": "Wallet Not Connected"
+    }
+}

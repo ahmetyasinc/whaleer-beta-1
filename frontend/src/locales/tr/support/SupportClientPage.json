@@ -1,0 +1,18 @@
+{
+    "header": {
+        "title": "Destek Merkezi",
+        "adminRole": "Admin",
+        "moderatorRole": "Moderatör",
+        "descAdmin": "Sistemdeki tüm destek taleplerini yönetin.",
+        "descModerator": "Size atanmış destek taleplerini yönetin.",
+        "descUser": "Sorunlarınızı bize bildirin, en kısa sürede çözelim."
+    },
+    "sidebar": {
+        "myPastTickets": "Geçmiş Taleplerim",
+        "newTicket": "Yeni Talep"
+    },
+    "loading": "Yükleniyor...",
+    "error": {
+        "userInfoLoad": "Kullanıcı bilgileri yüklenirken bir hata oluştu."
+    }
+}

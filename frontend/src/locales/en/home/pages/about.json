@@ -1,9 +1,117 @@
 {
   "title": "About Whaleer",
-  "p1": "is an innovative web-based platform that enables users to design, test, and commercialize their own trading algorithms—regardless of their technical background. Our mission is to democratize algorithmic trading by making it accessible, efficient, and user-friendly for everyone, from complete beginners to advanced developers and professional traders.",
-  "p2": "At the core of Whaleer lies a powerful yet intuitive interface. Beginners can build trading strategies through simple configuration panels, while more experienced users can write and fine-tune their own algorithmic scripts with advanced customization options. By catering to all skill levels, Whaleer fosters a collaborative ecosystem where users can learn, experiment, and grow together.",
-  "p3": "Beyond algorithm creation, Whaleer features a dynamic marketplace where strategies can be shared, sold, or leased to other users. This opens up a new revenue stream for creators while providing investors access to diverse, ready-to-use strategies. Our platform encourages innovation and knowledge-sharing, creating a space where algorithm developers and algorithm consumers can interact and benefit from one another.",
-  "p4": "Our lightweight vector-based processing engine allows us to extend the limits of free-tier usage while maintaining high performance. Whaleer also offers premium features such as advanced analytics, backtesting tools, and increased strategy limits for users seeking enhanced capabilities.",
-  "p5": "Whaleer is not just a platform—it’s a movement toward more transparent, collaborative, and empowered trading for all.",
+  "introduction": {
+    "title": "Platform Overview",
+    "content": "A New Era in Financial Technology: Meet Whaleer. Whaleer is a professional algorithmic trading platform that simplifies the complexity of cryptocurrency markets through data-driven strategies and automated trading models. In today’s rapidly changing financial environment, Whaleer was founded to eliminate the emotional mistakes and time loss caused by manual trading, offering users not just a tool but a fully designed end-to-end digital trading ecosystem. Thanks to its flexible Python-based architecture, you can transform your technical analyses directly into algorithms and gain the power to trade seamlessly 24/7 with full exchange integration.\n\nProfessional Solutions for Everyone. Whaleer creates a customized experience for all participants in the trading world:\n• For Strategy Developers: A powerful development environment where you can write your own algorithms and securely sell your strategies through an NFT-based infrastructure.\n• For Investors: The ability to purchase verified strategies with transparent historical performance—without requiring technical knowledge—and entrust portfolios to automated bots.\n• For Analysts: Advanced charting interfaces and manual analysis tools to monitor market dynamics even without running bots.\n\nTransparency, Security, and Social Interaction. At the heart of our platform lies an Advanced Backtesting Module where every transaction and strategy can be transparently tested. Before publishing or purchasing a strategy, users can examine its historical market performance in full detail. NFT-based payment infrastructure maximizes ownership rights and transaction security, while our Discover interface enables interaction among users—transforming algorithmic trading into a social experience.\n\nOur Vision: Empowering Individual Investors with Institutional Strength. Whaleer’s core mission is to make algorithmic trading accessible beyond major financial institutions and establish it as a standard for individual investors. With a transparent ecosystem, user-friendly interface, and continuous support, we are building the future of trading today—helping every user write their own financial freedom story on a professional foundation."
+  },
+  "story": {
+    "title": "Our Story – How & Why It Was Founded",
+    "content": "Whaleer was born from analyzing a fundamental paradox in modern cryptocurrency markets: while markets operate 24/7 at millisecond speed, individual investors remain dependent on manual methods, limited charting tools, and emotional reactions. We observed the widening gap between institutional high-frequency trading algorithms and the limited capabilities of individual traders. Even when investors possess promising strategic ideas, they often lack the technical infrastructure to execute them with discipline. Meanwhile, opaque signal groups and copy-trading schemes continue to exploit trust—creating a massive credibility crisis.\n\nWhaleer emerged as a necessity: to eliminate technological asymmetry, unverified strategy pollution, and sleepless manual trading—redefining financial freedom on a transparent, data-driven foundation. The founding vision combines engineering discipline with the chaotic nature of financial markets, opening algorithmic power once reserved for quant developers and large funds to users of every level. By isolating fear and greed from trading decisions and replacing them with Python-based mathematical precision, Whaleer introduces disciplined automation.\n\nBeyond this, the platform addresses strategy reliability through NFT-based ownership and verification—protecting creators while ensuring investors fully understand what they invest in. The first spark came during a sudden midnight market move and the realization: ‘If only this strategy could be coded.’ Technical struggles connecting scripts to exchanges and the inadequacy or high cost of existing bot platforms shaped the first drafts. The true breakthrough was recognizing a marketplace gap—where skilled strategists lacked distribution and investors lacked trust. The idea of turning professional algorithms into digital NFT assets transformed Whaleer from a simple bot platform into a comprehensive ecosystem."
+  },
+  "vision_mission": {
+    "title1": "Our Vision",
+    "title2": "Our Mission",
+    "content1": "Our Vision: Bringing Institutional Power to Individual Investors. Whaleer aims to transform algorithmic trading from an exclusive privilege into a universal standard. We strive to lead a transparent, auditable trading culture where data-driven decisions replace emotions. In the near future, we envision not just a platform, but the world’s most comprehensive algotrade ecosystem—where top strategists gain global recognition, NFT-based financial products take center stage, and individual investors operate with ‘whale-level’ discipline.",
+    "content2": "Our Mission: Redefining Trust and Transparency. Whaleer seeks to eliminate the trust crisis in crypto markets through blockchain-based NFT ownership and verifiable backtest performance. Our goal is to ensure every investor experiences disciplined, secure, and data-driven trading—democratizing complex financial technology through a user-friendly, high-security interface.",
+    "article1": "Technological Excellence: Enabling even the most complex strategies to execute within milliseconds through our flexible Python-based infrastructure.",
+    "article2": "Trust and Transparency: Eliminating misinformation and manipulation via NFT ownership and verified performance data.",
+    "article3": "Accessibility: Delivering a simple yet powerful interface adaptable to every experience level.",
+    "article4": "Education and Growth: Supporting newcomers to increase both the quality and share of individual algorithmic trading volume worldwide."
+  },
+  "team": {
+    "title": "Team",
+    "description": "The professional team behind Whaleer.",
+    "list": [
+      {
+        "name": "Ahmet Yasin Çelik",
+        "role": "Founder & CEO",
+        "bio": "Marmara University Electrical & Electronics Engineering Student.",
+        "linkedin": "https://www.linkedin.com/in/ahmet-yasin-çelik?utm_source=share_via&utm_content=profile&utm_medium=member_android",
+        "instagram": "https://www.instagram.com/ahmet_yasinc?igsh=eW54dG9ucDdodHlm",
+        "image": "/team/ahmet.png"
+      },
+      {
+        "name": "Bilal Bostan",
+        "role": "CPO - Frontend Develeoper",
+        "bio": "Marmara University Electrical & Electronics Engineering Student.",
+        "linkedin": "https://www.linkedin.com/in/bilal-bostan-a16b7a2a2?utm_source=share_via&utm_content=profile&utm_medium=member_android",
+        "instagram": "https://www.instagram.com/bilalbstn7?igsh=MXZxMm9rbzlrdTBiYQ==",
+        "image": "/team/bilal.png"
+      },
+      {
+        "name": "Taha Emre Can",
+        "role": "CTO - Backend Developer",
+        "bio": "Marmara University Electrical & Electronics Engineering Student.",
+        "linkedin": "https://www.linkedin.com/in/tahaemrecan?utm_source=share_via&utm_content=profile&utm_medium=member_android",
+        "instagram": "https://www.instagram.com/tahaemrecan?igsh=MzRkcmJhYXVpYXM5",
+        "image": "/team/taha.png"
+      },
+      {
+        "name": "Mevlüt Akhan",
+        "role": "Senior COO",
+        "bio": "Marmara University Electrical & Electronics Engineering Student.",
+        "linkedin": "https://www.linkedin.com/in/mevlutakhan?utm_source=share_via&utm_content=profile&utm_medium=member_android",
+        "instagram": "https://www.instagram.com/akhanmevlut?igsh=bWJ5ZW1rbWhkaHBz",
+        "image": "/team/mevlüt.png"
+      },
+      {
+        "name": "Abdulsamet Yaramış",
+        "role": "CFO - Data Analyst",
+        "bio": "Marmara University Electrical & Electronics Engineering Student.",
+        "linkedin": "https://www.linkedin.com/in/sametyaramis?utm_source=share_via&utm_content=profile&utm_medium=member_android",
+        "instagram": "https://www.instagram.com/samet.yaramiss?igsh=bjJsa2M5cmVoZW1r",
+        "image": "/team/samet.png"
+      }
+    ]
+  },
+  "how_it_works": {
+    "title": "Why Whaleer?",
+    "steps": [
+      {
+        "title": "Why does starting algorithmic trading have to be so difficult?",
+        "desc": "What makes algorithmic trading seem complex is an ecosystem full of scattered tools, technical barriers, lack of trust, and unverified strategies. Whaleer aims to remove these obstacles by combining the entire process from analysis to backtesting, bot execution to strategy sharing, into a single, simple platform. Because financial technologies should be understandable enough for everyone who wants to learn, try, and grow, not just experts."
+      },
+      {
+        "title": "Why take risks without seeing if strategies really work?",
+        "desc": "No strategy gives confidence without being based on real data and having its past performance transparently shown. Whaleer makes backtest results, risk metrics, and verification processes visible for every strategy, enabling users to make decisions based on data, not guesses. Because sustainable profit starts with measurable and provable performance, not hope."
+      },
+      {
+        "title": "Why entrust our money to bots whose security we don't know?",
+        "desc": "Financial trust is built not on assumptions but on transparency, technical security, and verifiable processes. Whaleer aims to minimize risk with a bot infrastructure where API keys are stored encrypted, there is no direct access to user funds, and operations run in isolated environments. Also, since strategy performance and behavior are traceable, users always keep control. Because true trust comes not from handing over money, but from not losing control."
+      },
+      {
+        "title": "Why shouldn't successful strategy developers earn income from this?",
+        "desc": "Algorithmic knowledge and effort should not be limited to personal gain but should turn into a sustainable income model for those who create value. Whaleer offers a fair marketplace where developers can turn their efforts into earnings by ensuring strategies with verified performance are displayed transparently and meet buyers through a secure infrastructure. Because a strong ecosystem is built on a structure that rewards the producer, encourages sharing, and makes value visible."
+      },
+      {
+        "title": "Is professional trading not possible without complex interfaces?",
+        "desc": "Professionalism comes from an experience designed correctly, understandable, and serving the purpose, not from screens that look complex. Whaleer aims to combine powerful analysis tools and automation processes with a simple interface, allowing beginners to progress without difficulty while experienced users do not lose the depth they need. Because a good financial experience gains value not by increasing complexity, but by making it invisible."
+      },
+      {
+        "title": "Isn't learning and growing with a community stronger?",
+        "desc": "A community where knowledge is shared, experiences are transferred, and strategies develop together accelerates the individual trial-and-error process and produces more solid results. Whaleer aims to build a social ecosystem where users can make their strategies visible, receive feedback, and progress within a common learning culture. Because lasting success comes not from moving forward alone, but from learning and growing together."
+      },
+      {
+        "title": "Doesn't everyone have the right to do algorithmic trading, not just professionals?",
+        "desc": "Financial technologies should be accessible to everyone who wants to learn, try, and improve themselves, not closed areas accessible only to experts. Whaleer aims to make algorithmic trading more inclusive by bringing together tools that reduce technical barriers, a guiding experience, and a transparent ecosystem. Because equality of opportunity starts with knowledge and technology being accessible to everyone."
+      },
+      {
+        "title": "Why should algorithmic finance belong to only a minority?",
+        "desc": "Algorithmic finance remaining an area accessible only to a limited segment stems from the unequal distribution of knowledge, technology, and opportunities. However, when the right tools, transparent data, and an understandable experience are offered, everyone can be a part of this world. Whaleer aims to make algorithmic finance more accessible and fair by reducing technical barriers and creating a verifiable ecosystem. Because the finance of the future should be built on a structure where everyone who wants to participate can have a say, not just the minority."
+      },
+      {
+        "title": "Is a data-driven, transparent, and verifiable trading ecosystem possible?",
+        "desc": "Correct processing of real-time data, presentation of strategy performances with measurable metrics, and transparent monitoring of all processes form the basis of updates. Whaleer ensures decisions are based on data, not guesses, by making every step visible, from backtest results to risk indicators, verification mechanisms to user feedback. Because sustainable success comes from scalability and transparency, not uncertainty."
+      },
+      {
+        "title": "Can't analysis, automation, and income model combined in a single platform?",
+        "desc": "Gathering analysis tools, automated trading infrastructure, and a sustainable income model under a single roof simplifies the user experience and increases productivity. Whaleer makes this holistic structure possible by bringing together deep analysis on charts, transforming strategies into algorithmic bots and running them, and turning verified performance into income opportunities in the same ecosystem. Because real value comes from holistic systems working together, not fragmented solutions."
+      },
+      {
+        "title": "What should the future trading experience be like?",
+        "desc": "The future trading experience should be accessible, transparent, and data-focused, far from a structure that is complex, closed, and appeals only to experts. An ecosystem where users can easily develop their strategies, clearly see real performance, use automation safely, and grow either individually or within a community forms the basis of this experience. Whaleer aims to make trading more understandable, reliable, and inclusive by gathering the entire process from analysis to automation, verification to revenue model under a single roof. Because the finance of the future is built on control, transparency, and common growth, not uncertainty."
+      }
+    ]
+  },
   "imageAlt": "Whaleer logo"
 }

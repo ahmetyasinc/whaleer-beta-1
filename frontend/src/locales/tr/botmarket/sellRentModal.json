@@ -1,0 +1,72 @@
+{
+    "titles": {
+        "create": "İlan Oluştur",
+        "update": "İlanı Güncelle"
+    },
+    "subtitle": "Botunuzu markette satışa veya kiralamaya sunun",
+    "labels": {
+        "chooseBot": "Bot Seçimi",
+        "noPnlData": "PnL Verisi Yok",
+        "noBotSelected": "Bot Seçilmedi",
+        "wantSell": "Satmak İstiyorum",
+        "wantRent": "Kiralamak İstiyorum",
+        "revenueWallet": "Gelir Cüzdanı",
+        "description": "Açıklama"
+    },
+    "placeholders": {
+        "sellPrice": "Satış Fiyatı",
+        "rentPrice": "Günlük Kiralama Fiyatı",
+        "solanaAddress": "Solana Adresi",
+        "description": "Detaylı açıklama girin..."
+    },
+    "hints": {
+        "detailedAttracts": "Detaylı açıklamalar daha fazla kullanıcı çeker",
+        "feeExplain": "İlan ücreti olarak ~1 USD değerinde SOL/USDC ödeyeceksiniz."
+    },
+    "banners": {
+        "feeTitle": "İlan Ücreti",
+        "feeConfirm": "İlan ücretini kabul ediyorum",
+        "walletRequired": "Cüzdan Bağlantısı Gerekli",
+        "phantomRequired": "Phantom Cüzdan Gerekli"
+    },
+    "buttons": {
+        "select": "Seç",
+        "create": "İlan Oluştur",
+        "update": "Güncelle",
+        "remove": "Yayından Kaldır",
+        "connect": "Cüzdanı Bağla",
+        "installPhantom": "Phantom Yükle"
+    },
+    "status": {
+        "solanaConnected": "Solana Network Bağlı",
+        "phantomNotInstalled": "Phantom Yüklü Değil",
+        "walletNotConnected": "Cüzdan Bağlı Değil"
+    },
+    "errors": {
+        "selectBot": "Lütfen bir bot seçin",
+        "chooseOne": "Lütfen en az bir seçenek (Satış veya Kiralama) seçin",
+        "invalidPrices": "Geçersiz fiyatlar",
+        "invalidWallet": "Geçersiz cüzdan adresi",
+        "acceptDisclaimer": "Lütfen ilan ücreti bilgilendirmesini onaylayın",
+        "connectWalletFirst": "Lütfen önce cüzdanınızı bağlayın",
+        "invalidIntent": "Geçersiz ilan isteği",
+        "paymentNotConfirmed": "Ödeme onaylanmadı"
+    },
+    "toasts": {
+        "preparingPayment": "Ödeme hazırlanıyor...",
+        "signInWallet": "Lütfen cüzdanınızdaki işlemi imzalayın",
+        "confirmOnchain": "İşlem ağ üzerinde onaylanıyor...",
+        "paymentConfirmed": "Ödeme onaylandı!",
+        "operationFailed": "İşlem başarısız oldu",
+        "creating": "İlan oluşturuluyor...",
+        "updating": "İlan güncelleniyor...",
+        "createSuccess": "İlan başarıyla oluşturuldu",
+        "updateSuccess": "İlan başarıyla güncellendi",
+        "removing": "İlan kaldırılıyor...",
+        "removeSuccess": "İlan başarıyla kaldırıldı"
+    },
+    "confirm": {
+        "remove": "Bu ilanı kaldırmak istediğinize emin misiniz?"
+    },
+    "success": "Başarılı!"
+}

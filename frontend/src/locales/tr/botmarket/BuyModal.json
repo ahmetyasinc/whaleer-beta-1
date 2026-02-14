@@ -1,0 +1,37 @@
+{
+    "title": "Bot Satın Al",
+    "errors": {
+        "nonJson": "Sunucu yanıtı geçersiz.",
+        "prepareFailed": "Ödeme ekranı hazırlanamadı.",
+        "connectWallet": "Lütfen önce cüzdanınızı bağlayın.",
+        "invalidCheckout": "Geçersiz ödeme verisi.",
+        "invalidIntent": "Satın alma isteği oluşturulamadı.",
+        "notConfirmed": "Ödeme onaylanamadı.",
+        "operationFailed": "İşlem başarısız oldu."
+    },
+    "toasts": {
+        "preparing": "İşlem hazırlanıyor...",
+        "signWallet": "Lütfen cüzdanınızdan işlemi onaylayın...",
+        "confirmOnchain": "İşlem ağ üzerinde onaylanıyor..."
+    },
+    "rows": {
+        "action": "İşlem",
+        "botName": "Bot Adı",
+        "sellerName": "Satıcı",
+        "priceUsd": "Fiyat (USD)",
+        "approxSol": "Yaklaşık SOL",
+        "revenueWallet": "Satıcı Cüzdanı"
+    },
+    "actionNames": {
+        "buy": "Satın Al"
+    },
+    "buttons": {
+        "cancel": "İptal",
+        "continue": "Devam Et",
+        "processing": "İşleniyor..."
+    },
+    "wallet": {
+        "solanaNetwork": "Solana Ağı",
+        "notConnected": "Cüzdan Bağlı Değil"
+    }
+}

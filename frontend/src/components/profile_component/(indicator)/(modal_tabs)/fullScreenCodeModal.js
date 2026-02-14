@@ -51,7 +51,7 @@ const CodeModal = ({
   const [localCode, setLocalCode] = useState("");
   const monacoRef = useRef(null);
   const runButtonRefs = useRef([]);
-  const { t } = useTranslation("profile/indicatorEditor");
+  const { t } = useTranslation("fullScreen");
   const [isPeekMode, setIsPeekMode] = useState(false);
   const [layoutMode, setLayoutMode] = useState("columns");
   const [isMinimized, setIsMinimizedState] = useState(false);
@@ -500,12 +500,12 @@ const CodeModal = ({
         <TbMaximize size={24} />
         <span
           className="
-            absolute top-[10px] -left-[140px] -translate-x-1/
+            absolute top-[10px] -left-[145px] -translate-x-1/
             z-20
             px-2 py-1
             text-[11px] font-medium
             text-white
-            bg-gray-900
+            bg-zinc-900
             rounded-md
             shadow-md
             whitespace-nowrap
@@ -513,7 +513,7 @@ const CodeModal = ({
             scale-0 group-hover:scale-100
           "
         >
-          {t("buttons.maximize", "Kod Editörünü Büyüt (F)")}
+          {t("maximize")}
         </span>
       </button>,
       document.body
@@ -536,7 +536,7 @@ const CodeModal = ({
             className="h-full px-3 bg-transparent hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors flex items-center justify-center border-l border-zinc-800"
             onMouseEnter={() => setIsPeekMode(true)}
             onMouseLeave={() => setIsPeekMode(false)}
-            title={t("buttons.peek", "Önizleme (Space basılı tut)")}
+            title={t("peek")}
           >
             <FaRegEye size={14} />
           </button>
@@ -545,7 +545,7 @@ const CodeModal = ({
           {panels.length < 4 ? (
             <button
               className="h-full px-3 bg-transparent hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors flex items-center justify-center border-l border-zinc-800"
-              title={t("buttons.addPanel", "Yeni Panel Ekle (Shift++)")}
+              title={t("addPanel")}
               onClick={() => setShowSelectModal(true)}
             >
               <span className="text-lg font-light">+</span>
@@ -553,7 +553,7 @@ const CodeModal = ({
           ) : (
             <button
               className="h-full px-3 bg-transparent hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors flex items-center justify-center border-l border-zinc-800"
-              title={layoutMode === "columns" ? t("buttons.gridView", "Grid Görünüme Geç") : t("buttons.columnView", "Sütun Görünüme Geç")}
+              title={layoutMode === "columns" ? t("gridView") : t("columnView")}
               onClick={() => setLayoutMode(prev => prev === "columns" ? "grid" : "columns")}
             >
               {layoutMode === "columns" ? (
@@ -567,7 +567,7 @@ const CodeModal = ({
           {/* Minimize Button (_) */}
           <button
             className="h-full px-3 bg-transparent hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors flex items-center justify-center border-l border-zinc-800"
-            title={t("buttons.minimize", "Küçült (F)")}
+            title={t("minimize")}
             onClick={() => setIsMinimized(true)}
           >
             <span className="text-lg leading-none mb-1">_</span>
@@ -577,7 +577,7 @@ const CodeModal = ({
           <button
             className="h-full px-3 bg-transparent hover:bg-red-900 text-zinc-400 hover:text-white transition-colors flex items-center justify-center border-l border-zinc-800"
             onClick={onClose}
-            title={t("buttons.close", "Kapat (Shift+Esc)")}
+            title={t("close")}
             aria-label="Close"
           >
             <IoMdClose size={16} />
@@ -622,7 +622,7 @@ const CodeModal = ({
                   <div className="flex items-center gap-1 shrink-0 bg-zinc-800/50 px-1.5 py-0.5 rounded border border-zinc-700/50">
                     <span className={`w-1.5 h-1.5 rounded-full ${isStrategyPanel ? "bg-purple-500" : "bg-cyan-400"}`}></span>
                     <span className={`text-[10px] font-medium leading-none ${isStrategyPanel ? "text-purple-200" : "text-cyan-200"}`}>
-                      {isStrategyPanel ? "Strateji" : "İndikatör"}
+                      {isStrategyPanel ? t("strategy") : t("indicator")}
                     </span>
                   </div>
                 </div>
@@ -652,7 +652,7 @@ const CodeModal = ({
                       ? "bg-gray-700 cursor-not-allowed opacity-60"
                       : "bg-[rgb(16,45,100)] hover:bg-[rgb(27,114,121)]"
                       }`}
-                    title={locked && isStrategyPanel ? "Kilitli sürümler değiştirilemez" : "Kaydet (Ctrl+S)"}
+                    title={locked && isStrategyPanel ? t("lockedVersion") : t("save")}
                     onClick={() => handleSave(index)}
                     disabled={isSaving || (locked && isStrategyPanel)}
                   >
@@ -668,7 +668,7 @@ const CodeModal = ({
                     <button
                       className="px-1.5 py-0.5 ml-1 bg-red-800 hover:bg-red-600 rounded-[4px] transition-colors"
                       onClick={() => handleRemovePanel(index)}
-                      title="Paneli Kapat"
+                      title={t("closePanel")}
                     >
                       <IoMdClose size={14} className="text-white" />
                     </button>
@@ -702,19 +702,19 @@ const CodeModal = ({
                   <TerminalStrategy
                     key={`terminal-strategy-${panelEntity.id}`}
                     id={panelEntity.id}
-                    initialOutput={t("terminal.ready")}
+                    initialOutput={t("terminalReady")}
                   />
                 ) : (
                   <TerminalIndicator
                     key={`terminal-indicator-${panelEntity.id}`}
                     id={panelEntity.id}
-                    initialOutput={t("terminal.ready")}
+                    initialOutput={t("terminalReady")}
                   />
                 )}
                 <button
                   onClick={() => togglePanelTerminal(index)}
                   className="absolute top-0 right-0 p-0.5 bg-black hover:bg-zinc-950 rounded-sm text-gray-400 hover:text-white transition-colors z-[60]"
-                  title="Terminali Gizle"
+                  title={t("hideTerminal")}
                 >
                   <FaChevronDown size={12} />
                 </button>
@@ -725,10 +725,10 @@ const CodeModal = ({
                 <button
                   onClick={() => togglePanelTerminal(index)}
                   className="mx-1 mb-1 px-1 py-0.5 bg-zinc-900 hover:bg-zinc-800 text-gray-400 hover:text-white transition-all text-xs flex items-center justify-center gap-1 border border-zinc-800"
-                  title="Terminali Aç"
+                  title={t("showTerminal")}
                 >
                   <FaChevronUp size={10} />
-                  <span>Terminal</span>
+                  <span>{t("terminal")}</span>
                 </button>
               )}
             </div>

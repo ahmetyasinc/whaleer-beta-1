@@ -343,7 +343,7 @@ def control_the_results(user_id, bot_id, results, min_usd=10.0, ctx=None):
         actions.append(a)
         log_info(
             bot_id=bot_id,
-            message="İşlem eklendi",
+            message="Action added",
             symbol=act.get("coin_id"),
             details={
                 "frac": _finite_or_none(frac),

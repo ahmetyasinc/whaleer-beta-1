@@ -1,0 +1,18 @@
+{
+    "header": {
+        "title": "Support Center",
+        "adminRole": "Admin",
+        "moderatorRole": "Moderator",
+        "descAdmin": "Manage all support tickets in the system.",
+        "descModerator": "Manage support tickets assigned to you.",
+        "descUser": "Report your issues to us, we will solve them as soon as possible."
+    },
+    "sidebar": {
+        "myPastTickets": "My Past Tickets",
+        "newTicket": "New Ticket"
+    },
+    "loading": "Loading...",
+    "error": {
+        "userInfoLoad": "An error occurred while loading user information."
+    }
+}

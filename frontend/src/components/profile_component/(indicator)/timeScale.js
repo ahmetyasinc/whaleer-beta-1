@@ -176,7 +176,7 @@ export default function TimeScale() {
             },
             rightPriceScale: {
                 visible: true,
-                minimumWidth: 70,
+                minimumWidth: 75,
                 autoScale: true,
                 ticksVisible: false,
                 borderVisible: false,

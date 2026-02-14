@@ -107,11 +107,23 @@ export default function BotsPageClient() {
     });
   }, [counts.ORIGINAL, counts.PURCHASED, counts.RENTED]);
 
+  // --- Data Loading ---
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     const loadData = async () => {
-      await loadApiKeys();
-      await load_strategies();
-      await loadBots();
+      setIsLoading(true);
+      try {
+        await Promise.all([
+          loadApiKeys(),
+          load_strategies(),
+          loadBots()
+        ]);
+      } catch (error) {
+        console.error("Failed to load data", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     loadData();
   }, [loadApiKeys, loadBots]);
@@ -284,8 +296,12 @@ export default function BotsPageClient() {
         <ToastContainer position="top-center" />
         {modalOpen && <BotModal onClose={() => setModalOpen(false)} />}
 
-        {displayBots.length === 0 ? (
-          <div className="flex flex-col items-center justify-center text-center text-white/70 py-24">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center h-full">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        ) : displayBots.length === 0 ? (
+          <div className="flex flex-col items-center justify-center text-center bg-gray-950/50 w-[40%] mt-16 rounded-3xl mx-auto backdrop-blur-md text-white/70 py-24 ring-2 ring-gray-800 hover:ring-sky-900/80 transition-all duration-200 shadow-[0_0_8px_rgba(99,102,241,0.4)] hover:shadow-[0_0_21px_rgba(139,92,246,0.6)]">
             <RiRobot2Line className="text-8xl text-gray-400 mb-4 animate-pulse" />
 
             <h2 className="text-2xl font-semibold text-gray-200 mb-2">

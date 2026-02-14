@@ -2,8 +2,10 @@
 
 import React from 'react';
 import useBotExamineModalStore from '@/store/botmarket/BotExamineModalStore';
+import { useTranslation } from 'react-i18next';
 
 const TradeList = ({ botId }) => {
+    const { t } = useTranslation('botMarketTradeList');
     const { extraData } = useBotExamineModalStore();
     const trades = extraData?.trades || [];
 
@@ -13,8 +15,8 @@ const TradeList = ({ botId }) => {
             return trade.side; // LONG veya SHORT
         } else {
             // Spot için: LONG -> Alış, SHORT -> Satış, BUY -> Alış, SELL -> Satış
-            if (trade.side === 'LONG' || trade.side === 'BUY') return 'ALIŞ';
-            if (trade.side === 'SHORT' || trade.side === 'SELL') return 'SATIŞ';
+            if (trade.side === 'LONG' || trade.side === 'BUY') return t('sides.buy');
+            if (trade.side === 'SHORT' || trade.side === 'SELL') return t('sides.sell');
             return trade.side;
         }
     };
@@ -27,23 +29,23 @@ const TradeList = ({ botId }) => {
             <div className="flex items-center justify-between mb-4">
                 <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-amber-500/80">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]"></span>
-                    İşlem Geçmişi
+                    {t('header')}
                     <div className="h-3 w-[1px] bg-zinc-600 mx-1"></div>
-                    <span className="text-zinc-400 font-medium normal-case tracking-normal">İşlemler kopyalanmaması için gecikmeli gelmektedir.</span>
+                    <span className="text-zinc-400 font-medium normal-case tracking-normal">{t('disclaimer')}</span>
                 </h4>
                 <span className="text-[10px] font-mono text-amber-400/60 bg-amber-950/30 px-1.5 py-1 rounded border border-amber-800/30">
-                    {trades.length} işlem
+                    {t('count', { count: trades.length })}
                 </span>
             </div>
 
             {/* Table Header */}
             <div className="grid grid-cols-6 gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-2 px-3">
-                <span>İşlem Çifti</span>
-                <span className="text-center">Piyasa</span>
-                <span className="text-center">Yön</span>
-                <span className="text-center">Aksiyon</span>
-                <span className="text-right">Fiyat</span>
-                <span className="text-right">Tarih</span>
+                <span>{t('table.pair')}</span>
+                <span className="text-center">{t('table.market')}</span>
+                <span className="text-center">{t('table.side')}</span>
+                <span className="text-center">{t('table.action')}</span>
+                <span className="text-right">{t('table.price')}</span>
+                <span className="text-right">{t('table.date')}</span>
             </div>
 
             {/* Trade List */}
@@ -96,7 +98,7 @@ const TradeList = ({ botId }) => {
                     ))
                 ) : (
                     <div className="flex items-center justify-center h-20 text-zinc-500 text-sm">
-                        İşlem bulunamadı
+                        {t('empty')}
                     </div>
                 )}
             </div>

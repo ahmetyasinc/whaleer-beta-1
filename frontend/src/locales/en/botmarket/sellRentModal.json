@@ -1,0 +1,72 @@
+{
+    "titles": {
+        "create": "Create Listing",
+        "update": "Update Listing"
+    },
+    "subtitle": "List your bot for sale or rent",
+    "labels": {
+        "chooseBot": "Choose Bot",
+        "noPnlData": "No PnL Data",
+        "noBotSelected": "No Bot Selected",
+        "wantSell": "I want to sell",
+        "wantRent": "I want to rent",
+        "revenueWallet": "Revenue Wallet",
+        "description": "Description"
+    },
+    "placeholders": {
+        "sellPrice": "Sale Price",
+        "rentPrice": "Daily Rent Price",
+        "solanaAddress": "Solana Address",
+        "description": "Enter detailed description..."
+    },
+    "hints": {
+        "detailedAttracts": "Detailed descriptions attract more users",
+        "feeExplain": "You will pay ~1 USD in SOL/USDC for listing fee."
+    },
+    "banners": {
+        "feeTitle": "Listing Fee",
+        "feeConfirm": "I accept the listing fee",
+        "walletRequired": "Wallet Connection Required",
+        "phantomRequired": "Phantom Wallet Required"
+    },
+    "buttons": {
+        "select": "Select",
+        "create": "Create Listing",
+        "update": "Update Listing",
+        "remove": "Remove Listing",
+        "connect": "Connect Wallet",
+        "installPhantom": "Install Phantom"
+    },
+    "status": {
+        "solanaConnected": "Solana Network Connected",
+        "phantomNotInstalled": "Phantom Not Installed",
+        "walletNotConnected": "Wallet Not Connected"
+    },
+    "errors": {
+        "selectBot": "Please select a bot",
+        "chooseOne": "Please choose at least one option (Sell or Rent)",
+        "invalidPrices": "Invalid prices",
+        "invalidWallet": "Invalid wallet address",
+        "acceptDisclaimer": "Please accept the listing fee disclaimer",
+        "connectWalletFirst": "Please connect your wallet first",
+        "invalidIntent": "Invalid listing intent",
+        "paymentNotConfirmed": "Payment not confirmed"
+    },
+    "toasts": {
+        "preparingPayment": "Preparing payment...",
+        "signInWallet": "Please sign in your wallet",
+        "confirmOnchain": "Confirming on-chain...",
+        "paymentConfirmed": "Payment confirmed!",
+        "operationFailed": "Operation failed",
+        "creating": "Creating listing...",
+        "updating": "Updating listing...",
+        "createSuccess": "Listing created successfully",
+        "updateSuccess": "Listing updated successfully",
+        "removing": "Removing listing...",
+        "removeSuccess": "Listing removed successfully"
+    },
+    "confirm": {
+        "remove": "Are you sure you want to remove this listing?"
+    },
+    "success": "Success!"
+}

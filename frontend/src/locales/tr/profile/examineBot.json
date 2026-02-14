@@ -2,7 +2,8 @@
   "header": {
     "totalProfit": "Toplam Kâr",
     "totalValue": "Toplam Değer",
-    "refresh": "Yenile"
+    "refresh": "Yenile",
+    "description": "Bot performans ve işlem detayları"
   },
   "charts": {
     "pnlTitle": "Kâr / Zarar Grafiği (%)"
@@ -33,7 +34,8 @@
     "title": "Spot Varlıklar",
     "empty": "Herhangi bir spot varlık bulunamadı.",
     "amount": "Miktar",
-    "profit": "Kâr"
+    "profit": "Kâr",
+    "value": "Değer"
   },
   "tabs": {
     "trades": "İşlemler",
@@ -62,5 +64,16 @@
       "stopLoss": "Zarar Durdur",
       "takeProfit": "Kâr Al"
     }
+  },
+  "values": {
+    "buy": "AL",
+    "sell": "SAT",
+    "long": "UZUN",
+    "short": "KISA",
+    "isolated": "İZOLE",
+    "cross": "ÇAPRAZ",
+    "error": "HATA",
+    "warning": "UYARI",
+    "info": "BİLGİ"
   }
 }

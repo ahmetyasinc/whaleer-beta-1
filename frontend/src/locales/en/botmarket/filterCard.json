@@ -1,0 +1,24 @@
+{
+    "addFilter": "Add Filter",
+    "onlyMyBots": "Only My Bots",
+    "trade": {
+        "label": "Trade Type",
+        "sale": "Sale",
+        "rental": "Rental"
+    },
+    "botType": {
+        "spot": "Spot",
+        "futures": "Futures"
+    },
+    "salePrice": "Sale Price",
+    "rentalPrice": "Rental Price",
+    "powerScore": "Power Score",
+    "profitMargin": "Profit Margin",
+    "usageTime": "Usage Time",
+    "periods": {
+        "day": "Day",
+        "week": "Week",
+        "month": "Month",
+        "all": "All"
+    }
+}

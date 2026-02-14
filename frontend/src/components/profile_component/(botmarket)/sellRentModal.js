@@ -39,7 +39,7 @@ function calcPnlPct(initial, current) {
 }
 
 export default function SellRentModal({ open, onClose }) {
-  const { t } = useTranslation('sellRentModal');
+  const { t } = useTranslation('botMarketSellRentModal');
 
   // --- CÜZDAN DURUMLARI ---
   const { walletLinked } = useSiwsStore();
@@ -191,7 +191,7 @@ export default function SellRentModal({ open, onClose }) {
 
   async function payListingFeeIfNeeded() {
     if (!isNewListing) return { paid: false };
-    if (!activeChain) throw new Error(t("errors.connectWalletFirst") || "Wallet not connected");
+    if (!activeChain) throw new Error(t("errors.connectWalletFirst"));
 
     setPayLoading(true);
     const toastId = toast.loading(t("toasts.preparingPayment"));
@@ -295,7 +295,7 @@ export default function SellRentModal({ open, onClose }) {
               {isNewListing ? t("titles.create") : t("titles.update")}
             </h2>
             <p className="text-sm text-zinc-500 mt-1">
-              Botunuzu markette satışa veya kiralamaya sunun
+              {t('subtitle')}
             </p>
           </div>
 
@@ -305,17 +305,17 @@ export default function SellRentModal({ open, onClose }) {
               <span className="inline-flex items-center px-4 py-2 rounded-full text-xs font-medium bg-emerald-900/30 text-emerald-300 border border-emerald-500/40 shadow-lg shadow-emerald-500/10">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse"></span>
                 <PhantomIcon className="w-4 h-4 mr-2" />
-                Solana Network Bağlı
+                {t('status.solanaConnected')}
               </span>
             ) : !phantomInstalled ? (
               <span className="inline-flex items-center px-4 py-2 rounded-full text-xs font-medium bg-red-900/30 text-red-300 border border-red-500/40">
                 <FiAlertTriangle className="w-4 h-4 mr-2" />
-                Phantom Yüklü Değil
+                {t('status.phantomNotInstalled')}
               </span>
             ) : (
               <span className="inline-flex items-center px-4 py-2 rounded-full text-xs font-medium bg-amber-900/30 text-amber-300 border border-amber-500/40">
                 <FiAlertTriangle className="w-4 h-4 mr-2" />
-                Cüzdan Bağlı Değil
+                {t('status.walletNotConnected')}
               </span>
             )}
           </div>
@@ -328,7 +328,7 @@ export default function SellRentModal({ open, onClose }) {
                   <FiDownload className="w-8 h-8 text-red-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-red-300 mb-1">Phantom Cüzdan Gerekli</h3>
+                  <h3 className="text-lg font-bold text-red-300 mb-1">{t('banners.phantomRequired')}</h3>
                   <p className="text-sm text-red-200/70">Bot ilanı oluşturmak için Phantom cüzdanınızı yüklemeniz gerekmektedir.</p>
                 </div>
                 <a
@@ -338,7 +338,7 @@ export default function SellRentModal({ open, onClose }) {
                   className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 active:scale-[0.98]"
                 >
                   <PhantomIcon className="w-5 h-5" />
-                  Phantom yükle
+                  {t('buttons.installPhantom')}
                 </a>
               </div>
             </div>
@@ -352,7 +352,7 @@ export default function SellRentModal({ open, onClose }) {
                   <FiLink className="w-8 h-8 text-amber-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-amber-300 mb-1">Cüzdan Bağlantısı Gerekli</h3>
+                  <h3 className="text-lg font-bold text-amber-300 mb-1">{t('banners.walletRequired')}</h3>
                   <p className="text-sm text-amber-200/70">Bot ilanı oluşturmak için Phantom cüzdanınızı bağlamanız gerekmektedir.</p>
                 </div>
                 <button
@@ -361,7 +361,7 @@ export default function SellRentModal({ open, onClose }) {
                   className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   <FiLink className="w-5 h-5" />
-                  {authLoading ? "Bağlanıyor..." : "Cüzdanı Bağla"}
+                  {authLoading ? "Bağlanıyor..." : t('buttons.connect')}
                 </button>
               </div>
             </div>
@@ -491,7 +491,7 @@ export default function SellRentModal({ open, onClose }) {
                     {t("banners.feeTitle")}
                   </div>
                   <div className="text-zinc-400 text-xs mt-2">
-                    <span className="font-bold text-white">1 USD</span> tutarında SOL/USDC (Solana) ödeme yapacaksınız.
+                    <span className="font-bold text-white">1 USD</span> {t('hints.feeExplain')}
                   </div>
                   <label className="mt-4 flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={disclaimerAccepted} onChange={() => setDisclaimerAccepted(v => !v)} className="rounded bg-zinc-800 border-zinc-600 text-cyan-500 focus:ring-cyan-500" />
@@ -509,7 +509,7 @@ export default function SellRentModal({ open, onClose }) {
                 >
                   <span className="flex items-center justify-center gap-2">
                     {(loading || payLoading) ? (
-                      <span className="animate-pulse">İşleniyor...</span>
+                      <span className="animate-pulse">{t('buttons.processing')}</span>
                     ) : (
                       isNewListing ? t("buttons.create") : t("buttons.update")
                     )}
@@ -535,7 +535,7 @@ export default function SellRentModal({ open, onClose }) {
                 <div className="w-20 h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center mb-4">
                   <svg className="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
                 </div>
-                <div className="text-emerald-400 font-bold text-2xl">Başarılı!</div>
+                <div className="text-emerald-400 font-bold text-2xl">{t('success')}</div>
               </div>
             </div>
           )}

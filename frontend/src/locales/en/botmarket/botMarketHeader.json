@@ -1,0 +1,12 @@
+{
+    "buttons": {
+        "sellRent": "List for Sale/Rent",
+        "installPhantom": "Install Phantom",
+        "connecting": "Connecting...",
+        "connectWallet": "Connect Wallet",
+        "signOut": "Sign Out"
+    },
+    "labels": {
+        "connected": "Connected"
+    }
+}

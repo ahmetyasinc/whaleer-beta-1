@@ -60,7 +60,7 @@ export default function BacktestHeader() {
             title={t('buttons.archive')}
           >
             <BsArchive className="text-[14px]" />
-            Arşiv
+            {t('buttons.archive')}
             {isArchiveSidebarOpen ? (
               <IoChevronBack className="text-[16px] ml-1" />
             ) : (

@@ -13,5 +13,20 @@
     "confirm": "{{name}} indikatörünü silmek istediğinize emin misiniz?",
     "no": "Hayır",
     "yes": "Sil"
+  },
+  "publish": "Yayınla",
+  "toast": {
+    "titles": {
+      "success": "Başarılı",
+      "error": "Hata",
+      "info": "Bilgi"
+    },
+    "messages": {
+      "indicatorPublish": {
+        "ok": "İndikatör başarıyla yayınlandı.",
+        "failed": "Yayınlama başarısız oldu.",
+        "unexpected": "Beklenmedik bir hata oluştu."
+      }
+    }
   }
 }

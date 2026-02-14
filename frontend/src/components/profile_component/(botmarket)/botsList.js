@@ -11,7 +11,7 @@ import { FaSpinner, FaRobot } from 'react-icons/fa';
 const BotsList = ({ sort, setSort, filters }) => {
     const [isSortModalOpen, setSortModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const { t } = useTranslation('botsList');
+    const { t } = useTranslation('botMarketBotsList');
     const { bots, isLoading, error } = useBotCardStore();
 
     const filteredBots = bots.filter(bot => {
@@ -112,7 +112,7 @@ const BotsList = ({ sort, setSort, filters }) => {
 
                 <div className="mt-6 flex flex-col items-center gap-2">
                     <span className="text-cyan-500 font-mono text-xs tracking-[0.2em] uppercase animate-pulse">
-                        Botlar Yükleniyor...
+                        {t('loading')}
                     </span>
                     {/* İlerleme çubuğu efekti (Opsiyonel) */}
                     <div className="w-32 h-[1px] bg-zinc-800 overflow-hidden">
@@ -144,7 +144,7 @@ const BotsList = ({ sort, setSort, filters }) => {
                 <div className="hidden sm:flex items-center justify-center px-3 h-[33.5px] bg-zinc-900 border border-t-zinc-700 border-b-zinc-700 border-r-zinc-700 border-l-transparent rounded-r-lg shadow-sm">
                     <span className="text-neutral-500 text-[11px] mt-0.5 font-semibold">
                         <span className="mr-1.5">{sortedBots.length}</span>
-                        {t('results', 'Sonuç')}
+                        {t('results')}
                     </span>
                 </div>
 

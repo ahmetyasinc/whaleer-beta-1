@@ -1,0 +1,38 @@
+{
+    "title": "Botları Filtrele",
+    "onlyMyBots": "Sadece Botlarım",
+    "botType": {
+        "label": "Bot Tipi",
+        "all": "Tümü",
+        "spot": "Spot",
+        "futures": "Vadeli"
+    },
+    "tradeType": {
+        "label": "İşlem Tipi",
+        "all": "Tümü",
+        "sale": "Satılık",
+        "rental": "Kiralık"
+    },
+    "ranges": {
+        "salePrice": "Satış Fiyat Aralığı ($)",
+        "rentalPrice": "Kiralama Fiyat Aralığı ($)",
+        "powerScore": "Minimum Güç Skoru",
+        "profitMargin": "Minimum Kar Marjı",
+        "usageTime": "Minimum Kullanım Süresi (Saat)"
+    },
+    "placeholders": {
+        "min": "Min",
+        "max": "Maks",
+        "example85": "örn. 85",
+        "minPerc": "Min %",
+        "example24": "örn. 24"
+    },
+    "periods": {
+        "day": "Son 24 Saat",
+        "week": "Son 7 Gün",
+        "month": "Son 30 Gün",
+        "all": "Tüm Zamanlar"
+    },
+    "cancel": "İptal",
+    "apply": "Filtreleri Uygula"
+}

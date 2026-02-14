@@ -1,10 +1,12 @@
 // components/NewTicketForm.jsx  (GÜNCELLE)
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSupportStore } from "@/store/support/supportStore";
+import { useTranslation } from "react-i18next";
 
 export default function NewTicketForm({ onTicketCreated }) {
+  const { t } = useTranslation("supportNewTicketForm");
   const { categories, createTicket } = useSupportStore();
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
@@ -14,6 +16,8 @@ export default function NewTicketForm({ onTicketCreated }) {
   const [filePreviews, setFilePreviews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (categories.length === 0) {
@@ -26,7 +30,7 @@ export default function NewTicketForm({ onTicketCreated }) {
     setError(null);
 
     if (!subject.trim() || !message.trim()) {
-      setError("Lütfen konu ve mesaj girin.");
+      setError(t("validation.requiredFields"));
       return;
     }
 
@@ -53,15 +57,13 @@ export default function NewTicketForm({ onTicketCreated }) {
       if (onTicketCreated) onTicketCreated(created);
     } catch (err) {
       console.error(err);
-      setError("İşlem sırasında hata oluştu: " + (err.response?.data?.detail || err.message));
+      setError(t("error.generic") + (err.response?.data?.detail || err.message));
     } finally {
       setLoading(false);
     }
   }
 
-  function handleFilesChange(e) {
-    const selectedFiles = Array.from(e.target.files);
-
+  function handleFiles(selectedFiles) {
     // Mevcut dosyalara ekle (duplicate kontrolü yapalım)
     const newFiles = selectedFiles.filter(newFile => {
       return !files.some(existingFile =>
@@ -83,10 +85,34 @@ export default function NewTicketForm({ onTicketCreated }) {
 
     setFiles(prev => [...prev, ...newFiles]);
     setFilePreviews(prev => [...prev, ...newPreviews]);
-
-    // Aynı dosyayı tekrar seçebilmek için input'u sıfırla
-    e.target.value = "";
   }
+
+  function handleFilesChange(e) {
+    if (e.target.files && e.target.files.length > 0) {
+      handleFiles(Array.from(e.target.files));
+      // Aynı dosyayı tekrar seçebilmek için input'u sıfırla
+      e.target.value = "";
+    }
+  }
+
+  const onDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const onDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFiles(Array.from(e.dataTransfer.files));
+      e.dataTransfer.clearData();
+    }
+  };
 
   function removeFile(index) {
     const nextFiles = files.filter((_, i) => i !== index);
@@ -107,12 +133,12 @@ export default function NewTicketForm({ onTicketCreated }) {
 
   return (
     <div className="bg-zinc-900/90 border border-zinc-800 rounded-xl p-6 backdrop-blur-sm mb-6">
-      <h2 className="text-xl font-semibold mb-6 text-white">Yeni Destek Talebi</h2>
+      <h2 className="text-xl font-semibold mb-6 text-white">{t("title")}</h2>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Kategori */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-1.5">Kategori</label>
+          <label className="block text-sm font-medium text-zinc-300 mb-1.5">{t("category")}</label>
           <div className="relative">
             <select
               value={categoryId}
@@ -120,7 +146,7 @@ export default function NewTicketForm({ onTicketCreated }) {
               className="w-full p-2.5 border border-zinc-700 rounded-lg bg-zinc-950/70 text-zinc-200 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all appearance-none"
               required
             >
-              <option value="" className="bg-zinc-900">Kategori seçin</option>
+              <option value="" className="bg-zinc-900">{t("selectCategory")}</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id} className="bg-zinc-900">
                   {c.name}
@@ -135,25 +161,25 @@ export default function NewTicketForm({ onTicketCreated }) {
 
         {/* Konu */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-1.5">Konu</label>
+          <label className="block text-sm font-medium text-zinc-300 mb-1.5">{t("subject")}</label>
           <input
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             className="block w-full rounded-lg border border-zinc-700 bg-zinc-950/50 p-2.5 text-zinc-200 placeholder-zinc-500 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all"
-            placeholder="Destek talebinizin kısa özeti"
+            placeholder={t("subjectPlaceholder")}
             required
           />
         </div>
 
         {/* Mesaj */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-1.5">Mesaj</label>
+          <label className="block text-sm font-medium text-zinc-300 mb-1.5">{t("message")}</label>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={6}
             className="block w-full rounded-lg border border-zinc-700 bg-zinc-950/50 p-2.5 text-zinc-200 placeholder-zinc-500 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all resize-none"
-            placeholder="Sorununuzu detaylı bir şekilde açıklayın..."
+            placeholder={t("messagePlaceholder")}
             required
           />
         </div>
@@ -161,17 +187,17 @@ export default function NewTicketForm({ onTicketCreated }) {
         {/* Öncelik + Dosya */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1.5">Öncelik</label>
+            <label className="block text-sm font-medium text-zinc-300 mb-1.5">{t("priority")}</label>
             <div className="relative">
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
                 className="block w-full rounded-lg border border-zinc-700 bg-zinc-950/50 p-2.5 text-zinc-200 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none appearance-none transition-all"
               >
-                <option value="low" className="bg-zinc-900">Düşük</option>
-                <option value="normal" className="bg-zinc-900">Normal</option>
-                <option value="high" className="bg-zinc-900">Yüksek</option>
-                <option value="urgent" className="bg-zinc-900">Acil</option>
+                <option value="low" className="bg-zinc-900">{t("priorityLevel.low")}</option>
+                <option value="normal" className="bg-zinc-900">{t("priorityLevel.normal")}</option>
+                <option value="high" className="bg-zinc-900">{t("priorityLevel.high")}</option>
+                <option value="urgent" className="bg-zinc-900">{t("priorityLevel.urgent")}</option>
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-zinc-500">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -180,21 +206,48 @@ export default function NewTicketForm({ onTicketCreated }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1.5">Dosya Ekle</label>
-            <input
-              type="file"
-              onChange={handleFilesChange}
-              multiple
-              className="block w-full text-sm text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700 transition-all cursor-pointer"
-              accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.zip,.rar"
-            />
+            <label className="block text-sm font-medium text-zinc-300 mb-1.5">{t("addFile")}</label>
+
+            <div
+              onDragOver={onDragOver}
+              onDragLeave={onDragLeave}
+              onDrop={onDrop}
+              onClick={() => fileInputRef.current?.click()}
+              className={`
+                border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-all
+                ${isDragging
+                  ? "border-blue-500 bg-blue-500/10"
+                  : "border-zinc-700 bg-zinc-950/30 hover:bg-zinc-900 hover:border-zinc-600"
+                }
+              `}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                onChange={handleFilesChange}
+                multiple
+                className="hidden"
+                accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.zip,.rar"
+              />
+
+              <svg className={`w-8 h-8 mb-3 ${isDragging ? "text-blue-400" : "text-zinc-500"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+
+              <p className="text-sm text-zinc-300 font-medium mb-1 text-center">
+                {t("fileInput.dragDrop")} <span className="text-blue-400 hover:underline">{t("fileInput.browse")}</span>
+              </p>
+              <p className="text-xs text-zinc-500 text-center">
+                {t("fileInput.supports")}
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Önizlemeler */}
         {filePreviews.length > 0 && (
           <div className="space-y-3 pt-2">
-            <p className="text-sm font-medium text-zinc-300">Seçili dosyalar:</p>
+            <p className="text-sm font-medium text-zinc-300">{t("selectedFiles")}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {filePreviews.map((p, i) => (
                 <div key={i} className="flex items-center gap-3 p-2 bg-zinc-900/80 border border-zinc-800 rounded-lg group">
@@ -255,10 +308,10 @@ export default function NewTicketForm({ onTicketCreated }) {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
-                Oluşturuluyor...
+                {t("creating")}
               </span>
             ) : (
-              "Talep Oluştur"
+              t("createTicket")
             )}
           </button>
         </div>

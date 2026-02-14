@@ -3,8 +3,10 @@
 
 import { useSupportStore } from "@/store/support/supportStore";
 import TicketItem from "./TicketItem";
+import { useTranslation } from "react-i18next";
 
 export default function TicketList({ onSelectTicket, selectedTicketId, isModerator = false, hideHeader = false }) {
+  const { t } = useTranslation("supportTicketList");
   const tickets = useSupportStore((s) => s.tickets);
 
   return (
@@ -13,11 +15,11 @@ export default function TicketList({ onSelectTicket, selectedTicketId, isModerat
       {!hideHeader && (
         <div className="pb-4 mb-2 border-b border-zinc-800/50">
           <h2 className="text-sm font-semibold ml-2 uppercase tracking-wider text-zinc-400">
-            {isModerator ? "Tüm Talepler" : "Geçmiş Taleplerim"}
+            {isModerator ? t("allTickets") : t("myPastTickets")}
           </h2>
           {isModerator && (
             <p className="text-xs text-zinc-500 mt-1 ml-2">
-              Toplam {tickets.length} talep
+              {t("totalTickets", { count: tickets.length })}
             </p>
           )}
         </div>
@@ -47,7 +49,7 @@ export default function TicketList({ onSelectTicket, selectedTicketId, isModerat
 
         {tickets.length === 0 && (
           <li className="p-8 text-center text-zinc-500 text-sm italic">
-            Henüz hiç destek talebiniz bulunmuyor.
+            {t("noTicketsFound")}
           </li>
         )}
       </ul>

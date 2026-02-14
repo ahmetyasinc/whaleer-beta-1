@@ -2,7 +2,8 @@
   "header": {
     "totalProfit": "Total Profit",
     "totalValue": "Total Value",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "description": "Bot performance and trade details"
   },
   "charts": {
     "pnlTitle": "Profit / Loss Chart (%)"
@@ -33,11 +34,12 @@
     "title": "Spot Holdings",
     "empty": "No spot holdings found.",
     "amount": "Amount",
-    "profit": "Profit"
+    "profit": "Profit",
+    "value": "Value"
   },
   "tabs": {
-    "trades": "İşlemler",
-    "logs": "Loglar"
+    "trades": "Trades",
+    "logs": "Logs"
   },
   "logs": {
     "empty": "No logs found.",
@@ -62,5 +64,16 @@
       "stopLoss": "Stop Loss",
       "takeProfit": "Take Profit"
     }
+  },
+  "values": {
+    "buy": "BUY",
+    "sell": "SELL",
+    "long": "LONG",
+    "short": "SHORT",
+    "isolated": "ISOLATED",
+    "cross": "CROSS",
+    "error": "ERROR",
+    "warning": "WARNING",
+    "info": "INFO"
   }
 }

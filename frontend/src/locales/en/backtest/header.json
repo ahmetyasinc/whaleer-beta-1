@@ -4,7 +4,8 @@
   },
   "buttons": {
     "runBacktest": "Run Backtest",
-    "close": "Close"
+    "close": "Close",
+    "archive": "Archive"
   },
   "periods": {
     "select": "Select Period",

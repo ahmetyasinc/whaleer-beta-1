@@ -1,0 +1,10 @@
+{
+    "strategyName": "Strategy Name",
+    "lines": "lines",
+    "activeUsers": "Active Users",
+    "totalBalance": "Total Balance",
+    "period": "Period",
+    "cryptos": "Cryptocurrencies",
+    "noCrypto": "No crypto found",
+    "publisherDescription": "Publisher Description"
+}

@@ -2,9 +2,11 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { createChart } from 'lightweight-charts';
+import { useTranslation } from 'react-i18next';
 import useBotExamineModalStore from '@/store/botmarket/BotExamineModalStore';
 
 const Chart = ({ botId }) => {
+    const { t } = useTranslation('botMarketChart');
     const { extraData } = useBotExamineModalStore();
     const chartContainerRef = useRef(null);
     const chartRef = useRef(null);
@@ -15,10 +17,10 @@ const Chart = ({ botId }) => {
     const chartData = chartDataByPeriod[selectedPeriod] || [];
 
     const periods = [
-        { key: 'weekly', label: '1H' },
-        { key: 'monthly', label: '1A' },
-        { key: 'sixMonths', label: '6A' },
-        { key: 'all', label: 'Tüm Zamanlar' },
+        { key: 'weekly', label: t('periods.weekly') },
+        { key: 'monthly', label: t('periods.monthly') },
+        { key: 'sixMonths', label: t('periods.sixMonths') },
+        { key: 'all', label: t('periods.all') },
     ];
 
     useEffect(() => {
@@ -104,7 +106,7 @@ const Chart = ({ botId }) => {
             <div className="flex items-center justify-between mb-4">
                 <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-500/80">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
-                    Performans Grafiği
+                    {t('title')}
                 </h4>
                 <div className="flex gap-1">
                     {periods.map((period) => (

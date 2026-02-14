@@ -1,0 +1,20 @@
+{
+    "header": "Trade History",
+    "disclaimer": "Trades are shown with delay to prevent copying.",
+    "count": "{{count}} trades",
+    "table": {
+        "pair": "Pair",
+        "market": "Market",
+        "side": "Side",
+        "action": "Action",
+        "price": "Price",
+        "date": "Date"
+    },
+    "sides": {
+        "buy": "BUY",
+        "sell": "SELL",
+        "long": "LONG",
+        "short": "SHORT"
+    },
+    "empty": "No trades found"
+}

@@ -1,0 +1,38 @@
+{
+    "menu": {
+        "examine": "İncele"
+    },
+    "actions": {
+        "comment": "Yorum Yap",
+        "sell": "SATIN AL",
+        "rent": "KİRALA",
+        "ownBotReason": "Kendi botunuzu satın alamaz veya kiralayamazsınız.",
+        "alreadyPurchasedReason": "Bu botu zaten satın aldınız.",
+        "alreadyRentedReason": "Bu botu zaten kiraladınız."
+    },
+    "sort": {
+        "labels": {
+            "profitMargin": "KAR MARJI",
+            "usageTime": "KULLANIM",
+            "saleCount": "SATIŞ",
+            "rentalCount": "KİRALAMA",
+            "powerScore": "Güç Skoru",
+            "createdAt": "Oluşturulma Tarihi"
+        }
+    },
+    "filter": {
+        "periods": {
+            "day": "Gün",
+            "week": "Hafta",
+            "month": "Ay",
+            "all": "Tümü"
+        },
+        "botType": {
+            "label": "TÜR"
+        }
+    },
+    "wallet": {
+        "phantomRequired": "Satın alım ve kiralama işlemleri için Phantom yüklemeniz gerekiyor",
+        "connectionRequired": "Satın alım ve kiralama işlemleri için cüzdanınızı bağlamanız gerekiyor"
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "header": "İşlem Geçmişi",
+    "disclaimer": "İşlemler kopyalanmaması için gecikmeli göstermektedir.",
+    "count": "{{count}} işlem",
+    "table": {
+        "pair": "İşlem Çifti",
+        "market": "Piyasa",
+        "side": "Yön",
+        "action": "Aksiyon",
+        "price": "Fiyat",
+        "date": "Tarih"
+    },
+    "sides": {
+        "buy": "ALIŞ",
+        "sell": "SATIŞ",
+        "long": "LONG",
+        "short": "SHORT"
+    },
+    "empty": "İşlem bulunamadı"
+}

@@ -4,8 +4,10 @@
 import React from "react";
 import { useSupportStore } from "@/store/support/supportStore";
 import { useAttachmentsStore } from "@/store/support/attachmentsStore";
+import { useTranslation } from "react-i18next";
 
 export default function MessageComposer({ ticketId }) {
+  const { t } = useTranslation("supportMessageList");
   const { addMessage, appendAttachmentToMessage } = useSupportStore();
   const { uploadAttachment, uploading } = useAttachmentsStore();
 
@@ -41,7 +43,7 @@ export default function MessageComposer({ ticketId }) {
     setSending(true);
     try {
       // 1) Mesajı oluştur
-      const msg = await addMessage(ticketId, { message: text || "(ek)", is_internal: false });
+      const msg = await addMessage(ticketId, { message: text || t("attachment"), is_internal: false });
 
       // 2) Ekler varsa yükle
       for (const f of files) {
@@ -64,7 +66,7 @@ export default function MessageComposer({ ticketId }) {
           rows={3}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Mesajınızı yazın..."
+          placeholder={t("writeMessage")}
           className="w-full p-4 pr-32 bg-zinc-950/50 border border-zinc-700 rounded-xl text-zinc-200 placeholder-zinc-500 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none resize-none transition-all scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent"
           onKeyDown={(e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === "Enter") send();
@@ -72,7 +74,7 @@ export default function MessageComposer({ ticketId }) {
         />
 
         <div className="absolute bottom-3 right-3 flex items-center gap-2">
-          <label className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg cursor-pointer transition-colors" title="Dosya ekle">
+          <label className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg cursor-pointer transition-colors" title={t("addFile")}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
             <input
               type="file"
@@ -86,7 +88,7 @@ export default function MessageComposer({ ticketId }) {
             onClick={send}
             disabled={disabled || (!text.trim() && files.length === 0)}
             className="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-900/20 active:scale-95"
-            title="Gönder (Ctrl + Enter)"
+            title={t("sendTooltip")}
           >
             <svg className={`w-5 h-5 ${sending ? "animate-spin" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {sending ? (

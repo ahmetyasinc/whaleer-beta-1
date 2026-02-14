@@ -1,0 +1,34 @@
+{
+    "searchPlaceholder": "Search bots by name or publisher...",
+    "results": "Results",
+    "sort": {
+        "button": "Sort",
+        "labels": {
+            "default": "Default",
+            "profitMargin": "Profit Margin",
+            "createdAt": "Creation Date",
+            "usageTime": "Usage Time",
+            "saleCount": "Sales",
+            "rentalCount": "Rentals",
+            "powerScore": "Power Score"
+        },
+        "directions": {
+            "asc": "Ascending",
+            "desc": "Descending",
+            "newest": "Newest",
+            "oldest": "Oldest"
+        }
+    },
+    "filter": {
+        "periods": {
+            "day": "Day",
+            "week": "Week",
+            "month": "Month",
+            "all": "All"
+        }
+    },
+    "loading": "Loading Bots...",
+    "empty": {
+        "list": "No bots found matching your criteria."
+    }
+}

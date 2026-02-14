@@ -24,5 +24,20 @@
     "compileDefault": "Compile Error!",
     "favoriteAction": "Error while updating favorite state",
     "deleteAction": "Error while deleting strategy"
+  },
+  "publish": "Publish",
+  "toast": {
+    "titles": {
+      "success": "Success",
+      "error": "Error",
+      "info": "Info"
+    },
+    "messages": {
+      "strategyPublish": {
+        "ok": "Strategy published successfully.",
+        "failed": "Publish failed.",
+        "unexpected": "An unexpected error occurred."
+      }
+    }
   }
 }

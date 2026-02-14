@@ -10,7 +10,7 @@ import { useSiwsStore } from "@/store/auth/siwsStore";
 import useSiwsAuth from "@/hooks/useSiwsAuth";
 
 const BotCard = ({ bot, isPreview = false }) => {
-    const { t } = useTranslation('botsList');
+    const { t } = useTranslation('botMarketBotCard');
     const [isCommentModalOpen, setCommentModalOpen] = useState(false);
     const [isExamineModalOpen, setExamineModalOpen] = useState(false);
 
@@ -188,9 +188,8 @@ const BotCard = ({ bot, isPreview = false }) => {
                             ) : (
                                 <div className="relative w-full flex flex-row gap-2">
 
-                                    {/* Phantom cüzdan yönetimi yaparak butonlara bloke koyar yorum satırını kaldır yeter*/}
 
-                                    {/*
+                                    {/* Phantom cüzdan yönetimi yaparak butonlara bloke koyar yorum satırını kaldır yeter*/}
                                     {(!phantomInstalled || !walletConnected) && (
                                         <div className="absolute inset-0 z-10 bg-red-900/40 backdrop-blur-[2px] rounded-md flex items-center justify-center p-2 border border-red-500/40">
                                             <div className="flex flex-col items-center gap-1 text-center">
@@ -204,8 +203,8 @@ const BotCard = ({ bot, isPreview = false }) => {
                                             </div>
                                         </div>
                                     )}
-                                    */}
 
+                                    {/* Satın alma butonu */}
                                     <button
                                         disabled={!bot.isForSale || !phantomInstalled || !walletConnected}
                                         className={`w-full py-2 px-2 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all duration-200 flex flex-col items-center justify-center gap-0.5 min-h-[50px]
@@ -218,6 +217,7 @@ const BotCard = ({ bot, isPreview = false }) => {
                                         {bot.isForSale && <span className="font-mono text-[16px] opacity-80">{fmtMoney(bot.salePrice)}</span>}
                                     </button>
 
+                                    {/* Kiralama butonu */}
                                     <button
                                         disabled={!bot.isForRent || !phantomInstalled || !walletConnected}
                                         className={`w-full py-2 px-2 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all duration-200 flex flex-col items-center justify-center gap-0.5 min-h-[50px]

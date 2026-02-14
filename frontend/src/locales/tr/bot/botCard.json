@@ -55,6 +55,7 @@
     "dataSoon": "Performans Verisi (Yakında)",
     "notAvailable": "Müsait Değil",
     "sellEligibilityTooltip": "Botunuzu satabilmek veya kiralayabilmek için en az 700 saat çalışması gerekmektedir",
-    "powerPointTooltip": "Botunuzun risk profili ve çalışma süresince yaptığı para temel alınarak tarafımızca hesaplanmış bir başarı göstergesi verisidir"
+    "powerPointTooltip": "Botunuzun risk profili ve çalışma süresince yaptığı para temel alınarak tarafımızca hesaplanmış bir başarı göstergesi verisidir",
+    "powerPoint": "Güç Puanı"
   }
 }

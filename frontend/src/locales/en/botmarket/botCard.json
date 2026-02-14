@@ -1,0 +1,38 @@
+{
+    "menu": {
+        "examine": "Examine"
+    },
+    "actions": {
+        "comment": "Comment",
+        "sell": "BUY",
+        "rent": "RENT",
+        "ownBotReason": "You cannot buy or rent your own bot.",
+        "alreadyPurchasedReason": "You have already purchased this bot.",
+        "alreadyRentedReason": "You have already rented this bot."
+    },
+    "sort": {
+        "labels": {
+            "profitMargin": "PROFIT MARGIN",
+            "usageTime": "USAGE TIME",
+            "saleCount": "SALES",
+            "rentalCount": "RENTALS",
+            "powerScore": "Power Score",
+            "createdAt": "Creation Date"
+        }
+    },
+    "filter": {
+        "periods": {
+            "day": "Day",
+            "week": "Week",
+            "month": "Month",
+            "all": "All"
+        },
+        "botType": {
+            "label": "TYPE"
+        }
+    },
+    "wallet": {
+        "phantomRequired": "You need to install Phantom to buy or rent.",
+        "connectionRequired": "You need to connect your wallet to buy or rent."
+    }
+}

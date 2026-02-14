@@ -19,7 +19,7 @@ export default function ModernBotList({ bots = [] }) {
   const menuRef = useRef(null);
   const [isExamineOpen, setIsExamineOpen] = useState(false);
   const [selectedBotId, setSelectedBotId] = useState(null);
-  const [examineLoadingId, setExamineLoadingId] = useState(null);
+  const [selectedBotName, setSelectedBotName] = useState(null);
 
   // Dışarı tıklayınca menüyü kapat
   useEffect(() => {
@@ -39,18 +39,16 @@ export default function ModernBotList({ bots = [] }) {
     setMenuOpen(null);
   };
 
-  const handleExamineBot = async (botId) => {
-    try {
-      setExamineLoadingId(botId);
-      await fetchAndStoreBotAnalysis(botId);
-      setSelectedBotId(botId);
-      setIsExamineOpen(true);
-    } catch (e) {
+  const handleExamineBot = (bot) => {
+    setSelectedBotId(bot.id);
+    setSelectedBotName(bot.name);
+    setIsExamineOpen(true);
+    setMenuOpen(null);
+
+    // Fetch data in background
+    fetchAndStoreBotAnalysis(bot.id).catch(e => {
       console.error("Examine fetch error:", e);
-    } finally {
-      setExamineLoadingId(null);
-      setMenuOpen(null);
-    }
+    });
   };
 
   const formatUsd = (v) =>
@@ -165,12 +163,11 @@ export default function ModernBotList({ bots = [] }) {
                           {menuOpen === bot.id && (
                             <div className="absolute top-8 right-0 w-32 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-50 overflow-hidden">
                               <button
-                                onClick={() => handleExamineBot(bot.id)}
-                                className="flex items-center gap-2 w-full px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-amber-500 hover:bg-zinc-800 transition-colors duration-75 disabled:opacity-60"
-                                disabled={examineLoadingId === bot.id}
+                                onClick={() => handleExamineBot(bot)}
+                                className="flex items-center gap-2 w-full px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-amber-500 hover:bg-zinc-800 transition-colors duration-75"
                               >
                                 <IoSearch size={14} />
-                                {examineLoadingId === bot.id ? t("menu.loading") : t("menu.examine")}
+                                {t("menu.examine")}
                               </button>
                             </div>
                           )}
@@ -201,6 +198,7 @@ export default function ModernBotList({ bots = [] }) {
         isOpen={isExamineOpen}
         onClose={() => setIsExamineOpen(false)}
         botId={selectedBotId}
+        initialBotName={selectedBotName}
       />
 
       <style jsx>{`

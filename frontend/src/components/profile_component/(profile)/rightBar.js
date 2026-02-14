@@ -12,6 +12,7 @@ import { useAccountDataStore } from "@/store/profile/accountDataStore";
 import { useTranslation } from "react-i18next";
 import RecycleBinModal from "./recycleBinModal";
 import { useRef } from "react";
+import Loader from "@/components/loader";
 
 /* ------------------ Tarih yardımcıları (local) ------------------ */
 function startOfToday() {
@@ -151,6 +152,7 @@ export default function RightBar() {
   const botsByApiId = useAccountDataStore((s) => s.botsByApiId);
   const snapshotsByApiId = useAccountDataStore((s) => s.snapshotsByApiId);
   const tradesByApiId = useAccountDataStore((s) => s.tradesByApiId);
+  const isHydrated = useAccountDataStore((s) => s.isHydrated);
 
   /* ---- Tüm API'lerdeki botlar ---- */
   const allBots = useMemo(() => {
@@ -283,118 +285,125 @@ export default function RightBar() {
     <div className="w-[260px] h-full bg-zinc-950 backdrop-blur-sm text-white shrink-0 flex flex-col overflow-hidden border-l border-zinc-800">
       <RecycleBinModal ref={recycleBinRef} />
 
-      <div className="flex flex-col h-full p-2 gap-3 overflow-hidden">
-
-        {/* --- BÖLÜM 1: Genel İstatistikler --- */}
-        <div className="space-y-2 shrink-0">
-          <div className="flex items-center gap-2 px-1">
-            <IoStatsChart className="text-cyan-400 text-sm" />
-            <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest">{t("sections.statistics") || "Statistics"}</span>
+      <div className="flex flex-col h-full p-2 gap-3 overflow-hidden relative">
+        {!isHydrated ? (
+          <div className="absolute inset-0 flex items-center justify-center z-20 bg-zinc-950/50 backdrop-blur-[1px]">
+            <Loader />
           </div>
+        ) : null}
 
-          <div className="grid grid-cols-2 gap-2">
-            {stats.map((stat, index) => {
-              const colors = getColorClasses(stat.color);
-              const Icon = stat.icon;
-              return (
-                <div
-                  key={stat.title}
-                  className={`group relative bg-zinc-900/60 backdrop-blur-sm rounded-lg border ${colors.border} hover:${colors.bg} transition-all duration-100 p-2 cursor-default ${colors.glow}`}
-                  style={{
-                    animationDelay: `${index * 100}ms`,
-                    animation: "fadeInUpRightBar 0.6s ease-out forwards",
-                  }}
-                >
-                  {/* Glow effect on hover */}
-                  <div className={`absolute inset-0 rounded-lg ${colors.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-100`}></div>
+        <div className={`flex flex-col h-full gap-3 overflow-hidden transition-opacity duration-300 ${!isHydrated ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+          {/* --- BÖLÜM 1: Genel İstatistikler --- */}
+          <div className="space-y-2 shrink-0">
+            <div className="flex items-center gap-2 px-1">
+              <IoStatsChart className="text-cyan-400 text-sm" />
+              <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest">{t("sections.statistics") || "Statistics"}</span>
+            </div>
 
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-1">
-                      <Icon className={`text-lg ${colors.text}`} />
-                      <div className={`w-1.5 h-1.5 rounded-full ${colors.indicator} shadow-[0_0_6px_currentColor]`}></div>
-                    </div>
-                    <p className="text-lg font-bold text-zinc-100 mb-0 leading-none">
-                      {stat.value}
-                    </p>
-                    <h4 className="text-[9px] font-medium text-zinc-500 leading-tight mt-1">
-                      {stat.title}
-                    </h4>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+            <div className="grid grid-cols-2 gap-2">
+              {stats.map((stat, index) => {
+                const colors = getColorClasses(stat.color);
+                const Icon = stat.icon;
+                return (
+                  <div
+                    key={stat.title}
+                    className={`group relative bg-zinc-900/60 backdrop-blur-sm rounded-lg border ${colors.border} hover:${colors.bg} transition-all duration-100 p-2 cursor-default ${colors.glow}`}
+                    style={{
+                      animationDelay: `${index * 100}ms`,
+                      animation: "fadeInUpRightBar 0.6s ease-out forwards",
+                    }}
+                  >
+                    {/* Glow effect on hover */}
+                    <div className={`absolute inset-0 rounded-lg ${colors.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-100`}></div>
 
-        {/* Divider */}
-        <div className="h-px bg-gradient-to-r from-transparent via-zinc-700/50 to-transparent shrink-0"></div>
-
-        {/* --- BÖLÜM 2: Performans (Flexible but compact) --- */}
-        <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          <div className="flex items-center gap-2 px-1 mb-2 shrink-0">
-            <IoTrendingUp className="text-cyan-400 text-sm" />
-            <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest">{t("sections.performance") || "Performance"}</span>
-          </div>
-
-          <div className="flex flex-col flex-1 gap-2 min-h-0">
-            {["daily", "weekly", "monthly"].map((period, index) => {
-              const perf = performance[period] || { value: null, trades: 0 };
-              const val = perf.value;
-              const trades = perf.trades || 0;
-
-              const isPositive = val !== null && val >= 0;
-              const isNegative = val !== null && val < 0;
-
-              return (
-                <div
-                  key={period}
-                  // Removed min-h-[60px] to let it shrink more if needed, default padding kept but could reduce if needed.
-                  // Used flex-1 so they share space equally, but if content is small, they won't force huge height if container is small.
-                  className="flex-1 group relative bg-zinc-900/60 backdrop-blur-sm rounded-lg border border-zinc-800/50 hover:border-cyan-500/30 transition-all duration-100 p-2 flex flex-col justify-center"
-                  style={{
-                    animationDelay: `${(index + 4) * 100}ms`,
-                    animation: "fadeInUpRightBar 0.6s ease-out forwards",
-                  }}
-                >
-                  {/* Subtle glow on hover */}
-                  <div className="absolute inset-0 rounded-lg bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-100"></div>
-
-                  <div className="relative z-10 w-full">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <h4 className="text-xs font-medium text-zinc-400 capitalize flex items-center gap-2">
-                        <div className={`w-1 h-3 rounded-full ${period === 'daily' ? 'bg-cyan-400' :
-                          period === 'weekly' ? 'bg-blue-400' : 'bg-purple-400'
-                          } shadow-[0_0_6px_currentColor]`}></div>
-                        {t(`performance.labels.${period}`)}
-                      </h4>
-                      <span className="text-[10px] text-zinc-600 bg-zinc-800/50 px-1.5 py-0.5 rounded">
-                        {t("performance.trades", { count: trades })}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {val !== null && (
-                        isPositive ? (
-                          <IoTrendingUp className="text-emerald-400 text-base" />
-                        ) : (
-                          <IoTrendingDown className="text-red-400 text-base" />
-                        )
-                      )}
-                      <p className={`text-lg font-bold tracking-tight ${val === null
-                        ? "text-zinc-500"
-                        : isPositive
-                          ? "text-emerald-400"
-                          : "text-red-400"
-                        }`}>
-                        {val === null
-                          ? "–"
-                          : `${val >= 0 ? "+" : ""}${val.toFixed(2)}%`}
+                    <div className="relative z-10">
+                      <div className="flex items-center justify-between mb-1">
+                        <Icon className={`text-lg ${colors.text}`} />
+                        <div className={`w-1.5 h-1.5 rounded-full ${colors.indicator} shadow-[0_0_6px_currentColor]`}></div>
+                      </div>
+                      <p className="text-lg font-bold text-zinc-100 mb-0 leading-none">
+                        {stat.value}
                       </p>
+                      <h4 className="text-[9px] font-medium text-zinc-500 leading-tight mt-1">
+                        {stat.title}
+                      </h4>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="h-px bg-gradient-to-r from-transparent via-zinc-700/50 to-transparent shrink-0"></div>
+
+          {/* --- BÖLÜM 2: Performans (Flexible but compact) --- */}
+          <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="flex items-center gap-2 px-1 mb-2 shrink-0">
+              <IoTrendingUp className="text-cyan-400 text-sm" />
+              <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest">{t("sections.performance") || "Performance"}</span>
+            </div>
+
+            <div className="flex flex-col flex-1 gap-2 min-h-0">
+              {["daily", "weekly", "monthly"].map((period, index) => {
+                const perf = performance[period] || { value: null, trades: 0 };
+                const val = perf.value;
+                const trades = perf.trades || 0;
+
+                const isPositive = val !== null && val >= 0;
+                const isNegative = val !== null && val < 0;
+
+                return (
+                  <div
+                    key={period}
+                    // Removed min-h-[60px] to let it shrink more if needed, default padding kept but could reduce if needed.
+                    // Used flex-1 so they share space equally, but if content is small, they won't force huge height if container is small.
+                    className="flex-1 group relative bg-zinc-900/60 backdrop-blur-sm rounded-lg border border-zinc-800/50 hover:border-cyan-500/30 transition-all duration-100 p-2 flex flex-col justify-center"
+                    style={{
+                      animationDelay: `${(index + 4) * 100}ms`,
+                      animation: "fadeInUpRightBar 0.6s ease-out forwards",
+                    }}
+                  >
+                    {/* Subtle glow on hover */}
+                    <div className="absolute inset-0 rounded-lg bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-100"></div>
+
+                    <div className="relative z-10 w-full">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <h4 className="text-xs font-medium text-zinc-400 capitalize flex items-center gap-2">
+                          <div className={`w-1 h-3 rounded-full ${period === 'daily' ? 'bg-cyan-400' :
+                            period === 'weekly' ? 'bg-blue-400' : 'bg-purple-400'
+                            } shadow-[0_0_6px_currentColor]`}></div>
+                          {t(`performance.labels.${period}`)}
+                        </h4>
+                        <span className="text-[10px] text-zinc-600 bg-zinc-800/50 px-1.5 py-0.5 rounded">
+                          {t("performance.trades", { count: trades })}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {val !== null && (
+                          isPositive ? (
+                            <IoTrendingUp className="text-emerald-400 text-base" />
+                          ) : (
+                            <IoTrendingDown className="text-red-400 text-base" />
+                          )
+                        )}
+                        <p className={`text-lg font-bold tracking-tight ${val === null
+                          ? "text-zinc-500"
+                          : isPositive
+                            ? "text-emerald-400"
+                            : "text-red-400"
+                          }`}>
+                          {val === null
+                            ? "–"
+                            : `${val >= 0 ? "+" : ""}${val.toFixed(2)}%`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 

@@ -63,7 +63,7 @@ async function fetchSolUsdtPrice(signal) {
 
 
 export default function RentModal({ botId, onClose, minDays = 1 }) {
-  const { t } = useTranslation("rentModal");
+  const { t } = useTranslation("botMarketRentModal");
 
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState(null);
@@ -242,11 +242,11 @@ export default function RentModal({ botId, onClose, minDays = 1 }) {
             {activeChain === "solana" ? (
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-900/30 text-green-200 border border-green-500/40">
                 <span className="w-2 h-2 rounded-full bg-green-400 mr-2" />
-                Solana Network
+                {t('network.solana')}
               </span>
             ) : (
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-900/30 text-red-200 border border-red-500/40">
-                Wallet Not Connected
+                {t('network.notConnected')}
               </span>
             )}
           </div>

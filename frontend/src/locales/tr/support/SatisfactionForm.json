@@ -1,0 +1,16 @@
+{
+    "title": "Talebinizi kapatmadan önce işlemden memnun kaldınız mı?",
+    "rating": {
+        "1": "Çok Kötü",
+        "2": "Kötü",
+        "3": "Orta",
+        "4": "İyi",
+        "5": "Çok İyi"
+    },
+    "feedbackPlaceholder": "Eklemek istediğiniz bir not var mı? (İsteğe bağlı)",
+    "cancel": "Vazgeç",
+    "submit": "Değerlendir ve Kapat",
+    "validation": {
+        "ratingRequired": "Lütfen bir puan verin"
+    }
+}

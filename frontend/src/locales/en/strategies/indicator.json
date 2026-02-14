@@ -29,5 +29,18 @@
     "code_disabled": "No permission to view code (allow_code_view=false)",
     "fav_add": "Add to favorites",
     "fav_remove": "Remove from favorites"
-  }
+  },
+  "all": "All",
+  "spot": "Spot",
+  "swap": "Swap",
+  "futures": "Futures",
+  "watchlist": "Watchlist",
+  "cryptoSelect": "Select Crypto",
+  "emptyWatchlist": "Watchlist is empty. (You can navigate with keyboard arrow keys.)",
+  "noMatch": "No matching tokens",
+  "typeSpot": "SPOT",
+  "typeFutures": "FUTURES",
+  "publish": "Publish",
+  "resultCount": "{{count}} Results",
+  "loading": "Loading..."
 }

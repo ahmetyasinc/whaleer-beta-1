@@ -6,7 +6,7 @@ import useBotExamineModalStore from '@/store/botmarket/BotExamineModalStore';
 import { FaUser } from 'react-icons/fa';
 
 const ExtraDataCard = ({ botId }) => {
-    const { t } = useTranslation('botsList');
+    const { t } = useTranslation('botMarketExtraDataCard');
     const { extraData, isLoading, fetchExtraData } = useBotExamineModalStore();
 
     useEffect(() => {
@@ -40,26 +40,26 @@ const ExtraDataCard = ({ botId }) => {
                     <div className="flex-1 flex flex-col gap-2">
                         {/* Strateji Adı ve Satır Sayısı */}
                         <div className="bg-zinc-900/50 border border-zinc-700/50 rounded p-2 flex flex-col hover:border-cyan-500/30 transition-colors group/box">
-                            <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase mb-0.5 group-hover/box:text-cyan-400/70 transition-colors">Strateji Adı</span>
+                            <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase mb-0.5 group-hover/box:text-cyan-400/70 transition-colors">{t('strategyName')}</span>
                             <span className="text-xs font-semibold text-zinc-200 truncate" title={extraData.strategyName}>{extraData.strategyName}</span>
-                            <span className="text-[10px] text-zinc-500 mt-1">{extraData.strategyLines} satır</span>
+                            <span className="text-[10px] text-zinc-500 mt-1">{extraData.strategyLines} {t('lines')}</span>
                         </div>
 
                         {/* Çalıştıran Kullanıcı Sayısı */}
                         <div className="bg-zinc-900/50 border border-zinc-700/50 rounded p-2 flex flex-col hover:border-cyan-500/30 transition-colors group/box">
-                            <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase mb-0.5 group-hover/box:text-cyan-400/70 transition-colors">Aktif Kullanıcı</span>
+                            <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase mb-0.5 group-hover/box:text-cyan-400/70 transition-colors">{t('activeUsers')}</span>
                             <span className="text-xs font-semibold text-zinc-200">{extraData.activeUsers?.toLocaleString()}</span>
                         </div>
 
                         {/* Yönetilen Toplam Bakiye */}
                         <div className="bg-zinc-900/50 border border-zinc-700/50 rounded p-2 flex flex-col hover:border-cyan-500/30 transition-colors group/box">
-                            <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase mb-0.5 group-hover/box:text-cyan-400/70 transition-colors">Toplam Bakiye</span>
+                            <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase mb-0.5 group-hover/box:text-cyan-400/70 transition-colors">{t('totalBalance')}</span>
                             <span className="text-xs font-semibold text-emerald-400">{fmtMoney(extraData.totalManagedBalance)}</span>
                         </div>
 
                         {/* Periyot */}
                         <div className="bg-zinc-900/50 border border-zinc-700/50 rounded p-2 flex flex-col hover:border-cyan-500/30 transition-colors group/box">
-                            <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase mb-0.5 group-hover/box:text-cyan-400/70 transition-colors">Periyot</span>
+                            <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase mb-0.5 group-hover/box:text-cyan-400/70 transition-colors">{t('period')}</span>
                             <span className="text-xs font-semibold text-cyan-300">{extraData.period}</span>
                         </div>
                     </div>
@@ -69,7 +69,7 @@ const ExtraDataCard = ({ botId }) => {
                         <div className="flex items-center justify-between mb-3 relative z-20">
                             <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-cyan-500/80">
                                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></span>
-                                Kripto Paralar
+                                {t('cryptos')}
                             </h4>
                             <span className="text-[10px] font-mono text-cyan-400/60 bg-cyan-950/30 px-1.5 py-1 rounded border border-cyan-800/30">
                                 {extraData.cryptos?.length || 0}
@@ -87,7 +87,7 @@ const ExtraDataCard = ({ botId }) => {
                                 ))
                             ) : (
                                 <div className="flex flex-col items-center justify-center p-4 border border-dashed border-zinc-800 rounded-lg">
-                                    <span className="text-[11px] text-zinc-600">Kripto bulunamadı</span>
+                                    <span className="text-[11px] text-zinc-600">{t('noCrypto')}</span>
                                 </div>
                             )}
                         </div>
@@ -98,7 +98,7 @@ const ExtraDataCard = ({ botId }) => {
                 <div className="flex-[0.6] flex flex-col pl-4">
                     <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-purple-500/80 mb-3">
                         <span className="w-1.5 h-1.5 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]"></span>
-                        Yayınlayan Açıklaması
+                        {t('publisherDescription')}
                         <div className="h-3 w-[1px] bg-zinc-600 mx-1"></div>
                         <FaUser className="w-2.5 h-2.5 text-zinc-400" />
                         <span className="text-zinc-400 font-medium normal-case tracking-normal">{extraData.publisherUsername}</span>

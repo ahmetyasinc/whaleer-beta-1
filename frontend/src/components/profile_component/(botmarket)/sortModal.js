@@ -4,7 +4,7 @@ import { FiX } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
 
 const SortModal = ({ isOpen, onClose, currentSort, onApply }) => {
-    const { t } = useTranslation('botsList');
+    const { t } = useTranslation('botMarketSortModal');
     const [localSort, setLocalSort] = useState(currentSort);
     const [profitPeriod, setProfitPeriod] = useState((currentSort?.key === 'profitMargin' && currentSort?.period) || 'day');
     const [mounted, setMounted] = useState(false);
@@ -50,7 +50,7 @@ const SortModal = ({ isOpen, onClose, currentSort, onApply }) => {
             <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 ring-1 ring-zinc-800/50">
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800/50 bg-zinc-900/30">
-                    <h3 className="text-lg font-semibold text-zinc-100">{t('sort.title')}</h3>
+                    <h3 className="text-lg font-semibold text-zinc-100">{t('title')}</h3>
                     <button
                         onClick={onClose}
                         className="p-1 text-zinc-400 hover:text-white transition-colors rounded-full hover:bg-zinc-800"
@@ -63,7 +63,7 @@ const SortModal = ({ isOpen, onClose, currentSort, onApply }) => {
                 <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
                     {/* Default Option */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-zinc-300">{t('sort.default')}</label>
+                        <label className="text-sm font-medium text-zinc-300">{t('default')}</label>
                         <button
                             type="button"
                             onClick={() => handleSelect('default', 'desc')}
@@ -74,7 +74,7 @@ const SortModal = ({ isOpen, onClose, currentSort, onApply }) => {
                                     : 'bg-zinc-900/50 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 border-zinc-800/50'
                                 }`}
                         >
-                            {t('sort.defaultLabel')}
+                            {t('defaultLabel')}
                         </button>
                     </div>
 
@@ -92,14 +92,14 @@ const SortModal = ({ isOpen, onClose, currentSort, onApply }) => {
                     ].map((key) => {
                         const isDate = key === 'createdAt';
                         const isProfit = key === 'profitMargin';
-                        const ascLabel = isDate ? t('sort.directions.oldest') : t('sort.directions.asc');
-                        const descLabel = isDate ? t('sort.directions.newest') : t('sort.directions.desc');
+                        const ascLabel = isDate ? t('directions.oldest') : t('directions.asc');
+                        const descLabel = isDate ? t('directions.newest') : t('directions.desc');
                         const isActive = localSort.key === key;
 
                         return (
                             <div key={key} className="space-y-2">
                                 <div className="flex justify-between items-center">
-                                    <label className="text-sm font-medium text-zinc-300">{t(`sort.labels.${key}`)}</label>
+                                    <label className="text-sm font-medium text-zinc-300">{t(`labels.${key}`)}</label>
                                     {isProfit && (
                                         <select
                                             value={profitPeriod}
@@ -107,10 +107,10 @@ const SortModal = ({ isOpen, onClose, currentSort, onApply }) => {
                                             className="bg-zinc-900 border border-zinc-700 text-xs rounded px-2 py-1 text-zinc-300 focus:outline-none focus:border-cyan-500/50 cursor-pointer"
                                             onClick={(e) => e.stopPropagation()}
                                         >
-                                            <option value="day">{t('filter.periods.day')}</option>
-                                            <option value="week">{t('filter.periods.week')}</option>
-                                            <option value="month">{t('filter.periods.month')}</option>
-                                            <option value="all">{t('filter.periods.all')}</option>
+                                            <option value="day">{t('periods.day')}</option>
+                                            <option value="week">{t('periods.week')}</option>
+                                            <option value="month">{t('periods.month')}</option>
+                                            <option value="all">{t('periods.all')}</option>
                                         </select>
                                     )}
                                 </div>
@@ -147,13 +147,13 @@ const SortModal = ({ isOpen, onClose, currentSort, onApply }) => {
                         onClick={onClose}
                         className="px-4 py-2 text-sm font-medium text-zinc-300 hover:text-white transition-colors mr-2"
                     >
-                        {t('sort.cancel')}
+                        {t('cancel')}
                     </button>
                     <button
                         onClick={handleApply}
                         className="px-4 backdrop-blur-sm border py-1 rounded-lg font-bold transition-all duration-100 relative overflow-hidden group bg-gradient-to-r from-cyan-500/30 to-purple-500/30 border-cyan-500/60 text-cyan-50 hover:border-cyan-400/80 hover:shadow-[0_0_20px_-5px_rgba(6,182,212,0.6)] cursor-pointer bg-zinc-900 border-zinc-800"
                     >
-                        {t('sort.apply')}
+                        {t('apply')}
                     </button>
                 </div>
             </div>

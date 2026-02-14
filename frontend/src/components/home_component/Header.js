@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useLogout } from "@/utils/HookLogout";
 import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "@/components/home_component/LanguageSwitcher";
 
 export default function Header({ pageClass }) {
   // Dil tüketimi: LanguageProvider zaten dili eşitliyor
@@ -204,6 +205,7 @@ export default function Header({ pageClass }) {
                   )}
                 </>
               )}
+              <LanguageSwitcher />
             </div>
 
             {/* Mobile Toggle */}
@@ -213,7 +215,7 @@ export default function Header({ pageClass }) {
               aria-label="Toggle navigation menu"
               aria-expanded={mobileOpen}
             >
-                <MenuIcon isOpen={mobileOpen} />
+              <MenuIcon isOpen={mobileOpen} />
             </button>
           </div>
         </div>
@@ -246,7 +248,7 @@ export default function Header({ pageClass }) {
                   <Link
                     href={withLocale("/profile")}
                     onClick={() => setMobileOpen(false)}
-                      className="group relative overflow-hidden w-full rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-3 text-center font-semibold text-white shadow-lg transition-all duration-300 hover:from-blue-500 hover:to-cyan-500 hover:shadow-[0_8px_30px_rgba(59,130,246,0.4)] active:scale-95"
+                    className="group relative overflow-hidden w-full rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-3 text-center font-semibold text-white shadow-lg transition-all duration-300 hover:from-blue-500 hover:to-cyan-500 hover:shadow-[0_8px_30px_rgba(59,130,246,0.4)] active:scale-95"
                   >
                     <span className="relative z-10">My Profile</span>
                     <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -256,7 +258,7 @@ export default function Header({ pageClass }) {
                       setMobileOpen(false);
                       handleLogout();
                     }}
-                      className="group relative overflow-hidden w-full rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-3 text-center font-semibold text-white shadow-lg transition-all duration-300 hover:from-blue-500 hover:to-cyan-500 hover:shadow-[0_8px_30px_rgba(59,130,246,0.4)] active:scale-95"
+                    className="group relative overflow-hidden w-full rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-3 text-center font-semibold text-white shadow-lg transition-all duration-300 hover:from-blue-500 hover:to-cyan-500 hover:shadow-[0_8px_30px_rgba(59,130,246,0.4)] active:scale-95"
                   >
                     <span className="relative z-10">Log Out</span>
                     <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-red-500/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -287,6 +289,9 @@ export default function Header({ pageClass }) {
                   )}
                 </>
               )}
+              <div className="mt-4 flex justify-center">
+                <LanguageSwitcher />
+              </div>
             </div>
           </div>
         </div>

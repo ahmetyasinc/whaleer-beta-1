@@ -179,6 +179,9 @@ import trTechnicalStrategies from '@/locales/tr/bot/technicalStrategies.json';
 import enBotPersonalStrategies from '@/locales/en/bot/personalStrategies.json';
 import trBotPersonalStrategies from '@/locales/tr/bot/personalStrategies.json';
 
+import enBotToggleConfirmModal from '@/locales/en/bot/botToggleConfirmModal.json';
+import trBotToggleConfirmModal from '@/locales/tr/bot/botToggleConfirmModal.json';
+
 import enCommunityStrategies from '@/locales/en/bot/communityStrategies.json';
 import trCommunityStrategies from '@/locales/tr/bot/communityStrategies.json';
 
@@ -254,6 +257,62 @@ import trRecycleBinModal from '@/locales/tr/profile/recycleBinModal.json';
 import enResetPassword from '@/locales/en/auth/resetPassword.json';
 import trResetPassword from '@/locales/tr/auth/resetPassword.json';
 
+import enFullScreen from '@/locales/en/strategies/fullScreen.json';
+import trFullScreen from '@/locales/tr/strategies/fullScreen.json';
+
+import enSupportMessageList from '@/locales/en/support/MessageList.json';
+import trSupportMessageList from '@/locales/tr/support/MessageList.json';
+
+import enSupportNewTicketForm from '@/locales/en/support/NewTicketForm.json';
+import trSupportNewTicketForm from '@/locales/tr/support/NewTicketForm.json';
+
+import enSupportSatisfactionForm from '@/locales/en/support/SatisfactionForm.json';
+import trSupportSatisfactionForm from '@/locales/tr/support/SatisfactionForm.json';
+
+import enSupportTicketDetail from '@/locales/en/support/TicketDetail.json';
+import trSupportTicketDetail from '@/locales/tr/support/TicketDetail.json';
+
+import enSupportTicketItem from '@/locales/en/support/TicketItem.json';
+import trSupportTicketItem from '@/locales/tr/support/TicketItem.json';
+
+import enSupportTicketList from '@/locales/en/support/TicketList.json';
+import trSupportTicketList from '@/locales/tr/support/TicketList.json';
+
+import enSupportClientPage from '@/locales/en/support/SupportClientPage.json';
+import trSupportClientPage from '@/locales/tr/support/SupportClientPage.json';
+
+// BotMarket imports
+import enBotMarketBuyModal from '@/locales/en/botmarket/BuyModal.json';
+import trBotMarketBuyModal from '@/locales/tr/botmarket/BuyModal.json';
+import enBotMarketModalFrame from '@/locales/en/botmarket/ModalFrame.json';
+import trBotMarketModalFrame from '@/locales/tr/botmarket/ModalFrame.json';
+import enBotMarketRentModal from '@/locales/en/botmarket/RentModal.json';
+import trBotMarketRentModal from '@/locales/tr/botmarket/RentModal.json';
+import enBotMarketBotCard from '@/locales/en/botmarket/botCard.json';
+import trBotMarketBotCard from '@/locales/tr/botmarket/botCard.json';
+import enBotMarketBotExamineModal from '@/locales/en/botmarket/botExamineModal.json';
+import trBotMarketBotExamineModal from '@/locales/tr/botmarket/botExamineModal.json';
+import enBotMarketHeader from '@/locales/en/botmarket/botMarketHeader.json';
+import trBotMarketHeader from '@/locales/tr/botmarket/botMarketHeader.json';
+import enBotMarketBotsList from '@/locales/en/botmarket/botsList.json';
+import trBotMarketBotsList from '@/locales/tr/botmarket/botsList.json';
+import enBotMarketChart from '@/locales/en/botmarket/chart.json';
+import trBotMarketChart from '@/locales/tr/botmarket/chart.json';
+import enBotMarketCommentModal from '@/locales/en/botmarket/commentModal.json';
+import trBotMarketCommentModal from '@/locales/tr/botmarket/commentModal.json';
+import enBotMarketExtraDataCard from '@/locales/en/botmarket/extraDataCard.json';
+import trBotMarketExtraDataCard from '@/locales/tr/botmarket/extraDataCard.json';
+import enBotMarketFilterCard from '@/locales/en/botmarket/filterCard.json';
+import trBotMarketFilterCard from '@/locales/tr/botmarket/filterCard.json';
+import enBotMarketFilterModal from '@/locales/en/botmarket/filterModal.json';
+import trBotMarketFilterModal from '@/locales/tr/botmarket/filterModal.json';
+import enBotMarketSellRentModal from '@/locales/en/botmarket/sellRentModal.json';
+import trBotMarketSellRentModal from '@/locales/tr/botmarket/sellRentModal.json';
+import enBotMarketSortModal from '@/locales/en/botmarket/sortModal.json';
+import trBotMarketSortModal from '@/locales/tr/botmarket/sortModal.json';
+import enBotMarketTradeList from '@/locales/en/botmarket/tradeList.json';
+import trBotMarketTradeList from '@/locales/tr/botmarket/tradeList.json';
+
 // ... (other imports)
 
 // Inside resources object:
@@ -273,18 +332,54 @@ if (!i18n.isInitialized) {
           notFound: enNotFound, metadata: enMetadata, header: enHeader, hero: enHero, about: enAbout, feature: enFuature, footer: enFooter, login: enLogin, register: enRegister, resetPassword: enResetPassword, updatePassword: enUpdatePassword, leftmenu: enLeftMenu, indicator: enIndicator, profileHeader: enProfileHeader, portfolio: enPortfolio, portfolioChart: enPortfolioChart, rightBar: enRightBar, botsList: enBotsList, examineBot: enExamineBot, botPieChart: enBotPieChart, strategyIndicator: enStrategyIndicator, publishStrategyModal: enPublishStrategyModal, publishIndicatorModal: enPublishIndicatorModal, settings: enSettings, personalIndicators: enPersonalIndicators, addStrategyButton: enAddStrategyButton, personalStrategies: enPersonalStrategies, indicatorEditor: enIndicatorEditor, indicatorTerminal: enIndicatorTerminal, strategyCodePanel: enStrategyCodePanel, strategyTerminal: enStrategyTerminal, strategiesHeader: enStrategiesHeader, ruler: enRuler, backtestHeader: enBacktestHeader, backtestStrategyButton: enBacktestStrategyButton, backtestTechnicalStrategies: enBacktestTechnicalStrategies, backtestPersonalStrategies: enBacktestPersonalStrategies, backtestCommunityStrategies: enBacktestCommunityStrategies, backtestCryptoSelectButton: enBacktestCryptoSelectButton, backtestPage: enBacktestPage, backtestArchivedBacktest: enBacktestArchivedBacktest, backtestInfoCard: enBacktestInfoCard,
           backtestChart: enBacktestChart, backtestPerformanceMetrics: enBacktestPerformanceMetrics, backtestTradesList: enBacktestTradesList, botPage: enBotPage, botModal: enBotModal, botChooseStrategy: enBotChooseStrategy, botCard: enBotCard, deleteConfirm: enDeleteConfirm, shutDown: enShutDown, criticalConfirmModal: enCriticalConfirmModal, technicalStrategies: enTechnicalStrategies, botPersonalStrategies: enBotPersonalStrategies, communityStrategies: enCommunityStrategies, showcaseHeader: enshowcaseHeader,
           searchButton: enShowcaseSearchButton, sellRentModal: enShowcaseSellRentModal, chooseBotModal: enShowcaseChooseBotModal, botFilterSidebar: enBotFilterSidebar, botDiscoveryApp: enBotDiscoveryApp, showcaseBotCard: enShowcaseBotCard, buyModal: enBuyModal, rentModal: enRentModal, userProfileCard: enUserProfileCard, botterGuide: enBotterGuide, trades: enTrades, sideBar: enSideBar, userLeaderBoard: enUserLeaderBoard, botLeaderBoard: enBotLeaderBoard, apiContent: enApiContent, addApi: enAddApi, confirmDelete: enConfirmDelete, strategiesSettings: enStrategiesSettings,
-          features: enFeatures, premium: enPremium, homeAbout: enHomeAbout, recycleBinModal: enRecycleBinModal,
+          features: enFeatures, premium: enPremium, homeAbout: enHomeAbout, recycleBinModal: enRecycleBinModal, fullScreen: enFullScreen, botToggleConfirmModal: enBotToggleConfirmModal,
+          supportMessageList: enSupportMessageList, supportNewTicketForm: enSupportNewTicketForm, supportSatisfactionForm: enSupportSatisfactionForm, supportTicketDetail: enSupportTicketDetail, supportTicketItem: enSupportTicketItem, supportTicketList: enSupportTicketList,
+          supportClientPage: enSupportClientPage,
+          // BotMarket namespaces
+          botMarketBuyModal: enBotMarketBuyModal,
+          botMarketModalFrame: enBotMarketModalFrame,
+          botMarketRentModal: enBotMarketRentModal,
+          botMarketBotCard: enBotMarketBotCard,
+          botMarketBotExamineModal: enBotMarketBotExamineModal,
+          botMarketHeader: enBotMarketHeader,
+          botMarketBotsList: enBotMarketBotsList,
+          botMarketChart: enBotMarketChart,
+          botMarketCommentModal: enBotMarketCommentModal,
+          botMarketExtraDataCard: enBotMarketExtraDataCard,
+          botMarketFilterCard: enBotMarketFilterCard,
+          botMarketFilterModal: enBotMarketFilterModal,
+          botMarketSellRentModal: enBotMarketSellRentModal,
+          botMarketSortModal: enBotMarketSortModal,
+          botMarketTradeList: enBotMarketTradeList,
         },
         tr: {
           notFound: trNotFound, metadata: trMetadata, header: trHeader, hero: trHero, about: trAbout, feature: trFuature, footer: trFooter, login: trLogin, register: trRegister, resetPassword: trResetPassword, updatePassword: trUpdatePassword, leftmenu: trLeftMenu, indicator: trIndicator, profileHeader: trProfileHeader, portfolio: trPortfolio, portfolioChart: trPortfolioChart, rightBar: trRightBar, botsList: trBotsList, examineBot: trExamineBot, botPieChart: trBotPieChart, strategyIndicator: trStrategyIndicator, publishStrategyModal: trPublishStrategyModal, publishIndicatorModal: trPublishIndicatorModal, settings: trSettings, personalIndicators: trPersonalIndicators, addStrategyButton: trAddStrategyButton, personalStrategies: trPersonalStrategies, indicatorEditor: trIndicatorEditor, indicatorTerminal: trIndicatorTerminal, strategyCodePanel: trStrategyCodePanel, strategyTerminal: trStrategyTerminal, strategiesHeader: trStrategiesHeader, ruler: trRuler, backtestHeader: trBacktestHeader, backtestStrategyButton: trBacktestStrategyButton, backtestTechnicalStrategies: trBacktestTechnicalStrategies, backtestPersonalStrategies: trBacktestPersonalStrategies, backtestCommunityStrategies: trBacktestCommunityStrategies, backtestCryptoSelectButton: trBacktestCryptoSelectButton, backtestPage: trBacktestPage, backtestArchivedBacktest: trBacktestArchivedBacktest, backtestInfoCard: trBacktestInfoCard,
           backtestChart: trBacktestChart, backtestPerformanceMetrics: trBacktestPerformanceMetrics, backtestTradesList: trBacktestTradesList, botPage: trBotPage, botModal: trBotModal, botChooseStrategy: trBotChooseStrategy, botCard: trBotCard, deleteConfirm: trDeleteConfirm, shutDown: trShutDown, criticalConfirmModal: trCriticalConfirmModal, technicalStrategies: trTechnicalStrategies, botPersonalStrategies: trBotPersonalStrategies, communityStrategies: trCommunityStrategies, showcaseHeader: trshowcaseHeader,
           searchButton: trShowcaseSearchButton, sellRentModal: trShowcaseSellRentModal, chooseBotModal: trShowcaseChooseBotModal, botFilterSidebar: trBotFilterSidebar, botDiscoveryApp: trBotDiscoveryApp, showcaseBotCard: trShowcaseBotCard, buyModal: trBuyModal, rentModal: trRentModal, userProfileCard: trUserProfileCard, botterGuide: trBotterGuide, trades: trTrades, sideBar: trSideBar, userLeaderBoard: trUserLeaderBoard, botLeaderBoard: trBotLeaderBoard, apiContent: trApiContent, addApi: trAddApi, confirmDelete: trConfirmDelete, strategiesSettings: trStrategiesSettings,
-          features: trFeatures, premium: trPremium, homeAbout: trHomeAbout, recycleBinModal: trRecycleBinModal,
+          features: trFeatures, premium: trPremium, homeAbout: trHomeAbout, recycleBinModal: trRecycleBinModal, fullScreen: trFullScreen, botToggleConfirmModal: trBotToggleConfirmModal,
+          supportMessageList: trSupportMessageList, supportNewTicketForm: trSupportNewTicketForm, supportSatisfactionForm: trSupportSatisfactionForm, supportTicketDetail: trSupportTicketDetail, supportTicketItem: trSupportTicketItem, supportTicketList: trSupportTicketList,
+          supportClientPage: trSupportClientPage,
+          // BotMarket namespaces
+          botMarketBuyModal: trBotMarketBuyModal,
+          botMarketModalFrame: trBotMarketModalFrame,
+          botMarketRentModal: trBotMarketRentModal,
+          botMarketBotCard: trBotMarketBotCard,
+          botMarketBotExamineModal: trBotMarketBotExamineModal,
+          botMarketHeader: trBotMarketHeader,
+          botMarketBotsList: trBotMarketBotsList,
+          botMarketChart: trBotMarketChart,
+          botMarketCommentModal: trBotMarketCommentModal,
+          botMarketExtraDataCard: trBotMarketExtraDataCard,
+          botMarketFilterCard: trBotMarketFilterCard,
+          botMarketFilterModal: trBotMarketFilterModal,
+          botMarketSellRentModal: trBotMarketSellRentModal,
+          botMarketSortModal: trBotMarketSortModal,
+          botMarketTradeList: trBotMarketTradeList,
         },
       },
 
       // App’te explicit namespace kullanıyorsun, yine de liste dursun:
-      ns: ['common', 'notFound', 'metadata', 'header', 'hero', 'about', 'feature', 'footer', 'login', 'register', 'resetPassword', 'updatePassword', 'leftmenu', 'profileHeader', 'portfolio', 'portfolioChart', 'strategyIndicator', 'recycleBinModal'],
+      ns: ['common', 'notFound', 'metadata', 'header', 'hero', 'about', 'feature', 'footer', 'login', 'register', 'resetPassword', 'updatePassword', 'leftmenu', 'profileHeader', 'portfolio', 'portfolioChart', 'strategyIndicator', 'recycleBinModal', 'fullScreen'],
       defaultNS: 'common',
 
       interpolation: { escapeValue: false },

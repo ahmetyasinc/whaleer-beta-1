@@ -1,0 +1,12 @@
+{
+    "buttons": {
+        "sellRent": "Market Ekle/Kirala",
+        "installPhantom": "Phantom Yükle",
+        "connecting": "Bağlanıyor...",
+        "connectWallet": "Cüzdanı Bağla",
+        "signOut": "Çıkış Yap"
+    },
+    "labels": {
+        "connected": "Bağlandı"
+    }
+}

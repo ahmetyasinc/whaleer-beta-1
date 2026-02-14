@@ -1,0 +1,9 @@
+{
+    "title": "Performans Grafiği",
+    "periods": {
+        "weekly": "1H",
+        "monthly": "1A",
+        "sixMonths": "6A",
+        "all": "Tüm Zamanlar"
+    }
+}

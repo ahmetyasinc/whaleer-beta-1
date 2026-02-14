@@ -6,6 +6,7 @@ import AuthenticatedImage from "@/components/AuthenticatedImage";
 import api from "@/api/axios";
 
 import ImageLightbox from "@/components/profile_component/(support)/ImageLightbox";
+import { useTranslation } from "react-i18next";
 
 const isImage = (m) => (m || "").startsWith("image/");
 
@@ -38,6 +39,7 @@ function parseGmtOffsetMinutes(str) {
 }
 
 export default function MessageList({ messages = [], currentUserId }) {
+  const { t } = useTranslation("supportMessageList");
   const messagesEndRef = useRef(null);
   const [previewSrc, setPreviewSrc] = useState(null);
   const [tzPref, setTzPref] = useState(null); // cookie'den gelen timezone string
@@ -148,7 +150,7 @@ export default function MessageList({ messages = [], currentUserId }) {
                               (e.key === "Enter" || e.key === " ") &&
                               openPreview(fileUrl)
                             }
-                            title="Büyütmek için tıklayın"
+                            title={t("clickToEnlarge")}
                             className="outline-none ring-0 focus-visible:ring-2 focus-visible:ring-white/60 rounded overflow-hidden"
                           >
                             <AuthenticatedImage
@@ -206,12 +208,12 @@ export default function MessageList({ messages = [], currentUserId }) {
                               window.URL.revokeObjectURL(url);
                             } catch (err) {
                               console.error("Download error", err);
-                              alert("İndirme başarısız oldu.");
+                              alert(t("downloadFailed"));
                             }
                           }}
                           className="text-xs ml-3 flex-shrink-0 bg-white/10 hover:bg-white/20 rounded px-2 py-1 transition-colors"
                         >
-                          İndir
+                          {t("download")}
                         </button>
                       </div>
                     );

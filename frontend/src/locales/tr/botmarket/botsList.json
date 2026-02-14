@@ -1,0 +1,34 @@
+{
+    "searchPlaceholder": "Bot adı veya yayıncı ara...",
+    "results": "Sonuç",
+    "sort": {
+        "button": "Sırala",
+        "labels": {
+            "default": "Varsayılan",
+            "profitMargin": "Kar Marjı",
+            "createdAt": "Oluşturulma Tarihi",
+            "usageTime": "Kullanım Süresi",
+            "saleCount": "Satış Sayısı",
+            "rentalCount": "Kiralama Sayısı",
+            "powerScore": "Güç Skoru"
+        },
+        "directions": {
+            "asc": "Artan",
+            "desc": "Azalan",
+            "newest": "En Yeni",
+            "oldest": "En Eski"
+        }
+    },
+    "filter": {
+        "periods": {
+            "day": "Gün",
+            "week": "Hafta",
+            "month": "Ay",
+            "all": "Tümü"
+        }
+    },
+    "loading": "Botlar Yükleniyor...",
+    "empty": {
+        "list": "Kriterlerinize uygun bot bulunamadı."
+    }
+}

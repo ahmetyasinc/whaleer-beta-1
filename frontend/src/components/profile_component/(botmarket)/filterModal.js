@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 const FilterModal = ({ isOpen, onClose, currentFilters, onApply }) => {
     const [localFilters, setLocalFilters] = useState(currentFilters);
-    const { t } = useTranslation('botsList');
+    const { t } = useTranslation('botMarketFilterModal');
 
     useEffect(() => {
         if (isOpen) {
@@ -40,7 +40,7 @@ const FilterModal = ({ isOpen, onClose, currentFilters, onApply }) => {
             <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 ring-1 ring-zinc-800/50">
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800/50 bg-zinc-900/30">
-                    <h3 className="text-lg font-semibold text-zinc-100">{t('filter.title')}</h3>
+                    <h3 className="text-lg font-semibold text-zinc-100">{t('title')}</h3>
                     <button
                         onClick={onClose}
                         className="p-1 text-zinc-400 hover:text-white transition-colors rounded-full hover:bg-zinc-800"
@@ -64,13 +64,13 @@ const FilterModal = ({ isOpen, onClose, currentFilters, onApply }) => {
                                 checked={localFilters.onlyMyBots}
                                 onChange={(e) => handleChange('onlyMyBots', e.target.checked)}
                             />
-                            <span className={`text-sm font-medium transition-colors ${localFilters.onlyMyBots ? 'text-cyan-100' : 'text-zinc-400 group-hover:text-zinc-300'}`}>{t('filter.onlyMyBots')}</span>
+                            <span className={`text-sm font-medium transition-colors ${localFilters.onlyMyBots ? 'text-cyan-100' : 'text-zinc-400 group-hover:text-zinc-300'}`}>{t('onlyMyBots')}</span>
                         </label>
                     </div>
 
                     {/* Bot Type */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-zinc-300">{t('filter.botType.label')}</label>
+                        <label className="text-sm font-medium text-zinc-300">{t('botType.label')}</label>
                         <div className="flex bg-zinc-900/50 p-1 rounded-lg border border-zinc-800/50">
                             {['all', 'spot', 'futures'].map((type) => (
                                 <button
@@ -82,7 +82,7 @@ const FilterModal = ({ isOpen, onClose, currentFilters, onApply }) => {
                                         : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 border-transparent'
                                         }`}
                                 >
-                                    {t(`filter.botType.${type}`)}
+                                    {t(`botType.${type}`)}
                                 </button>
                             ))}
                         </div>
@@ -90,7 +90,7 @@ const FilterModal = ({ isOpen, onClose, currentFilters, onApply }) => {
 
                     {/* Trade Type */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-zinc-300">{t('filter.tradeType.label')}</label>
+                        <label className="text-sm font-medium text-zinc-300">{t('tradeType.label')}</label>
                         <div className="flex bg-zinc-900/50 p-1 rounded-lg border border-zinc-800/50">
                             {['all', 'sale', 'rental'].map((type) => (
                                 <button
@@ -102,7 +102,7 @@ const FilterModal = ({ isOpen, onClose, currentFilters, onApply }) => {
                                         : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 border-transparent'
                                         }`}
                                 >
-                                    {t(`filter.tradeType.${type}`)}
+                                    {t(`tradeType.${type}`)}
                                 </button>
                             ))}
                         </div>
@@ -111,11 +111,11 @@ const FilterModal = ({ isOpen, onClose, currentFilters, onApply }) => {
                     {/* Sale Price Range */}
                     {localFilters.tradeType !== 'rental' && (
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-300">{t('filter.ranges.salePrice')}</label>
+                            <label className="text-sm font-medium text-zinc-300">{t('ranges.salePrice')}</label>
                             <div className="flex gap-3">
                                 <input
                                     type="number"
-                                    placeholder={t('filter.placeholders.min')}
+                                    placeholder={t('placeholders.min')}
                                     value={localFilters.salePrice.min}
                                     onChange={(e) => handleNestedChange('salePrice', 'min', e.target.value)}
                                     className="w-full px-3 py-2 bg-zinc-900/50 border border-zinc-700 rounded-lg text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
@@ -134,11 +134,11 @@ const FilterModal = ({ isOpen, onClose, currentFilters, onApply }) => {
                     {/* Rental Price Range */}
                     {localFilters.tradeType !== 'sale' && (
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-300">{t('filter.ranges.rentalPrice')}</label>
+                            <label className="text-sm font-medium text-zinc-300">{t('ranges.rentalPrice')}</label>
                             <div className="flex gap-3">
                                 <input
                                     type="number"
-                                    placeholder={t('filter.placeholders.min')}
+                                    placeholder={t('placeholders.min')}
                                     value={localFilters.rentalPrice.min}
                                     onChange={(e) => handleNestedChange('rentalPrice', 'min', e.target.value)}
                                     className="w-full px-3 py-2 bg-zinc-900/50 border border-zinc-700 rounded-lg text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
@@ -156,10 +156,10 @@ const FilterModal = ({ isOpen, onClose, currentFilters, onApply }) => {
 
                     {/* Minimum Power Score */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-zinc-300">{t('filter.ranges.powerScore')}</label>
+                        <label className="text-sm font-medium text-zinc-300">{t('ranges.powerScore')}</label>
                         <input
                             type="number"
-                            placeholder={t('filter.placeholders.example85')}
+                            placeholder={t('placeholders.example85')}
                             value={localFilters.minPowerScore}
                             onChange={(e) => handleChange('minPowerScore', e.target.value)}
                             className="w-full px-3 py-2 bg-zinc-900/50 border border-zinc-700 rounded-lg text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
@@ -168,11 +168,11 @@ const FilterModal = ({ isOpen, onClose, currentFilters, onApply }) => {
 
                     {/* Minimum Profit Margin */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-zinc-300">{t('filter.ranges.profitMargin')}</label>
+                        <label className="text-sm font-medium text-zinc-300">{t('ranges.profitMargin')}</label>
                         <div className="flex gap-3">
                             <input
                                 type="number"
-                                placeholder={t('filter.placeholders.minPerc')}
+                                placeholder={t('placeholders.minPerc')}
                                 value={localFilters.minProfitMargin.value}
                                 onChange={(e) => handleNestedChange('minProfitMargin', 'value', e.target.value)}
                                 className="w-2/3 px-3 py-2 bg-zinc-900/50 border border-zinc-700 rounded-lg text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
@@ -182,20 +182,20 @@ const FilterModal = ({ isOpen, onClose, currentFilters, onApply }) => {
                                 onChange={(e) => handleNestedChange('minProfitMargin', 'period', e.target.value)}
                                 className="w-1/3 px-3 py-2 bg-zinc-900/50 border border-zinc-700 rounded-lg text-sm text-zinc-200 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
                             >
-                                <option value="day">{t('filter.periods.day')}</option>
-                                <option value="week">{t('filter.periods.week')}</option>
-                                <option value="month">{t('filter.periods.month')}</option>
-                                <option value="all">{t('filter.periods.all')}</option>
+                                <option value="day">{t('periods.day')}</option>
+                                <option value="week">{t('periods.week')}</option>
+                                <option value="month">{t('periods.month')}</option>
+                                <option value="all">{t('periods.all')}</option>
                             </select>
                         </div>
                     </div>
 
                     {/* Minimum Usage Time */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-zinc-300">{t('filter.ranges.usageTime')}</label>
+                        <label className="text-sm font-medium text-zinc-300">{t('ranges.usageTime')}</label>
                         <input
                             type="number"
-                            placeholder={t('filter.placeholders.example24')}
+                            placeholder={t('placeholders.example24')}
                             value={localFilters.minUsageTime}
                             onChange={(e) => handleChange('minUsageTime', e.target.value)}
                             className="w-full px-3 py-2 bg-zinc-900/50 border border-zinc-700 rounded-lg text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
@@ -210,12 +210,12 @@ const FilterModal = ({ isOpen, onClose, currentFilters, onApply }) => {
                         onClick={onClose}
                         className="px-4 py-2 text-sm font-medium text-zinc-300 hover:text-white transition-colors mr-2"
                     >
-                        {t('filter.cancel')}
+                        {t('cancel')}
                     </button>
                     <button
                         onClick={handleApply}
                         className="px-4 backdrop-blur-sm border py-1 rounded-lg font-bold transition-all duration-100 relative overflow-hidden group bg-gradient-to-r from-cyan-500/30 to-purple-500/30 border-cyan-500/60 text-cyan-50 hover:border-cyan-400/80 hover:shadow-[0_0_20px_-5px_rgba(6,182,212,0.6)] cursor-pointer bg-zinc-900 border-zinc-800">
-                        {t('filter.apply')}
+                        {t('apply')}
                     </button>
                 </div>
             </div>

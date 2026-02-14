@@ -95,6 +95,11 @@ export default function ChartComponent({ onLoadingChange }) {
     };
   }
 
+  const priceFmt = (p) => {
+    if (Math.abs(p) >= 100000) return (p / 1000).toFixed(0) + "k";
+    return p.toFixed(2);
+  };
+
   function decimalsFromTick(t) {
     if (t == null) return null; const s = String(t);
     if (s.includes(".")) return s.split(".")[1].length;
@@ -349,7 +354,7 @@ export default function ChartComponent({ onLoadingChange }) {
     const timeVisible = !['1d', '1w'].includes(selectedPeriod);
     const fmt = makeZonedFormatter(selectedPeriod, tzOffsetMin);
     chart.applyOptions({
-      localization: { timeFormatter: fmt },
+      localization: { timeFormatter: fmt, priceFormatter: priceFmt },
       timeScale: { timeVisible, secondsVisible: false, tickMarkFormatter: fmt },
     });
   }, [selectedPeriod, tzOffsetMin]);
@@ -443,6 +448,10 @@ export default function ChartComponent({ onLoadingChange }) {
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
+    if (chartContainerRef.current.clientWidth === 0) { //888
+      return;
+    }
+
     // önceki chart'ı ve series'i bırak
     // Artık cleanup fonksiyonunda handle ediyoruz, burada tekrar remove çağrısı güvenli olsun diye kalsın ama ref zaten null olacak.
     try { chartRef.current?.remove?.(); } catch { }
@@ -489,7 +498,7 @@ export default function ChartComponent({ onLoadingChange }) {
         vertLine: crosshairStyle,
         horzLine: crosshairStyle,
       },
-      localization: { timeFormatter: fmt },
+      localization: { timeFormatter: fmt, priceFormatter: priceFmt },
       timeScale: {
         visible: settings.timeScaleVisible,
         timeVisible: settings.timeScaleVisible,
@@ -498,12 +507,23 @@ export default function ChartComponent({ onLoadingChange }) {
         rightBarStaysOnScroll: true,
         shiftVisibleRangeOnNewBar: false,
         borderVisible: false,
+        handleScale: true, // 888
+        autoSize: true, //888
       },
-      rightPriceScale: { minimumWidth: 70, autoScale: true },
+      rightPriceScale: { minimumWidth: 75, autoScale: true },
     };
 
     const chart = createChart(chartContainerRef.current, chartOptions);
     chartRef.current = chart;
+
+    setTimeout(() => { //888
+      if (chartRef.current && chartContainerRef.current) {
+        chartRef.current.applyOptions({
+          width: chartContainerRef.current.clientWidth,
+          height: chartContainerRef.current.clientHeight,
+        });
+      }
+    }, 50);
 
     // YENİ WATERMARK KODU
     const wmVisible = settings?.watermark?.visible ?? true;
@@ -1365,7 +1385,7 @@ export default function ChartComponent({ onLoadingChange }) {
 
       {/* Info Panel Overlay */}
       {infoPanelData && (
-        <div className="absolute bottom-10 right-20 z-20 bg-[#1e1e1e] border border-gray-700 rounded p-4 shadow-lg text-xs text-gray-200 min-w-[200px]"
+        <div className="absolute bottom-3 right-20 z-20 bg-[#1e1e1e] border border-gray-700 rounded p-4 shadow-lg text-xs text-gray-200 min-w-[220px]"
           onClick={(e) => e.stopPropagation()} // Prevent clicks from bubbling if needed
         >
           <div className="flex justify-between items-center mb-2 border-b border-gray-700 pb-1">

@@ -29,5 +29,18 @@
     "code_disabled": "Kod görüntüleme izni yok (allow_code_view=false)",
     "fav_add": "Favorilere ekle",
     "fav_remove": "Favorilerden çıkar"
-  }
+  },
+  "all": "Tümü",
+  "spot": "Spot",
+  "swap": "Takas",
+  "futures": "Vadeli",
+  "watchlist": "İzleme Listesi",
+  "cryptoSelect": "Kripto Seçin",
+  "emptyWatchlist": "İzleme listesi boş. (Klavye yön tuşları ile geçiş yapabilirsiniz.)",
+  "noMatch": "Eşleşen öğe yok",
+  "typeSpot": "SPOT",
+  "typeFutures": "VADELİ",
+  "publish": "Yayınla",
+  "resultCount": "{{count}} Sonuç",
+  "loading": "Yükleniyor..."
 }

@@ -1,0 +1,24 @@
+{
+    "addFilter": "Filtre Ekle",
+    "onlyMyBots": "Sadece Botlarım",
+    "trade": {
+        "label": "İşlem Tipi",
+        "sale": "Satılık",
+        "rental": "Kiralık"
+    },
+    "botType": {
+        "spot": "Spot",
+        "futures": "Vadeli"
+    },
+    "salePrice": "Satış Fiyatı",
+    "rentalPrice": "Kiralama Fiyatı",
+    "powerScore": "Güç Skoru",
+    "profitMargin": "Kar Marjı",
+    "usageTime": "Kullanım Süresi",
+    "periods": {
+        "day": "Gün",
+        "week": "Hafta",
+        "month": "Ay",
+        "all": "Tümü"
+    }
+}

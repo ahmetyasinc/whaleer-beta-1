@@ -1,0 +1,17 @@
+{
+    "priority": {
+        "low": "Low",
+        "normal": "Normal",
+        "high": "High",
+        "urgent": "Urgent"
+    },
+    "status": {
+        "open": "Open",
+        "in_progress": "In Progress",
+        "resolved": "Resolved",
+        "closed": "Closed"
+    },
+    "noMessageContent": "Message content not found...",
+    "expand": "Expand",
+    "collapse": "Collapse"
+}

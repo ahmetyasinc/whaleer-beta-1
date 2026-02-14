@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import api from "@/api/axios";
 import { useMemo, useState, useEffect } from "react";
 import { BsPerson } from "react-icons/bs";
@@ -18,6 +19,7 @@ import useStrategyStore from "@/store/indicator/strategyStore";
  * @param {"indicator"|"strategy"} props.type - Type of items to show (default: "indicator")
  */
 const FullScreenChooseIndicator = ({ isOpen, onClose, onSelect, existingPanelIds = [], type = "indicator" }) => {
+    const { t } = useTranslation("fullScreen");
     // Get personal indicators from store
     const { indicators, setPersonalIndicators, favorites: indicatorFavorites } = useIndicatorStore();
     // Get personal strategies from store
@@ -95,10 +97,10 @@ const FullScreenChooseIndicator = ({ isOpen, onClose, onSelect, existingPanelIds
 
     if (!isOpen) return null;
 
-    const title = "Gösterge Seç";
+    const title = t("title");
     const emptyMessage = activeTab === "strategy"
-        ? "Kişisel strateji bulunamadı."
-        : "Kişisel indikatör bulunamadı.";
+        ? t("noStrategiesFound")
+        : t("noIndicatorsFound");
 
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[60] backdrop-blur-sm">
@@ -126,7 +128,7 @@ const FullScreenChooseIndicator = ({ isOpen, onClose, onSelect, existingPanelIds
                                 }`}
                             onClick={() => setActiveTab("indicator")}
                         >
-                            <BsPerson className="text-[18px]" /> İndikatörler
+                            <BsPerson className="text-[18px]" /> {t("indicators")}
                         </button>
 
                         {/* Kişisel Stratejiler Butonu */}
@@ -137,7 +139,7 @@ const FullScreenChooseIndicator = ({ isOpen, onClose, onSelect, existingPanelIds
                                 }`}
                             onClick={() => setActiveTab("strategy")}
                         >
-                            <TbChartCandle className="text-[18px]" /> Stratejiler
+                            <TbChartCandle className="text-[18px]" /> {t("strategies")}
                         </button>
                     </div>
 
@@ -186,7 +188,7 @@ const FullScreenChooseIndicator = ({ isOpen, onClose, onSelect, existingPanelIds
                                                 )}
 
                                                 {isAlreadyAdded && (
-                                                    <span className="text-xs text-zinc-500 ml-2">Zaten eklendi</span>
+                                                    <span className="text-xs text-zinc-500 ml-2">{t("alreadyAdded")}</span>
                                                 )}
                                             </div>
 
@@ -201,7 +203,7 @@ const FullScreenChooseIndicator = ({ isOpen, onClose, onSelect, existingPanelIds
                                                     onClick={() => !isAlreadyAdded && onSelect(selected, activeTab)}
                                                     disabled={isAlreadyAdded}
                                                 >
-                                                    {isAlreadyAdded ? 'Eklendi' : 'Seç'}
+                                                    {isAlreadyAdded ? t("added") : t("select")}
                                                 </button>
                                             </div>
                                         </div>

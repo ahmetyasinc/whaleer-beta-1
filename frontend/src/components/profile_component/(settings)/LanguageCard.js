@@ -9,8 +9,8 @@ export default function LanguageCard({ t, currentLang, onLanguageChange }) {
   }, [currentLang]);
 
   const languages = [
-    { key: 'tr', label: t('languages.tr') },
-    { key: 'en', label: t('languages.en') },
+    { key: 'tr', label: t('languages.tr'), icon: '/country-icons/tr.svg' },
+    { key: 'en', label: t('languages.en'), icon: '/country-icons/en.svg' },
   ];
 
   const hasChanges = selectedLang !== currentLang;
@@ -49,10 +49,9 @@ export default function LanguageCard({ t, currentLang, onLanguageChange }) {
           onClick={handleSave}
           disabled={!hasChanges}
           className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200
-            ${
-              hasChanges
-                ? "bg-blue-600/90 text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500 hover:shadow-blue-500/40 hover:-translate-y-0.5 active:translate-y-0"
-                : "bg-zinc-900/80 text-zinc-500 ring-1 ring-zinc-800/80 cursor-not-allowed opacity-60"
+            ${hasChanges
+              ? "bg-blue-600/90 text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500 hover:shadow-blue-500/40 hover:-translate-y-0.5 active:translate-y-0"
+              : "bg-zinc-900/80 text-zinc-500 ring-1 ring-zinc-800/80 cursor-not-allowed opacity-60"
             }`}
         >
           <FiSave className="text-base" />
@@ -66,13 +65,20 @@ export default function LanguageCard({ t, currentLang, onLanguageChange }) {
           <button
             key={lng.key}
             onClick={() => setSelectedLang(lng.key)}
-            className={`px-4 py-2 rounded-xl border transition-all duration-200
-              ${
-                selectedLang === lng.key
-                  ? "bg-blue-900/20 text-blue-400 border-blue-500/40 ring-1 ring-blue-500/30 shadow-blue-500/20 shadow-md"
-                  : "bg-zinc-800/40 text-zinc-400 border-zinc-700 hover:bg-zinc-800 hover:text-zinc-200 hover:border-zinc-600"
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-200 group
+              ${selectedLang === lng.key
+                ? "bg-blue-900/20 text-blue-400 border-blue-500/40 ring-1 ring-blue-500/30 shadow-blue-500/20 shadow-md"
+                : "bg-zinc-800/40 text-zinc-400 border-zinc-700 hover:bg-zinc-800 hover:text-zinc-200 hover:border-zinc-600"
               }`}
           >
+            <div className={`relative w-5 h-5 rounded-full overflow-hidden border transition-colors ${selectedLang === lng.key ? "border-blue-500/50" : "border-zinc-600 group-hover:border-zinc-500"
+              }`}>
+              <img
+                src={lng.icon}
+                alt={lng.label}
+                className="w-full h-full object-cover"
+              />
+            </div>
             {lng.label}
           </button>
         ))}

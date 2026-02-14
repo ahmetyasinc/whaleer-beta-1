@@ -14,7 +14,7 @@ const PhantomIcon = ({ }) => (
 );
 
 export default function BotMarketHeader() {
-    const { t } = useTranslation('showcaseHeader');
+    const { t } = useTranslation('botMarketHeader');
     const pathname = usePathname();
     const [modalOpen, setModalOpen] = useState(false);
 

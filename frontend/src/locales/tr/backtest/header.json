@@ -4,7 +4,8 @@
   },
   "buttons": {
     "runBacktest": "Backtest’i Çalıştır",
-    "close": "Kapat"
+    "close": "Kapat",
+    "archive": "Arşiv"
   },
   "periods": {
     "select": "Periyot Seç",

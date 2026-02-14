@@ -1,0 +1,40 @@
+{
+    "title": "Bot Kirala",
+    "errors": {
+        "nonJson": "Sunucudan geçersiz yanıt alındı",
+        "prepareFailed": "Kiralama özeti hazırlanamadı",
+        "connectWallet": "Lütfen cüzdanınızı bağlayın",
+        "invalidCheckout": "Geçersiz ödeme verisi",
+        "notConfirmed": "Ödeme onaylanmadı",
+        "operationFailed": "İşlem başarısız oldu"
+    },
+    "toasts": {
+        "preparing": "İşlem hazırlanıyor...",
+        "signWallet": "Lütfen cüzdanınızdaki işlemi onaylayın",
+        "confirmOnchain": "İşlem ağ üzerinde onaylanıyor...",
+        "activatingRental": "Kiralama aktifleştiriliyor..."
+    },
+    "rows": {
+        "action": "İşlem",
+        "botName": "Bot Adı",
+        "owner": "Sahibi",
+        "durationTitle": "Süre (Gün)",
+        "minDaysHint": "Minimum {{minDays}} gün",
+        "dailyUsd": "Günlük Ücret",
+        "totalUsd": "Toplam Tutar (USD)",
+        "totalSol": "Toplam Tutar (SOL)",
+        "revenueWallet": "Gelir Cüzdanı"
+    },
+    "actionNames": {
+        "rent": "Kirala"
+    },
+    "buttons": {
+        "cancel": "İptal",
+        "continue": "Devam Et",
+        "processing": "İşleniyor..."
+    },
+    "network": {
+        "solana": "Solana Ağı",
+        "notConnected": "Cüzdan Bağlı Değil"
+    }
+}

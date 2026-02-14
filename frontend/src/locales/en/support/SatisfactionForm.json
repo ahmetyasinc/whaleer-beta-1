@@ -1,0 +1,16 @@
+{
+    "title": "Were you satisfied with the transaction before closing your request?",
+    "rating": {
+        "1": "Very Bad",
+        "2": "Bad",
+        "3": "Average",
+        "4": "Good",
+        "5": "Very Good"
+    },
+    "feedbackPlaceholder": "Is there a note you would like to add? (Optional)",
+    "cancel": "Cancel",
+    "submit": "Rate and Close",
+    "validation": {
+        "ratingRequired": "Please give a rating"
+    }
+}

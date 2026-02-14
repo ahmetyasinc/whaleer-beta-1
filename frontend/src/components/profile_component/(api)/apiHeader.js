@@ -9,7 +9,7 @@ const ApiHeader = ({ onAdd }) => {
     return (
         <div className="w-full bg-black border-b border-zinc-900 shadow-md flex justify-between items-center py-3 fixed top-0 left-0 right-0 z-50 h-[61px] pl-16 pr-6">
             <div className="flex gap-4 items-center w-full">
-                <h2 className="flex items-center gap-2 text-xl text-gray-200 font-semibold border-r border-gray-800 pr-4">
+                <h2 className="flex items-center gap-2 text-xl text-gray-200 font-semibold border-l border-gray-600 pl-4 py-1">
                     {t("title")}
                 </h2>
 
@@ -17,7 +17,7 @@ const ApiHeader = ({ onAdd }) => {
                     href=""
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[13px] text-blue-400/90 hover:text-blue-300/90 underline underline-offset-2 transition-colors duration-100"
+                    className="text-[13px] border-l border-slate-700 px-4 py-[2.5px] text-blue-400/90 hover:text-blue-300/90 underline underline-offset-2 transition-colors duration-100"
                 >
                     {t("links.howToConnect")}
                 </a>

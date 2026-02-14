@@ -1,0 +1,9 @@
+{
+    "title": "Performance Chart",
+    "periods": {
+        "weekly": "1W",
+        "monthly": "1M",
+        "sixMonths": "6M",
+        "all": "All Time"
+    }
+}

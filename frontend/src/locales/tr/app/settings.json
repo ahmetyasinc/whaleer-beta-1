@@ -12,6 +12,7 @@
     "en": "İngilizce"
   },
   "theme": "Tema",
+  "theme_hint": "Tema seçiminizi buradan yapabilirsiniz.",
   "theme_system": "Sistem",
   "theme_light": "Açık",
   "theme_dark": "Koyu",
@@ -35,7 +36,8 @@
     "bio_ph": "Kendiniz hakkında kısa bir açıklama…"
   },
   "social": {
-    "title": "Sosyal Bağlantılar"
+    "title": "Sosyal Bağlantılar",
+    "subtitle": "Sosyal medya hesaplarınızı buradan ekleyebilirsiniz."
   },
   "security": {
     "title": "Hesap Güvenliği",
@@ -45,7 +47,8 @@
     "hint": "Şifre değişikliği için mevcut şifrenizi doğrulayın.",
     "no_new_pw": "Lütfen yeni şifre giriniz.",
     "mismatch": "Yeni şifreler eşleşmiyor.",
-    "changed": "Şifre güncellendi."
+    "changed": "Şifre güncellendi.",
+    "subtitle": "Şifrenizi buradan güncelleyebilirsiniz."
   },
   "validation": {
     "required": "Bu alan zorunludur.",

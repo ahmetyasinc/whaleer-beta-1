@@ -307,8 +307,9 @@ export const BotCard = ({ bot }) => {
                       onClick={() => {
                         if (isBlocked) return;
                         setIsExamineOpen(true);
-                        fetchAndStoreBotAnalysis(bot.id);
                         setMenuOpen(false);
+                        // Fetch in background
+                        fetchAndStoreBotAnalysis(bot.id);
                       }}
                       disabled={isBlocked}
                       className={`flex items-center gap-3 w-full px-4 py-2.5 transition-colors ${isBlocked ? "text-zinc-600 cursor-not-allowed" : "text-amber-400 hover:bg-zinc-800 hover:text-amber-300"
@@ -569,7 +570,7 @@ export const BotCard = ({ bot }) => {
               <div style={{ padding: '30px' }}>
                 <Gauge
                   value={perfData?.backend?.powerPoint || 0}
-                  label="Güç Puanı"
+                  label={t("performance.powerPoint")}
                   isEligible={perfData?.derived?.isEligibleForSale}
                 />
               </div>
@@ -618,7 +619,7 @@ export const BotCard = ({ bot }) => {
         </div>
 
         {editing && <BotModal mode="edit" bot={bot} onClose={() => setEditing(false)} />}
-        {isExamineOpen && <ExamineBot isOpen={isExamineOpen} onClose={() => setIsExamineOpen(false)} botId={bot.id} />}
+        {isExamineOpen && <ExamineBot isOpen={isExamineOpen} onClose={() => setIsExamineOpen(false)} botId={bot.id} initialBotName={bot.name} />}
       </div>
 
       <DeleteBotConfirmModal

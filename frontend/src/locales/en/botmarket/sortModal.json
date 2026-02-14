@@ -1,0 +1,29 @@
+{
+    "title": "Sort Bots",
+    "default": "Default Sorting",
+    "defaultLabel": "Recommended",
+    "labels": {
+        "salePrice": "Sale Price",
+        "rentalPrice": "Rental Price",
+        "profitMargin": "Profit Margin",
+        "powerScore": "Power Score",
+        "usageTime": "Usage Time",
+        "createdAt": "Creation Date",
+        "saleCount": "Sale Count",
+        "rentalCount": "Rental Count"
+    },
+    "directions": {
+        "asc": "Low to High",
+        "desc": "High to Low",
+        "oldest": "Oldest First",
+        "newest": "Newest First"
+    },
+    "periods": {
+        "day": "24H",
+        "week": "7D",
+        "month": "30D",
+        "all": "All Time"
+    },
+    "cancel": "Cancel",
+    "apply": "Apply"
+}

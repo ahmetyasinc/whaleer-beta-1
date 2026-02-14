@@ -1,0 +1,37 @@
+{
+    "title": "Yeni Destek Talebi",
+    "category": "Kategori",
+    "selectCategory": "Kategori seçin",
+    "subject": "Konu",
+    "subjectPlaceholder": "Destek talebinizin kısa özeti",
+    "message": "Mesaj",
+    "messagePlaceholder": "Sorununuzu detaylı bir şekilde açıklayın...",
+    "priority": "Öncelik",
+    "priorityLevel": {
+        "low": "Düşük",
+        "normal": "Normal",
+        "high": "Yüksek",
+        "urgent": "Acil"
+    },
+    "addFile": "Dosya Ekle",
+    "selectedFiles": "Seçili dosyalar:",
+    "createTicket": "Talep Oluştur",
+    "creating": "Oluşturuluyor...",
+    "validation": {
+        "requiredFields": "Lütfen konu ve mesaj girin."
+    },
+    "error": {
+        "generic": "İşlem sırasında hata oluştu: "
+    },
+    "fileInput": {
+        "dragDrop": "Dosyaları buraya sürükleyip bırakın veya",
+        "browse": "göz atın",
+        "supports": "Desteklenenler: JPG, PNG, PDF, DOC (Maks 10MB)"
+    },
+    "categories": {
+        "genel": "Genel",
+        "faturalandırma": "Faturalandırma",
+        "teknik": "Teknik",
+        "öneri": "Öneri"
+    }
+}

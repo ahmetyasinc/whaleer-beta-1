@@ -8,6 +8,7 @@ import { GiTwoCoins } from "react-icons/gi";
 import { TbAlignBoxLeftStretch } from "react-icons/tb";
 import { FaLongArrowAltRight } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import Loader from "@/components/loader";
 
 
 // ---- Timezone helpers (cookie: wh_settings.timezone = "GMT+3" vb.) ----
@@ -69,7 +70,6 @@ function timeToZonedDate(utcSeconds, offsetMinutes) {
   return new Date(msUTC + (offsetMinutes || 0) * 60 * 1000);
 }
 
-
 export default function Portfolio() {
   const { t, i18n } = useTranslation("portfolio");
   const [activeTab, setActiveTab] = useState("portfolio");
@@ -77,6 +77,7 @@ export default function Portfolio() {
   const activeApiId = useProfileStore((s) => s.activeApiId);
   const portfolioMap = useAccountDataStore((s) => s.portfolioByApiId);
   const tradesMap = useAccountDataStore((s) => s.tradesByApiId);
+  const isHydrated = useAccountDataStore((s) => s.isHydrated);
 
   const router = useRouter();
 
@@ -229,7 +230,11 @@ export default function Portfolio() {
         {/* h-full: Ebeveyninin boyunu alır. */}
         {/* overflow-y-auto: İçerik sığmazsa scroll bar çıkarır. */}
         <div className="h-full overflow-y-auto px-4 py-4 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
-          {activeTab === "portfolio" ? (
+          {!isHydrated ? (
+            <div className="flex h-full items-center justify-center">
+              <Loader />
+            </div>
+          ) : activeTab === "portfolio" ? (
             <div className="space-y-3">
               {portfolio.length > 0 ? (
                 <>

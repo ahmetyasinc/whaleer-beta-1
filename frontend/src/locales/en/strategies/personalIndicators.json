@@ -13,5 +13,20 @@
     "confirm": "Are you sure you want to delete the indicator {{name}}?",
     "no": "No",
     "yes": "Delete"
+  },
+  "publish": "Publish",
+  "toast": {
+    "titles": {
+      "success": "Success",
+      "error": "Error",
+      "info": "Info"
+    },
+    "messages": {
+      "indicatorPublish": {
+        "ok": "Indicator published successfully.",
+        "failed": "Publish failed.",
+        "unexpected": "An unexpected error occurred."
+      }
+    }
   }
 }

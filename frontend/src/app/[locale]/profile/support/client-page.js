@@ -11,8 +11,10 @@ import { useSupportStore } from "@/store/support/supportStore";
 import { useAdminSupportStore } from "@/store/support/adminStore";
 import api from "@/api/axios";
 import CandleLoader from "@/components/profile_component/(indicator)/candleLoader";
+import { useTranslation } from "react-i18next";
 
 export default function ClientPage() {
+  const { t } = useTranslation("supportClientPage");
   const fetchUserTickets = useSupportStore((s) => s.fetchTickets);
   const fetchAdminTickets = useAdminSupportStore((s) => s.fetchTickets);
 
@@ -34,7 +36,7 @@ export default function ClientPage() {
       } catch (err) {
         if (!ignore) {
           console.error("Kullanıcı bilgileri alınamadı:", err);
-          setErrorUser("Kullanıcı bilgileri yüklenirken bir hata oluştu.");
+          setErrorUser(t("error.userInfoLoad"));
         }
       } finally {
         if (!ignore) setLoadingUser(false);
@@ -71,7 +73,7 @@ export default function ClientPage() {
         {/* İçerik */}
         <div className="relative text-center">
           <CandleLoader />
-          <p className="mt-4 text-zinc-400">Yükleniyor...</p>
+          <p className="mt-4 text-zinc-400">{t("loading")}</p>
         </div>
       </div>
     );
@@ -92,28 +94,28 @@ export default function ClientPage() {
     <div className="flex flex-col h-screen bg-zinc-950 text-zinc-200 overflow-hidden font-sans">
 
       {/* Header Bar */}
-      <header className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-black backdrop-blur-sm z-20 relative">
+      <header className="shrink-0 flex items-center justify-between px-6 py-3 border-b border-zinc-800 bg-black backdrop-blur-sm z-20 relative">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold tracking-tight text-white ml-12">
-            Destek Merkezi
+          <h1 className="text-xl font-bold tracking-tight border-l border-gray-600 px-4 py-1 text-white ml-10">
+            {t("header.title")}
           </h1>
           {isAdmin && (
             <span className="px-2.5 py-0.5 bg-red-500/10 text-red-400 text-xs font-medium rounded-full border border-red-500/20">
-              Admin
+              {t("header.adminRole")}
             </span>
           )}
           {isModerator && (
             <span className="px-2.5 py-0.5 bg-blue-500/10 text-blue-400 text-xs font-medium rounded-full border border-blue-500/20">
-              Moderator
+              {t("header.moderatorRole")}
             </span>
           )}
         </div>
         <p className="hidden md:block text-sm text-zinc-500">
           {isAdmin
-            ? "Sistemdeki tüm destek taleplerini yönetin."
+            ? t("header.descAdmin")
             : isModerator
-              ? "Size atanmış destek taleplerini yönetin."
-              : "Sorunlarınızı bize bildirin, en kısa sürede çözelim."}
+              ? t("header.descModerator")
+              : t("header.descUser")}
         </p>
       </header>
 
@@ -131,7 +133,7 @@ export default function ClientPage() {
             {/* Sabit Başlık */}
             <div className="shrink-0 px-4 pt-4 pb-3 border-b border-zinc-800/50 bg-zinc-950 flex items-center justify-between">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
-                Geçmiş Taleplerim
+                {t("sidebar.myPastTickets")}
               </h2>
               <button
                 onClick={() => setSelectedTicketId(null)}
@@ -140,7 +142,7 @@ export default function ClientPage() {
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                 </svg>
-                Yeni Talep
+                {t("sidebar.newTicket")}
               </button>
             </div>
             {/* Scroll Edilebilir Liste */}

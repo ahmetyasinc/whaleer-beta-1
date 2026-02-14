@@ -7,6 +7,7 @@ import { useProfileStore } from "@/store/profile/profileStore";
 import { useAccountDataStore } from "@/store/profile/accountDataStore";
 import { useTranslation } from "react-i18next";
 import { RiPieChartLine } from "react-icons/ri"; // 🥧 ikon eklendi
+import Loader from "@/components/loader";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -16,6 +17,7 @@ export default function PortfolioPieChart() {
 
   const activeApiId = useProfileStore((s) => s.activeApiId);
   const portfolioMap = useAccountDataStore((s) => s.portfolioByApiId);
+  const isHydrated = useAccountDataStore((s) => s.isHydrated);
 
   const portfolio = useMemo(
     () => portfolioMap?.[activeApiId] || [],
@@ -77,7 +79,7 @@ export default function PortfolioPieChart() {
   const isEmpty = portfolio.length === 0 || total === 0;
 
   return (
-    <div className="relative bg-zinc-950/90 backdrop-blur-sm border border-zinc-700 rounded-xl shadow-lg p-5 text-white w-full h-full flex flex-col group hover:border-blue-900/80 transition-all duration-200">
+    <div className="relative bg-zinc-950/90 backdrop-blur-sm border border-zinc-700 rounded-xl shadow-lg p-5 text-white w-full h-[350px] flex flex-col group hover:border-blue-900/80 transition-all duration-200">
 
       {/* Glow effects */}
       <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/5 blur-3xl rounded-full pointer-events-none"></div>
@@ -92,7 +94,11 @@ export default function PortfolioPieChart() {
 
       {/* Grafik Alanı */}
       <div className="relative flex-1 w-full min-h-10 flex items-center justify-center z-10">
-        {isEmpty ? (
+        {!isHydrated ? (
+          <div className="flex h-full items-center justify-center">
+            <Loader />
+          </div>
+        ) : isEmpty ? (
           <div className="flex flex-col items-center justify-center text-center text-zinc-600 animate-fadeIn gap-3">
             <div className="w-16 h-16 rounded-full bg-zinc-900/50 border border-zinc-700/50 flex items-center justify-center shadow-[0_0_15px_-5px_rgba(0,0,0,0.5)]">
               <RiPieChartLine className="text-3xl text-zinc-600" />

@@ -6,10 +6,12 @@ import { useSupportStore } from "@/store/support/supportStore";
 import MessageList from "./MessageList";
 import SatisfactionForm from "./SatisfactionForm";
 import MessageComposer from "./MessageComposer";
+import { useTranslation } from "react-i18next";
 
 import { RiLoader4Fill } from "react-icons/ri";
 
 export default function TicketDetail({ ticketId, onBack, user }) {
+  const { t, i18n } = useTranslation("supportTicketDetail");
   const { currentTicket, fetchTicket, closeTicket } = useSupportStore();
   const [showSatisfaction, setShowSatisfaction] = useState(false);
 
@@ -52,12 +54,12 @@ export default function TicketDetail({ ticketId, onBack, user }) {
                 }`}
             >
               {currentTicket.status === "open"
-                ? "Açık"
+                ? t("status.open")
                 : currentTicket.status === "in_progress"
-                  ? "İşlemde"
+                  ? t("status.in_progress")
                   : currentTicket.status === "resolved"
-                    ? "Çözüldü"
-                    : "Kapalı"}
+                    ? t("status.resolved")
+                    : t("status.closed")}
             </span>
 
             {currentTicket.status !== "closed" && (
@@ -65,13 +67,13 @@ export default function TicketDetail({ ticketId, onBack, user }) {
                 onClick={() => setShowSatisfaction(true)}
                 className="px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg text-sm hover:bg-red-500/20 transition-colors"
               >
-                Kapat
+                {t("closeTicket")}
               </button>
             )}
           </div>
         </div>
         <div className="mt-1 ml-8 text-xs text-zinc-500">
-          #{currentTicket.id} • {new Date(currentTicket.created_at).toLocaleDateString("tr-TR", { year: 'numeric', month: 'long', day: 'numeric' })}
+          #{currentTicket.id} • {new Date(currentTicket.created_at).toLocaleDateString(i18n.language, { year: 'numeric', month: 'long', day: 'numeric' })}
         </div>
       </div>
 

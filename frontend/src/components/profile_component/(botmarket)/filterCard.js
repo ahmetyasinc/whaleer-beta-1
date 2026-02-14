@@ -7,23 +7,23 @@ import { useTranslation } from 'react-i18next';
 
 const FilterCard = ({ filters, setFilter, setFilters }) => {
     const [isModalOpen, setModalOpen] = useState(false);
-    const { t } = useTranslation('botsList');
+    const { t } = useTranslation('botMarketFilterCard');
 
     const activeFilters = [];
-    if (filters.onlyMyBots) activeFilters.push({ label: t('filter.onlyMyBots'), key: 'onlyMyBots', reset: false });
+    if (filters.onlyMyBots) activeFilters.push({ label: t('onlyMyBots'), key: 'onlyMyBots', reset: false });
 
     if (filters.tradeType !== 'all') {
-        const typeLabel = filters.tradeType === 'sale' ? t('filter.chips.trade.sale') : t('filter.chips.trade.rental');
-        activeFilters.push({ label: `${t('filter.chips.trade.label')}: ${typeLabel}`, key: 'tradeType', reset: 'all' });
+        const typeLabel = filters.tradeType === 'sale' ? t('trade.sale') : t('trade.rental');
+        activeFilters.push({ label: `${t('trade.label')}: ${typeLabel}`, key: 'tradeType', reset: 'all' });
     }
 
     if (filters.botType !== 'all') {
-        const typeLabel = filters.botType === 'spot' ? t('filter.chips.botType.spot') : t('filter.chips.botType.futures');
+        const typeLabel = filters.botType === 'spot' ? t('botType.spot') : t('botType.futures');
         activeFilters.push({ label: typeLabel, key: 'botType', reset: 'all' });
     }
 
     if (filters.salePrice.min || filters.salePrice.max) {
-        let label = t('filter.chips.sale') + ': ';
+        let label = t('salePrice') + ': ';
         if (filters.salePrice.min && filters.salePrice.max) label += `${filters.salePrice.min}-${filters.salePrice.max}`;
         else if (filters.salePrice.min) label += `>${filters.salePrice.min}`;
         else if (filters.salePrice.max) label += `<${filters.salePrice.max}`;
@@ -31,14 +31,14 @@ const FilterCard = ({ filters, setFilter, setFilters }) => {
     }
 
     if (filters.rentalPrice.min || filters.rentalPrice.max) {
-        let label = t('filter.chips.rental') + ': ';
+        let label = t('rentalPrice') + ': ';
         if (filters.rentalPrice.min && filters.rentalPrice.max) label += `${filters.rentalPrice.min}-${filters.rentalPrice.max}`;
         else if (filters.rentalPrice.min) label += `>${filters.rentalPrice.min}`;
         else if (filters.rentalPrice.max) label += `<${filters.rentalPrice.max}`;
         activeFilters.push({ label, key: 'rentalPrice', reset: { min: '', max: '' } });
     }
 
-    if (filters.minPowerScore) activeFilters.push({ label: `${t('filter.chips.power')} > ${filters.minPowerScore}`, key: 'minPowerScore', reset: '' });
+    if (filters.minPowerScore) activeFilters.push({ label: `${t('powerScore')} > ${filters.minPowerScore}`, key: 'minPowerScore', reset: '' });
 
     if (filters.minProfitMargin.value) {
         // period translation
@@ -49,16 +49,16 @@ const FilterCard = ({ filters, setFilter, setFilters }) => {
             all: 'all'
         };
         const periodKey = periods[filters.minProfitMargin.period] || 'day';
-        const periodLabel = t(`filter.periods.${periodKey}`);
+        const periodLabel = t(`periods.${periodKey}`);
 
         activeFilters.push({
-            label: `${t('filter.chips.profit')} > ${filters.minProfitMargin.value}% (${periodLabel})`,
+            label: `${t('profitMargin')} > ${filters.minProfitMargin.value}% (${periodLabel})`,
             key: 'minProfitMargin',
             reset: { value: '', period: 'day' }
         });
     }
 
-    if (filters.minUsageTime) activeFilters.push({ label: `${t('filter.chips.usage')} > ${filters.minUsageTime}h`, key: 'minUsageTime', reset: '' });
+    if (filters.minUsageTime) activeFilters.push({ label: `${t('usageTime')} > ${filters.minUsageTime}h`, key: 'minUsageTime', reset: '' });
 
     const removeFilter = (key, resetValue) => {
         setFilter(key, resetValue);
@@ -72,7 +72,7 @@ const FilterCard = ({ filters, setFilter, setFilters }) => {
                     className="flex shrink-0 bg-zinc-900 hover:bg-cyan-950/30 text-cyan-500 hover:text-cyan-300 border border-zinc-700 hover:border-cyan-500/50 px-3 py-2 rounded-md text-xs font-semibold items-center justify-center gap-2 transition-all duration-100 shadow-sm hover:shadow-[0_0_10px_-2px_rgba(6,182,212,0.3)]"
                 >
                     <FiPlus className="w-4 h-4" />
-                    {t('filter.addFilter')}
+                    {t('addFilter')}
                 </button>
 
                 <div className="flex items-center gap-2 ml-4 overflow-x-auto scrollbar-hide">

@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const priorityColors = {
   low: "bg-zinc-500/10 text-zinc-400 border border-zinc-500/20",
@@ -17,14 +18,15 @@ const statusColors = {
   closed: "bg-zinc-500/10 text-zinc-500 border border-zinc-500/20",
 };
 
-const priorityLabels = { low: "Düşük", normal: "Normal", high: "Yüksek", urgent: "Acil" };
-const statusLabels = { open: "Açık", in_progress: "İşlemde", resolved: "Çözüldü", closed: "Kapalı" };
+// const priorityLabels = { low: "Düşük", normal: "Normal", high: "Yüksek", urgent: "Acil" };
+// const statusLabels = { open: "Açık", in_progress: "İşlemde", resolved: "Çözüldü", closed: "Kapalı" };
 
 export default function TicketItem({ ticket, onSelect, isSelected, showUserInfo }) {
+  const { t, i18n } = useTranslation("supportTicketItem");
   const [expanded, setExpanded] = useState(false);
 
   const formatDate = (dateString) =>
-    new Date(dateString).toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" });
+    new Date(dateString).toLocaleDateString(i18n.language, { day: "2-digit", month: "2-digit", year: "numeric" });
 
   const handleClick = (e) => {
     // Eğer metin seçiliyse (select işlemi varsa) tıklamayı tetikleme
@@ -51,10 +53,10 @@ export default function TicketItem({ ticket, onSelect, isSelected, showUserInfo 
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-2">
             <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${priorityColors[ticket.priority] || priorityColors.low}`}>
-              {priorityLabels[ticket.priority] || ticket.priority}
+              {t(`priority.${ticket.priority}`) || ticket.priority}
             </span>
             <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium ${statusColors[ticket.status] || statusColors.open}`}>
-              {statusLabels[ticket.status] || ticket.status}
+              {t(`status.${ticket.status}`) || ticket.status}
             </span>
             <span className="text-[10px] font-mono text-zinc-600">#{ticket.id}</span>
           </div>
@@ -76,7 +78,7 @@ export default function TicketItem({ ticket, onSelect, isSelected, showUserInfo 
           {(expanded || isSelected) && (
             <div className="mt-3 pt-3 border-t border-zinc-800/50">
               <p className="text-sm text-zinc-400 line-clamp-2 leading-relaxed opacity-90">
-                {ticket.messages?.[0]?.message || "Mesaj içeriği bulunamadı..."}
+                {ticket.messages?.[0]?.message || t("noMessageContent")}
               </p>
             </div>
           )}
@@ -90,7 +92,7 @@ export default function TicketItem({ ticket, onSelect, isSelected, showUserInfo 
               setExpanded((x) => !x);
             }}
             className="mt-1 p-1 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 rounded transition-colors"
-            aria-label={expanded ? "Kapat" : "Genişlet"}
+            aria-label={expanded ? t("collapse") : t("expand")}
           >
             <svg className={`w-4 h-4 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -98,6 +100,6 @@ export default function TicketItem({ ticket, onSelect, isSelected, showUserInfo 
           </button>
         )}
       </div>
-    </div>
+    </div >
   );
 }

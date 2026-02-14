@@ -1,0 +1,9 @@
+{
+    "status": {
+        "open": "Açık",
+        "in_progress": "İşlemde",
+        "resolved": "Çözüldü",
+        "closed": "Kapalı"
+    },
+    "closeTicket": "Kapat"
+}

@@ -12,7 +12,7 @@ import Chart from './chart';
 import useBotExamineModalStore from '@/store/botmarket/BotExamineModalStore';
 
 const BotExamineModal = ({ isOpen, onClose, bot }) => {
-    const { t } = useTranslation('botsList');
+    const { t } = useTranslation('botMarketBotExamineModal');
     const [isCommentModalOpen, setCommentModalOpen] = useState(false);
 
     // Store actions
@@ -70,7 +70,7 @@ const BotExamineModal = ({ isOpen, onClose, bot }) => {
 
                         {/* Detaylı İnceleme Yazısı */}
                         <span className="text-xs font-medium mt-[1px] text-zinc-500 uppercase tracking-wider">
-                            Detaylı İnceleme
+                            {t('title')}
                         </span>
                     </div>
 

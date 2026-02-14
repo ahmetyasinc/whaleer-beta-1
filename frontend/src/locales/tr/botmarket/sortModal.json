@@ -1,0 +1,29 @@
+{
+    "title": "Botları Sırala",
+    "default": "Varsayılan Sıralama",
+    "defaultLabel": "Önerilen",
+    "labels": {
+        "salePrice": "Satış Fiyatı",
+        "rentalPrice": "Kiralama Fiyatı",
+        "profitMargin": "Kâr Marjı",
+        "powerScore": "Güç Puanı",
+        "usageTime": "Kullanım Süresi",
+        "createdAt": "Oluşturulma Tarihi",
+        "saleCount": "Satış Sayısı",
+        "rentalCount": "Kiralama Sayısı"
+    },
+    "directions": {
+        "asc": "Artan",
+        "desc": "Azalan",
+        "oldest": "En Eski",
+        "newest": "En Yeni"
+    },
+    "periods": {
+        "day": "24S",
+        "week": "7G",
+        "month": "30G",
+        "all": "Tüm Zamanlar"
+    },
+    "cancel": "İptal",
+    "apply": "Uygula"
+}

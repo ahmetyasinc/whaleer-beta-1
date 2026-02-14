@@ -96,7 +96,7 @@ export default function ApiConnectionClient() {
   return (
     <>
       <ApiHeader onAdd={handleAddNewApi} />
-      <div className="bg-zinc-950/90 backdrop-blur-sm border border-gray-700/30 rounded-lg mx-2 mt-[65px] mb-2 shadow-xl shadow-black/50 p-4 h-[calc(100vh-90px)] flex flex-col overflow-hidden">
+      <div className="bg-[rgb(17,17,24)] backdrop-blur-sm border border-gray-700/30 rounded-lg mx-2 mt-[60px] mb-2 shadow-xl shadow-black/50 p-4 h-[calc(100vh-90px)] flex flex-col overflow-hidden">
 
 
         <p className="text-gray-500 text-sm font-medium mb-6 pb-4 border-b border-gray-500">

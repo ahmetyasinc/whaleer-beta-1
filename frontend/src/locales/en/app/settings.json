@@ -12,6 +12,7 @@
     "en": "English"
   },
   "theme": "Theme",
+  "theme_hint": "Choose your theme.",
   "theme_system": "System",
   "theme_light": "Light",
   "theme_dark": "Dark",
@@ -35,7 +36,8 @@
     "bio_ph": "A short description about yourself…"
   },
   "social": {
-    "title": "Social Links"
+    "title": "Social Links",
+    "subtitle": "Add your social media links here."
   },
   "security": {
     "title": "Account Security",
@@ -45,7 +47,8 @@
     "hint": "To change your password, verify your current password.",
     "no_new_pw": "Please enter a new password.",
     "mismatch": "New passwords do not match.",
-    "changed": "Password updated."
+    "changed": "Password updated.",
+    "subtitle": "Update your password here."
   },
   "validation": {
     "required": "This field is required.",

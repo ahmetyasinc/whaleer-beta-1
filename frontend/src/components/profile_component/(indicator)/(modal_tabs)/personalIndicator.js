@@ -30,8 +30,8 @@ function Toast({ toasts }) {
           (to.type === "success"
             ? t("toast.titles.success", "Başarılı")
             : to.type === "error"
-              ? t("toast.titles.error", "Hata")
-              : t("toast.titles.info", "Bilgi"));
+              ? t("toast.titles.error")
+              : t("toast.titles.info"));
         return (
           <div
             key={to.id}
@@ -56,7 +56,7 @@ function Toast({ toasts }) {
           to   { opacity: 1; transform: translateY(0) scale(1); }
         }
       `}</style>
-    </div>
+    </div >
   );
 }
 
@@ -159,14 +159,14 @@ export default function PersonalIndicators({ closeModal, isPublishMode }) {
 
       if (res.ok) {
         console.log("Indicator published successfully", res.data);
-        showToast("success", t("toast.messages.indicatorPublish.ok", "İndikatör başarıyla yayınlandı."), t("toast.titles.success", "Başarılı"));
+        showToast("success", t("toast.messages.indicatorPublish.ok"), t("toast.titles.success"));
       } else {
         console.error("Publish failed:", res.error);
-        showToast("error", res.error || t("toast.messages.indicatorPublish.failed", "Yayınlama başarısız oldu."), t("toast.titles.error", "Hata"));
+        showToast("error", res.error || t("toast.messages.indicatorPublish.failed"), t("toast.titles.error"));
       }
     } catch (error) {
       console.error("Publish error:", error);
-      showToast("error", t("toast.messages.indicatorPublish.unexpected", "Beklenmedik bir hata oluştu."), t("toast.titles.error", "Hata"));
+      showToast("error", t("toast.messages.indicatorPublish.unexpected"), t("toast.titles.error"));
     } finally {
       setShowPublishModal(false);
       setIndicatorToPublish(null);
@@ -237,10 +237,10 @@ export default function PersonalIndicators({ closeModal, isPublishMode }) {
                     <button
                       className="bg-transparent mr-4 text-zinc-200 px-2 py-1 rounded-2xl flex items-center gap-2 transition-all shadow hover:shadow-[0_0_25px_rgba(37,99,235,0.5)] hover:text-sky-400"
                       onClick={() => handlePublishClick(selected)}
-                      title={t("Publish")}
+                      title={t("publish")}
                     >
                       <MdPublish className="text-[18px]" />
-                      <span className="text-[12px] font-medium">{t("Yayınla")}</span>
+                      <span className="text-[12px] font-medium">{t("publish")}</span>
                     </button>
                   ) : (
                     <>

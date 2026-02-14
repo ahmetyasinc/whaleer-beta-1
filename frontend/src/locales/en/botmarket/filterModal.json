@@ -1,0 +1,38 @@
+{
+    "title": "Filter Bots",
+    "onlyMyBots": "Only My Bots",
+    "botType": {
+        "label": "Bot Type",
+        "all": "All",
+        "spot": "Spot",
+        "futures": "Futures"
+    },
+    "tradeType": {
+        "label": "Trade Type",
+        "all": "All",
+        "sale": "Sale",
+        "rental": "Rental"
+    },
+    "ranges": {
+        "salePrice": "Sale Price Range ($)",
+        "rentalPrice": "Rental Price Range ($)",
+        "powerScore": "Minimum Power Score",
+        "profitMargin": "Minimum Profit Margin",
+        "usageTime": "Minimum Usage Time (Hours)"
+    },
+    "placeholders": {
+        "min": "Min",
+        "max": "Max",
+        "example85": "e.g. 85",
+        "minPerc": "Min %",
+        "example24": "e.g. 24"
+    },
+    "periods": {
+        "day": "Last 24h",
+        "week": "Last 7 Days",
+        "month": "Last 30 Days",
+        "all": "All Time"
+    },
+    "cancel": "Cancel",
+    "apply": "Apply Filters"
+}

@@ -24,5 +24,20 @@
     "compileDefault": "Derleme Hatası!",
     "favoriteAction": "Favori durumu güncellenirken hata oluştu",
     "deleteAction": "Strateji silinirken hata oluştu"
+  },
+  "publish": "Yayınla",
+  "toast": {
+    "titles": {
+      "success": "Başarılı",
+      "error": "Hata",
+      "info": "Bilgi"
+    },
+    "messages": {
+      "strategyPublish": {
+        "ok": "Strateji başarıyla yayınlandı.",
+        "failed": "Yayınlama başarısız oldu.",
+        "unexpected": "Beklenmedik bir hata oluştu."
+      }
+    }
   }
 }

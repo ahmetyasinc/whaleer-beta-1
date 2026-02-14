@@ -5,10 +5,12 @@ import { createChart } from "lightweight-charts";
 import { useProfileStore } from "@/store/profile/profileStore";
 import { useAccountDataStore } from "@/store/profile/accountDataStore";
 import { BsQuestionOctagonFill } from "react-icons/bs";
+import Loader from "@/components/loader";
 
 export default function PortfolioLineChart() {
   const activeApiId = useProfileStore((s) => s.activeApiId);
   const snapshotsMap = useAccountDataStore((s) => s.snapshotsByApiId);
+  const isHydrated = useAccountDataStore((s) => s.isHydrated);
 
   // ----- Data prep -----
   const raw = useMemo(
@@ -100,7 +102,7 @@ export default function PortfolioLineChart() {
       chartRef.current = null;
       seriesRef.current = null;
     };
-  }, []);
+  }, [isHydrated]);
 
   // Data değişince seriyi güncelle
   useEffect(() => {
@@ -122,7 +124,7 @@ export default function PortfolioLineChart() {
   }, [lineData, hasData]);
 
   return (
-    <div className="relative bg-zinc-950/90 backdrop-blur-sm border border-zinc-700 rounded-xl shadow-lg pl-2 pt-5 text-white w-full h-full flex flex-col group hover:border-blue-900/80 transition-all duration-200">
+    <div className="relative bg-zinc-950/90 backdrop-blur-sm border border-zinc-700 rounded-xl shadow-lg pl-2 pt-5 text-white w-full h-[350px] flex flex-col group hover:border-blue-900/80 transition-all duration-200">
 
       {/* Glow effects */}
       <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/5 blur-3xl rounded-full pointer-events-none"></div>
@@ -135,18 +137,26 @@ export default function PortfolioLineChart() {
       </div>
 
       <div className="relative flex-1 h-full z-10">
-        <div ref={containerRef} className="w-full h-full rounded-xl" />
-        {!hasData && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-zinc-600 pointer-events-none bg-transparent">
-
-            {/* Büyük ikon */}
-            <div className="w-16 h-16 rounded-full bg-zinc-900/50 border border-zinc-700/50 flex items-center justify-center shadow-[0_0_15px_-5px_rgba(0,0,0,0.5)]">
-              <BsQuestionOctagonFill className="text-3xl text-zinc-600" />
-            </div>
-
-            <p className="text-sm font-medium text-zinc-500 uppercase tracking-wide">No data available</p>
-            <p className="text-xs text-zinc-600">Connect an API or wait for updates.</p>
+        {!isHydrated ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Loader />
           </div>
+        ) : (
+          <>
+            <div ref={containerRef} className="w-full h-full rounded-xl" />
+            {!hasData && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-zinc-600 pointer-events-none bg-transparent">
+
+                {/* Büyük ikon */}
+                <div className="w-16 h-16 rounded-full bg-zinc-900/50 border border-zinc-700/50 flex items-center justify-center shadow-[0_0_15px_-5px_rgba(0,0,0,0.5)]">
+                  <BsQuestionOctagonFill className="text-3xl text-zinc-600" />
+                </div>
+
+                <p className="text-sm font-medium text-zinc-500 uppercase tracking-wide">No data available</p>
+                <p className="text-xs text-zinc-600">Connect an API or wait for updates.</p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

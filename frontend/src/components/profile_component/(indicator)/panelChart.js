@@ -193,7 +193,7 @@ export default function PanelChart({ indicatorName, indicatorId, subId }) {
         tickMarkFormatter: fmt,
         borderVisible: true,
       },
-      rightPriceScale: { minimumWidth: 70, autoScale: true },
+      rightPriceScale: { minimumWidth: 75, autoScale: true },
       crosshair: {
         mode: CrosshairMode.Normal,
         vertLine: {

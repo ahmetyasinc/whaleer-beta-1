@@ -1,0 +1,10 @@
+{
+    "strategyName": "Strateji Adı",
+    "lines": "satır",
+    "activeUsers": "Aktif Kullanıcı",
+    "totalBalance": "Toplam Bakiye",
+    "period": "Periyot",
+    "cryptos": "Kripto Paralar",
+    "noCrypto": "Kripto bulunamadı",
+    "publisherDescription": "Yayınlayan Açıklaması"
+}

@@ -1,0 +1,7 @@
+{
+    "allTickets": "Tüm Talepler",
+    "myPastTickets": "Geçmiş Taleplerim",
+    "totalTickets": "Toplam {{count}} talep",
+    "totalTickets_plural": "Toplam {{count}} talep",
+    "noTicketsFound": "Henüz hiç destek talebiniz bulunmuyor."
+}

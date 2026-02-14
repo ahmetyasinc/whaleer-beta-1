@@ -1,0 +1,7 @@
+{
+    "allTickets": "All Tickets",
+    "myPastTickets": "My Past Tickets",
+    "totalTickets": "Total {{count}} ticket",
+    "totalTickets_plural": "Total {{count}} tickets",
+    "noTicketsFound": "You have no support tickets yet."
+}

@@ -62,7 +62,7 @@ async function fetchSolUsdtPrice(signal) {
 
 
 export default function BuyModal({ botId, onClose }) {
-  const { t } = useTranslation("buyModal");
+  const { t } = useTranslation("botMarketBuyModal");
 
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState(null);
@@ -231,11 +231,11 @@ export default function BuyModal({ botId, onClose }) {
             {activeChain === "solana" ? (
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-900/30 text-green-200 border border-green-500/40">
                 <span className="w-2 h-2 rounded-full bg-green-400 mr-2" />
-                Solana Network
+                {t('wallet.solanaNetwork')}
               </span>
             ) : (
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-900/30 text-red-200 border border-red-500/40">
-                Wallet Not Connected
+                {t('wallet.notConnected')}
               </span>
             )}
           </div>
